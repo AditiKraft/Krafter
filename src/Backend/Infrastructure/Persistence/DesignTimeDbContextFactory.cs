@@ -1,18 +1,31 @@
 ﻿using Backend.Infrastructure.BackgroundJobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System;
 
 namespace Backend.Infrastructure.Persistence
 {
+    internal static class DesignTimeConnectionStringHelper
+    {
+        public static string GetConnectionString()
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.Local.json", optional: false, reloadOnChange: false)
+                .AddEnvironmentVariables()
+                .Build();
+            var connectionString = configuration.GetConnectionString("KrafterDbMigration");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'KrafterDbMigration' not found. Please create 'appsettings.Local.json' with the connection string or set it via environment variables.");
+            }
+            return connectionString;
+        }
+    }
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TenantDbContext>
     {
         public TenantDbContext CreateDbContext(string[] args)
         {
-            // Prefer environment variable used elsewhere; fall back to local default
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__krafterDb")
-                                   ??
-                                   "Host=localhost;Port=56187;Username=postgres;Password=postgres;Database=krafterDb";
+            var connectionString = DesignTimeConnectionStringHelper.GetConnectionString();
             var optionsBuilder = new DbContextOptionsBuilder<TenantDbContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure());
 
@@ -24,14 +37,11 @@ namespace Backend.Infrastructure.Persistence
     {
         public KrafterContext CreateDbContext(string[] args)
         {
-            // Prefer environment variable used elsewhere; fall back to local default
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__krafterDb")
-                                   ??
-                                   "Host=localhost;Port=56187;Username=postgres;Password=postgres;Database=krafterDb";
+            var connectionString = DesignTimeConnectionStringHelper.GetConnectionString();
             var optionsBuilder = new DbContextOptionsBuilder<KrafterContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure());
 
-            return new KrafterContext(optionsBuilder.Options,null,null);
+            return new KrafterContext(optionsBuilder.Options, null, null);
         }
     }
 
@@ -39,10 +49,7 @@ namespace Backend.Infrastructure.Persistence
     {
         public BackgroundJobsContext CreateDbContext(string[] args)
         {
-            // Prefer environment variable used elsewhere; fall back to local default
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__krafterDb")
-                                   ??
-                                   "Host=localhost;Port=56187;Username=postgres;Password=postgres;Database=krafterDb";
+            var connectionString = DesignTimeConnectionStringHelper.GetConnectionString();
             var optionsBuilder = new DbContextOptionsBuilder<BackgroundJobsContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure());
 
