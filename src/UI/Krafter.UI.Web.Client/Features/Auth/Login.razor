@@ -22,7 +22,7 @@
             </RadzenText>
 
             <RadzenStack JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-            @if (themeManager.SystemTheme!=null&& themeManager.SystemTheme.Contains("dark"))
+                @if (themeManager.CurrentActive == ThemeManager.ThemePreference.Light)
 {
     <RadzenImage Path="login-with-google-dark.svg" 
                 Click="@StartGoogleLogin"

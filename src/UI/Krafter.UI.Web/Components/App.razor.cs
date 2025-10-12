@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Krafter.UI.Web.Client.Infrastructure.Services;
+using Microsoft.AspNetCore.Components;
 using Radzen;
+using static Krafter.UI.Web.Client.Infrastructure.Services.ThemeManager;
 
 namespace Krafter.UI.Web.Components
 {
-    public partial class App(ThemeService themeService
-    )
+    public partial class App(ThemeService themeService, ThemeManager themeManager)
     {
         [CascadingParameter]
         private HttpContext HttpContext { get; set; }
@@ -19,8 +20,17 @@ namespace Krafter.UI.Web.Components
 
                 if (!string.IsNullOrEmpty(theme))
                 {
+                    themeManager.CurrentActive = theme?.Contains("dark") == true ? ThemePreference.Dark : ThemePreference.Light;
                     themeService.SetTheme(theme, false);
                 }
+                else
+                {
+                    themeManager.CurrentActive = themeService.Theme?.Contains("dark") == true ? ThemePreference.Dark : ThemePreference.Light;
+                }
+            }
+            else
+            {
+                themeManager.CurrentActive = themeService.Theme?.Contains("dark") ==true? ThemePreference.Dark : ThemePreference.Light;
             }
         }
     }

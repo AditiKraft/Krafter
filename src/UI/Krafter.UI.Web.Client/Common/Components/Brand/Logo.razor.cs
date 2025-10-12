@@ -51,8 +51,8 @@ namespace Krafter.UI.Web.Client.Common.Components.Brand
                 orientationDirection = "vertical";
             }
 
-            var res = themeManager.SystemTheme;
-            if (res is null || !res.Contains("dark", StringComparison.InvariantCultureIgnoreCase))
+            var res = "";
+            if (themeManager.CurrentActive == ThemeManager.ThemePreference.Dark)
             {
                 res = "light";
             }

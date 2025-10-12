@@ -2,11 +2,8 @@
 
 namespace Krafter.UI.Web.Client.Infrastructure.Services
 {
-    public class ThemeManager
+    public class ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
     {
-        private readonly ThemeService _themeService;
-        private readonly IJSRuntime _jsRuntime;
-
         public event Func<string, Task> ThemeChangeRequested;
 
         public enum ThemePreference
@@ -15,113 +12,186 @@ namespace Krafter.UI.Web.Client.Infrastructure.Services
             Dark,
             Light
         }
+        public ThemePreference CurrentPreference { get; set; } = ThemePreference.Auto;
 
-        public ThemePreference CurrentPreference { get; private set; } = ThemePreference.Auto;
-        public string SystemTheme { get; set; }
-
-        public ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
-        {
-            _themeService = themeService;
-            _jsRuntime = jsRuntime;
-        }
-
+        public ThemePreference CurrentActive { get; set; } =
+            themeService.Theme?.Contains("dark") == true ? ThemePreference.Dark : ThemePreference.Light;
         public async Task SetThemePreference(ThemePreference preference)
         {
             CurrentPreference = preference;
 
             string preferenceValue = preference switch
-            {
+            { 
                 ThemePreference.Auto => "auto",
                 ThemePreference.Dark => "dark",
                 ThemePreference.Light => "light",
                 _ => "auto"
             };
-
-            // Store the preference
-            await _jsRuntime.InvokeVoidAsync("setStoredThemePreference", preferenceValue);
-
-            // Apply the theme
-            string _systemTheme = preferenceValue;
+            await jsRuntime.InvokeVoidAsync("setStoredThemePreference", preferenceValue);
+            string apptheme = string.Empty;
             if (preference == ThemePreference.Auto)
             {
-                // For auto, get the current system theme
-                var systemTheme = await _jsRuntime.InvokeAsync<string>("detectSystemTheme");
-                _systemTheme = systemTheme;
-                _themeService.SetTheme(MapSystemThemeToAppTheme(systemTheme));
+                var systemTheme = await jsRuntime.InvokeAsync<string>("detectSystemTheme");
+                if (systemTheme == "dark")
+                {
+                    CurrentActive = ThemePreference.Dark;
+                }
+                else if (systemTheme == "light")
+                {
+                    CurrentActive = ThemePreference.Light;
+                }
+                apptheme = MapSystemThemeToAppTheme(systemTheme);
             }
             else
             {
-                // For explicit themes, apply directly
-                _themeService.SetTheme(MapPreferenceToTheme(preference));
+                CurrentActive = preference;
+                apptheme = await MapPreferenceToTheme(preference);
             }
-            SystemTheme = _systemTheme;
-            await (ThemeChangeRequested?.Invoke(_systemTheme) ?? Task.CompletedTask);
+
+            themeService.SetTheme(apptheme);
+            await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
         }
 
-        public async Task SetThemePreference(bool isDark)
-        {
-            if (isDark)
-            {
-                await _jsRuntime.InvokeVoidAsync("setStoredThemePreference", "dark");
-                CurrentPreference = ThemePreference.Dark;
-            }
-            else
-            {
-                await _jsRuntime.InvokeVoidAsync("setStoredThemePreference", "light");
-                CurrentPreference = ThemePreference.Light;
-            }
-        }
 
         public async Task OnSystemThemeChanged(string systemTheme)
         {
-            // Only update theme if preference is set to auto
-            if (CurrentPreference == ThemePreference.Auto)
+            var value = await jsRuntime.InvokeAsync<string>("getStoredThemePreference");
+            if (value == "auto")
             {
+                CurrentPreference = ThemePreference.Auto;
+
+                if (systemTheme == "dark")
+                {
+                    if (CurrentActive != ThemePreference.Dark)
+                    {
+                        CurrentActive = ThemePreference.Dark;
+                        await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
+                    }
+                }
+                else if (systemTheme == "light")
+                {
+                    if (CurrentActive != ThemePreference.Light)
+                    {
+                        CurrentActive = ThemePreference.Light;
+                        await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
+                    }
+                }
                 var appTheme = MapSystemThemeToAppTheme(systemTheme);
-                _themeService.SetTheme(appTheme);
-                SystemTheme = systemTheme;
-                await (ThemeChangeRequested?.Invoke(systemTheme) ?? Task.CompletedTask);
+                if (appTheme != themeService.Theme)
+                {
+                    themeService.SetTheme(appTheme);
+                }
+            }
+            else if (value == "dark")
+            {
+                CurrentPreference = ThemePreference.Dark;
+                if (CurrentActive != ThemePreference.Dark)
+                {
+                    CurrentActive = ThemePreference.Dark;
+                    await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
+                }
+            }
+            else if (value == "light")
+            {
+                CurrentPreference = ThemePreference.Light;
+                if (CurrentActive != ThemePreference.Light)
+                {
+                    CurrentActive = ThemePreference.Light;
+                    await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
+                }
             }
         }
 
         private string MapSystemThemeToAppTheme(string systemTheme)
         {
-            var currentTheme = _themeService.Theme;
-            if (systemTheme == "dark" || systemTheme == "auto")
+            if (systemTheme == "dark")
             {
-                if (currentTheme.Contains("dark"))
-                {
-                    return currentTheme;
-                }
-                else
-                {
-                    return currentTheme + "-dark";
-                }
+                return CurrentDarkTheme;
+            }
+            else if (systemTheme == "light")
+            {
+                return CurrentLightTheme;
             }
             else
             {
-                return currentTheme;
+                return themeService.Theme;
             }
         }
 
-        private string MapPreferenceToTheme(ThemePreference preference)
+        private async Task<string> MapPreferenceToTheme(ThemePreference preference)
         {
-            var currentTheme = _themeService.Theme;
-            if (preference == ThemePreference.Dark || preference == ThemePreference.Auto)
+            if (preference == ThemePreference.Auto)
             {
-                if (currentTheme.Contains("dark"))
-                {
-                    return currentTheme;
-                }
-                else
-                {
-                    return currentTheme + "-dark";
-                }
+                var systemTheme = await jsRuntime.InvokeAsync<string>("detectSystemTheme");
+                return MapSystemThemeToAppTheme(systemTheme);
+            }
+            if (preference == ThemePreference.Dark)
+            {
+                return CurrentDarkTheme;
+
+            }
+            else if (preference == ThemePreference.Light)
+            {
+                return CurrentLightTheme;
             }
             else
             {
-                return currentTheme;
+                return themeService.Theme;
             }
+
+        }
+
+
+        private string CurrentLightTheme => themeService.Theme?.ToLowerInvariant() switch
+        {
+            "dark" => "default",
+            "material-dark" => "material",
+            "fluent-dark" => "fluent",
+            "material3-dark" => "material3",
+            "software-dark" => "software",
+            "humanistic-dark" => "humanistic",
+            "standard-dark" => "standard",
+            _ => themeService.Theme,
+        };
+
+        private string CurrentDarkTheme => themeService.Theme?.ToLowerInvariant() switch
+        {
+            "default" => "dark",
+            "material" => "material-dark",
+            "fluent" => "fluent-dark",
+            "material3" => "material3-dark",
+            "software" => "software-dark",
+            "humanistic" => "humanistic-dark",
+            "standard" => "standard-dark",
+            _ => themeService.Theme,
+        };
+
+
+        public async Task SetDifferentTheme(string apptheme)
+        {
+            var SystemTheme = "";
+            if (apptheme.Contains("dark"))
+            {
+                CurrentPreference = ThemePreference.Dark;
+                if (CurrentActive != ThemePreference.Dark)
+                {
+                    CurrentActive = ThemePreference.Dark;
+                    await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
+                }
+                SystemTheme = "dark";
+            }
+            else
+            {
+                CurrentPreference = ThemePreference.Light;
+                if (CurrentActive != ThemePreference.Light)
+                {
+                    CurrentActive = ThemePreference.Light;
+                    await (ThemeChangeRequested?.Invoke("") ?? Task.CompletedTask);
+                }
+                SystemTheme = "light";
+            }
+            await jsRuntime.InvokeVoidAsync("setStoredThemePreference", SystemTheme);
+            themeService.SetTheme(apptheme);
         }
     }
 }
