@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<!-- Background Jobs -->
+		<PackageReference Include="Scalar.AspNetCore.Microsoft" Version="2.9.0" />
 		<PackageReference Include="TickerQ" Version="2.4.0" />
 		<PackageReference Include="TickerQ.Dashboard" Version="2.4.0" />
 		<PackageReference Include="TickerQ.EntityFrameworkCore" Version="2.4.0" />
@@ -38,7 +39,7 @@
 
 		<!-- API & Swagger -->
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
+		
 
 		<!-- Validation -->
 		<PackageReference Include="FluentValidation" Version="12.0.0" />
