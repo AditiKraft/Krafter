@@ -6,6 +6,7 @@ var username = builder.AddParameter("postgresUsername", secret: true);
 var password = builder.AddParameter("postgresPassword", secret: true);
 
 var databaseServer = builder.AddPostgres("postgres", username, password)
+    .WithDataVolume(isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithContainerName("KrafterPostgres")
     .WithPgAdmin();

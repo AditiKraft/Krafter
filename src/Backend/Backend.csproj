@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<!-- Background Jobs -->
+		<PackageReference Include="Scalar.AspNetCore.Microsoft" Version="2.9.0" />
 		<PackageReference Include="TickerQ" Version="2.5.3" />
 		<PackageReference Include="TickerQ.Dashboard" Version="2.5.3" />
 		<PackageReference Include="TickerQ.EntityFrameworkCore" Version="2.5.3" />

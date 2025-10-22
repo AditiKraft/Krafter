@@ -1,3 +1,5 @@
+using Scalar.AspNetCore;
+
 namespace Backend.Api.Configuration;
 
 /// <summary>
@@ -7,31 +9,28 @@ public static class SwaggerConfiguration
 {
     public static IServiceCollection AddSwaggerConfiguration(this IServiceCollection services)
     {
+       
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options =>
+        services.AddOpenApi(options =>
         {
-            options.SwaggerDoc("v1", new()
+            options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
+            options.AddDocumentTransformer((document, context, cancellationToken) =>
             {
-                Title = "Krafter API",
-                Version = "v1",
-                Description = "Krafter Backend API with VSA (Vertical Slice Architecture)"
+                document.Info.Title = "Krafter API";
+                document.Info.Version = "v1";
+                document.Info.Description = "Krafter Backend API with VSA (Vertical Slice Architecture)";
+                return Task.CompletedTask;
             });
-
-            // TODO: Add JWT bearer auth configuration for Swagger UI
-            // options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { ... });
         });
-
         return services;
+
     }
 
-    public static IApplicationBuilder UseSwaggerConfiguration(this IApplicationBuilder app)
+    public static IEndpointRouteBuilder UseSwaggerConfiguration(this IEndpointRouteBuilder app)
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Krafter API v1");
-        });
-
+     
+        app.MapOpenApi();
+        app.MapScalarApiReference();
         return app;
     }
 }
