@@ -20,11 +20,15 @@ public static class BackgroundJobsConfiguration
 
             options.AddOperationalStore<BackgroundJobsContext>(efOpt =>
             {
-                efOpt.CancelMissedTickersOnApplicationRestart();
+               // efOpt.CancelMissedTickersOnApplicationRestart();
             });
 
-            options.AddDashboard(basePath: "/tickerq-dashboard");
-            options.AddDashboardBasicAuth();
+            options.AddDashboard(uiopt =>
+            {
+                uiopt.BasePath = "/tickerq-dashboard";
+                uiopt.EnableBasicAuth = true;
+            });
+
         });
 
         return services;
@@ -32,7 +36,7 @@ public static class BackgroundJobsConfiguration
 
     public static IApplicationBuilder UseBackgroundJobs(this IApplicationBuilder app)
     {
-        app.UseTickerQ();
+       app.UseTickerQ();
         return app;
     }
 }
