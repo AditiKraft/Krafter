@@ -24,6 +24,7 @@ builder.Services.AddUIServices(builder.Configuration["RemoteHostUrl"]);
 
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
 builder.Services.AddScoped<WebAssemblyAuthenticationHandler>();
+builder.Services.AddScoped<TenantIdentifier>();
 builder.Services.AddHttpClient("KrafterUIAPI", client =>
 {
     HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, builder.Configuration["RemoteHostUrl"], client);

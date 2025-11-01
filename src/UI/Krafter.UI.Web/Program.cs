@@ -175,6 +175,7 @@ builder.Services.AddUIServices(apiUrl);
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
       .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 builder.Services.AddRadzenComponents();
+builder.Services.AddScoped<TenantIdentifier>();
 
 builder.Services.AddHttpClient("KrafterUIAPI", client =>
 {

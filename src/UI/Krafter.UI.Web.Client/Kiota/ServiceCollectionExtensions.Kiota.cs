@@ -1,4 +1,5 @@
 ﻿using Krafter.Api.Client;
+using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
@@ -33,8 +34,10 @@ namespace Krafter.UI.Web.Client.Kiota
             services.AddScoped(sp =>
             {
                 var authProvider = sp.GetRequiredService<IAuthenticationProvider>();
-                // Pass IServiceProvider into TenantHeaderHandler
-                var tenantHandler = new TenantHeaderHandler(sp, baseUrl)
+                var tenantIdentifierProvider
+                    = sp.GetRequiredService<TenantIdentifier>();
+                var tenantIdentifierProviderResult = tenantIdentifierProvider.Get();
+                var tenantHandler = new TenantHeaderHandler(tenantIdentifierProviderResult)
                 {
                     InnerHandler = new HttpClientHandler()
                 };
@@ -42,7 +45,7 @@ namespace Krafter.UI.Web.Client.Kiota
 
                 var adapter = new HttpClientRequestAdapter(authProvider, httpClient: httpClient)
                 {
-                    BaseUrl = baseUrl
+                    BaseUrl = tenantIdentifierProviderResult.hostUrl
                 };
 
                 return new KrafterClient(adapter);
