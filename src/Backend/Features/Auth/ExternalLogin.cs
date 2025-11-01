@@ -48,11 +48,13 @@ public sealed class ExternalAuth
 
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<GoogleAuthClient> _logger;
 
-        public GoogleAuthClient(HttpClient httpClient, IConfiguration configuration)
+        public GoogleAuthClient(HttpClient httpClient, IConfiguration configuration,ILogger<GoogleAuthClient> logger)
         {
             _httpClient = httpClient;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<GoogleTokens> ExchangeCodeForTokensAsync(string code)
@@ -75,7 +77,14 @@ public sealed class ExternalAuth
                 new FormUrlEncodedContent(tokenRequestParams));
 
             if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Error exchanging code for tokens: {StatusCode} {ReasonPhrase}",
+                    response.StatusCode, response.ReasonPhrase);
+                _logger.LogError("Response: {ResponseContent}",
+                    await response.Content.ReadAsStringAsync());
+
                 return null;
+            }
 
             return await response.Content.ReadFromJsonAsync<GoogleTokens>();
         }
@@ -88,7 +97,9 @@ public sealed class ExternalAuth
 
             var response = await _httpClient.SendAsync(requestMessage);
             if (!response.IsSuccessStatusCode)
+            {
                 return null;
+            }
 
             return await response.Content.ReadFromJsonAsync<GoogleUserInfo>();
         }
