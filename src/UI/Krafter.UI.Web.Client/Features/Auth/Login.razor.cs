@@ -99,7 +99,7 @@ public partial class Login(
         var redirectUri = $"{navigationManager.BaseUri}google-callback";
         if (!redirectUri.Contains("localhost"))
         {
-            redirectUri = $"https://krafter.krafter.com/google-callback";
+            redirectUri = $"https://krafter.getkrafter.dev/google-callback";
         }
         var scope = "email profile";
         var responseType = "code";
