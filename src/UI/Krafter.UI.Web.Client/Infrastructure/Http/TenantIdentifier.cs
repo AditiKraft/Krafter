@@ -47,8 +47,6 @@ public class TenantIdentifier(IServiceProvider serviceProvider,IConfiguration co
         else
         {
             var strings = host.Split('.'); tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
-            tenantIdentifier = "krafter"; // adjust if you want different local logic
-
             remoteHostUrl = $"https://{tenantIdentifier}.{configuration["RemoteHostUrl"]}";
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
 
