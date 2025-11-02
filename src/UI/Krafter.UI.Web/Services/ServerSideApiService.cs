@@ -1,6 +1,4 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client;
+﻿using Krafter.Api.Client.Models;
 using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Infrastructure.Api;

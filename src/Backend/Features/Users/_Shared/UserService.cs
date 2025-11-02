@@ -6,7 +6,6 @@ using Backend.Common.Auth;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
 using Backend.Common.Models;
-using Backend.Features.Auth;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Tenants;
 using Backend.Infrastructure.Persistence;
@@ -71,13 +70,6 @@ public class UserService(
         //var user = await userManager.Asn.FindByIdAsync(userId);
         var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
         _ = user ?? throw new NotFoundException("User Not Found.");
-
-        // var claimsAsync = await userManager.GetClaimsAsync(user);
-        // var permissions = claimsAsync
-        //     .Where(c => c.Type == KrafterClaims.Permission)
-        //     .Select(c => c.Value)
-        //     .ToList();
-        // return permissions.Distinct().ToList();
 
         var userRoles = await userManager.GetRolesAsync(user);
         var permissions = new List<string>();

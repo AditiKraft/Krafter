@@ -179,7 +179,7 @@ builder.Services.AddScoped<TenantIdentifier>();
 
 builder.Services.AddHttpClient("KrafterUIAPI", client =>
 {
-    HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, apiUrl, client);
+    HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, client);
 })
    .AddHttpMessageHandler<ServerAuthenticationHandler>()
     .Services
@@ -237,30 +237,30 @@ static bool IsTokenExpired(string token)
 
 static void MapAuthTokenEndpoints(WebApplication app)
 {
-    app.MapGet("/tokens/current", async (IKrafterLocalStorageService localStorageService, IApiService apiService) =>
+    app.MapGet("/tokens/current", async (IApiService apiService) =>
     {
         var res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
-    app.MapPost("/tokens/create", async ([FromBody] TokenRequestInput request, IKrafterLocalStorageService localStorageService, IApiService apiService, IAuthenticationService authenticationService, HttpContext context, [FromServices] IHttpClientFactory clientFactory) =>
+    app.MapPost("/tokens/create", async ([FromBody] TokenRequestInput request,  IApiService apiService,  [FromServices] IHttpClientFactory clientFactory) =>
     {
         var res = await apiService.CreateTokenAsync(request, CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     });
-    app.MapPost("/tokens/refresh", async ([FromBody] RefreshTokenRequest request, IApiService apiService, IKrafterLocalStorageService localStorageService, IAuthenticationService authenticationService, HttpContext context, [FromServices] IHttpClientFactory clientFactory) =>
+    app.MapPost("/tokens/refresh", async ([FromBody] RefreshTokenRequest request, IApiService apiService,   [FromServices] IHttpClientFactory clientFactory) =>
     {
         var tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost("/external-auth/google", async ([FromBody] TokenRequestInput request, IApiService apiService, IKrafterLocalStorageService localStorageService, IAuthenticationService authenticationService, HttpContext context, IHttpClientFactory clientFactory) =>
+    app.MapPost("/external-auth/google", async ([FromBody] TokenRequestInput request, IApiService apiService) =>
     {
         var tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost("/tokens/logout", async (IKrafterLocalStorageService localStorageService, IApiService apiService, HttpContext context) =>
+    app.MapPost("/tokens/logout", async ( IApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();

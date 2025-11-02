@@ -1,15 +1,7 @@
 ﻿using Backend.Api;
-using Backend.Application.BackgroundJobs;
-using Backend.Application.Notifications;
 using Backend.Common;
-using Backend.Common.Interfaces;
-using Backend.Common.Models;
-using Backend.Features.Auth;
 using Backend.Features.Tenants._Shared;
-using Backend.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Features.Tenants
 {
@@ -30,8 +22,7 @@ namespace Backend.Features.Tenants
                     var res = await tenantSeedService.SeedBasicData(requestInput);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Common.Models.Response>()
-                    ;
+                .Produces<Common.Models.Response>();
             }
         }
     }

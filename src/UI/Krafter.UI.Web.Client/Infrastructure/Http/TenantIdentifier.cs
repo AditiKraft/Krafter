@@ -1,12 +1,12 @@
 ﻿using Krafter.UI.Web.Client.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 
-namespace Krafter.UI.Web.Client.Kiota;
+namespace Krafter.UI.Web.Client.Infrastructure.Http;
 
 public class TenantIdentifier(IServiceProvider serviceProvider,IConfiguration configuration)
 {
 
-    public(string tenantIdentifier, string hostUrl, string host) Get()
+    public(string tenantIdentifier, string remoteHostUrl, string rootDomain, string clientBaseAddress) Get()
     {
         var formFactor = serviceProvider.GetRequiredService<IFormFactor>();
         string navigationManagerBaseUri;
@@ -34,21 +34,26 @@ public class TenantIdentifier(IServiceProvider serviceProvider,IConfiguration co
 
         var uri = new Uri(navigationManagerBaseUri);
         var host = uri.Host;
-        string hostUrl;
+        string remoteHostUrl;
         var isRunningLocally = host == "localhost" || host == "127.0.0.1";
+        string clientBaseAddress;
 
         if (isRunningLocally)
         {
             tenantIdentifier = "krafter"; // adjust if you want different local logic
-            hostUrl = configuration["RemoteHostUrl"];
+            clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
+            remoteHostUrl = configuration["RemoteHostUrl"];
         }
         else
         {
             var strings = host.Split('.'); tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
             tenantIdentifier = "krafter"; // adjust if you want different local logic
 
-            hostUrl = $"https://{tenantIdentifier}.{configuration["RemoteHostUrl"]}";
+            remoteHostUrl = $"https://{tenantIdentifier}.{configuration["RemoteHostUrl"]}";
+            clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
+
         }
-        return (tenantIdentifier, hostUrl,host);
-    }
+        var rootDomain=host.Replace($"{tenantIdentifier}.", "");
+        return (tenantIdentifier, remoteHostUrl, rootDomain, clientBaseAddress);
+    } 
 }
