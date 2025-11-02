@@ -35,7 +35,7 @@ namespace Backend.Migrations
             migrationBuilder.InsertData(
                 table: "Tenant",
                 columns: new[] { "Id", "AdminEmail", "CreatedById", "CreatedOn", "DeleteReason", "Identifier", "IsActive", "IsDeleted", "Name", "TablesToCopy", "ValidUpto" },
-                values: new object[] { "root", "admin@krafter.com", null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "krafter", true, false, "krafter", null, new DateTime(9999, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999) });
+                values: new object[] { "root", "admin@getkrafter.dev", null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "krafter", true, false, "krafter", null, new DateTime(9999, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999) });
         }
 
         /// <inheritdoc />

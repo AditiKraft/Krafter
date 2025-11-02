@@ -28,7 +28,7 @@ public static class KrafterInitialConstants
         public const string Id = "root";
         public const string LastName = "Admin";
         public const string FirstName = "Admin";
-        public const string EmailAddress = "admin@krafter.com";
+        public const string EmailAddress = "admin@getkrafter.dev";
     }
 
     public static class RootTenant
@@ -102,16 +102,7 @@ public class UserService(
     {
         KrafterUser? user;
         bool isNewUser = string.IsNullOrEmpty(request.Id);
-        if (isNewUser == false && (request.Roles.Any()))
-        {
-            var roles = await db.UserRoles.AsNoTracking()
-                .Where(c => c.UserId == request.Id
-                            && (!request.Roles.Contains(c.RoleId)
-                            ))
-                .Select(c => c.RoleId)
-                .ToListAsync();
-        }
-
+       
         if (isNewUser)
         {
             var basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
@@ -172,7 +163,7 @@ public class UserService(
             {
                 if (request.UpdateTenantEmail)
                 {
-                    var firstOrDefaultAsync = await tenantDbContext.Tenants.IgnoreQueryFilters().AsNoTracking()
+                    var firstOrDefaultAsync = await tenantDbContext.Tenants.IgnoreQueryFilters()
                         .FirstOrDefaultAsync(c => c.AdminEmail == user.Email);
                     if (firstOrDefaultAsync is not null)
                     {
