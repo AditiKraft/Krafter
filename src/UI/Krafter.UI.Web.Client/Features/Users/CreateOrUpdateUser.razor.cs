@@ -80,6 +80,7 @@ public partial class CreateOrUpdateUser(
                 {
                     finalInput.Roles = input.Roles;
                 }
+                finalInput.UpdateTenantEmail= true;
             }
 
             var result = await krafterClient.Users.CreateOrUpdate.PostAsync(finalInput);

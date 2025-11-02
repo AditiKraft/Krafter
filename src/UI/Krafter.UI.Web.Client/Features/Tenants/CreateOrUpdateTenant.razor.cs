@@ -57,6 +57,10 @@ namespace Krafter.UI.Web.Client.Features.Tenants
                     {
                         finalInput.ValidUpto = input.ValidUpto;
                     }
+                    if (input.AdminEmail != OriginalCreateRequest.AdminEmail)
+                    {
+                        finalInput.AdminEmail = input.AdminEmail;
+                    }
                 }
 
                 var result = await krafterClient.Tenants.CreateOrUpdate.PostAsync(finalInput);
