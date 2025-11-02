@@ -21,19 +21,8 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IKrafterLocalStorageService, KrafterLocalStorageService>();
 builder.Services.AddScoped<IApiService, ClientSideApiService>();
 builder.Services.AddUIServices(builder.Configuration["RemoteHostUrl"]);
-
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
-builder.Services.AddScoped<WebAssemblyAuthenticationHandler>();
 builder.Services.AddScoped<TenantIdentifier>();
-builder.Services.AddHttpClient("KrafterUIAPI", client =>
-{
-    HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, builder.Configuration["RemoteHostUrl"], client);
-})
-   .AddHttpMessageHandler<WebAssemblyAuthenticationHandler>()
-    .Services
-    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIAPI"));
-
-
 
 builder.Services.AddHttpClient("KrafterUIBFF", client =>
 {

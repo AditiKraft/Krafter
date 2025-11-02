@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Http;
 namespace Krafter.UI.Web.Client.Kiota
 {
     public class TenantHeaderHandler(
-        (string tenantIdentifier, string hostUrl, string host) tenantIdentifierProviderResult)
+        (string tenantIdentifier, string remoteHostUrl, string rootDomain, string clientBaseAddress) tenantIdentifierProviderResult)
         : DelegatingHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             TenantInfo.Identifier = tenantIdentifierProviderResult.tenantIdentifier;
-            TenantInfo.HostUrl= tenantIdentifierProviderResult.hostUrl;
-            TenantInfo.MainDomain = tenantIdentifierProviderResult.host;
+            TenantInfo.HostUrl= tenantIdentifierProviderResult.remoteHostUrl;
+            TenantInfo.MainDomain = tenantIdentifierProviderResult.rootDomain;
             // Inject headers
             request.Headers.Remove("x-tenant-identifier");
             request.Headers.Add("x-tenant-identifier", TenantInfo.Identifier);

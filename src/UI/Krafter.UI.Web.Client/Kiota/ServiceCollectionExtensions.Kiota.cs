@@ -1,6 +1,7 @@
 ﻿using Krafter.Api.Client;
 using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
+using Krafter.UI.Web.Client.Infrastructure.Http;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
 using Microsoft.Kiota.Abstractions.Authentication;
@@ -45,7 +46,7 @@ namespace Krafter.UI.Web.Client.Kiota
 
                 var adapter = new HttpClientRequestAdapter(authProvider, httpClient: httpClient)
                 {
-                    BaseUrl = tenantIdentifierProviderResult.hostUrl
+                    BaseUrl = tenantIdentifierProviderResult.remoteHostUrl
                 };
 
                 return new KrafterClient(adapter);
