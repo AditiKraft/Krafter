@@ -1,6 +1,5 @@
 ﻿using Backend.Api;
 using Backend.Api.Authorization;
-using Backend.Application.Auth;
 using Backend.Application.Common;
 using Backend.Common;
 using Backend.Common.Auth.Permissions;
@@ -28,10 +27,12 @@ namespace Backend.Features.Tenants
             public string AdminEmail { get; set; } = default!;
             public bool? IsActive { get; set; }
             public DateTime? ValidUpto { get; set; }
-            public string? TablesToCopy { get; set; }
         }
 
-        internal sealed class Handler(TenantDbContext dbContext, KrafterContext krafterContext, ITenantGetterService tenantGetterService,
+        internal sealed class Handler(
+            TenantDbContext dbContext,
+            KrafterContext krafterContext,
+            ITenantGetterService tenantGetterService,
             IServiceProvider serviceProvider,
             ICurrentUser currentUser) : IScopedHandler
         {
@@ -157,6 +158,7 @@ namespace Backend.Features.Tenants
                 {
                     tenantDomain = tenantDomain.Substring(0, tenantDomain.Length - 1);
                 }
+
                 // Check if running on localhost and return tenantDomain as it is
                 if (tenantDomain.Contains("localhost"))
                 {
@@ -193,7 +195,6 @@ namespace Backend.Features.Tenants
                     return scheme + domain;
                 }
             }
-
         }
 
         internal sealed class Validator : AbstractValidator<CreateOrUpdateTenantRequestInput>
@@ -245,21 +246,17 @@ namespace Backend.Features.Tenants
 
                 //tenant creation from landing page , allow Anonymous access
                 tenant.MapPost("/create", async
-                ([FromBody] CreateOrUpdateTenantRequestInput requestInput,
-                    [FromServices] Handler handler) =>
-                {
-                    requestInput.ValidUpto = DateTime.UtcNow.AddDays(7);
-                    requestInput.IsActive = true;
-                    var res = await handler.CreateOrUpdateAsync(requestInput);
-                    return Results.Json(res, statusCode: res.StatusCode);
-                })
-
-                .Produces<Common.Models.Response>()
+                    ([FromBody] CreateOrUpdateTenantRequestInput requestInput,
+                        [FromServices] Handler handler) =>
+                    {
+                        requestInput.ValidUpto = DateTime.UtcNow.AddDays(7);
+                        requestInput.IsActive = true;
+                        var res = await handler.CreateOrUpdateAsync(requestInput);
+                        return Results.Json(res, statusCode: res.StatusCode);
+                    })
+                    .Produces<Common.Models.Response>()
                     .AllowAnonymous();
-
-
             }
         }
-
     }
 }

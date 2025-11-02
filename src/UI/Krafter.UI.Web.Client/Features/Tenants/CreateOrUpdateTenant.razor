@@ -1,5 +1,4 @@
 ﻿@using Krafter.Api.Client.Models
-@using Krafter.UI.Web.Client.Features.Tenants
 <RadzenTemplateForm Data="@CreateRequest" Submit="@((CreateOrUpdateTenantRequestInput __) => Submit(__))">
 
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
@@ -44,19 +43,7 @@
             </RadzenColumn>
             <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.ValidUpto)" />
         </RadzenRow>
-        
-        @if (string.IsNullOrWhiteSpace(CreateRequest.Id))
-        {
-            <RadzenRow AlignItems="AlignItems.Center">
-                <RadzenColumn Size="12" SizeMD="2">
-                    <RadzenLabel Text="Tables To Copy List" Component="TablesToCopyList" />
-                </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="10">
-                    <RadzenDropDown @bind-Value="@SelectedTables" TValue="List<string>" Data=@TablesToCopyList TextProperty="DisplayName" ValueProperty="Name" Name="TablesToCopyList"
-                                    Multiple=true AllowClear=true Placeholder="Select Tables" Chips=true Style="width: 100%; max-width: 400px;" />
-                </RadzenColumn>             
-            </RadzenRow>         
-        }
+
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
                 <RadzenLabel Text="Is Active" Component="IsActive" />

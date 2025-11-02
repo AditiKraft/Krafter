@@ -13,8 +13,6 @@ namespace Krafter.UI.Web.Client.Features.Tenants
         CreateOrUpdateTenantRequestInput CreateRequest = new();
         CreateOrUpdateTenantRequestInput OriginalCreateRequest = new();
         private bool isBusy = false;
-
-        public List<TableToCopy> TablesToCopyList { get; set; } = TablesToCopy.Data;
         public List<string> SelectedTables { get; set; } = new ();
         protected override async Task OnInitializedAsync()
         {
@@ -59,14 +57,9 @@ namespace Krafter.UI.Web.Client.Features.Tenants
                     {
                         finalInput.ValidUpto = input.ValidUpto;
                     }
-                    //we do not need int he case of update
-                    // if (input.TablesToCopy != OriginalCreateRequest.TablesToCopy)
-                    // {
-                    //     finalInput.TablesToCopy = input.TablesToCopy;
-                    // }
                 }
 
-                var result = await krafterClient.Tenants.CreateOrUpdate.PostAsync(finalInput); //await tenantService.CreateOrUpdateAsync(finalInput);
+                var result = await krafterClient.Tenants.CreateOrUpdate.PostAsync(finalInput);
                 isBusy = false;
                 StateHasChanged();
                 if (result is{ IsError:false})

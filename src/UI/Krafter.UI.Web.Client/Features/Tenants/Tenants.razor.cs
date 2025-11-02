@@ -19,7 +19,6 @@ public partial class Tenants(
     private RadzenDataGrid<TenantDto> grid;
     private bool IsLoading = true;
     private GetRequestInput requestInput = new();
-    [Parameter] public bool? EnableAction { get; set; }
 
     TenantDtoPaginationResponseResponse? response = new()
     {
