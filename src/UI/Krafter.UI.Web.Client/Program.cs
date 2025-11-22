@@ -11,7 +11,6 @@ using Krafter.UI.Web.Client.Infrastructure.Http;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Http;
-using Radzen;
 
 FluentValidationConfig.IsRunningOnUI = true;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -33,6 +32,7 @@ builder.Services.AddHttpClient("KrafterUIBFF", client =>
 builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStateProvider>()
      .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 
+builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddKrafterKiotaClient(builder.Configuration["RemoteHostUrl"]);
 

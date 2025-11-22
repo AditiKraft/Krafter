@@ -2,7 +2,6 @@ using Backend.Common;
 using Backend.Infrastructure.BackgroundJobs;
 using Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace Backend.Api.Configuration;
 
@@ -36,13 +35,6 @@ public static class DatabaseConfiguration
         {
             case DatabaseType.Postgresql:
                 opts.UseNpgsql(connectionString);
-                break;
-
-            case DatabaseType.MySql:
-                opts.UseMySql(
-                    connectionString,
-                    ServerVersion.AutoDetect(connectionString),
-                    mysqlOptions => mysqlOptions.SchemaBehavior(MySqlSchemaBehavior.Ignore));
                 break;
 
             default:

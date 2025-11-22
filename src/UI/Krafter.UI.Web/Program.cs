@@ -32,6 +32,7 @@ builder.Services.AddHybridCache();
 builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
 builder.Services.AddScoped<IApiService, ServerSideApiService>();
+builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -187,6 +188,8 @@ builder.Services.AddHttpClient("KrafterUIAPI", client =>
 builder.Services.AddKrafterKiotaClient(builder.Configuration["RemoteHostUrl"]);
 var app = builder.Build();
 app.UseOutputCache();
+
+app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -198,8 +201,8 @@ else
 }
 
 app.UseHttpsRedirection();
-
-app.UseStaticFiles();
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.MapStaticAssets();
 app.UseAntiforgery();
 
 app.UseAuthentication();
