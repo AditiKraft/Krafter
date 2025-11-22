@@ -16,6 +16,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
   </ItemGroup>
+
+
+	<PropertyGroup>
+		<RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+	</PropertyGroup>
+
   <PropertyGroup>
     <ContainerFamily>noble</ContainerFamily>
 	<ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>

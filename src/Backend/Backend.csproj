@@ -64,6 +64,11 @@
 		<None Include="Properties\launchSettings.json" />
 	</ItemGroup>
 
+
+	<PropertyGroup>
+		<RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+	</PropertyGroup>
+
 	<!-- Docker Container Configuration -->
 	<PropertyGroup>
 		<ContainerFamily>noble</ContainerFamily>
