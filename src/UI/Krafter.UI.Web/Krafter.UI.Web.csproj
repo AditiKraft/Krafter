@@ -18,7 +18,7 @@
   </ItemGroup>
   <PropertyGroup>
     <ContainerFamily>noble</ContainerFamily>
-    <ContainerRuntimeIdentifier>linux-arm64</ContainerRuntimeIdentifier>
+	<ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
     <ContainerRepository>ghcr.io/aditikraft/krafter.ui.web</ContainerRepository>
     <ContainerRegistry>ghcr.io</ContainerRegistry>
   </PropertyGroup>
