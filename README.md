@@ -4,9 +4,9 @@
   <img src="docs/krafter-logo.svg" alt="Krafter logo" width="560" />
 </p>
 
-> A modern .NET 9 full-stack platform built with Vertical Slice Architecture (VSA), multi-tenancy, and Blazor WebAssembly — designed for efficient AI-assisted feature development.
+> A modern .NET 10 full-stack platform built with Vertical Slice Architecture (VSA), multi-tenancy, and Blazor WebAssembly — designed for efficient AI-assisted feature development.
 
-[![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Blazor](https://img.shields.io/badge/Blazor-WebAssembly-512BD4?logo=blazor)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -87,7 +87,7 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 
 ## 🎯 Overview
 
-**Krafter** is a production-ready, enterprise-grade full-stack platform built with .NET 9, combining modern architectural patterns with cutting-edge technologies. It provides a solid foundation for building scalable, multi-tenant SaaS applications with rich user interfaces.
+**Krafter** is a production-ready, enterprise-grade full-stack platform built with .NET 10, combining modern architectural patterns with cutting-edge technologies. It provides a solid foundation for building scalable, multi-tenant SaaS applications with rich user interfaces.
 
 ### What Makes Krafter Special?
 
@@ -160,9 +160,9 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 ## 🛠️ Technology Stack
 
 ### Backend
-- **.NET 9** - Latest .NET framework
+- **.NET 10** - Latest .NET framework
 - **ASP.NET Core** - Minimal APIs
-- **Entity Framework Core 9** - ORM
+- **Entity Framework Core 10** - ORM
 - **ASP.NET Core Identity** - User management
 - **FluentValidation** - Input validation
 - **TickerQ** - Background job processing
@@ -189,7 +189,7 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (for Aspire/PostgreSQL)
 - [Visual Studio 2022 17.11+](https://visualstudio.microsoft.com/) or [VS Code](https://code.visualstudio.com/)
 
