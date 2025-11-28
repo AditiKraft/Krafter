@@ -1,24 +1,16 @@
 {
   "name": ".NET Aspire",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:9.0-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:10.0-noble",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/powershell:1": {},
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "username": "vscode"
     }
   },
-  "hostRequirements": {
-    "cpus": 8,
-    "memory": "16gb",
-    "storage": "64gb"
-  },
-  "onCreateCommand": "dotnet new install Aspire.ProjectTemplates::9.1.0 --force",
-  // Add EF Core tools to postCreateCommand
-  "postCreateCommand": "dotnet restore && dotnet tool install --global dotnet-ef",
+  "postCreateCommand": "dotnet restore && dotnet tool install --global dotnet-ef --version 10.0.0",
   "postStartCommand": "dotnet dev-certs https --trust",
   "customizations": {
     "jetbrains": {
@@ -31,9 +23,11 @@
     "vscode": {
       "extensions": [
         "ms-dotnettools.csdevkit",
+        "GitHub.copilot",
         "GitHub.copilot-chat",
-        "GitHub.copilot"
+        "jetbrains.jetbrains-ai-assistant"
       ]
     }
-  }
+  },
+  "remoteUser": "vscode"
 }
