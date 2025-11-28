@@ -14,10 +14,10 @@ jobs:
       contents: read  
     steps:
       - uses: actions/checkout@v1
-      - name: Setup .NET 9 SDK
+      - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
       - name: dotnet run --project ./build/_build.csproj
         run: |
           dotnet run --project ./build/_build.csproj
