@@ -1,4 +1,3 @@
-using Azure;
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Common;
@@ -32,7 +31,7 @@ public sealed class GetUsers
 
     internal sealed class Handler(KrafterContext db) : IScopedHandler
     {
-        public async Task<Common.Models.Response<PaginationResponse<UserDto>>> Get(
+        public async Task<Response<PaginationResponse<UserDto>>> Get(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
@@ -121,7 +120,7 @@ public sealed class GetUsers
                 requestInput.SkipCount,
                 requestInput.MaxResultCount);
 
-            return new Common.Models.Response<PaginationResponse<UserDto>> { Data = result, IsError = false };
+            return new Response<PaginationResponse<UserDto>> { Data = result, IsError = false };
         }
     }
 
@@ -137,11 +136,11 @@ public sealed class GetUsers
                     [AsParameters] GetRequestInput requestInput,
                     CancellationToken cancellationToken) =>
                 {
-                    Common.Models.Response<PaginationResponse<UserDto>> res =
+                    Response<PaginationResponse<UserDto>> res =
                         await handler.Get(requestInput, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Common.Models.Response<PaginationResponse<UserDto>>>()
+                .Produces<Response<PaginationResponse<UserDto>>>()
                 .MustHavePermission(KrafterAction.View, KrafterResource.Users);
         }
     }

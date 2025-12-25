@@ -24,8 +24,6 @@
 		<PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
 		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
 		<PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
-		<PackageReference Include="Flurl" Version="4.0.0" />
-		<PackageReference Include="Humanizer.Core" Version="3.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.0" />
@@ -35,8 +33,7 @@
 		<PackageReference Include="Microsoft.Kiota.Bundle" Version="1.21.0" />
 		<PackageReference Include="Radzen.Blazor" Version="8.3.2" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
-		<PackageReference Include="System.Net.Http.Json" Version="10.0.0" />
-		
+	
 
 	</ItemGroup> 	
 

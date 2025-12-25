@@ -1,4 +1,4 @@
-﻿using Backend.Common.Interfaces;
+using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
 using Backend.Common.Models;
 using Backend.Entities;
