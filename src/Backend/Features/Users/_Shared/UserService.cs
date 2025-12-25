@@ -41,7 +41,7 @@ public static class KrafterInitialConstants
 
     public const string DefaultPassword = "123Pa$$word!";
 
-    public static Tenant KrafterTenant { private set; get; } = new Tenant()
+    public static Tenant KrafterTenant { private set; get; } = new()
     {
         Id = RootTenant.Id,
         Identifier = RootTenant.Identifier,
@@ -64,16 +64,15 @@ public class UserService(
     ICurrentUser currentUser)
     : IUserService, IScopedService
 {
-
     public async Task<Response<List<string>>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
     {
         //var user = await userManager.Asn.FindByIdAsync(userId);
-        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
+        KrafterUser? user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
         _ = user ?? throw new NotFoundException("User Not Found.");
 
-        var userRoles = await userManager.GetRolesAsync(user);
+        IList<string> userRoles = await userManager.GetRolesAsync(user);
         var permissions = new List<string>();
-        foreach (var role in await roleManager.Roles.AsNoTracking()
+        foreach (KrafterRole role in await roleManager.Roles.AsNoTracking()
                      .Where(r => userRoles.Contains(r.Name!) && r.IsDeleted == false)
                      .ToListAsync(cancellationToken))
         {
@@ -84,32 +83,29 @@ public class UserService(
                 .ToListAsync(cancellationToken));
         }
 
-        return new Response<List<string>>()
-        {
-            Data = permissions.Distinct().ToList()
-        };
+        return new Response<List<string>> { Data = permissions.Distinct().ToList() };
     }
+
     public async Task<Response<bool>> HasPermissionAsync(string userId, string permission,
         CancellationToken cancellationToken)
     {
-        var permissions = await GetPermissionsAsync(userId, cancellationToken);
-        return new Response<bool>()
-        {
-            Data = permissions?.Data?.Contains(permission) ?? false
-        };
+        Response<List<string>>? permissions = await GetPermissionsAsync(userId, cancellationToken);
+        return new Response<bool> { Data = permissions?.Data?.Contains(permission) ?? false };
     }
+
     public async Task<Response> CreateOrUpdateAsync(CreateUserRequest request)
     {
         KrafterUser? user;
         bool isNewUser = string.IsNullOrEmpty(request.Id);
-       
+
         if (isNewUser)
         {
-            var basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+            KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
             if (basic is null)
             {
                 throw new NotFoundException("Basic Role Not Found.");
             }
+
             request.Roles ??= new List<string>();
             request.Roles.Add(basic.Id);
 
@@ -122,12 +118,13 @@ public class UserService(
                 user.UserName = user.Email;
             }
 
-            var password = PasswordGenerator.GeneratePassword();
-            var result = await userManager.CreateAsync(user, password);
+            string password = PasswordGenerator.GeneratePassword();
+            IdentityResult result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
             {
                 throw new KrafterException("An error occurred while creating user.");
             }
+
             string loginUrl = $"{tenantGetterService.Tenant.TenantLink}/login";
             string emailSubject = "Account Created";
             string emailBody = $"Hello {user.FirstName} {user.LastName},<br/><br/>" +
@@ -137,7 +134,9 @@ public class UserService(
                                $"Please <a href='{loginUrl}'>click here</a> to log in.<br/><br/>" +
                                $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
-            await jobService.EnqueueAsync(new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody }, "SendEmailJob", CancellationToken.None);
+            await jobService.EnqueueAsync(
+                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                "SendEmailJob", CancellationToken.None);
         }
         else
         {
@@ -163,7 +162,7 @@ public class UserService(
             {
                 if (request.UpdateTenantEmail)
                 {
-                    var firstOrDefaultAsync = await tenantDbContext.Tenants.IgnoreQueryFilters()
+                    Tenant? firstOrDefaultAsync = await tenantDbContext.Tenants.IgnoreQueryFilters()
                         .FirstOrDefaultAsync(c => c.AdminEmail == user.Email);
                     if (firstOrDefaultAsync is not null)
                     {
@@ -172,21 +171,23 @@ public class UserService(
                         tenantDbContext.Tenants.Update(firstOrDefaultAsync);
                     }
                 }
+
                 user.Email = request.Email;
                 user.UserName = request.Email;
             }
 
-            var result = await userManager.UpdateAsync(user);
+            IdentityResult result = await userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
                 throw new KrafterException($"Update profile failed {result.Errors.ToString()}");
             }
+
             await signInManager.RefreshSignInAsync(user);
         }
 
         if (request.Roles.Any())
         {
-            var roles = await db.UserRoles
+            List<KrafterUserRole> roles = await db.UserRoles
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == request.Id)
                 .ToListAsync();
@@ -195,7 +196,7 @@ public class UserService(
             var permissionsToUpdate = new List<KrafterUserRole>();
             var permissionsToAdd = new List<KrafterUserRole>();
 
-            foreach (var krafterRoleClaim in roles)
+            foreach (KrafterUserRole krafterRoleClaim in roles)
             {
                 if (!request.Roles.Contains(krafterRoleClaim.RoleId))
                 {
@@ -205,7 +206,7 @@ public class UserService(
                 }
             }
 
-            foreach (var krafterRoleClaim in roles)
+            foreach (KrafterUserRole krafterRoleClaim in roles)
             {
                 if (request.Roles.Contains(krafterRoleClaim.RoleId))
                 {
@@ -214,18 +215,16 @@ public class UserService(
                     permissionsToUpdate.Add(krafterRoleClaim);
                 }
             }
-            foreach (var claim in request.Roles)
+
+            foreach (string claim in request.Roles)
             {
-                var firstOrDefault = roles.FirstOrDefault(c => c.RoleId == claim);
+                KrafterUserRole? firstOrDefault = roles.FirstOrDefault(c => c.RoleId == claim);
                 if (firstOrDefault is null)
                 {
-                    permissionsToAdd.Add(new KrafterUserRole()
-                    {
-                        RoleId = claim,
-                        UserId = user.Id,
-                    });
+                    permissionsToAdd.Add(new KrafterUserRole { RoleId = claim, UserId = user.Id });
                 }
             }
+
             if (permissionsToAdd.Count > 0)
             {
                 db.UserRoles.AddRange(permissionsToAdd);
@@ -243,16 +242,16 @@ public class UserService(
         }
         else
         {
-            var roles = await db.UserRoles
+            List<KrafterUserRole> roles = await db.UserRoles
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == request.Id)
                 .ToListAsync();
 
             db.UserRoles.UpdateRange(roles);
         }
+
         await db.SaveChangesAsync(new List<string>());
         await tenantDbContext.SaveChangesAsync();
         return new Response();
     }
-
 }

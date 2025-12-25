@@ -19,7 +19,7 @@ public class HttpService
 
     public async Task<Response<T>> GetAsync<T>(string url, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.GetAsync(url, cancellationToken);
+        HttpResponseMessage response = await _httpClient.GetAsync(url, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
@@ -31,7 +31,7 @@ public class HttpService
 
     public async Task<Response<T>> PostAsync<T>(string url, object data, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken);
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<Response<T>>();
@@ -42,27 +42,29 @@ public class HttpService
 
     public async Task<Response> PostAsync(string url, object data, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken);
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<Response>();
         }
+
         return await HandleErrorResponse(response);
     }
 
     public async Task<Response<T>> PutAsync<T>(string url, object data, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken);
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<Response<T>>();
         }
+
         return await HandleErrorResponse<T>(response);
     }
 
     public async Task<Response> PutAsync(string url, object data, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PutAsJsonAsync(url, data, cancellationToken);
+        HttpResponseMessage response = await _httpClient.PutAsJsonAsync(url, data, cancellationToken);
         if (response.IsSuccessStatusCode)
         {
             return await response.Content.ReadFromJsonAsync<Response>();
@@ -73,109 +75,83 @@ public class HttpService
 
     private async Task<Response> HandleErrorResponse(HttpResponseMessage response)
     {
-        var errorContent = await response.Content.ReadAsStringAsync();
-        var errorResponse = JsonSerializer.Deserialize<Response>(errorContent, new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true
-        });
-        var validationErrorResponse = JsonSerializer.Deserialize<ValidationErrorResponse>(errorContent,
-            new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true
-            });
+        string errorContent = await response.Content.ReadAsStringAsync();
+        Response? errorResponse = JsonSerializer.Deserialize<Response>(errorContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        ValidationErrorResponse? validationErrorResponse = JsonSerializer.Deserialize<ValidationErrorResponse>(
+            errorContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (errorResponse != null && errorResponse.StatusCode != 0 && errorResponse.StatusCode != 200)
         {
             errorResponse.IsError = true;
-            var errorMessage = string.Join("\n", errorResponse.Error.Messages);
+            string errorMessage = string.Join("\n", errorResponse.Error.Messages);
             errorMessage += $"\nErrorCode: {errorResponse.Error.ErrorCode}";
             errorMessage += $"\nSupportMessage: {errorResponse.Error.Message}";
-            _notificationService.Notify(new NotificationMessage()
+            _notificationService.Notify(new NotificationMessage
             {
-                Severity = NotificationSeverity.Error,
-                Summary = $"Error: {errorMessage}"
+                Severity = NotificationSeverity.Error, Summary = $"Error: {errorMessage}"
             });
             return errorResponse;
         }
 
         if (validationErrorResponse != null)
         {
-            var errorMessage = $"Validation Error: {validationErrorResponse.Title}";
-            foreach (var error in validationErrorResponse.Errors)
+            string errorMessage = $"Validation Error: {validationErrorResponse.Title}";
+            foreach (KeyValuePair<string, List<string>> error in validationErrorResponse.Errors)
             {
                 errorMessage += $"\n{error.Key}: {string.Join(", ", error.Value)}";
             }
 
-            _notificationService.Notify(new NotificationMessage()
+            _notificationService.Notify(new NotificationMessage
             {
-                Severity = NotificationSeverity.Error,
-                Summary = errorMessage
+                Severity = NotificationSeverity.Error, Summary = errorMessage
             });
 
-            return new Response
-            {
-                StatusCode = (int)response.StatusCode,
-                IsError = true
-            };
+            return new Response { StatusCode = (int)response.StatusCode, IsError = true };
         }
 
-        return new Response()
-        {
-            IsError = true,
-        };
+        return new Response { IsError = true };
     }
 
     private async Task<Response<T>> HandleErrorResponse<T>(HttpResponseMessage response)
     {
-        var errorContent = await response.Content.ReadAsStringAsync();
-        var errorResponse = JsonSerializer.Deserialize<Response<T>>(errorContent, new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true
-        });
-        var validationErrorResponse = JsonSerializer.Deserialize<ValidationErrorResponse>(errorContent,
-            new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true
-            });
+        string errorContent = await response.Content.ReadAsStringAsync();
+        Response<T>? errorResponse = JsonSerializer.Deserialize<Response<T>>(errorContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        ValidationErrorResponse? validationErrorResponse = JsonSerializer.Deserialize<ValidationErrorResponse>(
+            errorContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (errorResponse != null && errorResponse.StatusCode != 0 && errorResponse.StatusCode != 200)
         {
             errorResponse.IsError = true;
-            var errorMessage = string.Join("\n", errorResponse.Error.Messages);
+            string errorMessage = string.Join("\n", errorResponse.Error.Messages);
             errorMessage += $"\nErrorCode: {errorResponse.Error.ErrorCode}";
             errorMessage += $"\nSupportMessage: {errorResponse.Error.Message}";
-            _notificationService.Notify(new NotificationMessage()
+            _notificationService.Notify(new NotificationMessage
             {
-                Severity = NotificationSeverity.Error,
-                Summary = $"Error: {errorMessage}"
+                Severity = NotificationSeverity.Error, Summary = $"Error: {errorMessage}"
             });
             return errorResponse;
         }
 
         if (validationErrorResponse != null)
         {
-            var errorMessage = $"Validation Error: {validationErrorResponse.Title}";
-            foreach (var error in validationErrorResponse.Errors)
+            string errorMessage = $"Validation Error: {validationErrorResponse.Title}";
+            foreach (KeyValuePair<string, List<string>> error in validationErrorResponse.Errors)
             {
                 errorMessage += $"\n{error.Key}: {string.Join(", ", error.Value)}";
             }
 
-            _notificationService.Notify(new NotificationMessage()
+            _notificationService.Notify(new NotificationMessage
             {
-                Severity = NotificationSeverity.Error,
-                Summary = errorMessage
+                Severity = NotificationSeverity.Error, Summary = errorMessage
             });
 
-            return new Response<T>
-            {
-                StatusCode = (int)response.StatusCode,
-                IsError = true
-            };
+            return new Response<T> { StatusCode = (int)response.StatusCode, IsError = true };
         }
 
-        return new Response<T>()
-        {
-            IsError = true,
-        };
+        return new Response<T> { IsError = true };
     }
 }

@@ -12,22 +12,24 @@ namespace Backend.Infrastructure.BackgroundJobs;
 
 public class Jobs(IEmailService emailService)
 {
-    [TickerFunction(functionName: nameof(SendEmailJob))]
-    public async Task SendEmailJob(TickerFunctionContext<SendEmailRequestInput> tickerContext, CancellationToken cancellationToken)
+    [TickerFunction(nameof(SendEmailJob))]
+    public async Task SendEmailJob(TickerFunctionContext<SendEmailRequestInput> tickerContext,
+        CancellationToken cancellationToken)
     {
         await emailService.SendEmailAsync(
-               tickerContext.Request.Email,
-               tickerContext.Request.Subject,
-               tickerContext.Request.HtmlMessage
-           );
+            tickerContext.Request.Email,
+            tickerContext.Request.Subject,
+            tickerContext.Request.HtmlMessage
+        );
     }
 }
 
-public class JobService(ITenantGetterService tenantGetterService, ITimeTickerManager<TimeTicker> timeTickerManager) : IJobService
+public class JobService(ITenantGetterService tenantGetterService, ITimeTickerManager<TimeTicker> timeTickerManager)
+    : IJobService
 {
     public async Task EnqueueAsync<T>(T requestInput, string methodName, CancellationToken cancellationToken)
     {
-        var res = await timeTickerManager.AddAsync(new TimeTicker
+        TickerResult<TimeTicker>? res = await timeTickerManager.AddAsync(new TimeTicker
         {
             Request = TickerHelper.CreateTickerRequest<T>(requestInput),
             ExecutionTime = DateTime.Now.AddSeconds(1),

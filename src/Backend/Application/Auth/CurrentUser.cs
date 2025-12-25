@@ -14,7 +14,7 @@ public class CurrentUser : ICurrentUser, ICurrentUserInitializer
 
     public string GetUserId() =>
         IsAuthenticated()
-            ? _user?.GetUserId()??string.Empty
+            ? _user?.GetUserId() ?? string.Empty
             : _userId;
 
     public string? GetUserEmail() =>

@@ -16,21 +16,15 @@ public partial class Users(
     NavigationManager navigationManager,
     LayoutService layoutService,
     DialogService dialogService,
-     KrafterClient krafterClient
-
-    ) : ComponentBase, IDisposable
+    KrafterClient krafterClient
+) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Users;
     private RadzenDataGrid<UserDto> grid;
     private GetRequestInput requestInput = new();
 
-    private UserDtoPaginationResponseResponse?  response = new UserDtoPaginationResponseResponse
-    {
-             
-        Data = new UserDtoPaginationResponse()
+    private UserDtoPaginationResponseResponse? response = new() { Data = new UserDtoPaginationResponse() };
 
-    };
-    
     private bool IsLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -54,29 +48,31 @@ public partial class Users(
 
     private async Task GetListAsync(bool resetPaginationData = false)
     {
-
         IsLoading = true;
         if (resetPaginationData)
         {
             requestInput.SkipCount = 0;
         }
-        response = await krafterClient.Users.GetPath.GetAsync(RequestConfiguration(requestInput), CancellationToken.None);
+
+        response = await krafterClient.Users.GetPath.GetAsync(RequestConfiguration(requestInput),
+            CancellationToken.None);
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 
-    private Action<RequestConfiguration<GetRequestBuilder.GetRequestBuilderGetQueryParameters>>? RequestConfiguration( GetRequestInput requestInput)
+    private Action<RequestConfiguration<GetRequestBuilder.GetRequestBuilderGetQueryParameters>>? RequestConfiguration(
+        GetRequestInput requestInput)
     {
-        return configuration => 
+        return configuration =>
         {
-            configuration.QueryParameters.Id= requestInput.Id;
-            configuration.QueryParameters.History= requestInput.History;
+            configuration.QueryParameters.Id = requestInput.Id;
+            configuration.QueryParameters.History = requestInput.History;
             configuration.QueryParameters.IsDeleted = requestInput.IsDeleted;
             configuration.QueryParameters.SkipCount = requestInput.SkipCount;
             configuration.QueryParameters.MaxResultCount = requestInput.MaxResultCount;
             configuration.QueryParameters.Filter = requestInput.Filter;
             configuration.QueryParameters.OrderBy = requestInput.OrderBy;
-            configuration.QueryParameters.Query=requestInput.Query;
+            configuration.QueryParameters.Query = requestInput.Query;
         };
     }
 
@@ -84,42 +80,26 @@ public partial class Users(
     private async Task AddUser()
     {
         await dialogService.OpenAsync<CreateOrUpdateUser>($"Add New User",
-            new Dictionary<string, object>() { { "UserInput", new UserDto() } },
-            new DialogOptions()
-            {
-                Width = "40vw",
-                Resizable = true,
-                Draggable = true,
-                Top = "5vh"
-            });
+            new Dictionary<string, object> { { "UserInput", new UserDto() } },
+            new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
     }
 
     private async Task UpdateUser(UserDto user)
     {
         await dialogService.OpenAsync<CreateOrUpdateUser>($"Update User {user.FirstName}",
-            new Dictionary<string, object>() { { "UserInput", user } },
-            new DialogOptions()
-            {
-                Width = "40vw",
-                Resizable = true,
-                Draggable = true,
-                Top = "5vh"
-            });
+            new Dictionary<string, object> { { "UserInput", user } },
+            new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
     }
 
     private async Task DeleteUser(UserDto user)
     {
-
-
-
         if (response?.Data is not null && response.Data.Items is not null && response.Data.Items.Contains(user))
         {
-            await commonService.Delete(new DeleteRequestInput()
-            {
-                Id = user.Id,
-                DeleteReason = user.DeleteReason,
-                EntityKind = (int)EntityKind.KrafterUser
-            }, $"Delete User {user.FirstName}");
+            await commonService.Delete(
+                new DeleteRequestInput
+                {
+                    Id = user.Id, DeleteReason = user.DeleteReason, EntityKind = (int)EntityKind.KrafterUser
+                }, $"Delete User {user.FirstName}");
         }
         else
         {
@@ -130,7 +110,10 @@ public partial class Users(
 
     private async void Close(dynamic result)
     {
-        if (result == null || !result.Equals(true)) return;
+        if (result == null || !result.Equals(true))
+        {
+            return;
+        }
 
         await GetListAsync();
     }

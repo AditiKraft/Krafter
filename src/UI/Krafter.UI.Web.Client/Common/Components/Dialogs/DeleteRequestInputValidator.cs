@@ -1,16 +1,14 @@
 ﻿using FluentValidation;
 using Krafter.Api.Client.Models;
 
-namespace Krafter.UI.Web.Client.Common.Components.Dialogs
+namespace Krafter.UI.Web.Client.Common.Components.Dialogs;
+
+public class DeleteRequestInputValidator : AbstractValidator<DeleteRequestInput>
 {
-    public class DeleteRequestInputValidator: AbstractValidator<DeleteRequestInput>
+    public DeleteRequestInputValidator()
     {
-        public DeleteRequestInputValidator()
-        {
-            RuleFor(x => x.DeleteReason)
-                .NotEmpty().WithMessage("Delete Reason is required")
-                .Length(5, 500).WithMessage("Delete Reason must be between 5 and 500 characters");
-        }
+        RuleFor(x => x.DeleteReason)
+            .NotEmpty().WithMessage("Delete Reason is required")
+            .Length(5, 500).WithMessage("Delete Reason must be between 5 and 500 characters");
     }
 }
- 

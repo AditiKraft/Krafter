@@ -9,7 +9,6 @@ public static class SwaggerConfiguration
 {
     public static IServiceCollection AddSwaggerConfiguration(this IServiceCollection services)
     {
-       
         services.AddEndpointsApiExplorer();
         services.AddOpenApi(options =>
         {
@@ -23,12 +22,10 @@ public static class SwaggerConfiguration
             });
         });
         return services;
-
     }
 
     public static IEndpointRouteBuilder UseSwaggerConfiguration(this IEndpointRouteBuilder app)
     {
-     
         app.MapOpenApi();
         app.MapScalarApiReference();
         return app;

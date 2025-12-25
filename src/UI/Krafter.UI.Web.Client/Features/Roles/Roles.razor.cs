@@ -9,13 +9,19 @@ using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Roles;
 
-public partial class Roles(CommonService commonService, NavigationManager navigationManager, KrafterClient krafterClient, LayoutService layoutService, DialogService dialogService, NotificationService notificationService) : ComponentBase, IDisposable
+public partial class Roles(
+    CommonService commonService,
+    NavigationManager navigationManager,
+    KrafterClient krafterClient,
+    LayoutService layoutService,
+    DialogService dialogService,
+    NotificationService notificationService) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Roles;
     private RadzenDataGrid<RoleDto> grid;
     private bool IsLoading = true;
 
-    private GetRequestInput RequestInput = new GetRequestInput();
+    private GetRequestInput RequestInput = new();
     public string IdentifierBasedOnPlacement = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -28,10 +34,7 @@ public partial class Roles(CommonService commonService, NavigationManager naviga
         await GetListAsync();
     }
 
-    private RoleDtoPaginationResponseResponse? response = new()
-    {
-        Data = new ()
-    };
+    private RoleDtoPaginationResponseResponse? response = new() { Data = new RoleDtoPaginationResponse() };
 
     private async Task GetListAsync(bool resetPaginationData = false)
     {
@@ -53,9 +56,8 @@ public partial class Roles(CommonService commonService, NavigationManager naviga
                 configuration.QueryParameters.OrderBy = RequestInput.OrderBy;
                 configuration.QueryParameters.Query = RequestInput.Query;
             }, CancellationToken.None
-
         );
-      
+
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
@@ -63,39 +65,26 @@ public partial class Roles(CommonService commonService, NavigationManager naviga
     private async Task AddRole()
     {
         await dialogService.OpenAsync<CreateOrUpdateRole>($"Add New Role",
-            new Dictionary<string, object>() { { "UserDetails", new RoleDto() } },
-            new DialogOptions()
-            {
-                Width = "50vw",
-                Resizable = true,
-                Draggable = true,
-                Top = "5vh"
-            });
+            new Dictionary<string, object> { { "UserDetails", new RoleDto() } },
+            new DialogOptions { Width = "50vw", Resizable = true, Draggable = true, Top = "5vh" });
     }
 
     private async Task UpdateRole(RoleDto user)
     {
         await dialogService.OpenAsync<CreateOrUpdateRole>($"Update Role {user.Name}",
-            new Dictionary<string, object>() { { "UserDetails", user } },
-            new DialogOptions()
-            {
-                Width = "50vw",
-                Resizable = true,
-                Draggable = true,
-                Top = "5vh"
-            });
+            new Dictionary<string, object> { { "UserDetails", user } },
+            new DialogOptions { Width = "50vw", Resizable = true, Draggable = true, Top = "5vh" });
     }
 
     private async Task DeleteRole(RoleDto roleDto)
     {
         if (response.Data.Items.Contains(roleDto))
         {
-            await commonService.Delete(new DeleteRequestInput()
-            {
-                Id = roleDto.Id,
-                DeleteReason = roleDto.DeleteReason,
-                EntityKind = (int)EntityKind.KrafterRole
-            }, $"Delete Role {roleDto.Name}");
+            await commonService.Delete(
+                new DeleteRequestInput
+                {
+                    Id = roleDto.Id, DeleteReason = roleDto.DeleteReason, EntityKind = (int)EntityKind.KrafterRole
+                }, $"Delete Role {roleDto.Name}");
         }
         else
         {
@@ -106,7 +95,10 @@ public partial class Roles(CommonService commonService, NavigationManager naviga
 
     private async void Close(object? result)
     {
-        if (result is not bool) return;
+        if (result is not bool)
+        {
+            return;
+        }
 
         await grid.Reload();
     }

@@ -2,8 +2,8 @@
 @using Krafter.UI.Web.Client.Features.Roles
 @using Krafter.UI.Web.Client.Features.Roles
 <RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest __) => Submit(__))">
-    <FluentValidationValidator  Options="@(options => options.IncludeAllRuleSets())"/>
-    <RadzenStack   Gap="1rem" Orientation="Orientation.Vertical">
+    <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
+    <RadzenStack Gap="1rem" Orientation="Orientation.Vertical">
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="4">
@@ -14,17 +14,17 @@
             </RadzenColumn>
             <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Name)"/>
         </RadzenRow>
-        
+
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="4">
                 <RadzenLabel Text="Description" Component="Description"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="8">
-                <RadzenTextBox  Style="width: 100%" @bind-Value="@CreateUserRequest.Description" Name="Description"/>
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.Description" Name="Description"/>
             </RadzenColumn>
             <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Description)"/>
         </RadzenRow>
-        
+
         @if (!string.IsNullOrWhiteSpace(UserDetails.Id))
         {
             <RadzenRow AlignItems="AlignItems.Center">
@@ -33,7 +33,7 @@
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="8">
                     <RadzenDropDown Style="width: 100%" @bind-Value=@CreateUserRequest.Permissions Multiple=true AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="FinalPermission"
-                                    Data=@(GroupedData!=null?GroupedData:Enumerable.Empty<GroupPermissionData>()) DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
+                                    Data=@(GroupedData != null ? GroupedData : Enumerable.Empty<GroupPermissionData>()) DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
                         <Template Context="product">
                             @(product.Resource ?? product.FinalPermission)
                         </Template>

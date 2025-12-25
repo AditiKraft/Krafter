@@ -13,13 +13,14 @@ public partial class RestPassword(
 
     [SupplyParameterFromQuery(Name = "Token")]
     public string Token { get; set; }
+
     public bool IsBusy { get; set; }
 
-    async Task ResetPassword(ResetPasswordRequest requestInput)
+    private async Task ResetPassword(ResetPasswordRequest requestInput)
     {
         requestInput.Token = Token;
         IsBusy = true;
-        var response = await krafterClient.Users.ResetPassword.PostAsync(requestInput);
+        Response? response = await krafterClient.Users.ResetPassword.PostAsync(requestInput);
         IsBusy = false;
         if (response is { IsError: true })
         {

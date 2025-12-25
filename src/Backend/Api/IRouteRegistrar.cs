@@ -1,8 +1,6 @@
-﻿namespace Backend.Api
+﻿namespace Backend.Api;
+
+public interface IRouteRegistrar
 {
-    public interface IRouteRegistrar
-    {
-         void MapRoute(IEndpointRouteBuilder endpointRouteBuilder);
-    }
+    public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder);
 }
- 

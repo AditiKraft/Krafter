@@ -1,9 +1,9 @@
 ﻿@using Krafter.Api.Client.Models
 @using Krafter.UI.Web.Client.Features.Users._Shared
 @using Krafter.UI.Web.Client.Features.Users._Shared
-<RadzenDropDownDataGrid Name="UserDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple=false AllowClear="true" @bind-Value=@Value Change="@((arg) => OnValueChanged(arg))"
-                        LoadData=@LoadProcesses AllowFiltering="true"
-                        Data=@Data Count="@TotalCount" TextProperty="FirstName" ValueProperty="Id" Placeholder="Select User" Chips=true>
+<RadzenDropDownDataGrid Name="UserDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="false" AllowClear="true" @bind-Value="@Value" Change="@((arg) => OnValueChanged(arg))"
+                        LoadData="@LoadProcesses" AllowFiltering="true"
+                        Data="@Data" Count="@TotalCount" TextProperty="FirstName" ValueProperty="Id" Placeholder="Select User" Chips="true">
 
     <Columns>
 
@@ -13,11 +13,11 @@
             </HeaderTemplate>
             <Template Context="data">
                 <RadzenCheckBox TriState="false" Value="@(Value != null && Value.Contains(((UserInfo)data).Id))"
-                                TValue="bool" Change=@(_ => dropDownGrid.SelectItem(data)) @onclick:stopPropagation/>
+                                TValue="bool" Change="@(_ => dropDownGrid.SelectItem(data))"@onclick:stopPropagation/>
             </Template>
         </RadzenDropDownDataGridColumn>
         <RadzenDropDownDataGridColumn Property="FirstName" Title="FirstName" Width="80px"/>
         <RadzenDropDownDataGridColumn Property="LastName" Title="LastName" Width="200px"/>
-       
+
     </Columns>
 </RadzenDropDownDataGrid>

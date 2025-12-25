@@ -4,6 +4,6 @@ namespace Backend.Entities;
 
 public interface IRecordState
 {
-    public RecordState RecordState { get; set; } 
+    public RecordState RecordState { get; set; }
     public string? RecordStateRemarks { get; set; }
 }

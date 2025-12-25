@@ -5,19 +5,15 @@ using Krafter.UI.Web.Client.Common.Models;
 namespace Krafter.UI.Web.Client.Features.Roles._Shared;
 
 public partial class MultiSelectRoleDropDownDataGrid(
-    
     KrafterClient krafterClient
-    
-    
-    ) : ComponentBase
+) : ComponentBase
 {
-       RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid;
+    private RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid;
 
-       RoleDtoPaginationResponseResponse? response;
-    bool IsLoading = true;
+    private RoleDtoPaginationResponseResponse? response;
+    private bool IsLoading = true;
     private IEnumerable<RoleDto>? Data;
-    [Parameter]
-    public GetRequestInput GetRequestInput { get; set; } = new ();
+    [Parameter] public GetRequestInput GetRequestInput { get; set; } = new();
 
     private IEnumerable<string>? ValueEnumerable { get; set; }
 
@@ -36,14 +32,12 @@ public partial class MultiSelectRoleDropDownDataGrid(
             }
         }
     }
-    
-    [Parameter]
-    public EventCallback<List<string>> ValueChanged { get; set; }
-    
-    [Parameter]
-    public List<string> IdsToDisable { get; set; }= new();
-    
-    async Task LoadProcesses(LoadDataArgs args)
+
+    [Parameter] public EventCallback<List<string>> ValueChanged { get; set; }
+
+    [Parameter] public List<string> IdsToDisable { get; set; } = new();
+
+    private async Task LoadProcesses(LoadDataArgs args)
     {
         IsLoading = true;
         await Task.Yield();
@@ -67,19 +61,21 @@ public partial class MultiSelectRoleDropDownDataGrid(
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
         }
+
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 
-    int GetCount()
+    private int GetCount()
     {
         if (response is { Data: { Items: not null, TotalCount: { } totalCount } })
         {
             return totalCount;
         }
+
         return 0;
     }
-    
+
     private async Task OnValueChanged(object newValue)
     {
         if (newValue is IEnumerable<string> newValueEnumerable)

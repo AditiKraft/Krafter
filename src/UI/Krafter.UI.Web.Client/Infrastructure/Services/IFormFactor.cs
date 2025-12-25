@@ -1,8 +1,7 @@
-namespace Krafter.UI.Web.Client.Infrastructure.Services
+namespace Krafter.UI.Web.Client.Infrastructure.Services;
+
+public interface IFormFactor
 {
-    public interface IFormFactor
-    {
-        public string GetFormFactor();
-        public string GetPlatform();
-    }
+    public string GetFormFactor();
+    public string GetPlatform();
 }

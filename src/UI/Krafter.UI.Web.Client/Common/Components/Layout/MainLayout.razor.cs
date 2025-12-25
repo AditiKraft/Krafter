@@ -8,22 +8,21 @@ using Microsoft.AspNetCore.Http;
 
 namespace Krafter.UI.Web.Client.Common.Components.Layout;
 
-public partial class MainLayout(KrafterClient krafterClient,
+public partial class MainLayout(
+    KrafterClient krafterClient,
     CookieThemeService CookieThemeService,
     MenuService menuService,
     LayoutService layoutService,
     IAuthenticationService authenticationService,
-     ThemeService themeService,
-     TooltipService tooltipService,
+    ThemeService themeService,
+    TooltipService tooltipService,
     ThemeManager themeManager,
     IKrafterLocalStorageService krafterLocalStorageService
-    ) : IDisposable
+) : IDisposable
 {
-    [CascadingParameter]
-    public bool IsMobileDevice { get; set; }
+    [CascadingParameter] public bool IsMobileDevice { get; set; }
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; }
+    [CascadingParameter] private HttpContext HttpContext { get; set; }
 
     private RadzenSidebar sidebar0;
     private RadzenBody body0;
@@ -56,8 +55,9 @@ public partial class MainLayout(KrafterClient krafterClient,
         {
             cachedPermissionsAsync = new List<string>();
         }
+
         menus = menuService.Menus;
-        layoutService.HeadingChanged += this.HeadingChanged;
+        layoutService.HeadingChanged += HeadingChanged;
         authenticationService.LoginChange += async name =>
         {
             cachedPermissionsAsync = await krafterLocalStorageService.GetCachedPermissionsAsync();
@@ -65,44 +65,38 @@ public partial class MainLayout(KrafterClient krafterClient,
             {
                 cachedPermissionsAsync = new List<string>();
             }
+
             menus = menuService.Menus;
         };
     }
 
     private void FilterPanelMenu(ChangeEventArgs args)
     {
-        var term = args.Value.ToString();
+        string? term = args.Value.ToString();
         menus = string.IsNullOrEmpty(term) ? menuService.Menus : menuService.Filter(term);
     }
 
-    private void ChangeTheme(object value)
-    {
-        themeService.SetTheme($"{value}");
-    }
+    private void ChangeTheme(object value) => themeService.SetTheme($"{value}");
 
-    private void HeadingChanged(object? sender, EventArgs e)
-    {
-        this.InvokeAsync(StateHasChanged);
-    }
+    private void HeadingChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 
-    public void Dispose()
-    {
-        layoutService.HeadingChanged -= this.HeadingChanged;
-    }
+    public void Dispose() => layoutService.HeadingChanged -= HeadingChanged;
 
     private bool HasChildPermission(Menu category)
     {
-        var childPermission = category.Children.Select(c => c.Permission);
+        IEnumerable<string> childPermission = category.Children.Select(c => c.Permission);
 
         return childPermission.Intersect(cachedPermissionsAsync).Count() > 0;
     }
 
     private bool HasPermission(Menu category)
     {
-        if (string.IsNullOrWhiteSpace(category.Permission) && (category.Children is null || category.Children.Count() == 0))
+        if (string.IsNullOrWhiteSpace(category.Permission) &&
+            (category.Children is null || category.Children.Count() == 0))
         {
             return true;
         }
+
         return cachedPermissionsAsync.Contains(category.Permission);
     }
 }

@@ -9,4 +9,3 @@ public class RoleDto : CommonDtoProperty
 
     public List<string>? Permissions { get; set; } = new();
 }
-

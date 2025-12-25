@@ -3,28 +3,29 @@ using Microsoft.AspNetCore.Http;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Http;
 
-public class TenantIdentifier(IServiceProvider serviceProvider,IConfiguration configuration)
+public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration configuration)
 {
-
-    public(string tenantIdentifier, string remoteHostUrl, string rootDomain, string clientBaseAddress) Get()
+    public (string tenantIdentifier, string remoteHostUrl, string rootDomain, string clientBaseAddress) Get()
     {
-        var formFactor = serviceProvider.GetRequiredService<IFormFactor>();
+        IFormFactor formFactor = serviceProvider.GetRequiredService<IFormFactor>();
         string navigationManagerBaseUri;
         string tenantIdentifier;
-        var formFactorType = formFactor.GetFormFactor();
+        string formFactorType = formFactor.GetFormFactor();
 
         if (formFactorType == "Web")
         {
-            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            var httpRequest = httpContextAccessor.HttpContext?.Request;
+            IHttpContextAccessor httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+            HttpRequest? httpRequest = httpContextAccessor.HttpContext?.Request;
             if (httpRequest == null)
+            {
                 throw new Exception("Request is null");
+            }
 
             navigationManagerBaseUri = $"{httpRequest.Scheme}://{httpRequest.Host}";
         }
         else if (formFactorType == "WebAssembly")
         {
-            var navigationManager = serviceProvider.GetRequiredService<NavigationManager>();
+            NavigationManager navigationManager = serviceProvider.GetRequiredService<NavigationManager>();
             navigationManagerBaseUri = navigationManager.BaseUri;
         }
         else
@@ -33,9 +34,9 @@ public class TenantIdentifier(IServiceProvider serviceProvider,IConfiguration co
         }
 
         var uri = new Uri(navigationManagerBaseUri);
-        var host = uri.Host;
+        string host = uri.Host;
         string remoteHostUrl;
-        var isRunningLocally = host == "localhost" || host == "127.0.0.1";
+        bool isRunningLocally = host == "localhost" || host == "127.0.0.1";
         string clientBaseAddress;
 
         if (isRunningLocally)
@@ -46,12 +47,14 @@ public class TenantIdentifier(IServiceProvider serviceProvider,IConfiguration co
         }
         else
         {
-            var strings = host.Split('.'); tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
+            string[] strings = host.Split('.');
+            tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
             remoteHostUrl = $"https://{tenantIdentifier}.{configuration["RemoteHostUrl"]}";
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
         }
-        var prefix = tenantIdentifier + ".";
-        var rootDomain = host.Substring(prefix.Length);
+
+        string prefix = tenantIdentifier + ".";
+        string rootDomain = host.Substring(prefix.Length);
         return (tenantIdentifier, remoteHostUrl, rootDomain, clientBaseAddress);
-    } 
+    }
 }

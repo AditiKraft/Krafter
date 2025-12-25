@@ -4,6 +4,7 @@ using System.Text;
 using Krafter.Api.Client.Models;
 using Krafter.UI.Web.Client;
 using Krafter.UI.Web.Client.Common.Constants;
+using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Api;
 using Krafter.UI.Web.Client.Infrastructure.Http;
@@ -19,15 +20,15 @@ using Microsoft.IdentityModel.Tokens;
 using Radzen;
 
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddHttpContextAccessor();
-builder.AddRedisDistributedCache(connectionName: "cache");
-builder.AddRedisOutputCache(connectionName: "cache");
+builder.AddRedisDistributedCache("cache");
+builder.AddRedisOutputCache("cache");
 builder.Services.AddHybridCache();
 builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
@@ -36,7 +37,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+        string jwtKey = builder.Configuration["Jwt:Key"] ??
+                        throw new InvalidOperationException("JWT Key not configured");
         byte[] key = Encoding.ASCII.GetBytes(jwtKey);
 
         options.RequireHttpsMetadata = false;
@@ -55,49 +57,55 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = async context =>
             {
-                var currentToken = context.Request.Cookies[StorageConstants.Local.AuthToken];
-                var refreshToken = context.Request.Cookies[StorageConstants.Local.RefreshToken];
+                string? currentToken = context.Request.Cookies[StorageConstants.Local.AuthToken];
+                string? refreshToken = context.Request.Cookies[StorageConstants.Local.RefreshToken];
 
                 // skip refresh logic for api endpoints we need this only in the case of prerendered Blazor components
-                if (context.Request.Path.StartsWithSegments("/tokens/refresh") || 
+                if (context.Request.Path.StartsWithSegments("/tokens/refresh") ||
                     context.Request.Path.StartsWithSegments("/tokens/create") ||
                     context.Request.Path.StartsWithSegments("/external-auth/google") ||
                     context.Request.Path.StartsWithSegments("/tokens/current") ||
                     context.Request.Path.StartsWithSegments("/tokens/logout")
-                    )
+                   )
                 {
                     context.Token = currentToken;
                     return;
                 }
-                if ((!string.IsNullOrEmpty(currentToken) && (IsTokenExpired(currentToken))) && !string.IsNullOrWhiteSpace(refreshToken))
+
+                if (!string.IsNullOrEmpty(currentToken) && IsTokenExpired(currentToken) &&
+                    !string.IsNullOrWhiteSpace(refreshToken))
                 {
-                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                    var apiService = context.HttpContext.RequestServices.GetRequiredService<IApiService>();
+                    ILogger<Program> logger =
+                        context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                    IApiService apiService = context.HttpContext.RequestServices.GetRequiredService<IApiService>();
 
                     logger.LogInformation("Token expired in OnMessageReceived, attempting refresh...");
 
                     try
                     {
-                       
-                        var refreshRequest = new RefreshTokenRequest()
+                        var refreshRequest = new RefreshTokenRequest
                         {
-                            
-                            Token = currentToken,
-                            RefreshToken = refreshToken
+                            Token = currentToken, RefreshToken = refreshToken
                         };
-                        var refreshResponse = await apiService.RefreshTokenAsync(refreshRequest, CancellationToken.None);
+                        Response<TokenResponse> refreshResponse =
+                            await apiService.RefreshTokenAsync(refreshRequest, CancellationToken.None);
 
                         if (refreshResponse is { Data: not null, IsError: false })
                         {
                             currentToken = refreshResponse.Data.Token;
                             if (refreshResponse.Data.Permissions is { Count: > 0 })
                             {
-                                context.HttpContext.Items[StorageConstants.Local.Permissions] = refreshResponse.Data.Permissions;
+                                context.HttpContext.Items[StorageConstants.Local.Permissions] =
+                                    refreshResponse.Data.Permissions;
                             }
+
                             context.HttpContext.Items[StorageConstants.Local.AuthToken] = refreshResponse.Data.Token;
-                            context.HttpContext.Items[StorageConstants.Local.RefreshToken] = refreshResponse.Data.RefreshToken;
-                            context.HttpContext.Items[StorageConstants.Local.AuthTokenExpiryDate] = refreshResponse.Data.TokenExpiryTime;
-                            context.HttpContext.Items[StorageConstants.Local.RefreshTokenExpiryDate] = refreshResponse.Data.RefreshTokenExpiryTime;
+                            context.HttpContext.Items[StorageConstants.Local.RefreshToken] =
+                                refreshResponse.Data.RefreshToken;
+                            context.HttpContext.Items[StorageConstants.Local.AuthTokenExpiryDate] =
+                                refreshResponse.Data.TokenExpiryTime;
+                            context.HttpContext.Items[StorageConstants.Local.RefreshTokenExpiryDate] =
+                                refreshResponse.Data.RefreshTokenExpiryTime;
 
                             logger.LogInformation("Token refreshed successfully in OnMessageReceived");
                         }
@@ -118,32 +126,40 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     context.Token = currentToken;
                 }
             },
-
             OnTokenValidated = async context =>
             {
                 if (context.Principal?.Identity is not ClaimsIdentity claimsIdentity)
-                    return;
-
-                if (context.HttpContext.Items.TryGetValue(StorageConstants.Local.Permissions, out var freshPermissions) && freshPermissions is List<string> permissionsFromTempHttpContextItem)
                 {
-                    foreach (var permission in permissionsFromTempHttpContextItem)
+                    return;
+                }
+
+                if (context.HttpContext.Items.TryGetValue(StorageConstants.Local.Permissions,
+                        out object? freshPermissions) &&
+                    freshPermissions is List<string> permissionsFromTempHttpContextItem)
+                {
+                    foreach (string permission in permissionsFromTempHttpContextItem)
                     {
-                        if (!string.IsNullOrWhiteSpace(permission) && !claimsIdentity.HasClaim(KrafterClaims.Permission, permission))
+                        if (!string.IsNullOrWhiteSpace(permission) &&
+                            !claimsIdentity.HasClaim(KrafterClaims.Permission, permission))
                         {
                             claimsIdentity.AddClaim(new Claim(KrafterClaims.Permission, permission));
                         }
                     }
                 }
-                else  
+                else
                 {
-                    var localStorage = context.HttpContext.RequestServices.GetRequiredService<IKrafterLocalStorageService>();
-                    var permissionsFromMemoryCache = await localStorage.GetCachedPermissionsAsync();
+                    IKrafterLocalStorageService localStorage = context.HttpContext.RequestServices
+                        .GetRequiredService<IKrafterLocalStorageService>();
+                    ICollection<string>? permissionsFromMemoryCache = await localStorage.GetCachedPermissionsAsync();
                     if (permissionsFromMemoryCache == null || permissionsFromMemoryCache.Count == 0)
-                        return;
-                    
-                    foreach (var permission in permissionsFromMemoryCache)
                     {
-                        if (!string.IsNullOrWhiteSpace(permission) && !claimsIdentity.HasClaim(KrafterClaims.Permission, permission))
+                        return;
+                    }
+
+                    foreach (string permission in permissionsFromMemoryCache)
+                    {
+                        if (!string.IsNullOrWhiteSpace(permission) &&
+                            !claimsIdentity.HasClaim(KrafterClaims.Permission, permission))
                         {
                             claimsIdentity.AddClaim(new Claim(KrafterClaims.Permission, permission));
                         }
@@ -156,7 +172,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 context.HandleResponse();
                 if (!context.Response.HasStarted)
                 {
-                    context.Response.Redirect("/login?ReturnUrl=" + Uri.EscapeDataString(context.Request.Path + context.Request.QueryString));
+                    context.Response.Redirect("/login?ReturnUrl=" +
+                                              Uri.EscapeDataString(context.Request.Path + context.Request.QueryString));
                 }
 
                 return Task.CompletedTask;
@@ -164,7 +181,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-var apiUrl = builder.Configuration.GetValue<string>("services:krafter-api:https:0");
+string? apiUrl = builder.Configuration.GetValue<string>("services:krafter-api:https:0");
 if (string.IsNullOrWhiteSpace(apiUrl))
 {
     throw new Exception("API URL not found");
@@ -174,19 +191,17 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IKrafterLocalStorageService, KrafterLocalStorageServiceServer>();
 builder.Services.AddUIServices(apiUrl);
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
-      .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
+    .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
-builder.Services.AddHttpClient("KrafterUIAPI", client =>
-{
-    HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, client);
-})
-   .AddHttpMessageHandler<ServerAuthenticationHandler>()
+builder.Services.AddHttpClient("KrafterUIAPI",
+        client => { HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, client); })
+    .AddHttpMessageHandler<ServerAuthenticationHandler>()
     .Services
     .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIAPI"));
 builder.Services.AddKrafterKiotaClient(builder.Configuration["RemoteHostUrl"]);
-var app = builder.Build();
+WebApplication app = builder.Build();
 app.UseOutputCache();
 
 app.MapDefaultEndpoints();
@@ -196,7 +211,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler("/Error", true);
     app.UseHsts();
 }
 
@@ -212,7 +227,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(
-        
         typeof(Krafter.UI.Web.Client._Imports).Assembly);
 app.MapGet("/cached", () => "Hello world!")
     .CacheOutput();
@@ -230,6 +244,7 @@ static bool IsTokenExpired(string token)
             // Add 1 minute buffer to avoid edge cases
             return jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1);
         }
+
         return true;
     }
     catch
@@ -242,28 +257,30 @@ static void MapAuthTokenEndpoints(WebApplication app)
 {
     app.MapGet("/tokens/current", async (IApiService apiService) =>
     {
-        var res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
+        Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
-    app.MapPost("/tokens/create", async ([FromBody] TokenRequestInput request,  IApiService apiService,  [FromServices] IHttpClientFactory clientFactory) =>
+    app.MapPost("/tokens/create", async ([FromBody] TokenRequestInput request, IApiService apiService,
+        [FromServices] IHttpClientFactory clientFactory) =>
     {
-        var res = await apiService.CreateTokenAsync(request, CancellationToken.None);
+        Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     });
-    app.MapPost("/tokens/refresh", async ([FromBody] RefreshTokenRequest request, IApiService apiService,   [FromServices] IHttpClientFactory clientFactory) =>
+    app.MapPost("/tokens/refresh", async ([FromBody] RefreshTokenRequest request, IApiService apiService,
+        [FromServices] IHttpClientFactory clientFactory) =>
     {
-        var tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
+        Response<TokenResponse> tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
     app.MapPost("/external-auth/google", async ([FromBody] TokenRequestInput request, IApiService apiService) =>
     {
-        var tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
+        Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost("/tokens/logout", async ( IApiService apiService) =>
+    app.MapPost("/tokens/logout", async (IApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();

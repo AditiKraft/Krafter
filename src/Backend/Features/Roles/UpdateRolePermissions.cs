@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Common;
@@ -30,41 +31,35 @@ public sealed class UpdateRolePermissions
             UpdateRolePermissionsRequest request,
             CancellationToken cancellationToken)
         {
-            var role = await roleManager.FindByIdAsync(request.RoleId);
+            KrafterRole? role = await roleManager.FindByIdAsync(request.RoleId);
 
             if (role is null)
             {
-                return new Response
-                {
-                    IsError = true,
-                    StatusCode = 404,
-                    Message = "Role Not Found"
-                };
+                return new Response { IsError = true, StatusCode = 404, Message = "Role Not Found" };
             }
 
             if (role.Name == KrafterRoleConstant.Admin)
             {
                 return new Response
                 {
-                    IsError = true,
-                    StatusCode = 403,
-                    Message = "Not allowed to modify Permissions for this Role."
+                    IsError = true, StatusCode = 403, Message = "Not allowed to modify Permissions for this Role."
                 };
             }
 
-            var currentClaims = await roleManager.GetClaimsAsync(role);
+            IList<Claim> currentClaims = await roleManager.GetClaimsAsync(role);
 
             // Remove permissions that were previously selected
-            foreach (var claim in currentClaims.Where(c => request.Permissions.All(p => p != c.Value)))
+            foreach (Claim claim in currentClaims.Where(c => request.Permissions.All(p => p != c.Value)))
             {
-                var removeResult = await roleManager.RemoveClaimAsync(role, claim);
+                IdentityResult removeResult = await roleManager.RemoveClaimAsync(role, claim);
                 if (!removeResult.Succeeded)
                 {
                     return new Response
                     {
                         IsError = true,
                         StatusCode = 400,
-                        Message = $"Update permissions failed: {string.Join(", ", removeResult.Errors.Select(e => e.Description))}"
+                        Message =
+                            $"Update permissions failed: {string.Join(", ", removeResult.Errors.Select(e => e.Description))}"
                     };
                 }
             }
@@ -76,18 +71,13 @@ public sealed class UpdateRolePermissions
                 {
                     db.RoleClaims.Add(new KrafterRoleClaim
                     {
-                        RoleId = role.Id,
-                        ClaimType = KrafterClaims.Permission,
-                        ClaimValue = permission,
+                        RoleId = role.Id, ClaimType = KrafterClaims.Permission, ClaimValue = permission
                     });
                     await db.SaveChangesAsync(cancellationToken);
                 }
             }
 
-            return new Response
-            {
-                Message = "Role permissions updated successfully"
-            };
+            return new Response { Message = "Role permissions updated successfully" };
         }
     }
 
@@ -107,19 +97,19 @@ public sealed class UpdateRolePermissions
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapPut("/update-permissions", async (
-                [FromBody] UpdateRolePermissionsRequest request,
-                [FromServices] Handler handler,
-                CancellationToken cancellationToken) =>
-            {
-                var res = await handler.UpdatePermissionsAsync(request, cancellationToken);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Response>()
-            .MustHavePermission(KrafterAction.Update, KrafterResource.Roles);
+                    [FromBody] UpdateRolePermissionsRequest request,
+                    [FromServices] Handler handler,
+                    CancellationToken cancellationToken) =>
+                {
+                    Response res = await handler.UpdatePermissionsAsync(request, cancellationToken);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response>()
+                .MustHavePermission(KrafterAction.Update, KrafterResource.Roles);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Reflection;
 using Backend.Features;
 
 namespace Backend.Infrastructure.Persistence;
@@ -9,20 +10,20 @@ public static class PersistenceConfiguration
 {
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services)
     {
-        var assembly = typeof(IScopedService).Assembly;
+        Assembly assembly = typeof(IScopedService).Assembly;
 
         // Register IScopedService implementations (legacy services with interfaces)
         var scopedServices = assembly.GetTypes()
             .Where(t => typeof(IScopedService).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
             .ToList();
 
-        foreach (var serviceType in scopedServices)
+        foreach (Type serviceType in scopedServices)
         {
             var interfaces = serviceType.GetInterfaces()
                 .Where(i => i != typeof(IScopedService))
                 .ToList();
 
-            foreach (var serviceInterface in interfaces)
+            foreach (Type serviceInterface in interfaces)
             {
                 services.AddScoped(serviceInterface, serviceType);
             }
@@ -33,7 +34,7 @@ public static class PersistenceConfiguration
             .Where(t => typeof(IScopedHandler).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
             .ToList();
 
-        foreach (var handlerType in scopedHandlers)
+        foreach (Type handlerType in scopedHandlers)
         {
             services.AddScoped(handlerType);
         }

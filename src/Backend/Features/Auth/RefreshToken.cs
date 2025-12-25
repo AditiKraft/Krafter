@@ -17,32 +17,43 @@ using Backend.Features.Auth.Token;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Backend.Features.Auth;
+
 public sealed class RefreshToken
 {
     public record RefreshTokenRequest(string Token, string RefreshToken);
 
-    internal sealed class Handler(UserManager<KrafterUser> userManager,ITokenService tokenService, KrafterContext krafterContext, IOptions<JwtSettings> jwtSettings): IScopedHandler
+    internal sealed class Handler(
+        UserManager<KrafterUser> userManager,
+        ITokenService tokenService,
+        KrafterContext krafterContext,
+        IOptions<JwtSettings> jwtSettings) : IScopedHandler
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
+
         public async Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request, string ipAddress)
         {
-            var userPrincipal = GetPrincipalFromExpiredToken(request.Token);
+            ClaimsPrincipal userPrincipal = GetPrincipalFromExpiredToken(request.Token);
             string? userEmail = userPrincipal.GetEmail();
-            var user = await userManager.FindByEmailAsync(userEmail!);
+            KrafterUser? user = await userManager.FindByEmailAsync(userEmail!);
             if (user is null)
             {
                 throw new UnauthorizedException("Authentication Failed.");
             }
-            var refreshToken = await krafterContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
-            if (refreshToken is null || refreshToken.RefreshToken != request.RefreshToken || refreshToken.RefreshTokenExpiryTime <= DateTime.UtcNow)
+
+            UserRefreshToken? refreshToken =
+                await krafterContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            if (refreshToken is null || refreshToken.RefreshToken != request.RefreshToken ||
+                refreshToken.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
                 throw new UnauthorizedException("Invalid Refresh Token.");
             }
-            return new Response<TokenResponse>()
+
+            return new Response<TokenResponse>
             {
                 Data = await tokenService.GenerateTokensAndUpdateUser(user, ipAddress)
             };
         }
+
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
@@ -56,7 +67,8 @@ public sealed class RefreshToken
                 ValidateLifetime = false
             };
             var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+            ClaimsPrincipal? principal =
+                tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken? securityToken);
             if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                 !jwtSecurityToken.Header.Alg.Equals(
                     SecurityAlgorithms.HmacSha256,
@@ -73,7 +85,7 @@ public sealed class RefreshToken
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var productGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Tokens)
+            RouteGroupBuilder productGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Tokens)
                 .AddFluentValidationFilter();
 
 
@@ -81,12 +93,12 @@ public sealed class RefreshToken
             ([FromBody] RefreshTokenRequest request, HttpContext context,
                 [FromServices] Handler handler) =>
             {
-                var ipAddress = GetIpAddress(context);
-                var res = await handler.RefreshTokenAsync(request, ipAddress!);
+                string? ipAddress = GetIpAddress(context);
+                Response<TokenResponse> res = await handler.RefreshTokenAsync(request, ipAddress!);
                 return TypedResults.Ok(res);
             }).Produces<Response<TokenResponse>>();
-
         }
+
         private string? GetIpAddress(HttpContext httpContext)
         {
             return httpContext.Request.Headers.ContainsKey("X-Forwarded-For")

@@ -4,47 +4,35 @@ using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Infrastructure.Api;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
 
-namespace Krafter.UI.Web.Services
+namespace Krafter.UI.Web.Services;
+
+public class ServerSideApiService(
+    // KrafterClient krafterClient,
+    IHttpClientFactory httpClientFactory,
+    IKrafterLocalStorageService localStorage,
+    ILogger<ServerSideApiService> logger) : IApiService
 {
-    public class ServerSideApiService(
-
-       // KrafterClient krafterClient,
-     IHttpClientFactory httpClientFactory,
-     IKrafterLocalStorageService localStorage,
-     ILogger<ServerSideApiService> logger) : IApiService
+    public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequestInput request,
+        CancellationToken cancellation)
     {
-        public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequestInput request, CancellationToken cancellation)
+        try
         {
-            try
+            //var res= await krafterClient.Tokens.Create.PostAsync(request);
+
+            HttpResponseMessage response = await httpClientFactory
+                .CreateClient("KrafterUIAPI")
+                .PostAsync($"{KrafterRoute.Tokens}/create", JsonContent.Create(request));
+
+            Response<TokenResponse>? tokenResponse =
+                await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
+
+            if (tokenResponse?.Data != null && !tokenResponse.IsError)
             {
-
-               //var res= await krafterClient.Tokens.Create.PostAsync(request);
-
-                var response = await httpClientFactory
-                    .CreateClient("KrafterUIAPI")
-                    .PostAsync($"{KrafterRoute.Tokens}/create", JsonContent.Create(request));
-
-                var tokenResponse = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
-
-                if (tokenResponse?.Data != null && !tokenResponse.IsError)
-                {
-                    await localStorage.CacheAuthTokens(tokenResponse.Data);
-                }
-                if (tokenResponse == null)
-                {
-                    return new Response<TokenResponse>
-                    {
-                        IsError = true,
-                        Message = "Failed to create token. Please log in again.",
-                        StatusCode = StatusCodes.Status500InternalServerError
-                    };
-                }
-
-                return tokenResponse;
+                await localStorage.CacheAuthTokens(tokenResponse.Data);
             }
-            catch (Exception ex)
+
+            if (tokenResponse == null)
             {
-                logger.LogError(ex, "Error during server-side token creation");
                 return new Response<TokenResponse>
                 {
                     IsError = true,
@@ -52,37 +40,40 @@ namespace Krafter.UI.Web.Services
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
             }
+
+            return tokenResponse;
         }
-
-        public async Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellation)
+        catch (Exception ex)
         {
-            try
+            logger.LogError(ex, "Error during server-side token creation");
+            return new Response<TokenResponse>
             {
-                var response = await httpClientFactory
-                    .CreateClient("KrafterUIAPI")
-                    .PostAsync($"{KrafterRoute.Tokens}/refresh", JsonContent.Create(request));
+                IsError = true,
+                Message = "Failed to create token. Please log in again.",
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
+        }
+    }
 
-                var tokenResponse = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
+    public async Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
+        CancellationToken cancellation)
+    {
+        try
+        {
+            HttpResponseMessage response = await httpClientFactory
+                .CreateClient("KrafterUIAPI")
+                .PostAsync($"{KrafterRoute.Tokens}/refresh", JsonContent.Create(request));
 
-                if (tokenResponse?.Data != null && !tokenResponse.IsError)
-                {
-                    await localStorage.CacheAuthTokens(tokenResponse.Data);
-                }
-                if (tokenResponse == null)
-                {
-                    return new Response<TokenResponse>
-                    {
-                        IsError = true,
-                        Message = "Failed to refresh token. Please log in again.",
-                        StatusCode = StatusCodes.Status500InternalServerError
-                    };
-                }
+            Response<TokenResponse>? tokenResponse =
+                await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
 
-                return tokenResponse;
+            if (tokenResponse?.Data != null && !tokenResponse.IsError)
+            {
+                await localStorage.CacheAuthTokens(tokenResponse.Data);
             }
-            catch (Exception ex)
+
+            if (tokenResponse == null)
             {
-                logger.LogError(ex, "Error during server-side token refresh");
                 return new Response<TokenResponse>
                 {
                     IsError = true,
@@ -90,37 +81,40 @@ namespace Krafter.UI.Web.Services
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
             }
+
+            return tokenResponse;
         }
-
-        public async Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequestInput request, CancellationToken cancellation)
+        catch (Exception ex)
         {
-            try
+            logger.LogError(ex, "Error during server-side token refresh");
+            return new Response<TokenResponse>
             {
-                var response = await httpClientFactory
-                    .CreateClient("KrafterUIAPI")
-                    .PostAsync($"{KrafterRoute.ExternalAuth}/google", JsonContent.Create(request));
+                IsError = true,
+                Message = "Failed to refresh token. Please log in again.",
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
+        }
+    }
 
-                var tokenResponse = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
+    public async Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequestInput request,
+        CancellationToken cancellation)
+    {
+        try
+        {
+            HttpResponseMessage response = await httpClientFactory
+                .CreateClient("KrafterUIAPI")
+                .PostAsync($"{KrafterRoute.ExternalAuth}/google", JsonContent.Create(request));
 
-                if (tokenResponse?.Data != null && !tokenResponse.IsError)
-                {
-                    await localStorage.CacheAuthTokens(tokenResponse.Data);
-                }
-                if (tokenResponse == null)
-                {
-                    return new Response<TokenResponse>
-                    {
-                        IsError = true,
-                        Message = "Failed to authenticate. Please try again.",
-                        StatusCode = StatusCodes.Status500InternalServerError
-                    };
-                }
+            Response<TokenResponse>? tokenResponse =
+                await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
 
-                return tokenResponse;
+            if (tokenResponse?.Data != null && !tokenResponse.IsError)
+            {
+                await localStorage.CacheAuthTokens(tokenResponse.Data);
             }
-            catch (Exception ex)
+
+            if (tokenResponse == null)
             {
-                logger.LogError(ex, "Error during server-side external auth");
                 return new Response<TokenResponse>
                 {
                     IsError = true,
@@ -128,63 +122,75 @@ namespace Krafter.UI.Web.Services
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
             }
+
+            return tokenResponse;
         }
-
-        public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation)
+        catch (Exception ex)
         {
-            try
+            logger.LogError(ex, "Error during server-side external auth");
+            return new Response<TokenResponse>
             {
-                var token = await localStorage.GetCachedAuthTokenAsync();
-                var refreshToken = await localStorage.GetCachedRefreshTokenAsync();
-                var authTokenExpiryDate = await localStorage.GetAuthTokenExpiryDate();
-                var refreshTokenExpiry = await localStorage.GetRefreshTokenExpiryDate();
-                var permissions = await localStorage.GetCachedPermissionsAsync();
+                IsError = true,
+                Message = "Failed to authenticate. Please try again.",
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
+        }
+    }
 
-                if (!string.IsNullOrWhiteSpace(token) && !string.IsNullOrWhiteSpace(refreshToken))
+    public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation)
+    {
+        try
+        {
+            string? token = await localStorage.GetCachedAuthTokenAsync();
+            string? refreshToken = await localStorage.GetCachedRefreshTokenAsync();
+            DateTime authTokenExpiryDate = await localStorage.GetAuthTokenExpiryDate();
+            DateTime refreshTokenExpiry = await localStorage.GetRefreshTokenExpiryDate();
+            ICollection<string>? permissions = await localStorage.GetCachedPermissionsAsync();
+
+            if (!string.IsNullOrWhiteSpace(token) && !string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return new Response<TokenResponse>
                 {
-                    return new Response<TokenResponse>
+                    Data = new TokenResponse
                     {
-                        Data = new TokenResponse()
-                        {
-                            RefreshToken = refreshToken,
-                            Token = token,
-                            RefreshTokenExpiryTime = refreshTokenExpiry,
-                            TokenExpiryTime = authTokenExpiryDate,
-                            Permissions = permissions?.ToList()
-                        },
-                        StatusCode = StatusCodes.Status200OK
-                    };
-                }
+                        RefreshToken = refreshToken,
+                        Token = token,
+                        RefreshTokenExpiryTime = refreshTokenExpiry,
+                        TokenExpiryTime = authTokenExpiryDate,
+                        Permissions = permissions?.ToList()
+                    },
+                    StatusCode = StatusCodes.Status200OK
+                };
+            }
 
-                return new Response<TokenResponse>
-                {
-                    IsError = true,
-                    Message = "No valid token found. Please log in again.",
-                    StatusCode = StatusCodes.Status401Unauthorized
-                };
-            }
-            catch (Exception ex)
+            return new Response<TokenResponse>
             {
-                logger.LogError(ex, "Error getting current token");
-                return new Response<TokenResponse>
-                {
-                    IsError = true,
-                    Message = "Failed to get current token.",
-                    StatusCode = StatusCodes.Status500InternalServerError
-                };
-            }
+                IsError = true,
+                Message = "No valid token found. Please log in again.",
+                StatusCode = StatusCodes.Status401Unauthorized
+            };
         }
-
-        public async Task LogoutAsync(CancellationToken cancellation)
+        catch (Exception ex)
         {
-            try
+            logger.LogError(ex, "Error getting current token");
+            return new Response<TokenResponse>
             {
-                await localStorage.ClearCacheAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error during server-side logout");
-            }
+                IsError = true,
+                Message = "Failed to get current token.",
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
+        }
+    }
+
+    public async Task LogoutAsync(CancellationToken cancellation)
+    {
+        try
+        {
+            await localStorage.ClearCacheAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during server-side logout");
         }
     }
 }

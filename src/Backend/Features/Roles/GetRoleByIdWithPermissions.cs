@@ -23,19 +23,14 @@ public sealed class GetRoleByIdWithPermissions
             string roleId,
             CancellationToken cancellationToken)
         {
-            var role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == roleId, cancellationToken);
+            KrafterRole? role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == roleId, cancellationToken);
 
             if (role is null)
             {
-                return new Response<RoleDto>
-                {
-                    IsError = true,
-                    StatusCode = 404,
-                    Message = "Role Not Found"
-                };
+                return new Response<RoleDto> { IsError = true, StatusCode = 404, Message = "Role Not Found" };
             }
 
-            var roleDto = role.Adapt<RoleDto>();
+            RoleDto roleDto = role.Adapt<RoleDto>();
 
             roleDto.Permissions = await db.RoleClaims
                 .Where(c => c.RoleId == roleId &&
@@ -44,10 +39,7 @@ public sealed class GetRoleByIdWithPermissions
                 .Select(c => c.ClaimValue!)
                 .ToListAsync(cancellationToken);
 
-            return new Response<RoleDto>
-            {
-                Data = roleDto
-            };
+            return new Response<RoleDto> { Data = roleDto };
         }
     }
 
@@ -55,19 +47,19 @@ public sealed class GetRoleByIdWithPermissions
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapGet("/get-by-id-with-permissions/{roleId}", async (
-                [FromRoute] string roleId,
-                [FromServices] Handler handler,
-                CancellationToken cancellationToken) =>
-            {
-                var res = await handler.GetByIdWithPermissionsAsync(roleId, cancellationToken);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Common.Models.Response<RoleDto>>()
-            .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
+                    [FromRoute] string roleId,
+                    [FromServices] Handler handler,
+                    CancellationToken cancellationToken) =>
+                {
+                    Response<RoleDto> res = await handler.GetByIdWithPermissionsAsync(roleId, cancellationToken);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response<RoleDto>>()
+                .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
         }
     }
 }

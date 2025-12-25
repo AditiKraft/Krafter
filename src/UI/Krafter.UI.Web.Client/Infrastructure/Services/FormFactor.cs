@@ -1,15 +1,8 @@
-﻿namespace Krafter.UI.Web.Client.Infrastructure.Services
-{
-    public class FormFactor : IFormFactor
-    {
-        public string GetFormFactor()
-        {
-            return "WebAssembly";
-        }
+﻿namespace Krafter.UI.Web.Client.Infrastructure.Services;
 
-        public string GetPlatform()
-        {
-            return Environment.OSVersion.ToString();
-        }
-    }
+public class FormFactor : IFormFactor
+{
+    public string GetFormFactor() => "WebAssembly";
+
+    public string GetPlatform() => Environment.OSVersion.ToString();
 }

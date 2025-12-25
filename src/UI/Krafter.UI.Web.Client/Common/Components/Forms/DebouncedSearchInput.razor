@@ -4,15 +4,15 @@
         {
             <LoadingIndicator Size="LoadingIndicatorSize.ExtraSmall"/>
         }
-       
+
     </RadzenStack>
     <RadzenStack Style="width: 85%;">
-        <RadzenTextBox @bind-Value="Value" @oninput="OnInputChanged" @onkeydown="OnKeyDown" Placeholder="Enter search text"  />
-        </RadzenStack>
+        <RadzenTextBox @bind-Value="Value" @oninput="OnInputChanged" @onkeydown="OnKeyDown" Placeholder="Enter search text"/>
+    </RadzenStack>
     <RadzenStack Style="width: 5%;">
         @if (!IsAutoSearch)
         {
-            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="search" Disabled="IsLoading" Click="TriggerSearch" />
+            <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="search" Disabled="IsLoading" Click="TriggerSearch"/>
         }
     </RadzenStack>
 </RadzenStack>

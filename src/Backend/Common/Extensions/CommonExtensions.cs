@@ -1,69 +1,69 @@
 ﻿using Backend.Common.Models;
+using Microsoft.Extensions.Primitives;
 
-namespace Backend.Common.Extensions
+namespace Backend.Common.Extensions;
+
+public static class QueryableExtensions
 {
-    public static class QueryableExtensions
+    public static IQueryable<T> PageBy<T>(this IQueryable<T> query, int skipCount, int maxResultCount)
     {
-        public static IQueryable<T> PageBy<T>(this IQueryable<T> query, int skipCount, int maxResultCount)
+        if (query == null)
         {
-            if (query == null) throw new ArgumentNullException("query");
-
-            return query.Skip(skipCount).Take(maxResultCount);
+            throw new ArgumentNullException("query");
         }
 
-        public static IQueryable<T> PageBy<T>(this IQueryable<T> query, IPagedResultRequest pagedResultRequest)
-        {
-            return query.PageBy(pagedResultRequest.SkipCount, pagedResultRequest.MaxResultCount);
-        }
+        return query.Skip(skipCount).Take(maxResultCount);
     }
-    public static class RequestExtensions
+
+    public static IQueryable<T> PageBy<T>(this IQueryable<T> query, IPagedResultRequest pagedResultRequest) =>
+        query.PageBy(pagedResultRequest.SkipCount, pagedResultRequest.MaxResultCount);
+}
+
+public static class RequestExtensions
+{
+    public static string GetOrigin(this HttpRequest request)
     {
-        public static string GetOrigin(this HttpRequest request)
+        string origin = string.Empty;
+        if (request.Headers is { Count: > 0 })
         {
-            var origin = string.Empty;
-            if (request.Headers is { Count: > 0 })
+            // Prefer Origin header for API/browser requests
+            if (request.Headers.TryGetValue("Origin", out StringValues originHeader))
             {
-                // Prefer Origin header for API/browser requests
-                if (request.Headers.TryGetValue("Origin", out var originHeader))
+                origin = originHeader.ToString();
+            }
+            else if (request.Headers.TryGetValue("Referer", out StringValues referer))
+            {
+                if (Uri.TryCreate(referer.ToString(), UriKind.Absolute, out Uri? refererUri))
                 {
-                    origin = originHeader.ToString();
-                }
-                else if (request.Headers.TryGetValue("Referer", out var referer))
-                {
-                    if (Uri.TryCreate(referer.ToString(), UriKind.Absolute, out var refererUri))
-                    {
-                        // Only scheme and host, no port
-                        origin = $"{refererUri.Scheme}://{refererUri.Host}";
-                    }
-                    else
-                    {
-                        origin = referer.ToString(); // fallback to raw if parsing fails
-                    }
+                    // Only scheme and host, no port
+                    origin = $"{refererUri.Scheme}://{refererUri.Host}";
                 }
                 else
                 {
-                    origin = request.GetOriginFromRequest();
+                    origin = referer.ToString(); // fallback to raw if parsing fails
                 }
             }
-
-            if (origin.EndsWith("/"))
+            else
             {
-                origin = origin.Substring(0, origin.Length - 1);
+                origin = request.GetOriginFromRequest();
             }
-
-            return origin;
         }
 
-        private static string GetOriginFromRequest(this HttpRequest request)
+        if (origin.EndsWith("/"))
         {
-            return $"{request.Scheme}://{request.Host.Value}{request.PathBase.Value}";
+            origin = origin.Substring(0, origin.Length - 1);
         }
 
-        public static string? GetIpAddress(this HttpContext httpContext)
-        {
-            return httpContext.Request.Headers.ContainsKey("X-Forwarded-For")
-                ? httpContext.Request.Headers["X-Forwarded-For"]
-                : httpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "N/A";
-        }
+        return origin;
+    }
+
+    private static string GetOriginFromRequest(this HttpRequest request) =>
+        $"{request.Scheme}://{request.Host.Value}{request.PathBase.Value}";
+
+    public static string? GetIpAddress(this HttpContext httpContext)
+    {
+        return httpContext.Request.Headers.ContainsKey("X-Forwarded-For")
+            ? httpContext.Request.Headers["X-Forwarded-For"]
+            : httpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "N/A";
     }
 }

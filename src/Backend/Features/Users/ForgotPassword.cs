@@ -28,10 +28,10 @@ public sealed class ForgotPassword
     {
         public async Task<Response> ForgotPasswordAsync(ForgotPasswordRequest request)
         {
-            var user = await userManager.FindByEmailAsync(request.Email.Normalize());
+            KrafterUser? user = await userManager.FindByEmailAsync(request.Email.Normalize());
             if (user is null)
             {
-                return new Response() { IsError = true, Message = "User Not Found", StatusCode = 404 };
+                return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
             string code = await userManager.GeneratePasswordResetTokenAsync(user);
@@ -48,12 +48,7 @@ public sealed class ForgotPassword
                                $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
             await jobService.EnqueueAsync(
-                new SendEmailRequestInput
-                {
-                    Email = user.Email,
-                    Subject = emailSubject,
-                    HtmlMessage = emailBody
-                },
+                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
                 "SendEmailJob",
                 CancellationToken.None);
 
@@ -75,17 +70,17 @@ public sealed class ForgotPassword
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost("/forgot-password", async (
-                [FromBody] ForgotPasswordRequest request,
-                [FromServices] Handler handler) =>
-            {
-                var res = await handler.ForgotPasswordAsync(request);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Common.Models.Response>();
+                    [FromBody] ForgotPasswordRequest request,
+                    [FromServices] Handler handler) =>
+                {
+                    Response res = await handler.ForgotPasswordAsync(request);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response>();
         }
     }
 }

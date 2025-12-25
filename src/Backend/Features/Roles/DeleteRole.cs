@@ -16,14 +16,16 @@ using Microsoft.EntityFrameworkCore;
 namespace Backend.Features.Roles;
 
 public sealed class DeleteRole
-{ 
-    internal sealed class Handler(RoleManager<KrafterRole> roleManager,
+{
+    internal sealed class Handler(
+        RoleManager<KrafterRole> roleManager,
         UserManager<KrafterUser> userManager,
-        KrafterContext db, ITenantGetterService tenantGetterService) : IScopedHandler
+        KrafterContext db,
+        ITenantGetterService tenantGetterService) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
         {
-            var role = await roleManager.FindByIdAsync(requestInput.Id);
+            KrafterRole? role = await roleManager.FindByIdAsync(requestInput.Id);
 
             _ = role ?? throw new NotFoundException("Role Not Found");
 
@@ -36,11 +38,11 @@ public sealed class DeleteRole
             role.DeleteReason = requestInput.DeleteReason;
             db.Roles.Update(role);
 
-            var krafterRoleClaims = await db.RoleClaims
+            List<KrafterRoleClaim> krafterRoleClaims = await db.RoleClaims
                 .Where(c => c.RoleId == requestInput.Id &&
                             c.ClaimType == KrafterClaims.Permission)
                 .ToListAsync();
-            foreach (var krafterRoleClaim in krafterRoleClaims)
+            foreach (KrafterRoleClaim krafterRoleClaim in krafterRoleClaims)
             {
                 krafterRoleClaim.IsDeleted = true;
             }
@@ -54,18 +56,17 @@ public sealed class DeleteRole
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapPost("/delete", async
                 ([FromBody] DeleteRequestInput roleRequestInput,
                     [FromServices] Handler roleService) =>
                 {
-                    var res = await roleService.DeleteAsync(roleRequestInput);
+                    Response res = await roleService.DeleteAsync(roleRequestInput);
                     return TypedResults.Ok(res);
                 })
                 .Produces<Response>()
-
                 .MustHavePermission(KrafterAction.Delete, KrafterResource.Roles);
         }
     }

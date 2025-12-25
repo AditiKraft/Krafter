@@ -1,13 +1,7 @@
-﻿
-using Backend.Features.Tenants;
+﻿using Backend.Features.Tenants;
 
-namespace Backend.Common
+namespace Backend.Common;
+
+public static class CommonServiceRegistrationExtensions
 {
-    public  static class CommonServiceRegistrationExtensions
-    {
-       
-
-      
-    }
 }
- 

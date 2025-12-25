@@ -30,8 +30,8 @@ public static class TokenSynchronizationManager
             _isSynchronizing = true;
             logger.LogInformation("Starting synchronized operation");
 
-            var result = await operation();
-            var success = isSuccessful(result);
+            T result = await operation();
+            bool success = isSuccessful(result);
 
             if (success)
             {
@@ -50,7 +50,10 @@ public static class TokenSynchronizationManager
 
     public static async Task WaitForSynchronizationAsync(CancellationToken cancellationToken = default)
     {
-        if (!_isSynchronizing) return;
+        if (!_isSynchronizing)
+        {
+            return;
+        }
 
         await _synchronizationSemaphore.WaitAsync(cancellationToken);
         _synchronizationSemaphore.Release();

@@ -1,26 +1,26 @@
 using Aspire.Hosting;
 
-var builder = DistributedApplication.CreateBuilder(args);
+IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 // The postgres username and password are provided via parameters (marked secret)
-var username = builder.AddParameter("postgresUsername", secret: true);
-var password = builder.AddParameter("postgresPassword", secret: true);
+IResourceBuilder<ParameterResource> username = builder.AddParameter("postgresUsername", true);
+IResourceBuilder<ParameterResource> password = builder.AddParameter("postgresPassword", true);
 
-var databaseServer = builder.AddPostgres("postgres", username, password)
+IResourceBuilder<PostgresServerResource> databaseServer = builder.AddPostgres("postgres", username, password)
     .WithDataVolume(isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithContainerName("KrafterPostgres")
     .WithPgAdmin();
 
-var database = databaseServer.AddDatabase("krafterDb");
+IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
 
-var cache = builder.AddGarnet("cache")
-    .WithDataVolume(isReadOnly: false)
-    .WithPersistence(
-        interval: TimeSpan.FromMinutes(5),
-        keysChangedThreshold: 100)
-    .WithArgs("--lua", "true")
-    ; 
-var backend = builder.AddProject<Projects.Backend>("krafter-api")
+IResourceBuilder<GarnetResource> cache = builder.AddGarnet("cache")
+        .WithDataVolume(isReadOnly: false)
+        .WithPersistence(
+            TimeSpan.FromMinutes(5),
+            100)
+        .WithArgs("--lua", "true")
+    ;
+IResourceBuilder<ProjectResource> backend = builder.AddProject<Projects.Backend>("krafter-api")
     .WithReference(database);
 
 builder.AddProject<Projects.Krafter_UI_Web>("krafter-ui-web")
@@ -28,7 +28,6 @@ builder.AddProject<Projects.Krafter_UI_Web>("krafter-ui-web")
     .WithReference(backend)
     .WithReference(cache)
     ;
-
 
 
 builder.Build().Run();

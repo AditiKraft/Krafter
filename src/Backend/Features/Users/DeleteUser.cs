@@ -19,38 +19,26 @@ public sealed class DeleteUser
     {
         public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
         {
-            var user = await userManager.FindByIdAsync(requestInput.Id);
+            KrafterUser? user = await userManager.FindByIdAsync(requestInput.Id);
             if (user is null)
             {
-                return new Response()
-                {
-                    IsError = true,
-                    Message = "User Not Found",
-                    StatusCode = 404
-                };
-              
+                return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
             if (user.IsOwner)
             {
-                return new Response()
-                {
-                    IsError = true,
-                    Message = "Owner cannot be deleted",
-                    StatusCode = 403
-                };
-               
+                return new Response { IsError = true, Message = "Owner cannot be deleted", StatusCode = 403 };
             }
 
             user.IsDeleted = true;
             user.DeleteReason = requestInput.DeleteReason;
             db.Users.Update(user);
 
-            var userRoles = await db.UserRoles
+            List<KrafterUserRole> userRoles = await db.UserRoles
                 .Where(c => c.UserId == requestInput.Id)
                 .ToListAsync();
 
-            foreach (var userRole in userRoles)
+            foreach (KrafterUserRole userRole in userRoles)
             {
                 userRole.IsDeleted = true;
             }
@@ -65,18 +53,18 @@ public sealed class DeleteUser
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost("/delete", async (
-                [FromBody] DeleteRequestInput request,
-                [FromServices] Handler handler) =>
-            {
-                var res = await handler.DeleteAsync(request);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Response>()
-            .MustHavePermission(KrafterAction.Delete, KrafterResource.Users);
+                    [FromBody] DeleteRequestInput request,
+                    [FromServices] Handler handler) =>
+                {
+                    Response res = await handler.DeleteAsync(request);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response>()
+                .MustHavePermission(KrafterAction.Delete, KrafterResource.Users);
         }
     }
 }

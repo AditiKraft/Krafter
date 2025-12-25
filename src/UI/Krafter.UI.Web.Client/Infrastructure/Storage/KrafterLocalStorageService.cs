@@ -16,19 +16,16 @@ public class KrafterLocalStorageService(ILocalStorageService localStorageService
         await localStorageService.RemoveItemAsync(StorageConstants.Local.RefreshTokenExpiryDate);
     }
 
-    public async ValueTask<string?> GetCachedAuthTokenAsync()
-    {
-        return await localStorageService.GetItemAsync<string>(StorageConstants.Local.AuthToken);
-    }
+    public async ValueTask<string?> GetCachedAuthTokenAsync() =>
+        await localStorageService.GetItemAsync<string>(StorageConstants.Local.AuthToken);
 
-    public async ValueTask<string?> GetCachedRefreshTokenAsync()
-    {
-        return await localStorageService.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
-    }
+    public async ValueTask<string?> GetCachedRefreshTokenAsync() =>
+        await localStorageService.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
 
     public async ValueTask<ICollection<string>?> GetCachedPermissionsAsync()
     {
-        var permissions = localStorageService.GetItemAsync<ICollection<string>>(StorageConstants.Local.Permissions);
+        ValueTask<ICollection<string>?> permissions =
+            localStorageService.GetItemAsync<ICollection<string>>(StorageConstants.Local.Permissions);
         return await permissions;
     }
 
@@ -46,13 +43,7 @@ public class KrafterLocalStorageService(ILocalStorageService localStorageService
         }
     }
 
-    public ValueTask<DateTime> GetAuthTokenExpiryDate()
-    {
-        throw new NotImplementedException();
-    }
+    public ValueTask<DateTime> GetAuthTokenExpiryDate() => throw new NotImplementedException();
 
-    public ValueTask<DateTime> GetRefreshTokenExpiryDate()
-    {
-        throw new NotImplementedException();
-    }
+    public ValueTask<DateTime> GetRefreshTokenExpiryDate() => throw new NotImplementedException();
 }

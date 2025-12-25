@@ -18,30 +18,31 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options)
             entity.HasQueryFilter(c => c.IsDeleted == false);
 
             // Configure CreatedOn with database-specific settings
-         //   ConfigureCreatedOnColumn(entity);
+            //   ConfigureCreatedOnColumn(entity);
 
             // Remove IsTemporal() for cross-database compatibility
             entity.ToTable(nameof(Tenant));
 
-            entity.HasData(new List<Tenant>()
+            entity.HasData(new List<Tenant>
             {
-                new Tenant()
+                new()
                 {
                     Id = KrafterInitialConstants.RootTenant.Id,
                     Identifier = KrafterInitialConstants.RootTenant.Identifier,
                     IsActive = true,
                     Name = KrafterInitialConstants.RootTenant.Name,
-                    CreatedOn = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),  // ✅ FIXED
+                    CreatedOn = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), // ✅ FIXED
                     ValidUpto = DateTime.MaxValue,
-                    AdminEmail = KrafterInitialConstants.RootUser.EmailAddress,
+                    AdminEmail = KrafterInitialConstants.RootUser.EmailAddress
                 }
             });
         });
     }
 
-    private void ConfigureCreatedOnColumn(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Tenant> entity)
+    private void ConfigureCreatedOnColumn(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Tenant> entity)
     {
-        var provider = Database.ProviderName;
+        string? provider = Database.ProviderName;
 
         switch (provider)
         {

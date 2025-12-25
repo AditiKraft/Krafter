@@ -12,12 +12,12 @@ public class ServerAuthenticationHandler(
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var isToServer = request.RequestUri?.AbsoluteUri.StartsWith(TenantInfo.HostUrl ?? "") ?? false;
+        bool isToServer = request.RequestUri?.AbsoluteUri.StartsWith(TenantInfo.HostUrl ?? "") ?? false;
 
         if (isToServer)
         {
             // For server-side, token should always be fresh due to middleware
-            var jwt = await localStorage.GetCachedAuthTokenAsync();
+            string? jwt = await localStorage.GetCachedAuthTokenAsync();
 
             if (!string.IsNullOrEmpty(jwt))
             {

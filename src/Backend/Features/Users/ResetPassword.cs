@@ -21,11 +21,10 @@ public sealed class ResetPassword
     {
         public async Task<Response> ResetPasswordAsync(ResetPasswordRequest request)
         {
-            var user = await userManager.FindByEmailAsync(request.Email?.Normalize()!);
+            KrafterUser? user = await userManager.FindByEmailAsync(request.Email?.Normalize()!);
             if (user is null)
             {
-
-                return new Response()
+                return new Response
                 {
                     Message = "If the email is registered, you will receive a password reset link.",
                     StatusCode = 200,
@@ -33,14 +32,12 @@ public sealed class ResetPassword
                 };
             }
 
-            var result = await userManager.ResetPasswordAsync(user, request.Token!, request.Password!);
+            IdentityResult result = await userManager.ResetPasswordAsync(user, request.Token!, request.Password!);
             if (!result.Succeeded)
             {
-                return new Response()
+                return new Response
                 {
-                    Message = "An error occurred while resetting password",
-                    StatusCode = 400,
-                    IsError = true
+                    Message = "An error occurred while resetting password", StatusCode = 400, IsError = true
                 };
             }
 
@@ -69,17 +66,17 @@ public sealed class ResetPassword
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost("/reset-password", async (
-                [FromBody] ResetPasswordRequest request,
-                [FromServices] Handler handler) =>
-            {
-                var res = await handler.ResetPasswordAsync(request);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Response>()
+                    [FromBody] ResetPasswordRequest request,
+                    [FromServices] Handler handler) =>
+                {
+                    Response res = await handler.ResetPasswordAsync(request);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response>()
                 ;
         }
     }

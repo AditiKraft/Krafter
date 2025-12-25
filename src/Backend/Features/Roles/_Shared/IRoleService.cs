@@ -4,5 +4,5 @@ namespace Backend.Features.Roles._Shared;
 
 public interface IRoleService
 {
-    Task<Response<RoleDto>> GetByIdAsync(string id);
+    public Task<Response<RoleDto>> GetByIdAsync(string id);
 }

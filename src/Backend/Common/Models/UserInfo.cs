@@ -13,10 +13,10 @@ public class UserInfo : IIdDto
 
     ////permissions
 
-    public List<string> Permissions { get; set; } = new List<string>();
+    public List<string> Permissions { get; set; } = new();
 
     ////roles
-    public List<string> Roles { get; set; } = new List<string>();
+    public List<string> Roles { get; set; } = new();
 
     ////tokenExpiryTime
     public DateTime TokenExpiryTime { get; set; }

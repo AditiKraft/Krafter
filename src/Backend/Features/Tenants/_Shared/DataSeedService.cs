@@ -1,4 +1,5 @@
-﻿using Backend.Application.BackgroundJobs;
+﻿using System.Security.Claims;
+using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
 using Backend.Common;
 using Backend.Common.Auth;
@@ -15,40 +16,40 @@ using static Backend.Features.Tenants.SeedBasicData;
 namespace Backend.Features.Tenants._Shared;
 
 public class DataSeedService(
-    ITenantGetterService tenantGetterService, 
-    IJobService jobService, 
-    KrafterContext krafterContext, 
-    TenantDbContext dbContext, 
+    ITenantGetterService tenantGetterService,
+    IJobService jobService,
+    KrafterContext krafterContext,
+    TenantDbContext dbContext,
     RoleManager<KrafterRole> roleManager,
     UserManager<KrafterUser> userManager) : IScopedHandler
 {
     public async Task<Response> SeedBasicData(SeedDataRequestInput requestInput)
     {
-        var currentTenantResponse = tenantGetterService.Tenant;
+        CurrentTenantDetails currentTenantResponse = tenantGetterService.Tenant;
 
-        var roleCount = await krafterContext.Roles.CountAsync();
+        int roleCount = await krafterContext.Roles.CountAsync();
         if (roleCount == 0)
         {
             var role = new KrafterRole(KrafterRoleConstant.Basic, KrafterRoleConstant.Basic)
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid().ToString()
             };
-            var result = await roleManager.CreateAsync(role);
+            IdentityResult result = await roleManager.CreateAsync(role);
             var role1 = new KrafterRole(KrafterRoleConstant.Admin, KrafterRoleConstant.Admin)
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid().ToString()
             };
-            var result1 = await roleManager.CreateAsync(role1);
+            IdentityResult result1 = await roleManager.CreateAsync(role1);
         }
 
-        var adminRole = await roleManager.FindByNameAsync(KrafterRoleConstant.Admin);
+        KrafterRole? adminRole = await roleManager.FindByNameAsync(KrafterRoleConstant.Admin);
         if (adminRole != null)
         {
-            var adminClaims = await roleManager.GetClaimsAsync(adminRole);
+            IList<Claim> adminClaims = await roleManager.GetClaimsAsync(adminRole);
             var adMinRolePermissions = adminClaims
                 .Where(c => c.Type == KrafterClaims.Permission).Select(p => p.Value).ToList();
 
-            var allPermissions =
+            IReadOnlyList<KrafterPermission> allPermissions =
                 currentTenantResponse.Id == KrafterInitialConstants.RootTenant.Id
                     ? KrafterPermissions.All
                     : KrafterPermissions.Admin;
@@ -59,13 +60,11 @@ public class DataSeedService(
             var permissionNotWithAdmin = allPermissionsString.Except(adMinRolePermissions).ToList();
             if (permissionNotWithAdmin.Count > 0)
             {
-                foreach (var permission in permissionNotWithAdmin)
+                foreach (string permission in permissionNotWithAdmin)
                 {
                     krafterContext.RoleClaims.Add(new KrafterRoleClaim
                     {
-                        RoleId = adminRole.Id,
-                        ClaimType = KrafterClaims.Permission,
-                        ClaimValue = permission,
+                        RoleId = adminRole.Id, ClaimType = KrafterClaims.Permission, ClaimValue = permission
                     });
                 }
 
@@ -73,15 +72,15 @@ public class DataSeedService(
             }
         }
 
-        var basicRole = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+        KrafterRole? basicRole = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
         if (basicRole != null)
         {
-            var basicClaims = await roleManager.GetClaimsAsync(basicRole);
+            IList<Claim> basicClaims = await roleManager.GetClaimsAsync(basicRole);
             var basicRolePermissions = basicClaims
                 .Where(c => c.Type == KrafterClaims.Permission).Select(p => p.Value).ToList();
 
-            var allBasicPermissions =
-                     KrafterPermissions.Basic;
+            IReadOnlyList<KrafterPermission> allBasicPermissions =
+                KrafterPermissions.Basic;
 
             var allPermissionsString = allBasicPermissions.Select(krafterPermission =>
                     KrafterPermission.NameFor(krafterPermission.Action, krafterPermission.Resource))
@@ -89,20 +88,19 @@ public class DataSeedService(
             var permissionNotWithBasic = allPermissionsString.Except(basicRolePermissions).ToList();
             if (permissionNotWithBasic.Count > 0)
             {
-                foreach (var permission in permissionNotWithBasic)
+                foreach (string permission in permissionNotWithBasic)
                 {
                     krafterContext.RoleClaims.Add(new KrafterRoleClaim
                     {
-                        RoleId = basicRole.Id,
-                        ClaimType = KrafterClaims.Permission,
-                        ClaimValue = permission,
+                        RoleId = basicRole.Id, ClaimType = KrafterClaims.Permission, ClaimValue = permission
                     });
                 }
+
                 await krafterContext.SaveChangesAsync();
             }
         }
 
-        var userCount = await krafterContext.Users.CountAsync();
+        int userCount = await krafterContext.Users.CountAsync();
         if (userCount == 0)
         {
             string password = KrafterInitialConstants.DefaultPassword;
@@ -117,7 +115,7 @@ public class DataSeedService(
                     Email = KrafterInitialConstants.RootUser.EmailAddress,
                     UserName = KrafterInitialConstants.RootUser.EmailAddress,
                     IsActive = true,
-                    IsOwner = true,
+                    IsOwner = true
                 };
             }
             else
@@ -130,31 +128,28 @@ public class DataSeedService(
                     Email = tenantGetterService.Tenant.AdminEmail,
                     UserName = tenantGetterService.Tenant.AdminEmail,
                     IsActive = true,
-                    IsOwner = true,
+                    IsOwner = true
                 };
                 //generate aspnet core valid password
                 password = PasswordGenerator.GeneratePassword();
             }
-            var res = await userManager.CreateAsync(rootUser, password);
-            var tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == tenantGetterService.Tenant.Id);
+
+            IdentityResult res = await userManager.CreateAsync(rootUser, password);
+            Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == tenantGetterService.Tenant.Id);
             if (adminRole is not null)
             {
-                krafterContext.UserRoles.Add(new KrafterUserRole()
+                krafterContext.UserRoles.Add(new KrafterUserRole
                 {
-                    RoleId = adminRole.Id,
-                    UserId = rootUser.Id,
-                    CreatedById = rootUser.Id
+                    RoleId = adminRole.Id, UserId = rootUser.Id, CreatedById = rootUser.Id
                 });
             }
 
-            var basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+            KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
             if (basic is not null)
             {
-                krafterContext.UserRoles.Add(new KrafterUserRole()
+                krafterContext.UserRoles.Add(new KrafterUserRole
                 {
-                    RoleId = basic.Id,
-                    UserId = rootUser.Id,
-                    CreatedById = rootUser.Id
+                    RoleId = basic.Id, UserId = rootUser.Id, CreatedById = rootUser.Id
                 });
             }
 
@@ -171,17 +166,18 @@ public class DataSeedService(
                         Email = tenant.AdminEmail,
                         Subject = "Welcome to Krafter",
                         HtmlMessage = $"Dear {rootUser.FirstName} {rootUser.LastName} ({rootUser.Email}),<br><br>" +
-                        "Your Krafter account has been successfully created. Here are your login details:<br><br>" +
-                        $"Username: {rootUser.Email}<br>" +
-                        $"Password: {password}<br><br>" +
-                        $"Please <a href='{loginUrl}'>click here</a> to log in.<br><br>" +
-                        "We recommend changing your password after your first login for security reasons.<br><br>" +
-                        "Best Regards,<br>" +
-                        "The Krafter Team"
+                                      "Your Krafter account has been successfully created. Here are your login details:<br><br>" +
+                                      $"Username: {rootUser.Email}<br>" +
+                                      $"Password: {password}<br><br>" +
+                                      $"Please <a href='{loginUrl}'>click here</a> to log in.<br><br>" +
+                                      "We recommend changing your password after your first login for security reasons.<br><br>" +
+                                      "Best Regards,<br>" +
+                                      "The Krafter Team"
                     }, "SendEmailJob", CancellationToken.None);
                 }
             }
         }
+
         return new Response();
     }
 }

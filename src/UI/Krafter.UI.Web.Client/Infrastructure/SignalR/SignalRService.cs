@@ -18,7 +18,8 @@ public class SignalRService : IAsyncDisposable
 
     public event Action<string, string>? MessageReceived;
 
-    public SignalRService(IAuthenticationService authenticationService, IKrafterLocalStorageService localStorageService, IFormFactor formatProvider, AuthenticationStateProvider authenticationStateProvider)
+    public SignalRService(IAuthenticationService authenticationService, IKrafterLocalStorageService localStorageService,
+        IFormFactor formatProvider, AuthenticationStateProvider authenticationStateProvider)
     {
         _authenticationStateProvider = authenticationStateProvider;
         _authenticationService = authenticationService;
@@ -28,71 +29,68 @@ public class SignalRService : IAsyncDisposable
 
     public async Task InitializeAsync()
     {
-        var formFactorType = _formatProvider.GetFormFactor();
+        string formFactorType = _formatProvider.GetFormFactor();
 
         if (formFactorType != "WebAssembly")
         {
             return;
         }
 
-        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        AuthenticationState authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        bool isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
         if (isAuthenticated)
         {
             _hubConnection = new HubConnectionBuilder()
-    .WithUrl(TenantInfo.HostUrl + "/RealtimeHub", options =>
-    {
-        options.AccessTokenProvider = async () =>
-        {
-            var token = await _localStorageService.GetCachedAuthTokenAsync();//_authenticationService.GetJwtAsync();
-
-            // Check if the token is expired
-            if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
-            {
-                // Wait for 2 seconds
-                await Task.Delay(2000);
-
-                // Try to get the token again
-                token = await _localStorageService.GetCachedAuthTokenAsync();
-
-                // Check again if the token is expired
-                if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
+                .WithUrl(TenantInfo.HostUrl + "/RealtimeHub", options =>
                 {
-                    // Attempt to refresh the token
-                    var refreshResult = await _authenticationService.RefreshAsync();
-                    if (refreshResult)
+                    options.AccessTokenProvider = async () =>
                     {
-                        token = await _localStorageService.GetCachedAuthTokenAsync();
-                    }
-                    else
-                    {
-                        // Handle the case when refreshing the token fails
-                        await _authenticationService.LogoutAsync("SignalRService 71");
-                        return null;
-                    }
-                }
-            }
+                        string? token =
+                            await _localStorageService
+                                .GetCachedAuthTokenAsync(); //_authenticationService.GetJwtAsync();
 
-            return token?.Replace("Bearer ", "").Trim();
-        };
-        options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-    })
-    .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
-    .ConfigureLogging(logging =>
-    {
-        logging.SetMinimumLevel(LogLevel.Debug);
-    })
-    .Build();
+                        // Check if the token is expired
+                        if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
+                        {
+                            // Wait for 2 seconds
+                            await Task.Delay(2000);
+
+                            // Try to get the token again
+                            token = await _localStorageService.GetCachedAuthTokenAsync();
+
+                            // Check again if the token is expired
+                            if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
+                            {
+                                // Attempt to refresh the token
+                                bool refreshResult = await _authenticationService.RefreshAsync();
+                                if (refreshResult)
+                                {
+                                    token = await _localStorageService.GetCachedAuthTokenAsync();
+                                }
+                                else
+                                {
+                                    // Handle the case when refreshing the token fails
+                                    await _authenticationService.LogoutAsync("SignalRService 71");
+                                    return null;
+                                }
+                            }
+                        }
+
+                        return token?.Replace("Bearer ", "").Trim();
+                    };
+                    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+                })
+                .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
+                .ConfigureLogging(logging => { logging.SetMinimumLevel(LogLevel.Debug); })
+                .Build();
 
             _hubConnection.Closed += async (exception) =>
             {
                 Console.WriteLine($"Connection closed: {exception?.Message}");
                 await Task.CompletedTask;
             };
-            _hubConnection.On<string, string>(nameof(SignalRMethods.ReceiveMessage), (user, message) =>
-            {
-                MessageReceived?.Invoke(user, message);
-            });
+            _hubConnection.On<string, string>(nameof(SignalRMethods.ReceiveMessage),
+                (user, message) => { MessageReceived?.Invoke(user, message); });
             await _hubConnection.StartAsync();
         }
     }
@@ -104,6 +102,7 @@ public class SignalRService : IAsyncDisposable
         {
             return jwtToken.ValidTo < DateTime.UtcNow;
         }
+
         return true;
     }
 
@@ -115,10 +114,7 @@ public class SignalRService : IAsyncDisposable
         }
     }
 
-    public bool IsConnected()
-    {
-        return _hubConnection?.State == HubConnectionState.Connected;
-    }
+    public bool IsConnected() => _hubConnection?.State == HubConnectionState.Connected;
 
     public async ValueTask DisposeAsync()
     {

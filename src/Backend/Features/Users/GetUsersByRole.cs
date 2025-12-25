@@ -15,7 +15,6 @@ namespace Backend.Features.Users;
 
 public sealed class GetUsersByRole
 {
-
     internal sealed class Handler(KrafterContext db) : IScopedHandler
     {
         public async Task<Response<PaginationResponse<UserInfo>>> GetByRoleAsync(
@@ -23,10 +22,10 @@ public sealed class GetUsersByRole
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            var predicate = PredicateBuilder.New<KrafterUserRole>(true);
+            ExpressionStarter<KrafterUserRole>? predicate = PredicateBuilder.New<KrafterUserRole>(true);
             predicate = predicate.And(c => c.RoleId == roleId);
 
-            var query = db.UserRoles
+            IQueryable<UserInfo> query = db.UserRoles
                 .Where(predicate)
                 .Include(c => c.User)
                 .Select(x => new UserInfo
@@ -51,10 +50,10 @@ public sealed class GetUsersByRole
                 }
                 else
                 {
-                    var filter = requestInput.Filter.ToLower();
+                    string filter = requestInput.Filter.ToLower();
                     query = query.Where(c =>
-                        ((c.FirstName ?? "").ToLower().Contains(filter)) ||
-                        ((c.LastName ?? "").ToLower().Contains(filter)));
+                        (c.FirstName ?? "").ToLower().Contains(filter) ||
+                        (c.LastName ?? "").ToLower().Contains(filter));
                 }
             }
 
@@ -64,11 +63,11 @@ public sealed class GetUsersByRole
                 query = query.OrderBy(requestInput.OrderBy);
             }
 
-            var items = await query
+            List<UserInfo> items = await query
                 .PageBy(requestInput)
                 .ToListAsync(cancellationToken);
 
-            var totalCount = await query.CountAsync(cancellationToken);
+            int totalCount = await query.CountAsync(cancellationToken);
 
             var result = new PaginationResponse<UserInfo>(
                 items,
@@ -76,14 +75,8 @@ public sealed class GetUsersByRole
                 requestInput.SkipCount,
                 requestInput.MaxResultCount);
 
-            return new Response<PaginationResponse<UserInfo>>
-            {
-                Data = result,
-                IsError = false,
-                StatusCode = 200,
-            }
-            ;
-
+            return new Response<PaginationResponse<UserInfo>> { Data = result, IsError = false, StatusCode = 200 }
+                ;
         }
     }
 
@@ -91,20 +84,21 @@ public sealed class GetUsersByRole
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet("/by-role/{roleId}", async (
-                [FromRoute] string roleId,
-                [FromServices] Handler handler,
-                [AsParameters] GetRequestInput requestInput,
-                CancellationToken cancellationToken) =>
-            {
-                var res = await handler.GetByRoleAsync(roleId, requestInput, cancellationToken);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Response<PaginationResponse<UserInfo>>>()
-            .MustHavePermission(KrafterAction.View, KrafterResource.Users);
+                    [FromRoute] string roleId,
+                    [FromServices] Handler handler,
+                    [AsParameters] GetRequestInput requestInput,
+                    CancellationToken cancellationToken) =>
+                {
+                    Response<PaginationResponse<UserInfo>> res =
+                        await handler.GetByRoleAsync(roleId, requestInput, cancellationToken);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response<PaginationResponse<UserInfo>>>()
+                .MustHavePermission(KrafterAction.View, KrafterResource.Users);
         }
     }
 }

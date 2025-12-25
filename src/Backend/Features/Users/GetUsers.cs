@@ -17,7 +17,7 @@ namespace Backend.Features.Users;
 
 public sealed class GetUsers
 {
-    public sealed class UserDto:CommonDtoProperty
+    public sealed class UserDto : CommonDtoProperty
     {
         public string? Id { get; set; }
         public string? UserName { get; set; }
@@ -27,7 +27,6 @@ public sealed class GetUsers
         public bool IsActive { get; set; }
         public bool EmailConfirmed { get; set; }
         public string? PhoneNumber { get; set; }
-   
     }
 
 
@@ -37,14 +36,14 @@ public sealed class GetUsers
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            var predicate = PredicateBuilder.New<KrafterUser>(true);
+            ExpressionStarter<KrafterUser>? predicate = PredicateBuilder.New<KrafterUser>(true);
 
             if (!string.IsNullOrWhiteSpace(requestInput.Id))
             {
                 predicate = predicate.And(c => c.Id == requestInput.Id);
             }
 
-            var query = db.Users
+            IQueryable<UserDto> query = db.Users
                 .Where(predicate)
                 .Select(x => new UserDto
                 {
@@ -60,21 +59,26 @@ public sealed class GetUsers
                     IsDeleted = x.IsDeleted,
                     DeleteReason = x.DeleteReason,
                     CreatedById = x.CreatedById,
-                    CreatedBy = x.CreatedBy != null ? new UserInfo
-                    {
-                        Id = x.CreatedBy.Id,
-                        FirstName = x.CreatedBy.FirstName,
-                        LastName = x.CreatedBy.LastName,
-                        CreatedOn = x.CreatedBy.CreatedOn
-                    } : null,
+                    CreatedBy =
+                        x.CreatedBy != null
+                            ? new UserInfo
+                            {
+                                Id = x.CreatedBy.Id,
+                                FirstName = x.CreatedBy.FirstName,
+                                LastName = x.CreatedBy.LastName,
+                                CreatedOn = x.CreatedBy.CreatedOn
+                            }
+                            : null,
                     UpdatedOn = x.UpdatedOn,
-                    UpdatedBy = x.UpdatedBy != null ? new UserInfo
-                    {
-                        Id = x.UpdatedBy.Id,
-                        FirstName = x.UpdatedBy.FirstName,
-                        LastName = x.UpdatedBy.LastName,
-                        CreatedOn = x.UpdatedBy.CreatedOn
-                    } : null,
+                    UpdatedBy = x.UpdatedBy != null
+                        ? new UserInfo
+                        {
+                            Id = x.UpdatedBy.Id,
+                            FirstName = x.UpdatedBy.FirstName,
+                            LastName = x.UpdatedBy.LastName,
+                            CreatedOn = x.UpdatedBy.CreatedOn
+                        }
+                        : null,
                     UpdatedById = x.UpdatedById
                 });
 
@@ -92,10 +96,10 @@ public sealed class GetUsers
                 }
                 else
                 {
-                    var filter = requestInput.Filter.ToLower();
+                    string filter = requestInput.Filter.ToLower();
                     query = query.Where(c =>
-                        ((c.FirstName ?? "").ToLower().Contains(filter)) ||
-                        ((c.LastName ?? "").ToLower().Contains(filter)));
+                        (c.FirstName ?? "").ToLower().Contains(filter) ||
+                        (c.LastName ?? "").ToLower().Contains(filter));
                 }
             }
 
@@ -105,11 +109,11 @@ public sealed class GetUsers
                 query = query.OrderBy(requestInput.OrderBy);
             }
 
-            var items = await query
+            List<UserDto> items = await query
                 .PageBy(requestInput)
                 .ToListAsync(cancellationToken);
 
-            var totalCount = await query.CountAsync(cancellationToken);
+            int totalCount = await query.CountAsync(cancellationToken);
 
             var result = new PaginationResponse<UserDto>(
                 items,
@@ -117,12 +121,7 @@ public sealed class GetUsers
                 requestInput.SkipCount,
                 requestInput.MaxResultCount);
 
-            return new Common.Models.Response<PaginationResponse<UserDto>>()
-            {
-                Data = result,
-                IsError = false,
-
-            };
+            return new Common.Models.Response<PaginationResponse<UserDto>> { Data = result, IsError = false };
         }
     }
 
@@ -130,20 +129,20 @@ public sealed class GetUsers
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet("/get", async (
-                [FromServices] Handler handler,
-                [AsParameters] GetRequestInput requestInput,
-                CancellationToken cancellationToken) =>
-            {
-                var res = await handler.Get(requestInput, cancellationToken);
-                return Results.Json(res, statusCode: res.StatusCode);
-
-            })
-            .Produces<Common.Models.Response<PaginationResponse<UserDto>>>()
-            .MustHavePermission(KrafterAction.View, KrafterResource.Users);
+                    [FromServices] Handler handler,
+                    [AsParameters] GetRequestInput requestInput,
+                    CancellationToken cancellationToken) =>
+                {
+                    Common.Models.Response<PaginationResponse<UserDto>> res =
+                        await handler.Get(requestInput, cancellationToken);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Common.Models.Response<PaginationResponse<UserDto>>>()
+                .MustHavePermission(KrafterAction.View, KrafterResource.Users);
         }
     }
 }

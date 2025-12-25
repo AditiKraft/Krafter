@@ -14,18 +14,17 @@ public static class NotificationConfiguration
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var smtpSettings = configuration.GetSection("SMTPEmailSettings").Get<SMTPEmailSettings>()
-            ?? throw new InvalidOperationException("SMTP settings must be configured");
+        SMTPEmailSettings smtpSettings = configuration.GetSection("SMTPEmailSettings").Get<SMTPEmailSettings>()
+                                         ?? throw new InvalidOperationException("SMTP settings must be configured");
 
         services.AddSingleton(smtpSettings);
 
         services.AddSingleton<SmtpClient>(sp =>
         {
-            var settings = sp.GetRequiredService<SMTPEmailSettings>();
+            SMTPEmailSettings settings = sp.GetRequiredService<SMTPEmailSettings>();
             return new SmtpClient(settings.Host, settings.Port)
             {
-                Credentials = new NetworkCredential(settings.UserName, settings.Password),
-                EnableSsl = true
+                Credentials = new NetworkCredential(settings.UserName, settings.Password), EnableSsl = true
             };
         });
 
