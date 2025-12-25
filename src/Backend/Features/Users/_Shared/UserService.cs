@@ -1,4 +1,4 @@
-﻿using Backend.Application.BackgroundJobs;
+using Backend.Application.BackgroundJobs;
 using Backend.Application.Common;
 using Backend.Application.Notifications;
 using Backend.Common;
@@ -7,7 +7,7 @@ using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
 using Backend.Common.Models;
 using Backend.Features.Roles._Shared;
-using Backend.Features.Tenants;
+using Backend.Features.Tenants._Shared;
 using Backend.Infrastructure.Persistence;
 using Mapster;
 using Microsoft.AspNetCore.Identity;

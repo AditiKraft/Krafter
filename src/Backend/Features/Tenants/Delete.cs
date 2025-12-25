@@ -1,9 +1,10 @@
-﻿using Backend.Api;
+using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Application.Common;
 using Backend.Common;
 using Backend.Common.Auth.Permissions;
 using Backend.Common.Models;
+using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;

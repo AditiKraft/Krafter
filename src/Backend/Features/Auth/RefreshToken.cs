@@ -1,4 +1,4 @@
-﻿using Backend.Api;
+using Backend.Api;
 using Backend.Api.Configuration;
 using Backend.Application.Common;
 using Backend.Common;
@@ -13,7 +13,7 @@ using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Backend.Common.Extensions;
-using Backend.Features.Auth.Token;
+using Backend.Features.Auth._Shared;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Backend.Features.Auth;

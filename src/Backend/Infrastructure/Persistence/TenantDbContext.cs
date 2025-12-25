@@ -1,4 +1,4 @@
-﻿using Backend.Features.Tenants;
+using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Microsoft.EntityFrameworkCore;
 

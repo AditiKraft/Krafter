@@ -7,11 +7,12 @@ using Backend.Application.Multitenant;
 using Backend.Application.Notifications;
 using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
-using Backend.Features.Auth.Token;
+using Backend.Features.Auth;
 using Backend.Hubs;
 using Backend.Infrastructure.Persistence;
 using Backend.Infrastructure.Persistence.Tenants;
 using FluentValidation;
+using Krafter.Aspire.ServiceDefaults;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 

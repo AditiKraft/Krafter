@@ -1,4 +1,4 @@
-﻿namespace Backend.Features.Tenants;
+namespace Backend.Features.Tenants._Shared;
 
 public class Tenant
 {

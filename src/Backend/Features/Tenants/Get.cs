@@ -1,4 +1,4 @@
-﻿using Backend.Api;
+using Backend.Api;
 using Backend.Common;
 using Backend.Common.Auth.Permissions;
 using Backend.Common.Extensions;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using Backend.Api.Authorization;
+using Backend.Features.Tenants._Shared;
 
 namespace Backend.Features.Tenants;
 

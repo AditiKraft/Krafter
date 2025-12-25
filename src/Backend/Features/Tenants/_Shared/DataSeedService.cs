@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
 using Backend.Common;

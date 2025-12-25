@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -8,7 +8,6 @@ using Backend.Common;
 using Backend.Common.Auth;
 using Backend.Common.Interfaces;
 using Backend.Common.Models;
-using Backend.Features.Auth.Token;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;

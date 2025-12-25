@@ -1,7 +1,7 @@
-﻿using Backend.Common.Models;
+using Backend.Common.Models;
 using Backend.Features.Users._Shared;
 
-namespace Backend.Features.Auth.Token;
+namespace Backend.Features.Auth._Shared;
 
 public interface ITokenService
 {

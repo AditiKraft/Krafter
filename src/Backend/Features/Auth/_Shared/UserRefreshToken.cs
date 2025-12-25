@@ -1,7 +1,7 @@
-﻿using Backend.Entities;
+using Backend.Entities;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Backend.Features.Auth.Token;
+namespace Backend.Features.Auth._Shared;
 
 public class UserRefreshToken : ITenant
 {

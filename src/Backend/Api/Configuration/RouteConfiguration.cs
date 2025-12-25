@@ -1,6 +1,6 @@
 using System.Reflection;
 using Backend.Api;
-using Backend.Features.Auth.Token;
+using Backend.Features.Auth;
 
 namespace Backend.Api.Configuration;
 

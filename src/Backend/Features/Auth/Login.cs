@@ -2,7 +2,6 @@
 using Backend.Api.Configuration;
 using Backend.Application.Common;
 using Backend.Common;
-using Backend.Common.Interfaces;
 using Backend.Common.Models;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Users._Shared;
@@ -10,10 +9,9 @@ using Backend.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace Backend.Features.Auth.Token;
+namespace Backend.Features.Auth;
 
 public sealed class GetToken
 {

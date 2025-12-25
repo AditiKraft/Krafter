@@ -1,9 +1,10 @@
-﻿using Backend.Common.Extensions;
+using Backend.Common.Extensions;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
 using Backend.Common.Models;
 using Backend.Features.Auth;
 using Backend.Features.Tenants;
+using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Mapster;
 

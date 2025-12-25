@@ -14,7 +14,6 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Backend.Common.Models;
-using Backend.Features.Auth.Token;
 
 namespace Backend.Features.Auth;
 

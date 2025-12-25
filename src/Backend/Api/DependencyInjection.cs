@@ -1,11 +1,10 @@
-﻿using Backend.Api.Authorization;
+using Backend.Api.Authorization;
 using Backend.Api.Configuration;
 using Backend.Api.Middleware;
 using Backend.Application.Auth;
 using Backend.Application.Common;
 using Backend.Common.Interfaces.Auth;
 using Backend.Features.Auth;
-using Backend.Features.Auth.Token;
 using Backend.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

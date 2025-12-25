@@ -1,5 +1,5 @@
-﻿using Backend.Common.Models;
-using Backend.Features.Tenants;
+using Backend.Common.Models;
+using Backend.Features.Tenants._Shared;
 
 namespace Backend.Common.Interfaces;
 

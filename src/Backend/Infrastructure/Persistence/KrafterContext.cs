@@ -1,9 +1,9 @@
-﻿using Backend.Common.Interfaces;
+using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
 using Backend.Common.Models;
 using Backend.Entities;
 using Backend.Features.Auth;
-using Backend.Features.Auth.Token;
+using Backend.Features.Auth._Shared;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Tenants;
 using Backend.Features.Users._Shared;

@@ -1,4 +1,4 @@
-﻿namespace Backend.Features.Auth.Token;
+namespace Backend.Features.Auth._Shared;
 
 public record TokenResponse(
     string Token,

@@ -1,7 +1,8 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Krafter.Api.Client.Models;
+using Krafter.Aspire.ServiceDefaults;
 using Krafter.UI.Web.Client;
 using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Common.Models;

@@ -9,6 +9,7 @@ using Backend.Common.Models;
 using Backend.Features.Auth;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Tenants;
+using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using FluentValidation;
