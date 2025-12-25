@@ -1,6 +1,5 @@
-﻿namespace Backend.Infrastructure.Persistence
+﻿namespace Backend.Infrastructure.Persistence;
+
+public interface IScopedService
 {
-    public interface IScopedService
-    {
-    }
 }

@@ -2,7 +2,7 @@
 
 public static class LocalAppSate
 {
-    public static string CurrentPageTitle { get; set; } = "Home";//Density
+    public static string CurrentPageTitle { get; set; } = "Home"; //Density
 
     public static Density Density { get; set; } = Density.Compact;
     public static bool AllowColumnResize { get; set; } = true;

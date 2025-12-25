@@ -6,53 +6,53 @@
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Name" Component="Name" />
+                <RadzenLabel Text="Name" Component="Name"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Name" Name="Name" />
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Name" Name="Name"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.Name)" />
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.Name)"/>
         </RadzenRow>
 
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Identifier" Component="Identifier" />
+                <RadzenLabel Text="Identifier" Component="Identifier"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Identifier" Name="Identifier" />
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Identifier" Name="Identifier"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.Identifier)" />
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.Identifier)"/>
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Admin Email" Component="AdminEmail" />
+                <RadzenLabel Text="Admin Email" Component="AdminEmail"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.AdminEmail" Name="AdminEmail" />
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.AdminEmail" Name="AdminEmail"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.AdminEmail)" />
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.AdminEmail)"/>
         </RadzenRow>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="ValidUpto" Component="ValidUpto" />
+                <RadzenLabel Text="ValidUpto" Component="ValidUpto"/>
             </RadzenColumn>
-            <RadzenColumn Size="12" SizeMD="10">             
-                <RadzenDatePicker Name="ValidUpto" Style="width: 100%" @bind-Value="@CreateRequest.ValidUpto" />
+            <RadzenColumn Size="12" SizeMD="10">
+                <RadzenDatePicker Name="ValidUpto" Style="width: 100%" @bind-Value="@CreateRequest.ValidUpto"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.ValidUpto)" />
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.ValidUpto)"/>
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Is Active" Component="IsActive" />
+                <RadzenLabel Text="Is Active" Component="IsActive"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenCheckBox @bind-Value=@CreateRequest.IsActive Name="IsActive" />
+                <RadzenCheckBox @bind-Value="@CreateRequest.IsActive" Name="IsActive"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.IsActive)" />
-        </RadzenRow>     
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.IsActive)"/>
+        </RadzenRow>
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
         <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>

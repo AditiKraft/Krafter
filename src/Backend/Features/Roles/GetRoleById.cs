@@ -18,22 +18,14 @@ public sealed class GetRoleById
     {
         public async Task<Response<RoleDto>> GetByIdAsync(string id)
         {
-            var role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == id);
+            KrafterRole? role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == id);
 
             if (role is null)
             {
-                return new Response<RoleDto>
-                {
-                    IsError = true,
-                    StatusCode = 404,
-                    Message = "Role Not Found"
-                };
+                return new Response<RoleDto> { IsError = true, StatusCode = 404, Message = "Role Not Found" };
             }
 
-            return new Response<RoleDto>
-            {
-                Data = role.Adapt<RoleDto>()
-            };
+            return new Response<RoleDto> { Data = role.Adapt<RoleDto>() };
         }
     }
 
@@ -41,18 +33,18 @@ public sealed class GetRoleById
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapGet("/get-by-id/{roleId}", async (
-                [FromRoute] string roleId,
-                [FromServices] Handler handler) =>
-            {
-                var res = await handler.GetByIdAsync(roleId);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Response<RoleDto>>()
-            .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
+                    [FromRoute] string roleId,
+                    [FromServices] Handler handler) =>
+                {
+                    Response<RoleDto> res = await handler.GetByIdAsync(roleId);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response<RoleDto>>()
+                .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
         }
     }
 }

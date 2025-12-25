@@ -1,19 +1,18 @@
 ﻿@using Radzen.Blazor.Rendering;
-<RadzenButton  ButtonStyle="ButtonStyle.Light" Shade="Shade.Lighter" Variant="Variant.Outlined" @ref=button Icon="notifications" Click="@(args => popup.ToggleAsync(button.Element))" />
+<RadzenButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Lighter" Variant="Variant.Outlined" @ref="button" Icon="notifications" Click="@(args => popup.ToggleAsync(button.Element))"/>
 
-    <Popup @ref=popup Lazy=true Open="@OnOpen"
+<Popup @ref="popup" Lazy="true" Open="@OnOpen"
        Style="display:none;position:absolute;height:300px;width:600px;padding:5px;border:var(--rz-panel-border);background-color:var(--rz-panel-background-color);">
-    <ChildContent>  
-        
-        
-        
+    <ChildContent>
+
+
         <h1> notification will go here</h1>
 
         @foreach (var message in messages)
         {
             <li>@message</li>
         }
-    
+
     </ChildContent>
-  
+
 </Popup>

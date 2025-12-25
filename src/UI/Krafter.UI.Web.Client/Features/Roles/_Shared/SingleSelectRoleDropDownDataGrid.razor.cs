@@ -2,29 +2,25 @@
 using Krafter.Api.Client.Models;
 using Krafter.UI.Web.Client.Common.Models;
 
-namespace Krafter.UI.Web.Client.Features.Roles._Shared
+namespace Krafter.UI.Web.Client.Features.Roles._Shared;
+
+public partial class SingleSelectRoleDropDownDataGrid(
+    KrafterClient krafterClient
+) : ComponentBase
 {
-    public partial class SingleSelectRoleDropDownDataGrid(
-        KrafterClient krafterClient
-        
-        ) : ComponentBase 
-    {
-        RadzenDropDownDataGrid<string> dropDownGrid;
-        RoleDtoPaginationResponseResponse response;
-    bool IsLoading = true;
+    private RadzenDropDownDataGrid<string> dropDownGrid;
+    private RoleDtoPaginationResponseResponse response;
+    private bool IsLoading = true;
     private IEnumerable<RoleDto>? Data;
-    [Parameter]
-    public GetRequestInput GetRequestInput { get; set; } = new ();
-    
-    [Parameter]
-    public string? Value { get; set; }
- 
-    [Parameter]
-    public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public GetRequestInput GetRequestInput { get; set; } = new();
+
+    [Parameter] public string? Value { get; set; }
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
 
     [Parameter] public List<string> IdsToDisable { get; set; } = new();
- 
-    async Task LoadData(LoadDataArgs args)
+
+    private async Task LoadData(LoadDataArgs args)
     {
         IsLoading = true;
         await Task.Yield();
@@ -48,20 +44,21 @@ namespace Krafter.UI.Web.Client.Features.Roles._Shared
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
         }
+
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 
-    int GetCount()
+    private int GetCount()
     {
         if (response is { Data: { Items: not null, TotalCount: { } totalCount } })
         {
             return totalCount;
         }
+
         return 0;
-           
     }
-    
+
     private async Task OnValueChanged(object newValue)
     {
         if (newValue is string newValueEnumerable)
@@ -73,6 +70,5 @@ namespace Krafter.UI.Web.Client.Features.Roles._Shared
         {
             Console.WriteLine("Invalid value type");
         }
-    }
     }
 }

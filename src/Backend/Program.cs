@@ -21,7 +21,7 @@ public static class Program
 {
     private static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
         // Forwarded headers (proxy support)
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -83,7 +83,7 @@ public static class Program
         builder.Services.AddSwaggerConfiguration();
 
         // Build app
-        var app = builder.Build();
+        WebApplication app = builder.Build();
 
         // Middleware Pipeline
         app.UseForwardedHeaders();

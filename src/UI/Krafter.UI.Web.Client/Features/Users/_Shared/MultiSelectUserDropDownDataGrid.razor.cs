@@ -4,13 +4,13 @@ using Krafter.UI.Web.Client.Common.Models;
 
 namespace Krafter.UI.Web.Client.Features.Users._Shared;
 
-public partial class MultiSelectUserDropDownDataGrid (
+public partial class MultiSelectUserDropDownDataGrid(
     KrafterClient krafterClient
-    ): ComponentBase
-{ 
-    RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid;
-    UserDtoPaginationResponseResponse? response;
-    bool IsLoading = true;
+) : ComponentBase
+{
+    private RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid;
+    private UserDtoPaginationResponseResponse? response;
+    private bool IsLoading = true;
     private IEnumerable<UserDto>? Data;
     [Parameter] public GetRequestInput GetRequestInput { get; set; } = new();
 
@@ -36,7 +36,7 @@ public partial class MultiSelectUserDropDownDataGrid (
 
     [Parameter] public List<string> IdsToDisable { get; set; } = new();
 
-    async Task LoadProcesses(LoadDataArgs args)
+    private async Task LoadProcesses(LoadDataArgs args)
     {
         IsLoading = true;
         await Task.Yield();
@@ -45,19 +45,19 @@ public partial class MultiSelectUserDropDownDataGrid (
         GetRequestInput.Filter = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
-      
-      response = await krafterClient.Users.GetPath.GetAsync(configuration =>
-      {
-          configuration.QueryParameters.Id = GetRequestInput.Id;
-          configuration.QueryParameters.History = GetRequestInput.History;
-          configuration.QueryParameters.IsDeleted = GetRequestInput.IsDeleted;
-          configuration.QueryParameters.SkipCount = GetRequestInput.SkipCount;
-          configuration.QueryParameters.MaxResultCount = GetRequestInput.MaxResultCount;
-          configuration.QueryParameters.Filter = GetRequestInput.Filter;
-          configuration.QueryParameters.OrderBy = GetRequestInput.OrderBy;
-          configuration.QueryParameters.Query = GetRequestInput.Query;
-      });
-      if (response is { Data.Items: not null })
+
+        response = await krafterClient.Users.GetPath.GetAsync(configuration =>
+        {
+            configuration.QueryParameters.Id = GetRequestInput.Id;
+            configuration.QueryParameters.History = GetRequestInput.History;
+            configuration.QueryParameters.IsDeleted = GetRequestInput.IsDeleted;
+            configuration.QueryParameters.SkipCount = GetRequestInput.SkipCount;
+            configuration.QueryParameters.MaxResultCount = GetRequestInput.MaxResultCount;
+            configuration.QueryParameters.Filter = GetRequestInput.Filter;
+            configuration.QueryParameters.OrderBy = GetRequestInput.OrderBy;
+            configuration.QueryParameters.Query = GetRequestInput.Query;
+        });
+        if (response is { Data.Items: not null })
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
         }
@@ -66,12 +66,13 @@ public partial class MultiSelectUserDropDownDataGrid (
         await InvokeAsync(StateHasChanged);
     }
 
-    int GetCount()
+    private int GetCount()
     {
         if (response?.Data?.TotalCount is { } total)
         {
-           return total;
+            return total;
         }
+
         return 0;
     }
 

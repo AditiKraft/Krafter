@@ -40,7 +40,7 @@ internal class Build : NukeBuild
     private Target SetBuildInfo => _ => _
         .Executes(() =>
         {
-            var text = System.IO.File.ReadAllText(BuildInfoPath);
+            string text = System.IO.File.ReadAllText(BuildInfoPath);
             text = text.Replace("#DateTimeUtc", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
             text = text.Replace("#Build", VersionMode);
             System.IO.File.WriteAllText(BuildInfoPath, text);
@@ -51,7 +51,7 @@ internal class Build : NukeBuild
         .Before(Restore)
         .Executes(() =>
         {
-            var text = System.IO.File.ReadAllText(BuildInfoPath);
+            string text = System.IO.File.ReadAllText(BuildInfoPath);
             text = text.Replace("#DateTimeUtc", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC");
             text = text.Replace("#Build", VersionMode);
             System.IO.File.WriteAllText(BuildInfoPath, text);
@@ -129,12 +129,12 @@ internal class Build : NukeBuild
 
                 DockerTasks.DockerLogout();
 
-                var webhookUrl = DeploymentWebhookUrl;
+                string webhookUrl = DeploymentWebhookUrl;
                 if (!string.IsNullOrWhiteSpace(webhookUrl))
                 {
                     using (var httpClient = new HttpClient())
                     {
-                        var response = await httpClient.PostAsync(webhookUrl, null);
+                        HttpResponseMessage response = await httpClient.PostAsync(webhookUrl, null);
                         if (response.IsSuccessStatusCode)
                         {
                             Console.WriteLine("Server start request successfully sent.");

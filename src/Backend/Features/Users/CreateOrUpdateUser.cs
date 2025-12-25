@@ -8,6 +8,7 @@ using Backend.Common.Interfaces;
 using Backend.Common.Models;
 using Backend.Features.Auth;
 using Backend.Features.Roles._Shared;
+using Backend.Features.Tenants;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using FluentValidation;
@@ -48,15 +49,10 @@ public sealed class CreateOrUpdateUser
 
             if (isNewUser)
             {
-                var basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+                KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
                 if (basic is null)
                 {
-                    return new Response()
-                    {
-                        IsError = true,
-                        Message = "Basic Role Not Found.",
-                        StatusCode = 404
-                    };
+                    return new Response { IsError = true, Message = "Basic Role Not Found.", StatusCode = 404 };
                 }
 
                 request.Roles ??= new List<string>();
@@ -73,16 +69,14 @@ public sealed class CreateOrUpdateUser
                     IsActive = true
                 };
 
-                var password = PasswordGenerator.GeneratePassword();
-                var result = await userManager.CreateAsync(user, password);
+                string password = PasswordGenerator.GeneratePassword();
+                IdentityResult result = await userManager.CreateAsync(user, password);
 
                 if (!result.Succeeded)
                 {
-                    return new Response()
+                    return new Response
                     {
-                        IsError = true,
-                        Message = "An error occurred while creating user.",
-                        StatusCode = 400
+                        IsError = true, Message = "An error occurred while creating user.", StatusCode = 400
                     };
                 }
 
@@ -96,12 +90,7 @@ public sealed class CreateOrUpdateUser
                                    $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
                 await jobService.EnqueueAsync(
-                    new SendEmailRequestInput
-                    {
-                        Email = user.Email,
-                        Subject = emailSubject,
-                        HtmlMessage = emailBody
-                    },
+                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
                     "SendEmailJob",
                     CancellationToken.None);
             }
@@ -110,28 +99,29 @@ public sealed class CreateOrUpdateUser
                 user = await userManager.FindByIdAsync(request.Id);
                 if (user is null)
                 {
-                    return new Response()
-                    {
-                        IsError = true,
-                        Message = "User Not Found",
-                        StatusCode = 404
-                    };
+                    return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
                 }
 
                 if (!string.IsNullOrWhiteSpace(request.FirstName))
+                {
                     user.FirstName = request.FirstName;
+                }
 
                 if (!string.IsNullOrWhiteSpace(request.LastName))
+                {
                     user.LastName = request.LastName;
+                }
 
                 if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+                {
                     user.PhoneNumber = request.PhoneNumber;
+                }
 
                 if (!string.IsNullOrWhiteSpace(request.Email) && user.Email != request.Email)
                 {
                     if (request.UpdateTenantEmail)
                     {
-                        var tenant = await tenantDbContext.Tenants
+                        Tenant? tenant = await tenantDbContext.Tenants
                             .IgnoreQueryFilters()
                             .AsNoTracking()
                             .FirstOrDefaultAsync(c => c.AdminEmail == user.Email);
@@ -147,13 +137,14 @@ public sealed class CreateOrUpdateUser
                     user.UserName = request.Email;
                 }
 
-                var result = await userManager.UpdateAsync(user);
+                IdentityResult result = await userManager.UpdateAsync(user);
                 if (!result.Succeeded)
                 {
-                    return new Response()
+                    return new Response
                     {
                         IsError = true,
-                        Message = $"Update profile failed: {string.Join(", ", result.Errors.Select(e => e.Description))}",
+                        Message =
+                            $"Update profile failed: {string.Join(", ", result.Errors.Select(e => e.Description))}",
                         StatusCode = 400
                     };
                 }
@@ -162,7 +153,7 @@ public sealed class CreateOrUpdateUser
             // Handle roles
             if (request.Roles?.Any() == true)
             {
-                var existingRoles = await db.UserRoles
+                List<KrafterUserRole> existingRoles = await db.UserRoles
                     .IgnoreQueryFilters()
                     .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == user.Id)
                     .ToListAsync();
@@ -174,24 +165,30 @@ public sealed class CreateOrUpdateUser
                     .Select(roleId => new KrafterUserRole { RoleId = roleId, UserId = user.Id })
                     .ToList();
 
-                foreach (var role in rolesToRemove)
+                foreach (KrafterUserRole role in rolesToRemove)
                 {
                     role.IsDeleted = true;
                 }
 
-                foreach (var role in rolesToUpdate)
+                foreach (KrafterUserRole role in rolesToUpdate)
                 {
                     role.IsDeleted = false;
                 }
 
                 if (rolesToAdd.Any())
+                {
                     db.UserRoles.AddRange(rolesToAdd);
+                }
 
                 if (rolesToRemove.Any())
+                {
                     db.UserRoles.UpdateRange(rolesToRemove);
+                }
 
                 if (rolesToUpdate.Any())
+                {
                     db.UserRoles.UpdateRange(rolesToUpdate);
+                }
             }
 
             await db.SaveChangesAsync([]);
@@ -228,18 +225,18 @@ public sealed class CreateOrUpdateUser
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost("/create-or-update", async (
-                [FromBody] CreateUserRequest request,
-                [FromServices] Handler handler) =>
-            {
-                var res = await handler.CreateOrUpdateAsync(request);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Common.Models.Response>()
-            .MustHavePermission(KrafterAction.Create, KrafterResource.Users);
+                    [FromBody] CreateUserRequest request,
+                    [FromServices] Handler handler) =>
+                {
+                    Response res = await handler.CreateOrUpdateAsync(request);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response>()
+                .MustHavePermission(KrafterAction.Create, KrafterResource.Users);
         }
     }
 }

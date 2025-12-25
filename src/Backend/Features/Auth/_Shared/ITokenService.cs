@@ -5,6 +5,6 @@ namespace Backend.Features.Auth.Token;
 
 public interface ITokenService
 {
-    Task<TokenResponse> GenerateTokensAndUpdateUser(string userId, string ipAddress);
-    Task<TokenResponse> GenerateTokensAndUpdateUser(KrafterUser user, string ipAddress);
+    public Task<TokenResponse> GenerateTokensAndUpdateUser(string userId, string ipAddress);
+    public Task<TokenResponse> GenerateTokensAndUpdateUser(KrafterUser user, string ipAddress);
 }

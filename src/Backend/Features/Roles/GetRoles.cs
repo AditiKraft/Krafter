@@ -19,17 +19,17 @@ public sealed class GetRoles
     internal sealed class Handler(KrafterContext db) : IScopedHandler
     {
         public async Task<Response<PaginationResponse<RoleDto>>> GetListAsync(
-            [AsParameters]GetRequestInput requestInput,
+            [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            var predicate = PredicateBuilder.New<KrafterRole>(true);
+            ExpressionStarter<KrafterRole>? predicate = PredicateBuilder.New<KrafterRole>(true);
 
             if (!string.IsNullOrWhiteSpace(requestInput.Id))
             {
                 predicate = predicate.And(c => c.Id == requestInput.Id);
             }
 
-            var query = db.Roles
+            IQueryable<RoleDto> query = db.Roles
                 .Where(predicate)
                 .Select(x => new RoleDto
                 {
@@ -39,20 +39,25 @@ public sealed class GetRoles
                     CreatedById = x.CreatedById,
                     IsDeleted = x.IsDeleted,
                     CreatedOn = x.CreatedOn,
-                    CreatedBy = x.CreatedBy != null ? new UserInfo
-                    {
-                        Id = x.CreatedBy.Id,
-                        FirstName = x.CreatedBy.FirstName,
-                        LastName = x.CreatedBy.LastName,
-                        CreatedOn = x.CreatedBy.CreatedOn
-                    } : null,
-                    UpdatedBy = x.UpdatedBy != null ? new UserInfo
-                    {
-                        Id = x.UpdatedBy.Id,
-                        FirstName = x.UpdatedBy.FirstName,
-                        LastName = x.UpdatedBy.LastName,
-                        CreatedOn = x.UpdatedBy.CreatedOn
-                    } : null,
+                    CreatedBy =
+                        x.CreatedBy != null
+                            ? new UserInfo
+                            {
+                                Id = x.CreatedBy.Id,
+                                FirstName = x.CreatedBy.FirstName,
+                                LastName = x.CreatedBy.LastName,
+                                CreatedOn = x.CreatedBy.CreatedOn
+                            }
+                            : null,
+                    UpdatedBy = x.UpdatedBy != null
+                        ? new UserInfo
+                        {
+                            Id = x.UpdatedBy.Id,
+                            FirstName = x.UpdatedBy.FirstName,
+                            LastName = x.UpdatedBy.LastName,
+                            CreatedOn = x.UpdatedBy.CreatedOn
+                        }
+                        : null,
                     UpdatedById = x.UpdatedById,
                     UpdatedOn = x.UpdatedOn,
                     DeleteReason = x.DeleteReason
@@ -72,9 +77,9 @@ public sealed class GetRoles
                 }
                 else
                 {
-                    var filter = requestInput.Filter.ToLower();
+                    string filter = requestInput.Filter.ToLower();
                     query = query.Where(c =>
-                        ((c.Name ?? "").ToLower().Contains(filter)));
+                        (c.Name ?? "").ToLower().Contains(filter));
                 }
             }
 
@@ -84,11 +89,11 @@ public sealed class GetRoles
                 query = query.OrderBy(requestInput.OrderBy);
             }
 
-            var items = await query
+            List<RoleDto> items = await query
                 .PageBy(requestInput)
                 .ToListAsync(cancellationToken);
 
-            var totalCount = await query.CountAsync(cancellationToken);
+            int totalCount = await query.CountAsync(cancellationToken);
 
             var result = new PaginationResponse<RoleDto>(
                 items,
@@ -96,10 +101,7 @@ public sealed class GetRoles
                 requestInput.SkipCount,
                 requestInput.MaxResultCount);
 
-            return new Response<PaginationResponse<RoleDto>>
-            {
-                Data = result
-            };
+            return new Response<PaginationResponse<RoleDto>> { Data = result };
         }
     }
 
@@ -107,19 +109,20 @@ public sealed class GetRoles
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapGet("/get", async (
-                [FromServices] Handler handler,
-                [AsParameters] GetRequestInput requestInput,
-                CancellationToken cancellationToken) =>
-            {
-                var res = await handler.GetListAsync(requestInput, cancellationToken);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Common.Models.Response<PaginationResponse<RoleDto>>>()
-            .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
+                    [FromServices] Handler handler,
+                    [AsParameters] GetRequestInput requestInput,
+                    CancellationToken cancellationToken) =>
+                {
+                    Response<PaginationResponse<RoleDto>> res =
+                        await handler.GetListAsync(requestInput, cancellationToken);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response<PaginationResponse<RoleDto>>>()
+                .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
         }
     }
 }

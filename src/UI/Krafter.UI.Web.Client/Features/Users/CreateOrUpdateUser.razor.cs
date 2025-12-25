@@ -7,17 +7,18 @@ namespace Krafter.UI.Web.Client.Features.Users;
 public partial class CreateOrUpdateUser(
     DialogService dialogService,
     KrafterClient krafterClient
-    ) :ComponentBase
+) : ComponentBase
 {
-    [Parameter]
-    public UserDto? UserInput { get; set; } = new ();
-    CreateUserRequest CreateUserRequest = new ();
-    CreateUserRequest OriginalCreateUserRequest = new ();
+    [Parameter] public UserDto? UserInput { get; set; } = new();
+
+    private CreateUserRequest CreateUserRequest = new();
+    private CreateUserRequest OriginalCreateUserRequest = new();
     public UserRoleDtoListResponse? UserRoles { get; set; }
     private bool isBusy = false;
+
     protected override async Task OnInitializedAsync()
     {
-        if (UserInput is {})
+        if (UserInput is not null)
         {
             CreateUserRequest = UserInput.Adapt<CreateUserRequest>();
             OriginalCreateUserRequest = UserInput.Adapt<CreateUserRequest>();
@@ -26,21 +27,22 @@ public partial class CreateOrUpdateUser(
                 CreateUserRequest.Roles = new List<string>();
                 OriginalCreateUserRequest.Roles = new List<string>();
             }
+
             if (!string.IsNullOrWhiteSpace(UserInput.Id))
             {
                 UserRoles = await krafterClient.Users.GetRoles[UserInput.Id].GetAsync();
                 CreateUserRequest.Roles = UserRoles?
                     .Data?
-                    .Where(c=>!string.IsNullOrEmpty(c.RoleId))
+                    .Where(c => !string.IsNullOrEmpty(c.RoleId))
                     .Select(c => c.RoleId!).ToList();
                 OriginalCreateUserRequest.Roles = CreateUserRequest.Roles;
             }
         }
     }
 
-    async void Submit(CreateUserRequest input)
+    private async void Submit(CreateUserRequest input)
     {
-        if (UserInput is { })
+        if (UserInput is not null)
         {
             isBusy = true;
             CreateUserRequest finalInput = new();
@@ -80,13 +82,14 @@ public partial class CreateOrUpdateUser(
                 {
                     finalInput.Roles = input.Roles;
                 }
-                finalInput.UpdateTenantEmail= true;
+
+                finalInput.UpdateTenantEmail = true;
             }
 
-            var result = await krafterClient.Users.CreateOrUpdate.PostAsync(finalInput);
+            Response? result = await krafterClient.Users.CreateOrUpdate.PostAsync(finalInput);
             isBusy = false;
             StateHasChanged();
-            if (result is {} && result.IsError==false)
+            if (result is not null && result.IsError == false)
             {
                 dialogService.Close(true);
             }
@@ -95,10 +98,7 @@ public partial class CreateOrUpdateUser(
         {
             dialogService.Close(false);
         }
-        
     }
-    void Cancel()
-    {
-        dialogService.Close();
-    }
+
+    private void Cancel() => dialogService.Close();
 }

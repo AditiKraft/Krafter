@@ -10,20 +10,16 @@ namespace Krafter.UI.Web.Client.Features.Tenants;
 
 public partial class Tenants(
     CommonService commonService,
-   KrafterClient krafterClient,
-
+    KrafterClient krafterClient,
     DialogService dialogService
-    ) : ComponentBase, IDisposable
+) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Tenants;
     private RadzenDataGrid<TenantDto> grid;
     private bool IsLoading = true;
     private GetRequestInput requestInput = new();
 
-    TenantDtoPaginationResponseResponse? response = new()
-    {
-        Data = new()
-    };
+    private TenantDtoPaginationResponseResponse? response = new() { Data = new TenantDtoPaginationResponse() };
 
     protected override async Task OnInitializedAsync()
     {
@@ -42,18 +38,18 @@ public partial class Tenants(
         }
 
         response = await krafterClient.Tenants.GetPath.GetAsync(
-         configuration =>
-         {
-             configuration.QueryParameters.Id = requestInput.Id;
-             configuration.QueryParameters.History = requestInput.History;
-             configuration.QueryParameters.IsDeleted = requestInput.IsDeleted;
-             configuration.QueryParameters.SkipCount = requestInput.SkipCount;
-             configuration.QueryParameters.MaxResultCount = requestInput.MaxResultCount;
-             configuration.QueryParameters.Filter = requestInput.Filter;
-             configuration.QueryParameters.OrderBy = requestInput.OrderBy;
-             configuration.QueryParameters.Query = requestInput.Query;
-         },CancellationToken.None
-            );
+            configuration =>
+            {
+                configuration.QueryParameters.Id = requestInput.Id;
+                configuration.QueryParameters.History = requestInput.History;
+                configuration.QueryParameters.IsDeleted = requestInput.IsDeleted;
+                configuration.QueryParameters.SkipCount = requestInput.SkipCount;
+                configuration.QueryParameters.MaxResultCount = requestInput.MaxResultCount;
+                configuration.QueryParameters.Filter = requestInput.Filter;
+                configuration.QueryParameters.OrderBy = requestInput.OrderBy;
+                configuration.QueryParameters.Query = requestInput.Query;
+            }, CancellationToken.None
+        );
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
@@ -61,39 +57,26 @@ public partial class Tenants(
     private async Task Add()
     {
         await dialogService.OpenAsync<CreateOrUpdateTenant>($"Add New Tenant",
-            new Dictionary<string, object>() { { "TenantInput", new TenantDto() } },
-            new DialogOptions()
-            {
-                Width = "40vw",
-                Resizable = true,
-                Draggable = true,
-                Top = "5vh"
-            });
+            new Dictionary<string, object> { { "TenantInput", new TenantDto() } },
+            new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
     }
 
     private async Task Update(TenantDto tenant)
     {
         await dialogService.OpenAsync<CreateOrUpdateTenant>($"Update Tenant {tenant.Name}",
-            new Dictionary<string, object>() { { "TenantInput", tenant } },
-            new DialogOptions()
-            {
-                Width = "40vw",
-                Resizable = true,
-                Draggable = true,
-                Top = "5vh"
-            });
+            new Dictionary<string, object> { { "TenantInput", tenant } },
+            new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
     }
 
     private async Task Delete(TenantDto input)
     {
         if (response.Data.Items.Contains(input))
         {
-            await commonService.Delete(new DeleteRequestInput()
-            {
-                Id = input.Id,
-                DeleteReason = input.DeleteReason,
-                EntityKind =(int) EntityKind.Tenant
-            }, $"Delete Tenant {input.Name}");
+            await commonService.Delete(
+                new DeleteRequestInput
+                {
+                    Id = input.Id, DeleteReason = input.DeleteReason, EntityKind = (int)EntityKind.Tenant
+                }, $"Delete Tenant {input.Name}");
         }
         else
         {
@@ -104,7 +87,10 @@ public partial class Tenants(
 
     private async void Close(object? result)
     {
-        if (result is not bool) return;
+        if (result is not bool)
+        {
+            return;
+        }
 
         await grid.Reload();
     }

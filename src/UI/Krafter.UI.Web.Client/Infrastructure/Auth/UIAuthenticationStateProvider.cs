@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Krafter.Api.Client.Models;
 using Krafter.UI.Web.Client.Common.Constants;
+using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Api;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
@@ -21,10 +22,9 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
     private readonly IApiService _apiService;
     private bool _isInitialLoad = true;
 
-    public UIAuthenticationStateProvider(IApiService apiService, IKrafterLocalStorageService localStorage, IAuthenticationService authenticationService,
-
+    public UIAuthenticationStateProvider(IApiService apiService, IKrafterLocalStorageService localStorage,
+        IAuthenticationService authenticationService,
         ILogger<UIAuthenticationStateProvider> logger,
-
         PersistentComponentState persistentState)
     {
         _authenticationService = authenticationService;
@@ -42,7 +42,8 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         // On the very first load, try to get the user from the persisted state.
-        if (_isInitialLoad && _persistentState.TryTakeFromJson<UserInfo>(nameof(UserInfo), out var userInfo) && userInfo is not null)
+        if (_isInitialLoad && _persistentState.TryTakeFromJson<UserInfo>(nameof(UserInfo), out UserInfo? userInfo) &&
+            userInfo is not null)
         {
             _isInitialLoad = false;
             var claimsPrincipal = new ClaimsPrincipal(CreateIdentityFromUserInfo(userInfo));
@@ -61,18 +62,19 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
 
         if (IsTokenExpired(cachedToken))
         {
-            var refreshResult = await _authenticationService.RefreshAsync();
+            bool refreshResult = await _authenticationService.RefreshAsync();
             if (!refreshResult)
             {
                 await _authenticationService.LogoutAsync("AuthenticationService Refresh Token 116");
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
-            var newCachedToken = await _localStorage.GetCachedAuthTokenAsync();
+            string? newCachedToken = await _localStorage.GetCachedAuthTokenAsync();
             if (string.IsNullOrWhiteSpace(newCachedToken))
             {
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
+
             cachedToken = newCachedToken;
         }
 
@@ -95,6 +97,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             {
                 return jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1);
             }
+
             return true;
         }
         catch
@@ -106,26 +109,28 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
     private async Task SynchronizeTokensFromServerAsync()
     {
         await TokenSynchronizationManager.TryExecuteWithSynchronizationAsync(
-    operation: async () =>
-    {
-        _logger.LogInformation("Starting token synchronization from server");
-        var tokenData = await _apiService.GetCurrentTokenAsync(CancellationToken.None);
-
-        if (tokenData?.Data?.Token != null && tokenData.Data.RefreshToken != null)
-        {
-            var existingToken = await _localStorage.GetCachedAuthTokenAsync();
-            if (existingToken != tokenData.Data.Token)
+            async () =>
             {
-                _logger.LogInformation("Caching fresh tokens from server");
-                await _localStorage.CacheAuthTokens(tokenData.Data);
-            }
-            return tokenData.Data;
-        }
-        return null;
-    },
-    isSuccessful: result => result != null,
-    logger: _logger
-);
+                _logger.LogInformation("Starting token synchronization from server");
+                Response<TokenResponse>? tokenData = await _apiService.GetCurrentTokenAsync(CancellationToken.None);
+
+                if (tokenData?.Data?.Token != null && tokenData.Data.RefreshToken != null)
+                {
+                    string? existingToken = await _localStorage.GetCachedAuthTokenAsync();
+                    if (existingToken != tokenData.Data.Token)
+                    {
+                        _logger.LogInformation("Caching fresh tokens from server");
+                        await _localStorage.CacheAuthTokens(tokenData.Data);
+                    }
+
+                    return tokenData.Data;
+                }
+
+                return null;
+            },
+            result => result != null,
+            _logger
+        );
     }
 
     private static ClaimsIdentity CreateIdentityFromUserInfo(UserInfo userInfo)
@@ -136,7 +141,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             new(ClaimTypes.Email, userInfo.Email ?? string.Empty),
             new(ClaimTypes.GivenName, userInfo.FirstName ?? string.Empty),
             new(ClaimTypes.Surname, userInfo.LastName ?? string.Empty),
-            new(KrafterClaims.Fullname, $"{userInfo.FirstName} {userInfo.LastName}"),
+            new(KrafterClaims.Fullname, $"{userInfo.FirstName} {userInfo.LastName}")
         };
 
         claims.AddRange(userInfo.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
@@ -150,7 +155,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
         var claims = new List<Claim>();
         string payload = jwt.Split('.')[1];
         byte[] jsonBytes = ParseBase64WithoutPadding(payload);
-        var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+        Dictionary<string, object>? keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
 
         if (keyValuePairs is not null)
         {
@@ -188,7 +193,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
     private byte[] ParseBase64WithoutPadding(string payload)
     {
         payload = payload.Trim().Replace('-', '+').Replace('_', '/');
-        string base64 = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+        string base64 = payload.PadRight(payload.Length + ((4 - (payload.Length % 4)) % 4), '=');
         return Convert.FromBase64String(base64);
     }
 }

@@ -2,6 +2,7 @@
 using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 
 namespace Krafter.UI.Web.Client.Features.Auth;
 
@@ -10,23 +11,23 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
 {
     protected override async Task OnInitializedAsync()
     {
-        var uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code))
+        Uri uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out StringValues code))
         {
             try
             {
                 string returnUrl = "";
                 string host = "";
-                if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("state", out var encodedState))
+                if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("state", out StringValues encodedState))
                 {
-                    var decoded = Uri.UnescapeDataString(encodedState);
-                    var parts = decoded.Split("|||");
+                    string decoded = Uri.UnescapeDataString(encodedState);
+                    string[] parts = decoded.Split("|||");
                     host = parts[0];
                     returnUrl = parts.Length > 1 ? parts[1] : "";
                     if (host != uri.Host)
                     {
                         uri = new UriBuilder(uri) { Host = host }.Uri;
-                        navigationManager.NavigateTo(uri.ToString(), forceLoad: true);
+                        navigationManager.NavigateTo(uri.ToString(), true);
                         return;
                     }
                 }
@@ -38,12 +39,11 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
 
                 if (host == uri.Host)
                 {
-                    var ReturnUrl = returnUrl;
+                    string ReturnUrl = returnUrl;
                     LocalAppSate.GoogleLoginReturnUrl = ReturnUrl;
-                    var isSuccess = await authenticationService.LoginAsync(new TokenRequestInput()
+                    bool isSuccess = await authenticationService.LoginAsync(new TokenRequestInput
                     {
-                        IsExternalLogin = true,
-                        Code = code.ToString()
+                        IsExternalLogin = true, Code = code.ToString()
                     });
                     if (isSuccess)
                     {

@@ -14,8 +14,9 @@ public static class DatabaseConfiguration
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("krafterDb")
-            ?? throw new InvalidOperationException("Database connection string 'krafterDb' not found");
+        string connectionString = configuration.GetConnectionString("krafterDb")
+                                  ?? throw new InvalidOperationException(
+                                      "Database connection string 'krafterDb' not found");
 
         // TenantDbContext (root tenant registry)
         services.AddDbContext<TenantDbContext>(opts => ConfigureDbContext(opts, connectionString));

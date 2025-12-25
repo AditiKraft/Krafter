@@ -12,10 +12,11 @@ public static class CorsConfiguration
         IConfiguration configuration,
         IHostEnvironment environment)
     {
-        var allowedCorsDomains = configuration["AllowedCorsDomains"]
-            ?? throw new InvalidOperationException("Configuration 'AllowedCorsDomains' not found");
+        string allowedCorsDomains = configuration["AllowedCorsDomains"]
+                                    ?? throw new InvalidOperationException(
+                                        "Configuration 'AllowedCorsDomains' not found");
 
-        var allowedDomains = allowedCorsDomains.Split(",", StringSplitOptions.RemoveEmptyEntries);
+        string[] allowedDomains = allowedCorsDomains.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
         services.AddCors(options =>
         {
@@ -41,8 +42,5 @@ public static class CorsConfiguration
         return services;
     }
 
-    public static IApplicationBuilder UseCorsConfiguration(this IApplicationBuilder app)
-    {
-        return app.UseCors(PolicyName);
-    }
+    public static IApplicationBuilder UseCorsConfiguration(this IApplicationBuilder app) => app.UseCors(PolicyName);
 }

@@ -3,24 +3,28 @@ using Krafter.Api.Client.Models;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
-public partial class ChangePassword(NavigationManager navigationManager,
+public partial class ChangePassword(
+    NavigationManager navigationManager,
     NotificationService notificationService,
     KrafterClient krafterClient
-    ) : ComponentBase
+) : ComponentBase
 {
     public ChangePasswordRequest ChangePasswordRequest { get; set; } = new();
 
     [SupplyParameterFromQuery(Name = "ReturnUrl")]
     public string ReturnUrl { get; set; }
+
     public bool IsBusy { get; set; }
-    async Task SubmitChangePassword(ChangePasswordRequest requestInput)
+
+    private async Task SubmitChangePassword(ChangePasswordRequest requestInput)
     {
         IsBusy = true;
-        var response = await krafterClient.Users.ChangePassword.PostAsync(requestInput);
+        Response? response = await krafterClient.Users.ChangePassword.PostAsync(requestInput);
         IsBusy = false;
         if (response is { IsError: false })
         {
-            notificationService.Notify(NotificationSeverity.Success, "Password Change", "Your password has been changed successfully");
+            notificationService.Notify(NotificationSeverity.Success, "Password Change",
+                "Your password has been changed successfully");
             navigationManager.NavigateTo(!string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/products");
         }
     }

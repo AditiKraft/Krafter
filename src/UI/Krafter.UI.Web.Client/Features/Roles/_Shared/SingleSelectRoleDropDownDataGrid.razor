@@ -1,23 +1,23 @@
 ﻿@using Krafter.Api.Client.Models
 @using Krafter.UI.Web.Client.Features.Roles._Shared
-<RadzenDropDownDataGrid Name="RoleDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple=false AllowClear="true" @bind-Value=@Value Change="@((arg) => OnValueChanged(arg))"
-                        LoadData=@LoadData AllowFiltering="true"
-                        Data=@Data Count="@(GetCount())" TextProperty="Name" ValueProperty="Id" Placeholder="Select Role" Chips=true>
+<RadzenDropDownDataGrid Name="RoleDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="false" AllowClear="true" @bind-Value="@Value" Change="@((arg) => OnValueChanged(arg))"
+                        LoadData="@LoadData" AllowFiltering="true"
+                        Data="@Data" Count="@(GetCount())" TextProperty="Name" ValueProperty="Id" Placeholder="Select Role" Chips="true">
 
     <Columns>
 
         <RadzenDropDownDataGridColumn Width="60px" Sortable="false">
             <HeaderTemplate>
-                <RadzenCheckBox Disabled="true" TriState="false" TValue="bool" Value="@(Data != null && Data.Any(c => Value != null && Value.Contains(c.Id)))" />
+                <RadzenCheckBox Disabled="true" TriState="false" TValue="bool" Value="@(Data != null && Data.Any(c => Value != null && Value.Contains(c.Id)))"/>
             </HeaderTemplate>
             <Template Context="data">
                 <RadzenCheckBox TriState="false" Value="@(Value != null && Value.Contains(((RoleDto)data).Id))"
-                                TValue="bool" Change=@(_ => dropDownGrid.SelectItem(data)) @onclick:stopPropagation />
+                                TValue="bool" Change="@(_ => dropDownGrid.SelectItem(data))"@onclick:stopPropagation/>
             </Template>
         </RadzenDropDownDataGridColumn>
-        <RadzenDropDownDataGridColumn Property="Name" Title="Name" Width="150px" />
-        <RadzenDropDownDataGridColumn Property="KeyPosition" Title="Key Position" Width="80px" />
-        <RadzenDropDownDataGridColumn Property="ProcessOwner" Title="Process Owner" Width="80px" />
-      
+        <RadzenDropDownDataGridColumn Property="Name" Title="Name" Width="150px"/>
+        <RadzenDropDownDataGridColumn Property="KeyPosition" Title="Key Position" Width="80px"/>
+        <RadzenDropDownDataGridColumn Property="ProcessOwner" Title="Process Owner" Width="80px"/>
+
     </Columns>
 </RadzenDropDownDataGrid>

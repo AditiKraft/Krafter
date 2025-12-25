@@ -28,33 +28,24 @@ public sealed class GetUserRoles
     {
         public async Task<Response<List<UserRoleDto>>> GetRolesAsync(string userId, CancellationToken cancellationToken)
         {
-            var user = await userManager.FindByIdAsync(userId);
+            KrafterUser? user = await userManager.FindByIdAsync(userId);
             if (user is null)
             {
-                return new Response<List<UserRoleDto>>()
-                {
-
-                    IsError = true,
-                    Message = "User Not Found",
-                    StatusCode = 404
-                };
+                return new Response<List<UserRoleDto>> { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
-            var userRoleNames = await userManager.GetRolesAsync(user);
-            var roles = await roleManager.Roles
+            IList<string> userRoleNames = await userManager.GetRolesAsync(user);
+            List<KrafterRole>? roles = await roleManager.Roles
                 .Where(c => userRoleNames.Contains(c.Name))
                 .ToListAsync(cancellationToken);
 
             if (roles is null || !roles.Any())
             {
-                return new Response<List<UserRoleDto>>()
-                {
-                    Data = new List<UserRoleDto>()
-                };
+                return new Response<List<UserRoleDto>> { Data = new List<UserRoleDto>() };
             }
 
             var userRoles = new List<UserRoleDto>();
-            foreach (var role in roles)
+            foreach (KrafterRole role in roles)
             {
                 userRoles.Add(new UserRoleDto
                 {
@@ -65,10 +56,7 @@ public sealed class GetUserRoles
                 });
             }
 
-            return new Response<List<UserRoleDto>>()
-            {
-                Data = userRoles
-            };
+            return new Response<List<UserRoleDto>> { Data = userRoles };
         }
     }
 
@@ -76,19 +64,19 @@ public sealed class GetUserRoles
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet("/get-roles/{userId}", async (
-                [FromRoute] string userId,
-                [FromServices] Handler handler,
-                CancellationToken cancellationToken) =>
-            {
-                var res = await handler.GetRolesAsync(userId, cancellationToken);
-                return Results.Json(res, statusCode: res.StatusCode);
-            })
-            .Produces<Response<List<UserRoleDto>>>()
-            .MustHavePermission(KrafterAction.View, KrafterResource.UserRoles);
+                    [FromRoute] string userId,
+                    [FromServices] Handler handler,
+                    CancellationToken cancellationToken) =>
+                {
+                    Response<List<UserRoleDto>> res = await handler.GetRolesAsync(userId, cancellationToken);
+                    return Results.Json(res, statusCode: res.StatusCode);
+                })
+                .Produces<Response<List<UserRoleDto>>>()
+                .MustHavePermission(KrafterAction.View, KrafterResource.UserRoles);
         }
     }
 }

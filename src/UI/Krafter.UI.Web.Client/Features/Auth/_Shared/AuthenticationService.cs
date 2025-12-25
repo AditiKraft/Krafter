@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Http;
 namespace Krafter.UI.Web.Client.Features.Auth._Shared;
 
 public class AuthenticationService(
-
     IApiService apiService,
     LayoutService layoutService,
     IKrafterLocalStorageService localStorage,
@@ -18,7 +17,7 @@ public class AuthenticationService(
     IHttpContextAccessor httpContextAccessor,
     IFormFactor formFactor,
     ILogger<AuthenticationService> logger
-    )
+)
     : IAuthenticationService
 {
     public event Action<string?>? LoginChange;
@@ -30,15 +29,16 @@ public class AuthenticationService(
         {
             await localStorage.ClearCacheAsync();
         }
+
         await apiService.LogoutAsync(CancellationToken.None);
         LoginChange?.Invoke("");
-        await HandleNavigationToLogin(forceLoad: true);
+        await HandleNavigationToLogin(true);
     }
 
     public async Task<bool> LoginAsync(TokenRequestInput model)
     {
         Response<TokenResponse>? tokenResponse;
-        if (model is {IsExternalLogin:true})
+        if (model is { IsExternalLogin: true })
         {
             tokenResponse = await apiService.ExternalAuthAsync(model, CancellationToken.None);
         }
@@ -74,11 +74,13 @@ public class AuthenticationService(
             {
                 return true;
             }
+
             var handler = new JwtSecurityTokenHandler();
             if (handler.ReadToken(token) is JwtSecurityToken jwtToken)
             {
                 return jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1);
             }
+
             return true;
         }
         catch
@@ -95,16 +97,17 @@ public class AuthenticationService(
 
         try
         {
-            navigationManager.NavigateTo("/login", forceLoad: forceLoad);
+            navigationManager.NavigateTo("/login", forceLoad);
             return;
         }
         catch (InvalidOperationException)
         {
             logger.LogInformation("NavigationManager not available, attempting server-side redirect.");
         }
+
         if (formFactor.GetFormFactor() is not "WebAssembly")
         {
-            var httpContext = httpContextAccessor.HttpContext;
+            HttpContext? httpContext = httpContextAccessor.HttpContext;
             if (httpContext != null && !httpContext.Response.HasStarted)
             {
                 logger.LogInformation("Performing server-side redirect to login page.");
@@ -136,14 +139,10 @@ public class AuthenticationService(
             return true;
         }
 
-        var model = new RefreshTokenRequest
-        {
-            Token = token,
-            RefreshToken = refreshToken
-        };
-     
+        var model = new RefreshTokenRequest { Token = token, RefreshToken = refreshToken };
+
         Response<TokenResponse>? tokenResponse = null;
-        var synchronized = await TokenSynchronizationManager.TryExecuteWithSynchronizationAsync(
+        bool synchronized = await TokenSynchronizationManager.TryExecuteWithSynchronizationAsync(
             async () =>
             {
                 tokenResponse = await apiService.RefreshTokenAsync(model, CancellationToken.None);
@@ -155,12 +154,14 @@ public class AuthenticationService(
 
         if (tokenResponse is null || tokenResponse.Data is null || tokenResponse.IsError)
         {
-            if (!IsTokenExpired((await localStorage.GetCachedAuthTokenAsync())))
+            if (!IsTokenExpired(await localStorage.GetCachedAuthTokenAsync()))
             {
                 return true;
             }
+
             return false;
         }
+
         if (formFactor.GetFormFactor() is "WebAssembly")
         {
             await localStorage.CacheAuthTokens(tokenResponse.Data);

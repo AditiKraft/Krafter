@@ -13,8 +13,7 @@ public class KrafterUser : IdentityUser<string>, ICommonAuthEntityProperty
     public DateTime? UpdatedOn { get; set; }
     public string? UpdatedById { get; set; }
 
-    [PersonalData]
-    public string? Name { get; set; }
+    [PersonalData] public string? Name { get; set; }
 
     public string? FirstName { get; set; }
     public string? LastName { get; set; }

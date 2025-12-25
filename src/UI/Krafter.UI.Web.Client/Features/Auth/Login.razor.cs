@@ -12,16 +12,14 @@ public partial class Login(
     NotificationService notificationService,
     ThemeManager themeManager,
     IConfiguration configuration
-    ) : ComponentBase
+) : ComponentBase
 {
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthState { get; set; } = default!;
+    [CascadingParameter] public Task<AuthenticationState> AuthState { get; set; } = default!;
 
     [SupplyParameterFromQuery(Name = "ReturnUrl")]
     public string ReturnUrl { get; set; }
 
-    [CascadingParameter]
-    public bool IsMobileDevice { get; set; }
+    [CascadingParameter] public bool IsMobileDevice { get; set; }
 
     public bool isBusy { get; set; }
     public TokenRequestInput TokenRequestInput { get; set; } = new();
@@ -29,20 +27,23 @@ public partial class Login(
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthState;
+        AuthenticationState authState = await AuthState;
         if (authState.User.Identity?.IsAuthenticated is true)
         {
-            if (!string.IsNullOrWhiteSpace(LocalAppSate.GoogleLoginReturnUrl) && (string.IsNullOrWhiteSpace(ReturnUrl) || ReturnUrl == "/"))
+            if (!string.IsNullOrWhiteSpace(LocalAppSate.GoogleLoginReturnUrl) &&
+                (string.IsNullOrWhiteSpace(ReturnUrl) || ReturnUrl == "/"))
             {
                 ReturnUrl = LocalAppSate.GoogleLoginReturnUrl;
                 LocalAppSate.GoogleLoginReturnUrl = "";
             }
 
-            if (!string.IsNullOrWhiteSpace(ReturnUrl) && (ReturnUrl.Contains("/login", StringComparison.InvariantCultureIgnoreCase)
-                || ReturnUrl.Contains("Account/Login", StringComparison.InvariantCultureIgnoreCase)))
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
+                (ReturnUrl.Contains("/login", StringComparison.InvariantCultureIgnoreCase)
+                 || ReturnUrl.Contains("Account/Login", StringComparison.InvariantCultureIgnoreCase)))
             {
                 ReturnUrl = "/";
             }
+
             _shouldRedirect = true;
         }
     }
@@ -51,11 +52,12 @@ public partial class Login(
     {
         if (firstRender && _shouldRedirect)
         {
-            var finalReturnUrl = !string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/";
-            if (Uri.TryCreate(finalReturnUrl, UriKind.Absolute, out var absoluteUri))
+            string finalReturnUrl = !string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/";
+            if (Uri.TryCreate(finalReturnUrl, UriKind.Absolute, out Uri? absoluteUri))
             {
                 finalReturnUrl = absoluteUri.PathAndQuery;
             }
+
             navigationManager.NavigateTo(finalReturnUrl);
         }
     }
@@ -67,11 +69,13 @@ public partial class Login(
             var uri = new Uri(navigationManager.Uri);
             ReturnUrl = uri.PathAndQuery;
         }
+
         isBusy = true;
-        var isSuccess = await authenticationService.LoginAsync(loginArgs);
+        bool isSuccess = await authenticationService.LoginAsync(loginArgs);
         if (isSuccess)
         {
-            if (!string.IsNullOrWhiteSpace(ReturnUrl) && !ReturnUrl.Contains("/login", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
+                !ReturnUrl.Contains("/login", StringComparison.InvariantCultureIgnoreCase))
             {
                 navigationManager.NavigateTo(ReturnUrl);
             }
@@ -91,29 +95,31 @@ public partial class Login(
             var uri = new Uri(navigationManager.Uri);
             ReturnUrl = uri.PathAndQuery;
         }
-        var returnUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "";
 
-        var host = new Uri(navigationManager.BaseUri).Host;
+        string returnUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "";
 
-        var clientId = configuration["Authentication:Google:ClientId"];
-        var redirectUri = $"{navigationManager.BaseUri}google-callback";
+        string host = new Uri(navigationManager.BaseUri).Host;
+
+        string? clientId = configuration["Authentication:Google:ClientId"];
+        string redirectUri = $"{navigationManager.BaseUri}google-callback";
         if (!redirectUri.Contains("localhost"))
         {
             redirectUri = $"https://krafter.getkrafter.dev/google-callback";
         }
-        var scope = "email profile";
-        var responseType = "code";
-        var state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(returnUrl)}";
-        var encodedState = Uri.EscapeDataString(state);
 
-        var authUrl = $"https://accounts.google.com/o/oauth2/v2/auth?" +
-                      $"client_id={Uri.EscapeDataString(clientId)}&" +
-                      $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
-                      $"response_type={responseType}&" +
-                      $"scope={Uri.EscapeDataString(scope)}&" +
-                      $"state={encodedState}&" +
-                      $"access_type=offline";
+        string scope = "email profile";
+        string responseType = "code";
+        string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(returnUrl)}";
+        string encodedState = Uri.EscapeDataString(state);
 
-        navigationManager.NavigateTo(authUrl, forceLoad: true);
+        string authUrl = $"https://accounts.google.com/o/oauth2/v2/auth?" +
+                         $"client_id={Uri.EscapeDataString(clientId)}&" +
+                         $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
+                         $"response_type={responseType}&" +
+                         $"scope={Uri.EscapeDataString(scope)}&" +
+                         $"state={encodedState}&" +
+                         $"access_type=offline";
+
+        navigationManager.NavigateTo(authUrl, true);
     }
 }

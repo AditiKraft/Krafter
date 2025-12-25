@@ -21,10 +21,9 @@ public static class RegisterUIServices
         service.AddScoped<CommonService>();
         service.AddScoped<MenuService>();
         service.AddScoped<LayoutService>();
-        
+
         service.AddScoped<IAuthenticationService, AuthenticationService>();
         service.AddScoped<HttpService>();
         service.AddScoped<NotificationService>();
-        
     }
 }

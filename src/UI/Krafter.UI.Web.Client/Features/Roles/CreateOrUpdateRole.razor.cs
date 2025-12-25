@@ -5,9 +5,12 @@ using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Roles;
 
-public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterClient krafterClient,  NotificationService notificationService) : ComponentBase
+public partial class CreateOrUpdateRole(
+    DialogService dialogService,
+    KrafterClient krafterClient,
+    NotificationService notificationService) : ComponentBase
 {
-    IEnumerable<string> selectedStandards;
+    private IEnumerable<string> selectedStandards;
 
     public class GroupPermissionData
     {
@@ -18,18 +21,17 @@ public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterCli
         public bool IsBasic { get; set; }
         public bool IsRoot { get; set; }
 
-        public bool IsGroup
-        {
-            get { return Resource != null; }
-        }
+        public bool IsGroup => Resource != null;
     }
 
-    [Parameter] public RoleDto? UserDetails { get; set; } = new RoleDto();
-    CreateOrUpdateRoleRequest CreateUserRequest = new CreateOrUpdateRoleRequest();
-    CreateOrUpdateRoleRequest OriginalCreateUserRequest = new CreateOrUpdateRoleRequest();
+    [Parameter] public RoleDto? UserDetails { get; set; } = new();
+    private CreateOrUpdateRoleRequest CreateUserRequest = new();
+    private CreateOrUpdateRoleRequest OriginalCreateUserRequest = new();
+
     public List<KrafterPermission> AllRoles { get; set; }
+
     //  public List<string> SelectedRolesId { get; set; } = new List<string>();
-    IEnumerable<GroupPermissionData> GroupedData = new List<GroupPermissionData>();
+    private IEnumerable<GroupPermissionData> GroupedData = new List<GroupPermissionData>();
 
     private bool isBusy = false;
 
@@ -38,16 +40,16 @@ public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterCli
 
     protected override async Task OnInitializedAsync()
     {
-        if (UserDetails is { })
+        if (UserDetails is not null)
         {
             CreateUserRequest = UserDetails.Adapt<CreateOrUpdateRoleRequest>();
             OriginalCreateUserRequest = UserDetails.Adapt<CreateOrUpdateRoleRequest>();
             if (!string.IsNullOrWhiteSpace(UserDetails.Id))
             {
                 GroupedData = KrafterPermissions.All.GroupBy(c => c.Resource)
-                    .SelectMany(i => new GroupPermissionData[] { new GroupPermissionData() { Resource = i.Key } }
+                    .SelectMany(i => new GroupPermissionData[] { new() { Resource = i.Key } }
                         .Concat(i.Select(o =>
-                            new GroupPermissionData()
+                            new GroupPermissionData
                             {
                                 Description = o.Description,
                                 Action = o.Action,
@@ -65,7 +67,7 @@ public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterCli
         }
     }
 
-    async void Submit(CreateOrUpdateRoleRequest input)
+    private async void Submit(CreateOrUpdateRoleRequest input)
     {
         if (UserDetails is not null)
         {
@@ -88,23 +90,23 @@ public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterCli
                     finalInput.Description = input.Description;
                 }
 
-               
 
                 if (!input.Permissions.ToHashSet().SetEquals(OriginalCreateUserRequest.Permissions))
                 {
                     finalInput.Permissions = input.Permissions;
                 }
             }
-            var result = await krafterClient.Roles.CreateOrUpdate.PostAsync(finalInput);
+
+            Response? result = await krafterClient.Roles.CreateOrUpdate.PostAsync(finalInput);
             isBusy = false;
             StateHasChanged();
-            if (result is null || result is {IsError:true})
+            if (result is null || result is { IsError: true })
             {
                 if (string.IsNullOrWhiteSpace(input.Id))
                 {
                     await dialogService.Alert(
                         "If you need to add a backup user and person in charge to this role, first add this role to the user by updating the user. Then come back here again and click on update to choose the backup person and person in charge.",
-                        "Information", new AlertOptions() { OkButtonText = "OK", Top = "5vh" });
+                        "Information", new AlertOptions { OkButtonText = "OK", Top = "5vh" });
                 }
 
                 dialogService.Close(true);
@@ -116,7 +118,7 @@ public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterCli
         }
     }
 
-    void OnChange(object? value)
+    private void OnChange(object? value)
     {
         if (value is null)
         {
@@ -124,8 +126,5 @@ public partial class CreateOrUpdateRole(DialogService dialogService,  KrafterCli
         }
     }
 
-    void Cancel()
-    {
-        dialogService.Close(false);
-    }
+    private void Cancel() => dialogService.Close(false);
 }

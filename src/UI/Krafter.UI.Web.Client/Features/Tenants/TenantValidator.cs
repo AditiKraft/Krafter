@@ -19,18 +19,18 @@ public class TenantValidator : AbstractValidator<CreateOrUpdateTenantRequestInpu
             .NotEmpty()
             .EmailAddress()
             .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-        
+
         RuleFor(p => p.Identifier)
             .NotEmpty()
             .NotEmpty()
             .MaximumLength(10)
             .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-        
-        
+
+
         RuleFor(p => p.IsActive)
             .NotNull()
             .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-        
+
         RuleFor(p => p.ValidUpto)
             .NotNull()
             .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);

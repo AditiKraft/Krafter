@@ -12,22 +12,26 @@ public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinde
     {
         if (string.IsNullOrWhiteSpace(identifier))
         {
-           return KrafterInitialConstants.KrafterTenant;
+            return KrafterInitialConstants.KrafterTenant;
         }
 
-        var tenant = await tenantDbContext.Tenants.AsNoTracking().SingleOrDefaultAsync(c => c.Identifier == identifier);
+        Tenant? tenant = await tenantDbContext.Tenants.AsNoTracking()
+            .SingleOrDefaultAsync(c => c.Identifier == identifier);
         if (tenant is null)
         {
             return KrafterInitialConstants.KrafterTenant;
         }
+
         if (tenant.IsActive == false)
         {
             throw new KrafterException("Tenant is not active");
         }
-        if (tenant.ValidUpto<DateTime.UtcNow)
+
+        if (tenant.ValidUpto < DateTime.UtcNow)
         {
-         throw   new KrafterException("Tenant validity expired");
+            throw new KrafterException("Tenant validity expired");
         }
+
         return tenant;
     }
 }

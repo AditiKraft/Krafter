@@ -4,11 +4,11 @@ namespace Krafter.UI.Web.Client.Features.Auth._Shared;
 
 public interface IAuthenticationService
 {
-    event Action<string?>? LoginChange;
+    public event Action<string?>? LoginChange;
 
-    Task<bool> LoginAsync(TokenRequestInput model);
+    public Task<bool> LoginAsync(TokenRequestInput model);
 
-    Task LogoutAsync(string methodName);
+    public Task LogoutAsync(string methodName);
 
-    Task<bool> RefreshAsync();
+    public Task<bool> RefreshAsync();
 }

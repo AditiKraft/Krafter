@@ -1,44 +1,43 @@
 ﻿using System.Security.Claims;
 using Backend.Common.Auth;
 
-namespace Backend.Common.Extensions
+namespace Backend.Common.Extensions;
+
+public static class ClaimsPrincipalExtensions
 {
-    public static class ClaimsPrincipalExtensions
-    {
-        public static string? GetEmail(this ClaimsPrincipal principal)
-            => principal.FindFirstValue(ClaimTypes.Email);
+    public static string? GetEmail(this ClaimsPrincipal principal)
+        => principal.FindFirstValue(ClaimTypes.Email);
 
-        // public static string? GetTenant(this ClaimsPrincipal principal)
-        //     => principal.FindFirstValue(FSHClaims.Tenant);
+    // public static string? GetTenant(this ClaimsPrincipal principal)
+    //     => principal.FindFirstValue(FSHClaims.Tenant);
 
-        public static string? GetFullName(this ClaimsPrincipal principal)
-            => principal?.FindFirst(KrafterClaims.Fullname)?.Value;
+    public static string? GetFullName(this ClaimsPrincipal principal)
+        => principal?.FindFirst(KrafterClaims.Fullname)?.Value;
 
-        public static string? GetFirstName(this ClaimsPrincipal principal)
-            => principal?.FindFirst(ClaimTypes.Name)?.Value;
+    public static string? GetFirstName(this ClaimsPrincipal principal)
+        => principal?.FindFirst(ClaimTypes.Name)?.Value;
 
-        public static string? GetSurname(this ClaimsPrincipal principal)
-            => principal?.FindFirst(ClaimTypes.Surname)?.Value;
+    public static string? GetSurname(this ClaimsPrincipal principal)
+        => principal?.FindFirst(ClaimTypes.Surname)?.Value;
 
-        public static string? GetPhoneNumber(this ClaimsPrincipal principal)
-            => principal.FindFirstValue(ClaimTypes.MobilePhone);
+    public static string? GetPhoneNumber(this ClaimsPrincipal principal)
+        => principal.FindFirstValue(ClaimTypes.MobilePhone);
 
-        public static string? GetUserId(this ClaimsPrincipal principal)
-            => principal.FindFirstValue(ClaimTypes.NameIdentifier);
+    public static string? GetUserId(this ClaimsPrincipal principal)
+        => principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // public static string? GetImageUrl(this ClaimsPrincipal principal)
-        //     => principal.FindFirstValue(FSHClaims.ImageUrl);
+    // public static string? GetImageUrl(this ClaimsPrincipal principal)
+    //     => principal.FindFirstValue(FSHClaims.ImageUrl);
 
-        public static DateTimeOffset GetExpiration(this ClaimsPrincipal principal) =>
-            DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(
-                principal.FindFirstValue(KrafterClaims.Expiration)));
+    public static DateTimeOffset GetExpiration(this ClaimsPrincipal principal) =>
+        DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(
+            principal.FindFirstValue(KrafterClaims.Expiration)));
 
-        private static string? FindFirstValue(this ClaimsPrincipal principal, string claimType) =>
-            principal is null
-                ? throw new ArgumentNullException(nameof(principal))
-                : principal.FindFirst(claimType)?.Value;
+    private static string? FindFirstValue(this ClaimsPrincipal principal, string claimType) =>
+        principal is null
+            ? throw new ArgumentNullException(nameof(principal))
+            : principal.FindFirst(claimType)?.Value;
 
-        public static List<string> GetRoles(this ClaimsPrincipal principal)
-            => principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
-    }
+    public static List<string> GetRoles(this ClaimsPrincipal principal)
+        => principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
 }

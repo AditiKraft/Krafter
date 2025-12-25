@@ -2,28 +2,27 @@
 
 #nullable disable
 
-namespace Backend.Migrations.Krafter
+namespace Backend.Migrations.Krafter;
+
+/// <inheritdoc />
+public partial class RemoveRoleNameIndex : Migration
 {
     /// <inheritdoc />
-    public partial class RemoveRoleNameIndex : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropIndex(
-                name: "RoleNameIndex",
-                table: "BrightLightRole");
-        }
+        migrationBuilder.DropIndex(
+            "RoleNameIndex",
+            "BrightLightRole");
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.CreateIndex(
-                name: "RoleNameIndex",
-                table: "BrightLightRole",
-                column: "NormalizedName",
-                unique: true,
-                filter: "[NormalizedName] IS NOT NULL");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.CreateIndex(
+            "RoleNameIndex",
+            "BrightLightRole",
+            "NormalizedName",
+            unique: true,
+            filter: "[NormalizedName] IS NOT NULL");
     }
 }

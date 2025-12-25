@@ -5,17 +5,19 @@ namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class ForgotPassword(NavigationManager navigationManager, KrafterClient krafterClient) : ComponentBase
 {
-    public ForgotPasswordRequest ForgotPasswordRequest { get; set; } = new ();
+    public ForgotPasswordRequest ForgotPasswordRequest { get; set; } = new();
     public bool IsBusy { get; set; }
     public bool MailSent { get; set; }
-    async Task SendForgotPasswordMail(ForgotPasswordRequest requestInput)
+
+    private async Task SendForgotPasswordMail(ForgotPasswordRequest requestInput)
     {
         IsBusy = true;
-        var response = await krafterClient.Users.ForgotPassword.PostAsync(requestInput);
-        if (response is not null && response.IsError==false)
+        Response? response = await krafterClient.Users.ForgotPassword.PostAsync(requestInput);
+        if (response is not null && response.IsError == false)
         {
             MailSent = true;
         }
+
         IsBusy = false;
     }
 }

@@ -7,6 +7,7 @@ using Backend.Application.Common;
 using Backend.Common;
 using Backend.Common.Auth;
 using Backend.Common.Interfaces;
+using Backend.Common.Models;
 using Backend.Features.Auth.Token;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
@@ -28,35 +29,36 @@ public class TokenService(
     private readonly SecuritySettings _securitySettings = securitySettings.Value;
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
-  
-   
 
     public async Task<TokenResponse> GenerateTokensAndUpdateUser(string userId, string ipAddress)
     {
-        var user = await userManager.FindByIdAsync(userId);
+        KrafterUser? user = await userManager.FindByIdAsync(userId);
         if (user is null)
         {
             throw new UnauthorizedException("Authentication Failed.");
         }
+
         return await GenerateTokensAndUpdateUser(user, ipAddress);
     }
 
     public async Task<TokenResponse> GenerateTokensAndUpdateUser(KrafterUser user, string ipAddress)
     {
         string token = GenerateJwt(user, ipAddress);
-        var newTone = false;
-        var tokenResponse = await krafterContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
+        bool newTone = false;
+        UserRefreshToken? tokenResponse =
+            await krafterContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
         if (tokenResponse is null)
         {
             newTone = true;
-            tokenResponse = new UserRefreshToken
-            {
-                UserId = user.Id,
-            };
+            tokenResponse = new UserRefreshToken { UserId = user.Id };
         }
+
         tokenResponse.RefreshToken = GenerateRefreshToken();
-        tokenResponse.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationInDays).AddMinutes(-1);
-        tokenResponse.TokenExpiryTime = DateTime.UtcNow.AddMinutes(_jwtSettings.TokenExpirationInMinutes).AddMinutes(-1); ;
+        tokenResponse.RefreshTokenExpiryTime =
+            DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationInDays).AddMinutes(-1);
+        tokenResponse.TokenExpiryTime =
+            DateTime.UtcNow.AddMinutes(_jwtSettings.TokenExpirationInMinutes).AddMinutes(-1);
+        ;
         if (newTone)
         {
             krafterContext.UserRefreshTokens.Add(tokenResponse);
@@ -66,15 +68,14 @@ public class TokenService(
             krafterContext.UserRefreshTokens.Update(tokenResponse);
         }
 
-        var permissions = await userService.GetPermissionsAsync(user.Id, CancellationToken.None);
+        Response<List<string>>? permissions = await userService.GetPermissionsAsync(user.Id, CancellationToken.None);
         await krafterContext.SaveChangesAsync();
-        return new TokenResponse(token, tokenResponse.RefreshToken, tokenResponse.RefreshTokenExpiryTime, tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
+        return new TokenResponse(token, tokenResponse.RefreshToken, tokenResponse.RefreshTokenExpiryTime,
+            tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
     }
 
-    private string GenerateJwt(KrafterUser user, string ipAddress)
-    {
-        return GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress));
-    }
+    private string GenerateJwt(KrafterUser user, string ipAddress) =>
+        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress));
 
     private IEnumerable<Claim> GetClaims(KrafterUser user, string ipAddress) =>
         new List<Claim>
@@ -106,7 +107,6 @@ public class TokenService(
         return tokenHandler.WriteToken(token);
     }
 
-   
 
     private SigningCredentials GetSigningCredentials()
     {

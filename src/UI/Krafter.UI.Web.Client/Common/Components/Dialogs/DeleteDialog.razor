@@ -1,22 +1,21 @@
 ﻿@using Krafter.Api.Client.Models
 @using Krafter.UI.Web.Client.Common.Components.Dialogs
-<RadzenAlert Variant="@Variant.Filled" AlertStyle="@AlertStyle.Secondary" Size="@AlertSize.ExtraSmall" Shade="Shade.Light" AllowClose=false>
+<RadzenAlert Variant="@Variant.Filled" AlertStyle="@AlertStyle.Secondary" Size="@AlertSize.ExtraSmall" Shade="Shade.Light" AllowClose="false">
     All fields marked with an asterisk (*) are required
 </RadzenAlert>
-<RadzenTemplateForm Data="@DeleteRequestInput" Submit="@(( DeleteRequestInput __)=> Submit(__))">    
+<RadzenTemplateForm Data="@DeleteRequestInput" Submit="@((DeleteRequestInput __) => Submit(__))">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="2">
-            <RadzenLabel Text="Delete Reason *" Component="DeleteReason" />
+            <RadzenLabel Text="Delete Reason *" Component="DeleteReason"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="10">
-            <RadzenTextBox Style="width: 100%" @bind-Value="@DeleteRequestInput.DeleteReason" Name="DeleteReason" />
+            <RadzenTextBox Style="width: 100%" @bind-Value="@DeleteRequestInput.DeleteReason" Name="DeleteReason"/>
         </RadzenColumn>
-        <ValidationMessage style="font-size: 13px" For="@(() => DeleteRequestInput.DeleteReason)" />
+        <ValidationMessage style="font-size: 13px" For="@(() => DeleteRequestInput.DeleteReason)"/>
     </RadzenRow>
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-        <RadzenButton ButtonStyle="ButtonStyle.Danger" ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Delete" />
-        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@dialogService.Close" />
+        <RadzenButton ButtonStyle="ButtonStyle.Danger" ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Delete"/>
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@dialogService.Close"/>
     </RadzenStack>
 </RadzenTemplateForm>
-

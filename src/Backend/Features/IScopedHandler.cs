@@ -1,6 +1,5 @@
-﻿namespace Backend.Features
+﻿namespace Backend.Features;
+
+public interface IScopedHandler
 {
-    public interface IScopedHandler
-    {
-    }
 }

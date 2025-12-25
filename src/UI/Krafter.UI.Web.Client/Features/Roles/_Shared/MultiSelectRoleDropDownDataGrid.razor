@@ -1,25 +1,25 @@
 ﻿@using Krafter.Api.Client.Models
 @using Krafter.UI.Web.Client.Features.Roles._Shared
-<RadzenDropDownDataGrid Name="RolesDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple=true AllowClear="true" @bind-Value=@ValueEnumerable Change="@((arg) => OnValueChanged(arg))"
-                        LoadData=@LoadProcesses AllowFiltering="true"
-                        Data=@Data Count="@(GetCount())" TextProperty="Name"  ValueProperty="Id" Placeholder="Select Roles" Chips=true>
+<RadzenDropDownDataGrid Name="RolesDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="true" AllowClear="true" @bind-Value="@ValueEnumerable" Change="@((arg) => OnValueChanged(arg))"
+                        LoadData="@LoadProcesses" AllowFiltering="true"
+                        Data="@Data" Count="@(GetCount())" TextProperty="Name" ValueProperty="Id" Placeholder="Select Roles" Chips="true">
 
     <Columns>
 
         <RadzenDropDownDataGridColumn Width="60px" Sortable="false">
             <HeaderTemplate>
-                <RadzenCheckBox  Disabled="@(!dropDownGrid.AllowSelectAll)" TriState="false" TValue="bool" Value="@(Data != null && Data.Any(c => ValueEnumerable != null && ValueEnumerable.Contains(c.Id)))"
-                                 Change="@(args => ValueEnumerable = args ? dropDownGrid.View.Cast<RoleDto>().Select(c => c.Id) : ValueEnumerable = Enumerable.Empty<string>())"/>
+                <RadzenCheckBox Disabled="@(!dropDownGrid.AllowSelectAll)" TriState="false" TValue="bool" Value="@(Data != null && Data.Any(c => ValueEnumerable != null && ValueEnumerable.Contains(c.Id)))"
+                                Change="@(args => ValueEnumerable = args ? dropDownGrid.View.Cast<RoleDto>().Select(c => c.Id) : ValueEnumerable = Enumerable.Empty<string>())"/>
             </HeaderTemplate>
             <Template Context="data">
-                <RadzenCheckBox  TriState="false" Value="@(ValueEnumerable != null && ValueEnumerable.Contains(((RoleDto)data).Id))"
-                                 TValue="bool" Change=@(_ => dropDownGrid.SelectItem(data)) @onclick:stopPropagation/>
+                <RadzenCheckBox TriState="false" Value="@(ValueEnumerable != null && ValueEnumerable.Contains(((RoleDto)data).Id))"
+                                TValue="bool" Change="@(_ => dropDownGrid.SelectItem(data))"@onclick:stopPropagation/>
             </Template>
         </RadzenDropDownDataGridColumn>
 
         <RadzenDropDownDataGridColumn Property="Name" Title="Name" Width="150px"/>
         <RadzenDropDownDataGridColumn Property="KeyPosition" Title="Key Position" Width="80px"/>
         <RadzenDropDownDataGridColumn Property="ProcessOwner" Title="Process Owner" Width="80px"/>
-        
+
     </Columns>
 </RadzenDropDownDataGrid>

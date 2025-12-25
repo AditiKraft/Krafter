@@ -23,14 +23,16 @@ builder.Services.AddUIServices(builder.Configuration["RemoteHostUrl"]);
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
 builder.Services.AddScoped<TenantIdentifier>();
 
-builder.Services.AddHttpClient("KrafterUIBFF", client =>
-{
-    HttpClientTenantConfigurator.SetBFFTenantHttpClientDefaults(builder.Services, builder.Configuration["RemoteHostUrl"], client);
-})
-  .Services
-  .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIBFF"));
+builder.Services.AddHttpClient("KrafterUIBFF",
+        client =>
+        {
+            HttpClientTenantConfigurator.SetBFFTenantHttpClientDefaults(builder.Services,
+                builder.Configuration["RemoteHostUrl"], client);
+        })
+    .Services
+    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIBFF"));
 builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStateProvider>()
-     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
+    .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 
 builder.Services.AddCascadingAuthenticationState();
 

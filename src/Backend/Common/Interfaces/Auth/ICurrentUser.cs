@@ -1,28 +1,27 @@
 ﻿using System.Security.Claims;
 
-namespace Backend.Common.Interfaces.Auth
+namespace Backend.Common.Interfaces.Auth;
+
+public interface ICurrentUser
 {
-    public interface ICurrentUser
-    {
-        string? Name { get; }
+    public string? Name { get; }
 
-        string GetUserId();
+    public string GetUserId();
 
-        string? GetUserEmail();
+    public string? GetUserEmail();
 
-        // string? GetTenant();
+    // string? GetTenant();
 
-        bool IsAuthenticated();
+    public bool IsAuthenticated();
 
-        bool IsInRole(string role);
+    public bool IsInRole(string role);
 
-        IEnumerable<Claim>? GetUserClaims();
-    }
-    public interface ICurrentUserInitializer
-    {
-        void SetCurrentUser(ClaimsPrincipal user);
+    public IEnumerable<Claim>? GetUserClaims();
+}
 
-        void SetCurrentUserId(string userId);
-    }
+public interface ICurrentUserInitializer
+{
+    public void SetCurrentUser(ClaimsPrincipal user);
 
+    public void SetCurrentUserId(string userId);
 }

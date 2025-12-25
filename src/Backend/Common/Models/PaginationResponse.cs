@@ -6,6 +6,7 @@ public class PaginationResponse<T>(List<T> items, int count, int skipCount, int 
     {
         Items = new List<T>();
     }
+
     public List<T> Items { get; set; } = items;
     public int SkipCount { get; set; } = skipCount;
     public int TotalCount { get; set; } = count;

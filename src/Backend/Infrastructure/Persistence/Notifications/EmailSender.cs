@@ -3,7 +3,8 @@ using Backend.Application.Notifications;
 using Backend.Infrastructure.Persistence.Configurations;
 
 namespace Backend.Infrastructure.Persistence.Notifications;
-public class EmailService(SmtpClient smtpClient,SMTPEmailSettings smtpEmailSettings) : IEmailService
+
+public class EmailService(SmtpClient smtpClient, SMTPEmailSettings smtpEmailSettings) : IEmailService
 {
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {

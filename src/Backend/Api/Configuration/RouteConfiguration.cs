@@ -1,3 +1,4 @@
+using System.Reflection;
 using Backend.Api;
 using Backend.Features.Auth.Token;
 
@@ -10,7 +11,7 @@ public static class RouteConfiguration
 {
     public static IServiceCollection AddRouteDiscovery(this IServiceCollection services)
     {
-        var assembly = typeof(GetToken.TokenRoute).Assembly;
+        Assembly assembly = typeof(GetToken.TokenRoute).Assembly;
 
         var routeRegistrars = assembly.GetTypes()
             .Where(t => typeof(IRouteRegistrar).IsAssignableFrom(t) &&
@@ -18,7 +19,7 @@ public static class RouteConfiguration
                         t != typeof(IRouteRegistrar))
             .ToList();
 
-        foreach (var routeType in routeRegistrars)
+        foreach (Type routeType in routeRegistrars)
         {
             services.AddSingleton(typeof(IRouteRegistrar), routeType);
         }
@@ -28,7 +29,7 @@ public static class RouteConfiguration
 
     public static IApplicationBuilder MapDiscoveredRoutes(this IApplicationBuilder app)
     {
-        foreach (var registrar in app.ApplicationServices.GetServices<IRouteRegistrar>())
+        foreach (IRouteRegistrar registrar in app.ApplicationServices.GetServices<IRouteRegistrar>())
         {
             registrar.MapRoute((IEndpointRouteBuilder)app);
         }

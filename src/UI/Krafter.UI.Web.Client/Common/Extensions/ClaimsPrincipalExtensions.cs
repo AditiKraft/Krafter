@@ -39,5 +39,5 @@ public static class ClaimsPrincipalExtensions
             : principal.FindFirst(claimType)?.Value;
 
     public static List<string> GetRoles(this ClaimsPrincipal principal)
-      => principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
+        => principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();
 }
