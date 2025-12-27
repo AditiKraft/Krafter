@@ -1,25 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="1280" height="640">
 	<defs>
 		<style>
-			.k-nav { fill: #0F172A; }
-			.k-grn { fill: url(#deepTechGradient); filter: url(#glow); }
-			.brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #0F172A; }
-			.tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #0F172A; }
+			.k-nav { fill: #FFFFFF; }
+			.k-grn { fill: #764AF1; }
+			.brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #FFFFFF; }
+			.tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #FFFFFF; }
 		</style>
-	
-        <linearGradient id="deepTechGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#764AF1" />
-            <stop offset="100%" stop-color="#06B6D4" />
-        </linearGradient>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-            </feMerge>
-        </filter>
-</defs>
-	<rect x="0" y="0" width="640" height="320" fill="#333333" />
+	</defs>
+	<rect x="0" y="0" width="640" height="320" fill="#0F172A" />
 	<g transform="translate(142.5, 70)">
 		<g id="icon">
 			<rect x="12" y="10" width="48" height="48" rx="6" class="k-nav" />

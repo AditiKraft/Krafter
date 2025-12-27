@@ -1,32 +1,15 @@
 <svg width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
-      .title { font: bold 20px sans-serif; fill: #333; }
-      .subtitle { font: bold 14px sans-serif; fill: #555; }
-      .text { font: 11px sans-serif; fill: #666; }
-      .box { fill: white; stroke: #333; stroke-width: 2; }
-      .client { fill: #e7f3ff; stroke: #0066cc; }
-      .backend { fill: #fff3e0; stroke: #ff9800; }
-      .data { fill: #f3e5f5; stroke: #9c27b0; }
-      .infra { fill: #e8f5e9; stroke: #4caf50; }
+      .title { font: bold 20px sans-serif; fill: #F8FAFC; }
+      .subtitle { font: bold 14px sans-serif; fill: #E2E8F0; }
+      .text { font: 11px sans-serif; fill: #94A3B8; }
+      .box { fill: #1E293B; stroke: #475569; stroke-width: 2; }
+      .client { fill: #172554; stroke: #3B82F6; }
+      .backend { fill: #451a03; stroke: #F59E0B; }
+      .data { fill: #4a044e; stroke: #D946EF; }
+      .infra { fill: #052e16; stroke: #22C55E; }
     </style>
-  
-        <linearGradient id="deepTechGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#764AF1" />
-            <stop offset="100%" stop-color="#06B6D4" />
-        </linearGradient>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-            </feMerge>
-        </filter>
-</defs>
-  
-  <text x="500" y="30" class="title" text-anchor="middle">Krafter Architecture</text>
-  
-  <!-- Client Layer -->
   <rect x="50" y="60" width="400" height="180" rx="8" class="client box"/>
   <text x="250" y="85" class="subtitle" text-anchor="middle">Client Layer</text>
   
@@ -113,18 +96,6 @@
     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
     </marker>
-  
-        <linearGradient id="deepTechGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#764AF1" />
-            <stop offset="100%" stop-color="#06B6D4" />
-        </linearGradient>
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-            </feMerge>
-        </filter>
 </defs>
   
   <line x1="250" y1="240" x2="250" y2="270" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)"/>

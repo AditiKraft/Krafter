@@ -56,11 +56,11 @@ public partial class Logo(ThemeManager themeManager) : IDisposable
         string res = "";
         if (themeManager.CurrentActive == ThemeManager.ThemePreference.Dark)
         {
-            res = "light";
+            res = "dark";
         }
         else
         {
-            res = "dark";
+            res = "light";
         }
 
 
