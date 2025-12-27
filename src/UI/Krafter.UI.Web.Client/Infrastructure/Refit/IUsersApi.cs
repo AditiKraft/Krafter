@@ -10,7 +10,7 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 public interface IUsersApi
 {
     [Get("/users/get")]
-    Task<Response<PaginationResponse<UserDto>>> GetUsersAsync(
+    public Task<Response<PaginationResponse<UserDto>>> GetUsersAsync(
         [Query] string? id = null,
         [Query] bool history = false,
         [Query] bool isDeleted = false,
@@ -22,7 +22,7 @@ public interface IUsersApi
         CancellationToken cancellationToken = default);
 
     [Get("/users/by-role/{roleId}")]
-    Task<Response<PaginationResponse<UserInfo>>> GetUsersByRoleAsync(
+    public Task<Response<PaginationResponse<UserInfo>>> GetUsersByRoleAsync(
         string roleId,
         [Query] string? id = null,
         [Query] bool history = false,
@@ -35,23 +35,29 @@ public interface IUsersApi
         CancellationToken cancellationToken = default);
 
     [Post("/users/create-or-update")]
-    Task<Response> CreateOrUpdateUserAsync([Body] CreateUserRequest request, CancellationToken cancellationToken = default);
+    public Task<Response> CreateOrUpdateUserAsync([Body] CreateUserRequest request,
+        CancellationToken cancellationToken = default);
 
     [Post("/users/delete")]
-    Task<Response> DeleteUserAsync([Body] DeleteRequestInput request, CancellationToken cancellationToken = default);
+    public Task<Response> DeleteUserAsync([Body] DeleteRequestInput request,
+        CancellationToken cancellationToken = default);
 
     [Get("/users/permissions")]
-    Task<Response<List<string>>> GetPermissionsAsync(CancellationToken cancellationToken = default);
+    public Task<Response<List<string>>> GetPermissionsAsync(CancellationToken cancellationToken = default);
 
     [Get("/users/roles")]
-    Task<Response<List<UserRoleDto>>> GetUserRolesAsync([Query] string userId, CancellationToken cancellationToken = default);
+    public Task<Response<List<UserRoleDto>>> GetUserRolesAsync([Query] string userId,
+        CancellationToken cancellationToken = default);
 
     [Post("/users/change-password")]
-    Task<Response> ChangePasswordAsync([Body] ChangePasswordRequest request, CancellationToken cancellationToken = default);
+    public Task<Response> ChangePasswordAsync([Body] ChangePasswordRequest request,
+        CancellationToken cancellationToken = default);
 
     [Post("/users/forgot-password")]
-    Task<Response> ForgotPasswordAsync([Body] ForgotPasswordRequest request, CancellationToken cancellationToken = default);
+    public Task<Response> ForgotPasswordAsync([Body] ForgotPasswordRequest request,
+        CancellationToken cancellationToken = default);
 
     [Post("/users/reset-password")]
-    Task<Response> ResetPasswordAsync([Body] ResetPasswordRequest request, CancellationToken cancellationToken = default);
+    public Task<Response> ResetPasswordAsync([Body] ResetPasswordRequest request,
+        CancellationToken cancellationToken = default);
 }

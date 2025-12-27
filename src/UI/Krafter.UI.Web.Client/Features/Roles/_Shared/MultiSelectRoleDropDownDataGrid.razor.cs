@@ -47,15 +47,15 @@ public partial class MultiSelectRoleDropDownDataGrid(
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
         response = await rolesApi.GetRolesAsync(
-            id: GetRequestInput.Id,
-            history: GetRequestInput.History,
-            isDeleted: GetRequestInput.IsDeleted,
-            query: GetRequestInput.Query,
-            filter: GetRequestInput.Filter,
-            orderBy: GetRequestInput.OrderBy,
-            skipCount: GetRequestInput.SkipCount,
-            maxResultCount: GetRequestInput.MaxResultCount,
-            cancellationToken: CancellationToken.None);
+            GetRequestInput.Id,
+            GetRequestInput.History,
+            GetRequestInput.IsDeleted,
+            GetRequestInput.Query,
+            GetRequestInput.Filter,
+            GetRequestInput.OrderBy,
+            GetRequestInput.SkipCount,
+            GetRequestInput.MaxResultCount,
+            CancellationToken.None);
         if (response is { Data.Items: not null })
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();

@@ -33,7 +33,7 @@
                     <ChildContent>
 
 
-                        @if (Krafter.Shared.Contracts.Roles.KrafterRoleConstant.IsDefault(data.Name!) == false)
+                        @if (Shared.Contracts.Roles.KrafterRoleConstant.IsDefault(data.Name!) == false)
                         {
                             <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Update, KrafterResource.Roles))">
                                 <RadzenSplitButtonItem Text="Edit" Value="@KrafterAction.Update" Icon="edit"/>

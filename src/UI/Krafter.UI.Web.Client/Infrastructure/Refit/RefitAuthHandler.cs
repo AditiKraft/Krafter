@@ -68,7 +68,7 @@ public class RefitAuthHandler(
                     if (!string.IsNullOrEmpty(accessToken))
                     {
                         // Clone request and retry
-                        var retryRequest = await CloneRequestAsync(request);
+                        HttpRequestMessage retryRequest = await CloneRequestAsync(request);
                         retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                         response.Dispose();
                         response = await base.SendAsync(retryRequest, cancellationToken);
@@ -86,7 +86,11 @@ public class RefitAuthHandler(
 
     private static bool IsPublicPath(string path)
     {
-        if (string.IsNullOrEmpty(path)) return false;
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
         string normalized = path.Trim().ToLowerInvariant();
         return PublicPaths.Any(p =>
             normalized.StartsWith(p, StringComparison.OrdinalIgnoreCase) ||
@@ -98,7 +102,10 @@ public class RefitAuthHandler(
         try
         {
             string[] parts = token.Split('.');
-            if (parts.Length != 3) return true;
+            if (parts.Length != 3)
+            {
+                return true;
+            }
 
             byte[] payload = Base64UrlDecode(parts[1]);
             using var doc = JsonDocument.Parse(payload);
@@ -121,28 +128,25 @@ public class RefitAuthHandler(
 
     private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request)
     {
-        var clone = new HttpRequestMessage(request.Method, request.RequestUri)
-        {
-            Version = request.Version
-        };
+        var clone = new HttpRequestMessage(request.Method, request.RequestUri) { Version = request.Version };
 
         if (request.Content != null)
         {
             byte[] content = await request.Content.ReadAsByteArrayAsync();
             clone.Content = new ByteArrayContent(content);
 
-            foreach (var header in request.Content.Headers)
+            foreach (KeyValuePair<string, IEnumerable<string>> header in request.Content.Headers)
             {
                 clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
         }
 
-        foreach (var header in request.Headers)
+        foreach (KeyValuePair<string, IEnumerable<string>> header in request.Headers)
         {
             clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
         }
 
-        foreach (var option in request.Options)
+        foreach (KeyValuePair<string, object?> option in request.Options)
         {
             clone.Options.TryAdd(option.Key, option.Value);
         }

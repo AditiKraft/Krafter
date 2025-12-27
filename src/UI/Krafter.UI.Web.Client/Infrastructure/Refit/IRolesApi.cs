@@ -10,7 +10,7 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 public interface IRolesApi
 {
     [Get("/roles/get")]
-    Task<Response<PaginationResponse<RoleDto>>> GetRolesAsync(
+    public Task<Response<PaginationResponse<RoleDto>>> GetRolesAsync(
         [Query] string? id = null,
         [Query] bool history = false,
         [Query] bool isDeleted = false,
@@ -22,14 +22,18 @@ public interface IRolesApi
         CancellationToken cancellationToken = default);
 
     [Post("/roles/create-or-update")]
-    Task<Response> CreateOrUpdateRoleAsync([Body] CreateOrUpdateRoleRequest request, CancellationToken cancellationToken = default);
+    public Task<Response> CreateOrUpdateRoleAsync([Body] CreateOrUpdateRoleRequest request,
+        CancellationToken cancellationToken = default);
 
     [Post("/roles/delete")]
-    Task<Response> DeleteRoleAsync([Body] DeleteRequestInput request, CancellationToken cancellationToken = default);
+    public Task<Response> DeleteRoleAsync([Body] DeleteRequestInput request,
+        CancellationToken cancellationToken = default);
 
     [Get("/roles/permissions")]
-    Task<Response<List<string>>> GetRolePermissionsAsync([Query] string roleId, CancellationToken cancellationToken = default);
+    public Task<Response<List<string>>> GetRolePermissionsAsync([Query] string roleId,
+        CancellationToken cancellationToken = default);
 
     [Post("/roles/update-permissions")]
-    Task<Response> UpdateRolePermissionsAsync([Body] UpdateRolePermissionsRequest request, CancellationToken cancellationToken = default);
+    public Task<Response> UpdateRolePermissionsAsync([Body] UpdateRolePermissionsRequest request,
+        CancellationToken cancellationToken = default);
 }

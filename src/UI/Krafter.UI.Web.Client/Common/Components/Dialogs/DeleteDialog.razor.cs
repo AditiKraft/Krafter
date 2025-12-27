@@ -32,7 +32,7 @@ public partial class DeleteDialog(
                     Response? roleResult = await rolesApi.DeleteRoleAsync(
                         new DeleteRequestInput
                         {
-                            DeleteReason = deleteRequestInput.DeleteReason, 
+                            DeleteReason = deleteRequestInput.DeleteReason,
                             Id = deleteRequestInput.Id,
                             EntityKind = EntityKind.KrafterRole
                         });
@@ -43,13 +43,14 @@ public partial class DeleteDialog(
                         result.StatusCode = roleResult.StatusCode;
                         result.Message = roleResult.Message;
                     }
+
                     break;
 
                 case EntityKind.KrafterUser:
                     Response? userResult = await usersApi.DeleteUserAsync(
                         new DeleteRequestInput
                         {
-                            DeleteReason = deleteRequestInput.DeleteReason, 
+                            DeleteReason = deleteRequestInput.DeleteReason,
                             Id = deleteRequestInput.Id,
                             EntityKind = EntityKind.KrafterUser
                         });
@@ -60,13 +61,14 @@ public partial class DeleteDialog(
                         result.StatusCode = userResult.StatusCode;
                         result.Message = userResult.Message;
                     }
+
                     break;
 
                 case EntityKind.Tenant:
                     Response? tenantResult = await tenantsApi.DeleteTenantAsync(
                         new DeleteRequestInput
                         {
-                            DeleteReason = deleteRequestInput.DeleteReason, 
+                            DeleteReason = deleteRequestInput.DeleteReason,
                             Id = deleteRequestInput.Id,
                             EntityKind = EntityKind.Tenant
                         });
@@ -77,6 +79,7 @@ public partial class DeleteDialog(
                         result.StatusCode = tenantResult.StatusCode;
                         result.Message = tenantResult.Message;
                     }
+
                     break;
 
                 default:

@@ -9,5 +9,5 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 public interface IAppInfoApi
 {
     [Get("/app-info")]
-    Task<Response<string>> GetAppInfoAsync(CancellationToken cancellationToken = default);
+    public Task<Response<string>> GetAppInfoAsync(CancellationToken cancellationToken = default);
 }

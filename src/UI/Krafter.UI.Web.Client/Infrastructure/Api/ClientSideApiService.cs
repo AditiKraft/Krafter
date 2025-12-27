@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
@@ -146,8 +146,5 @@ public class ClientSideApiService(
         }
     }
 
-    public Task LogoutAsync(CancellationToken cancellationToken)
-    {
-        return localStorage.ClearCacheAsync();
-    }
+    public Task LogoutAsync(CancellationToken cancellationToken) => localStorage.ClearCacheAsync();
 }

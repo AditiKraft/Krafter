@@ -108,10 +108,7 @@ public sealed class GetUsers
                 requestInput.SkipCount,
                 requestInput.MaxResultCount);
 
-            return new Response<PaginationResponse<UserDto>>
-            {
-                Data = result, IsError = false
-            };
+            return new Response<PaginationResponse<UserDto>> { Data = result, IsError = false };
         }
     }
 

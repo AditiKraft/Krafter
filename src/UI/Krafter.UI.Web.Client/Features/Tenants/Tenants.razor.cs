@@ -39,7 +39,7 @@ public partial class Tenants(
         }
 
         response = await tenantsApi.GetTenantsAsync(
-            id: requestInput.Id,
+            requestInput.Id,
             history: requestInput.History,
             isDeleted: requestInput.IsDeleted,
             filter: requestInput.Filter,

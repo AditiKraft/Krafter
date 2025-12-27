@@ -19,13 +19,13 @@
   </ItemGroup>
 
 
-	<PropertyGroup>
-		<RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
-	</PropertyGroup>
+  <PropertyGroup>
+    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
 
   <PropertyGroup>
     <ContainerFamily>noble</ContainerFamily>
-	<ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
+    <ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
     <ContainerRepository>ghcr.io/aditikraft/krafter.ui.web</ContainerRepository>
     <ContainerRegistry>ghcr.io</ContainerRegistry>
   </PropertyGroup>

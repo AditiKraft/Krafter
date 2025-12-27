@@ -25,10 +25,7 @@ public sealed class GetUserRoles
             KrafterUser? user = await userManager.FindByIdAsync(userId);
             if (user is null)
             {
-                return new Response<List<UserRoleDto>>
-                {
-                    IsError = true, Message = "User Not Found", StatusCode = 404
-                };
+                return new Response<List<UserRoleDto>> { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
             IList<string> userRoleNames = await userManager.GetRolesAsync(user);
@@ -38,10 +35,7 @@ public sealed class GetUserRoles
 
             if (roles is null || !roles.Any())
             {
-                return new Response<List<UserRoleDto>>
-                {
-                    Data = new List<UserRoleDto>()
-                };
+                return new Response<List<UserRoleDto>> { Data = new List<UserRoleDto>() };
             }
 
             var userRoles = new List<UserRoleDto>();

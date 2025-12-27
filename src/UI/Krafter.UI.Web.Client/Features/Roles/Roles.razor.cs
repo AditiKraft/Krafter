@@ -45,14 +45,14 @@ public partial class Roles(
         }
 
         response = await rolesApi.GetRolesAsync(
-            id: RequestInput.Id,
-            history: RequestInput.History,
-            isDeleted: RequestInput.IsDeleted,
-            query: RequestInput.Query,
-            filter: RequestInput.Filter,
-            orderBy: RequestInput.OrderBy,
-            skipCount: RequestInput.SkipCount,
-            maxResultCount: RequestInput.MaxResultCount);
+            RequestInput.Id,
+            RequestInput.History,
+            RequestInput.IsDeleted,
+            RequestInput.Query,
+            RequestInput.Filter,
+            RequestInput.OrderBy,
+            RequestInput.SkipCount,
+            RequestInput.MaxResultCount);
 
         IsLoading = false;
         await InvokeAsync(StateHasChanged);

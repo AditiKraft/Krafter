@@ -171,7 +171,7 @@ public sealed class ExternalAuth
                 GoogleAuthRequest request,
                 Handler externalAuthService,
                 KrafterContext db,
-                UserManager<KrafterUser> userManager, 
+                UserManager<KrafterUser> userManager,
                 RoleManager<KrafterRole> roleManager) =>
             {
                 Response<TokenResponse> res = await externalAuthService.GetTokenAsync(request, CancellationToken.None);

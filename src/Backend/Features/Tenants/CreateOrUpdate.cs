@@ -62,7 +62,7 @@ public sealed class CreateOrUpdate
                 dbContext.Tenants.Add(entity);
                 await dbContext.SaveChangesAsync();
                 await krafterContext.SaveChangesAsync([nameof(Tenant)]);
-                
+
                 string rootTenantLink = tenantGetterService.Tenant.TenantLink;
                 using (IServiceScope scope = serviceProvider.CreateScope())
                 {

@@ -32,7 +32,7 @@
                 @data.CreatedById
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Krafter.Shared.Contracts.Users.UserDto" Title="Actions" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true" Width="9.28vw" FrozenPosition="FrozenColumnPosition.Right">
+        <RadzenDataGridColumn TItem="UserDto" Title="Actions" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true" Width="9.28vw" FrozenPosition="FrozenColumnPosition.Right">
             <Template Context="data">
                 <RadzenSplitButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Lighter" Variant="Variant.Flat" AlwaysOpenPopup="true" Click="@(args => ActionClicked(args, data))" Text="Actions" Icon="settings_applications" Style="margin-right: 4px">
                     <ChildContent>

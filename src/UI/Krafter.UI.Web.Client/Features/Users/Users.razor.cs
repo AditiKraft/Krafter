@@ -53,14 +53,14 @@ public partial class Users(
         }
 
         response = await usersApi.GetUsersAsync(
-            id: requestInput.Id,
-            history: requestInput.History,
-            isDeleted: requestInput.IsDeleted,
-            query: requestInput.Query,
-            filter: requestInput.Filter,
-            orderBy: requestInput.OrderBy,
-            skipCount: requestInput.SkipCount,
-            maxResultCount: requestInput.MaxResultCount);
+            requestInput.Id,
+            requestInput.History,
+            requestInput.IsDeleted,
+            requestInput.Query,
+            requestInput.Filter,
+            requestInput.OrderBy,
+            requestInput.SkipCount,
+            requestInput.MaxResultCount);
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }

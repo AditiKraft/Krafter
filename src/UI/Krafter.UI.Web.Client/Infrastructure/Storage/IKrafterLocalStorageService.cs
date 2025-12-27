@@ -4,17 +4,17 @@ namespace Krafter.UI.Web.Client.Infrastructure.Storage;
 
 public interface IKrafterLocalStorageService
 {
-    Task ClearCacheAsync();
+    public Task ClearCacheAsync();
 
-    ValueTask<DateTime> GetAuthTokenExpiryDate();
+    public ValueTask<DateTime> GetAuthTokenExpiryDate();
 
-    ValueTask<DateTime> GetRefreshTokenExpiryDate();
+    public ValueTask<DateTime> GetRefreshTokenExpiryDate();
 
-    ValueTask CacheAuthTokens(TokenResponse tokenResponse);
+    public ValueTask CacheAuthTokens(TokenResponse tokenResponse);
 
-    ValueTask<string?> GetCachedAuthTokenAsync();
+    public ValueTask<string?> GetCachedAuthTokenAsync();
 
-    ValueTask<string?> GetCachedRefreshTokenAsync();
+    public ValueTask<string?> GetCachedRefreshTokenAsync();
 
-    ValueTask<ICollection<string>?> GetCachedPermissionsAsync();
+    public ValueTask<ICollection<string>?> GetCachedPermissionsAsync();
 }

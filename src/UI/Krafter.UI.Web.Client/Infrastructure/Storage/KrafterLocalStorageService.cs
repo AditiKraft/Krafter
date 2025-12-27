@@ -32,8 +32,10 @@ public class KrafterLocalStorageService(ILocalStorageService localStorageService
     {
         await localStorageService.SetItemAsync(StorageConstants.Local.AuthToken, tokenResponse.Token);
         await localStorageService.SetItemAsync(StorageConstants.Local.RefreshToken, tokenResponse.RefreshToken);
-        await localStorageService.SetItemAsync(StorageConstants.Local.AuthTokenExpiryDate, tokenResponse.TokenExpiryTime);
-        await localStorageService.SetItemAsync(StorageConstants.Local.RefreshTokenExpiryDate, tokenResponse.RefreshTokenExpiryTime);
+        await localStorageService.SetItemAsync(StorageConstants.Local.AuthTokenExpiryDate,
+            tokenResponse.TokenExpiryTime);
+        await localStorageService.SetItemAsync(StorageConstants.Local.RefreshTokenExpiryDate,
+            tokenResponse.RefreshTokenExpiryTime);
         if (tokenResponse.Permissions == null)
         {
             await localStorageService.RemoveItemAsync(StorageConstants.Local.Permissions);
@@ -46,13 +48,15 @@ public class KrafterLocalStorageService(ILocalStorageService localStorageService
 
     public async ValueTask<DateTime> GetAuthTokenExpiryDate()
     {
-        DateTime? expiry = await localStorageService.GetItemAsync<DateTime?>(StorageConstants.Local.AuthTokenExpiryDate);
+        DateTime? expiry =
+            await localStorageService.GetItemAsync<DateTime?>(StorageConstants.Local.AuthTokenExpiryDate);
         return expiry ?? DateTime.UtcNow.AddMinutes(-1);
     }
 
     public async ValueTask<DateTime> GetRefreshTokenExpiryDate()
     {
-        DateTime? expiry = await localStorageService.GetItemAsync<DateTime?>(StorageConstants.Local.RefreshTokenExpiryDate);
+        DateTime? expiry =
+            await localStorageService.GetItemAsync<DateTime?>(StorageConstants.Local.RefreshTokenExpiryDate);
         return expiry ?? DateTime.UtcNow.AddMinutes(-1);
     }
 }

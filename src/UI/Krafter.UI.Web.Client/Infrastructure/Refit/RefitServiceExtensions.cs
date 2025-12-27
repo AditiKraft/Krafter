@@ -17,10 +17,7 @@ public static class RefitServiceExtensions
         services.AddTransient<RefitAuthHandler>();
         services.AddTransient<RefitTenantHandler>();
 
-        var refitSettings = new RefitSettings
-        {
-            ContentSerializer = new SystemTextJsonContentSerializer()
-        };
+        var refitSettings = new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() };
 
         // Register IAuthApi (no auth handler - used for login/refresh)
         services.AddRefitClient<IAuthApi>(refitSettings)

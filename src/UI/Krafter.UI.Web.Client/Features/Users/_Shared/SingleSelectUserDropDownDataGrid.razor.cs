@@ -34,14 +34,14 @@ public partial class SingleSelectUserDropDownDataGrid(
         {
             Response<PaginationResponse<UserInfo>>? response = await usersApi.GetUsersByRoleAsync(
                 RoleId,
-                id: GetRequestInput.Id,
-                history: GetRequestInput.History,
-                isDeleted: GetRequestInput.IsDeleted,
-                query: GetRequestInput.Query,
-                filter: GetRequestInput.Filter,
-                orderBy: GetRequestInput.OrderBy,
-                skipCount: GetRequestInput.SkipCount,
-                maxResultCount: GetRequestInput.MaxResultCount);
+                GetRequestInput.Id,
+                GetRequestInput.History,
+                GetRequestInput.IsDeleted,
+                GetRequestInput.Query,
+                GetRequestInput.Filter,
+                GetRequestInput.OrderBy,
+                GetRequestInput.SkipCount,
+                GetRequestInput.MaxResultCount);
             if (response is { Data.Items: not null })
             {
                 Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id ?? "")).ToList();
@@ -51,14 +51,14 @@ public partial class SingleSelectUserDropDownDataGrid(
         else
         {
             Response<PaginationResponse<UserDto>>? response = await usersApi.GetUsersAsync(
-                id: GetRequestInput.Id,
-                history: GetRequestInput.History,
-                isDeleted: GetRequestInput.IsDeleted,
-                query: GetRequestInput.Query,
-                filter: GetRequestInput.Filter,
-                orderBy: GetRequestInput.OrderBy,
-                skipCount: GetRequestInput.SkipCount,
-                maxResultCount: GetRequestInput.MaxResultCount);
+                GetRequestInput.Id,
+                GetRequestInput.History,
+                GetRequestInput.IsDeleted,
+                GetRequestInput.Query,
+                GetRequestInput.Filter,
+                GetRequestInput.OrderBy,
+                GetRequestInput.SkipCount,
+                GetRequestInput.MaxResultCount);
             if (response is { Data.Items: not null })
             {
                 TotalCount = response.Data.TotalCount;

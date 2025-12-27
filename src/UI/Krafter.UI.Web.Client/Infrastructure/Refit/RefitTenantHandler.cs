@@ -13,7 +13,8 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier) : DelegatingH
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var tenantInfo = tenantIdentifier.Get();
+        (string tenantIdentifier, string remoteHostUrl, string rootDomain, string clientBaseAddress) tenantInfo =
+            tenantIdentifier.Get();
 
         // Set static TenantInfo for backward compatibility
         TenantInfo.Identifier = tenantInfo.tenantIdentifier;
