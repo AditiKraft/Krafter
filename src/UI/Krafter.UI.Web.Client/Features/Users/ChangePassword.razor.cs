@@ -1,25 +1,26 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class ChangePassword(
     NavigationManager navigationManager,
     NotificationService notificationService,
-    KrafterClient krafterClient
+    IUsersApi usersApi
 ) : ComponentBase
 {
     public ChangePasswordRequest ChangePasswordRequest { get; set; } = new();
 
     [SupplyParameterFromQuery(Name = "ReturnUrl")]
-    public string ReturnUrl { get; set; }
+    public string ReturnUrl { get; set; } = default!;
 
     public bool IsBusy { get; set; }
 
     private async Task SubmitChangePassword(ChangePasswordRequest requestInput)
     {
         IsBusy = true;
-        Response? response = await krafterClient.Users.ChangePassword.PostAsync(requestInput);
+        Response? response = await usersApi.ChangePasswordAsync(requestInput);
         IsBusy = false;
         if (response is { IsError: false })
         {

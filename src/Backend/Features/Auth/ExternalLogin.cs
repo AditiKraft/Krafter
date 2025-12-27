@@ -1,19 +1,15 @@
-﻿using Backend.Api;
-using Backend.Api.Configuration;
+using Backend.Api;
 using Backend.Application.Common;
-using Backend.Common;
-using Backend.Common.Interfaces;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using System.Security.Claims;
 using System.Text.Json.Serialization;
-using Backend.Common.Models;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Auth;
+using Krafter.Shared.Contracts.Roles;
 
 namespace Backend.Features.Auth;
 
@@ -24,7 +20,6 @@ public sealed class ExternalAuth
         public class GoogleTokens
         {
             [JsonPropertyName("access_token")] public string AccessToken { get; set; } = string.Empty;
-
             [JsonPropertyName("id_token")] public string IdToken { get; set; } = string.Empty;
         }
 
@@ -48,13 +43,13 @@ public sealed class ExternalAuth
             _logger = logger;
         }
 
-        public async Task<GoogleTokens> ExchangeCodeForTokensAsync(string code)
+        public async Task<GoogleTokens?> ExchangeCodeForTokensAsync(string code)
         {
             string? clientId = _configuration["Authentication:Google:ClientId"];
             string? clientSecret = _configuration["Authentication:Google:ClientSecret"];
             string? redirectUri = _configuration["Authentication:Google:RedirectUri"];
 
-            var tokenRequestParams = new Dictionary<string, string>
+            var tokenRequestParams = new Dictionary<string, string?>
             {
                 ["client_id"] = clientId,
                 ["client_secret"] = clientSecret,
@@ -65,7 +60,7 @@ public sealed class ExternalAuth
 
             HttpResponseMessage response = await _httpClient.PostAsync(
                 "https://oauth2.googleapis.com/token",
-                new FormUrlEncodedContent(tokenRequestParams));
+                new FormUrlEncodedContent(tokenRequestParams!));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -80,7 +75,7 @@ public sealed class ExternalAuth
             return await response.Content.ReadFromJsonAsync<GoogleTokens>();
         }
 
-        public async Task<GoogleUserInfo> GetUserInfoAsync(string accessToken)
+        public async Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken)
         {
             var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
@@ -97,11 +92,6 @@ public sealed class ExternalAuth
         }
     }
 
-    public sealed class GoogleAuthRequest
-    {
-        public string Code { get; set; } = string.Empty;
-    }
-
     internal sealed class Handler(
         ITokenService tokenService,
         KrafterContext db,
@@ -109,19 +99,17 @@ public sealed class ExternalAuth
         RoleManager<KrafterRole> roleManager,
         GoogleAuthClient googleAuthClient) : IScopedHandler
     {
-        public async Task<Response<TokenResponse>> GetTokenAsync(GoogleAuthRequest request,
+        public async Task<Response<TokenResponse>> GetTokenAsync(
+            GoogleAuthRequest request,
             CancellationToken cancellationToken)
         {
             // Get the auth info using the code
-            GoogleAuthClient.GoogleTokens? tokens = await googleAuthClient.ExchangeCodeForTokensAsync(
-                request.Code);
+            GoogleAuthClient.GoogleTokens? tokens = await googleAuthClient.ExchangeCodeForTokensAsync(request.Code);
 
             if (tokens == null)
             {
                 throw new UnauthorizedException("Invalid token");
             }
-
-            ;
 
             // Get user info from Google
             GoogleAuthClient.GoogleUserInfo? userInfo = await googleAuthClient.GetUserInfoAsync(tokens.AccessToken);
@@ -162,8 +150,7 @@ public sealed class ExternalAuth
                     throw new KrafterException("An error occurred while creating user.");
                 }
 
-                db.UserRoles.Add(
-                    new KrafterUserRole { RoleId = basic.Id, UserId = user.Id });
+                db.UserRoles.Add(new KrafterUserRole { RoleId = basic.Id, UserId = user.Id });
                 await db.SaveChangesAsync(new List<string>(), true, cancellationToken);
             }
 
@@ -178,25 +165,18 @@ public sealed class ExternalAuth
         {
             RouteGroupBuilder productGroup = app.MapGroup(KrafterRoute.ExternalAuth)
                 .AddFluentValidationFilter();
-            // Token exchange endpoint
+
             productGroup.MapPost("/google", async (
                 HttpContext context,
                 GoogleAuthRequest request,
                 Handler externalAuthService,
                 KrafterContext db,
-                UserManager<KrafterUser> userManager, RoleManager<KrafterRole> roleManager) =>
+                UserManager<KrafterUser> userManager,
+                RoleManager<KrafterRole> roleManager) =>
             {
-                string? ipAddress = GetIpAddress(context);
                 Response<TokenResponse> res = await externalAuthService.GetTokenAsync(request, CancellationToken.None);
                 return Results.Json(res, statusCode: res.StatusCode);
             }).AllowAnonymous();
-        }
-
-        private string? GetIpAddress(HttpContext httpContext)
-        {
-            return httpContext.Request.Headers.ContainsKey("X-Forwarded-For")
-                ? httpContext.Request.Headers["X-Forwarded-For"]
-                : httpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "N/A";
         }
     }
 }

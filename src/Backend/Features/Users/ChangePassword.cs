@@ -1,15 +1,12 @@
 using Backend.Api;
-using Backend.Api.Authorization;
 using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
-using Backend.Common;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
-using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,13 +14,6 @@ namespace Backend.Features.Users;
 
 public sealed class ChangePassword
 {
-    public sealed class ChangePasswordRequest
-    {
-        public string Password { get; set; } = default!;
-        public string NewPassword { get; set; } = default!;
-        public string ConfirmNewPassword { get; set; } = default!;
-    }
-
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         ICurrentUser currentUser,
@@ -69,19 +59,6 @@ public sealed class ChangePassword
                 CancellationToken.None);
 
             return new Response();
-        }
-    }
-
-    internal sealed class Validator : AbstractValidator<ChangePasswordRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.Password)
-                .NotEmpty().WithMessage("Current password is required");
-
-            RuleFor(p => p.NewPassword)
-                .NotEmpty().WithMessage("New password is required")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters");
         }
     }
 

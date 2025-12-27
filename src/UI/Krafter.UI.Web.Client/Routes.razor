@@ -1,9 +1,7 @@
-﻿@using Krafter.Api.Client
-@using Krafter.Api.Client.Models
-@using Krafter.UI.Web.Client.Common.Components.Layout
+﻿@using Krafter.UI.Web.Client.Common.Components.Layout
 @inject IJSRuntime jsRuntime
 @inject ThemeManager themeManager
-@inject KrafterClient KrafterClient
+@inject ITenantsApi tenantsApi
 @implements IDisposable
 <RadzenComponents/>
 
@@ -87,7 +85,7 @@
             Console.WriteLine($"Error in OnAfterRenderAsync: {ex}");
         }
 
-        await KrafterClient.Tenants.SeedData.PostAsync(new SeedDataRequestInput());
+        await tenantsApi.SeedDataAsync(new SeedDataRequest(), CancellationToken.None);
     }
 
     [JSInvokable]

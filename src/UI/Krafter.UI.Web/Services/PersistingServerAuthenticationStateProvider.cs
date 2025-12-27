@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Components.Web;
 using System.Diagnostics;
 using System.Security.Claims;
-using Krafter.Api.Client.Models;
+using Krafter.Shared.Common.Models;
 using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Common.Extensions;
 

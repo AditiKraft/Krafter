@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Krafter.Api.Client.Models;
+using Krafter.Shared.Contracts.Roles;
 using Krafter.UI.Web.Client.Common.Validators;
 
 namespace Krafter.UI.Web.Client.Features.Roles;

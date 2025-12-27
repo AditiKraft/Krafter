@@ -1,6 +1,5 @@
 ﻿using Blazored.LocalStorage;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client.Features.Auth._Shared;
+using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Common.Constants;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Storage;
@@ -33,6 +32,10 @@ public class KrafterLocalStorageService(ILocalStorageService localStorageService
     {
         await localStorageService.SetItemAsync(StorageConstants.Local.AuthToken, tokenResponse.Token);
         await localStorageService.SetItemAsync(StorageConstants.Local.RefreshToken, tokenResponse.RefreshToken);
+        await localStorageService.SetItemAsync(StorageConstants.Local.AuthTokenExpiryDate,
+            tokenResponse.TokenExpiryTime);
+        await localStorageService.SetItemAsync(StorageConstants.Local.RefreshTokenExpiryDate,
+            tokenResponse.RefreshTokenExpiryTime);
         if (tokenResponse.Permissions == null)
         {
             await localStorageService.RemoveItemAsync(StorageConstants.Local.Permissions);
@@ -43,7 +46,17 @@ public class KrafterLocalStorageService(ILocalStorageService localStorageService
         }
     }
 
-    public ValueTask<DateTime> GetAuthTokenExpiryDate() => throw new NotImplementedException();
+    public async ValueTask<DateTime> GetAuthTokenExpiryDate()
+    {
+        DateTime? expiry =
+            await localStorageService.GetItemAsync<DateTime?>(StorageConstants.Local.AuthTokenExpiryDate);
+        return expiry ?? DateTime.UtcNow.AddMinutes(-1);
+    }
 
-    public ValueTask<DateTime> GetRefreshTokenExpiryDate() => throw new NotImplementedException();
+    public async ValueTask<DateTime> GetRefreshTokenExpiryDate()
+    {
+        DateTime? expiry =
+            await localStorageService.GetItemAsync<DateTime?>(StorageConstants.Local.RefreshTokenExpiryDate);
+        return expiry ?? DateTime.UtcNow.AddMinutes(-1);
+    }
 }

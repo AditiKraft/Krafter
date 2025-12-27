@@ -1,6 +1,6 @@
 ﻿@page "/login"
 @page "/Account/Login"
-@using Krafter.Api.Client.Models
+@using Krafter.Shared.Contracts.Auth
 @using Krafter.UI.Web.Client.Features.Auth
 <RadzenRow Gap="0" Class="rz-my-12 rz-mx-auto rz-border-radius-6 rz-shadow-10" Style="width: 100%; max-width: 800px; overflow: hidden;">
 
@@ -45,7 +45,7 @@
                 Or
             </RadzenText>
 
-            <RadzenTemplateForm Data="@TokenRequestInput" Submit="@((TokenRequestInput __) => CreateToken(__))">
+            <RadzenTemplateForm Data="@TokenRequestInput" Submit="@((TokenRequest __) => CreateToken(__))">
                 <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
                 <RadzenStack Gap="3">
                     <RadzenRow AlignItems="AlignItems.Center">

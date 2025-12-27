@@ -1,18 +1,19 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class RestPassword(
     NavigationManager navigationManager,
     NotificationService notificationService,
-    KrafterClient krafterClient
+    IUsersApi usersApi
 ) : ComponentBase
 {
     public ResetPasswordRequest ResetPasswordRequest { get; set; } = new();
 
     [SupplyParameterFromQuery(Name = "Token")]
-    public string Token { get; set; }
+    public string Token { get; set; } = default!;
 
     public bool IsBusy { get; set; }
 
@@ -20,7 +21,7 @@ public partial class RestPassword(
     {
         requestInput.Token = Token;
         IsBusy = true;
-        Response? response = await krafterClient.Users.ResetPassword.PostAsync(requestInput);
+        Response? response = await usersApi.ResetPasswordAsync(requestInput);
         IsBusy = false;
         if (response is { IsError: true })
         {

@@ -2,47 +2,46 @@
 
 #nullable disable
 
-namespace Backend.Migrations.BackgroundJobs
+namespace Backend.Migrations.BackgroundJobs;
+
+/// <inheritdoc />
+public partial class NewChanges : Migration
 {
     /// <inheritdoc />
-    public partial class NewChanges : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropForeignKey(
-                name: "FK_TimeTickers_TimeTickers_BatchParent",
-                schema: "ticker",
-                table: "TimeTickers");
+        migrationBuilder.DropForeignKey(
+            "FK_TimeTickers_TimeTickers_BatchParent",
+            schema: "ticker",
+            table: "TimeTickers");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_TimeTickers_TimeTickers_BatchParent",
-                schema: "ticker",
-                table: "TimeTickers",
-                column: "BatchParent",
-                principalSchema: "ticker",
-                principalTable: "TimeTickers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-        }
+        migrationBuilder.AddForeignKey(
+            "FK_TimeTickers_TimeTickers_BatchParent",
+            schema: "ticker",
+            table: "TimeTickers",
+            column: "BatchParent",
+            principalSchema: "ticker",
+            principalTable: "TimeTickers",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.Restrict);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropForeignKey(
-                name: "FK_TimeTickers_TimeTickers_BatchParent",
-                schema: "ticker",
-                table: "TimeTickers");
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropForeignKey(
+            "FK_TimeTickers_TimeTickers_BatchParent",
+            schema: "ticker",
+            table: "TimeTickers");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_TimeTickers_TimeTickers_BatchParent",
-                schema: "ticker",
-                table: "TimeTickers",
-                column: "BatchParent",
-                principalSchema: "ticker",
-                principalTable: "TimeTickers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
-        }
+        migrationBuilder.AddForeignKey(
+            "FK_TimeTickers_TimeTickers_BatchParent",
+            schema: "ticker",
+            table: "TimeTickers",
+            column: "BatchParent",
+            principalSchema: "ticker",
+            principalTable: "TimeTickers",
+            principalColumn: "Id",
+            onDelete: ReferentialAction.SetNull);
     }
 }

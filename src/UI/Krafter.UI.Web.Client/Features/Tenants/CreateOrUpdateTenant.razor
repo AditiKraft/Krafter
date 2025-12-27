@@ -1,5 +1,5 @@
-﻿@using Krafter.Api.Client.Models
-<RadzenTemplateForm Data="@CreateRequest" Submit="@((CreateOrUpdateTenantRequestInput __) => Submit(__))">
+﻿@using Krafter.Shared.Contracts.Tenants
+<RadzenTemplateForm Data="@CreateRequest" Submit="@((CreateOrUpdateTenantRequest __) => Submit(__))">
 
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
     <RadzenStack>

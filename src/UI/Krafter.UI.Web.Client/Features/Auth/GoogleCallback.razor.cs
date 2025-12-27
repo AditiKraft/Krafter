@@ -1,4 +1,4 @@
-﻿using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Microsoft.AspNetCore.WebUtilities;
@@ -41,7 +41,7 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                 {
                     string ReturnUrl = returnUrl;
                     LocalAppSate.GoogleLoginReturnUrl = ReturnUrl;
-                    bool isSuccess = await authenticationService.LoginAsync(new TokenRequestInput
+                    bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
                     {
                         IsExternalLogin = true, Code = code.ToString()
                     });

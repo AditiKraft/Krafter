@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Backend.Common.Extensions;
 using Backend.Common.Interfaces.Auth;
+using Krafter.Shared.Common.Extensions;
 
 namespace Backend.Application.Auth;
 

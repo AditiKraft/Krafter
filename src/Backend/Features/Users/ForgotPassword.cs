@@ -1,13 +1,12 @@
 using Backend.Api;
-using Backend.Api.Authorization;
 using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
-using Backend.Common;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -16,11 +15,6 @@ namespace Backend.Features.Users;
 
 public sealed class ForgotPassword
 {
-    public sealed class ForgotPasswordRequest
-    {
-        public string Email { get; set; } = default!;
-    }
-
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         ITenantGetterService tenantGetterService,
@@ -53,16 +47,6 @@ public sealed class ForgotPassword
                 CancellationToken.None);
 
             return new Response();
-        }
-    }
-
-    internal sealed class Validator : AbstractValidator<ForgotPasswordRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email format");
         }
     }
 

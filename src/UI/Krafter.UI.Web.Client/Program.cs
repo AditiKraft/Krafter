@@ -2,7 +2,7 @@
 using Krafter.UI.Web.Client;
 using Krafter.UI.Web.Client.Common.Validators;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
-using Krafter.UI.Web.Client.Kiota;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Infrastructure.Auth;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
@@ -36,6 +36,6 @@ builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStatePro
 
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddKrafterKiotaClient(builder.Configuration["RemoteHostUrl"]);
+builder.Services.AddKrafterRefitClients(builder.Configuration["RemoteHostUrl"]!);
 
 await builder.Build().RunAsync();

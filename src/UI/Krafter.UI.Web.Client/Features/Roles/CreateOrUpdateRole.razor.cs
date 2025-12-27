@@ -1,23 +1,24 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client.Common.Permissions;
+﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Roles;
 
 public partial class CreateOrUpdateRole(
     DialogService dialogService,
-    KrafterClient krafterClient,
+    IRolesApi rolesApi,
     NotificationService notificationService) : ComponentBase
 {
-    private IEnumerable<string> selectedStandards;
+    private IEnumerable<string> selectedStandards = default!;
 
     public class GroupPermissionData
     {
-        public string Description { get; set; }
-        public string Action { get; set; }
-        public string Resource { get; set; }
-        public string FinalPermission { get; set; }
+        public string Description { get; set; } = default!;
+        public string Action { get; set; } = default!;
+        public string Resource { get; set; } = default!;
+        public string FinalPermission { get; set; } = default!;
         public bool IsBasic { get; set; }
         public bool IsRoot { get; set; }
 
@@ -28,9 +29,8 @@ public partial class CreateOrUpdateRole(
     private CreateOrUpdateRoleRequest CreateUserRequest = new();
     private CreateOrUpdateRoleRequest OriginalCreateUserRequest = new();
 
-    public List<KrafterPermission> AllRoles { get; set; }
+    public List<KrafterPermission> AllRoles { get; set; } = default!;
 
-    //  public List<string> SelectedRolesId { get; set; } = new List<string>();
     private IEnumerable<GroupPermissionData> GroupedData = new List<GroupPermissionData>();
 
     private bool isBusy = false;
@@ -57,11 +57,8 @@ public partial class CreateOrUpdateRole(
                                 IsRoot = o.IsRoot,
                                 FinalPermission = KrafterPermission.NameFor(o.Action, o.Resource)
                             }))).ToList();
-                RoleDto? roleWithPermissions =
-                    (await krafterClient.Roles.GetByIdWithPermissions[UserDetails.Id].GetAsync())?.Data;
-                CreateUserRequest.Permissions = roleWithPermissions is { Permissions: not null }
-                    ? roleWithPermissions.Permissions
-                    : new List<string>();
+                Response<List<string>>? rolePermissions = await rolesApi.GetRolePermissionsAsync(UserDetails.Id);
+                CreateUserRequest.Permissions = rolePermissions?.Data ?? new List<string>();
                 OriginalCreateUserRequest.Permissions = CreateUserRequest.Permissions;
             }
         }
@@ -97,7 +94,7 @@ public partial class CreateOrUpdateRole(
                 }
             }
 
-            Response? result = await krafterClient.Roles.CreateOrUpdate.PostAsync(finalInput);
+            Response? result = await rolesApi.CreateOrUpdateRoleAsync(finalInput);
             isBusy = false;
             StateHasChanged();
             if (result is null || result is { IsError: true })

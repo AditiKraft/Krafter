@@ -1,17 +1,18 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Tenants;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Tenants;
 
 public partial class CreateOrUpdateTenant(
     DialogService dialogService,
-    KrafterClient krafterClient
+    ITenantsApi tenantsApi
 ) : ComponentBase
 {
     [Parameter] public TenantDto? TenantInput { get; set; } = new();
-    private CreateOrUpdateTenantRequestInput CreateRequest = new();
-    private CreateOrUpdateTenantRequestInput OriginalCreateRequest = new();
+    private CreateOrUpdateTenantRequest CreateRequest = new();
+    private CreateOrUpdateTenantRequest OriginalCreateRequest = new();
     private bool isBusy = false;
     public List<string> SelectedTables { get; set; } = new();
 
@@ -19,24 +20,23 @@ public partial class CreateOrUpdateTenant(
     {
         if (TenantInput is not null)
         {
-            CreateRequest = TenantInput.Adapt<CreateOrUpdateTenantRequestInput>();
-            OriginalCreateRequest = TenantInput.Adapt<CreateOrUpdateTenantRequestInput>();
+            CreateRequest = TenantInput.Adapt<CreateOrUpdateTenantRequest>();
+            OriginalCreateRequest = TenantInput.Adapt<CreateOrUpdateTenantRequest>();
         }
     }
 
-    private async void Submit(CreateOrUpdateTenantRequestInput input)
+    private async void Submit(CreateOrUpdateTenantRequest input)
     {
         if (TenantInput is not null)
         {
             isBusy = true;
-            CreateOrUpdateTenantRequestInput finalInput = new();
+            CreateOrUpdateTenantRequest finalInput = new();
             if (string.IsNullOrWhiteSpace(input.Id))
             {
                 if (string.IsNullOrWhiteSpace(input.Id))
                 {
                     SelectedTables ??= new List<string>();
                     input.TablesToCopy = string.Join(",", SelectedTables);
-                    ;
                 }
 
                 finalInput = input;
@@ -70,7 +70,7 @@ public partial class CreateOrUpdateTenant(
                 }
             }
 
-            Response? result = await krafterClient.Tenants.CreateOrUpdate.PostAsync(finalInput);
+            Response? result = await tenantsApi.CreateOrUpdateTenantAsync(finalInput);
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

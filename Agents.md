@@ -22,11 +22,14 @@ Krafter is a .NET 10 full-stack platform with:
 │ ├── Blazor page, Component, UI Service?                    │
 │ │   └── READ: src/UI/Agents.md                             │
 │ │                                                           │
+│ ├── Shared DTOs, Requests, Responses (Contracts)?          │
+│ │   └── READ: src/Krafter.Shared/Agents.md                 │
+│ │                                                           │
 │ ├── Aspire orchestration, Docker, CI/CD?                   │
 │ │   └── Use patterns from aspire/ and .github/workflows/   │
 │ │                                                           │
 │ └── Cross-cutting (affects both Backend + UI)?             │
-│     └── READ BOTH sub-files                                │
+│     └── READ BOTH Backend + UI sub-files                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,11 +41,19 @@ Krafter/
 │   ├── Krafter.Aspire.AppHost/
 │   └── Krafter.Aspire.ServiceDefaults/
 ├── src/
+│   ├── Krafter.Shared/          # Shared contracts library
+│   │   ├── Agents.md            ← Shared-specific rules
+│   │   ├── Contracts/           # API DTOs, Requests, Responses
+│   │   │   ├── Auth/
+│   │   │   ├── Users/
+│   │   │   ├── Roles/
+│   │   │   └── Tenants/
+│   │   └── Common/              # Shared utilities, models
 │   ├── Backend/                 # API (See src/Backend/Agents.md)
 │   │   ├── Agents.md            ← Backend-specific rules
-│   │   ├── Features/            # Vertical slices
+│   │   ├── Features/            # Vertical slices (business logic)
 │   │   ├── Infrastructure/      # Persistence, Jobs
-│   │   └── Common/              # Permissions, Models
+│   │   └── Common/              # Backend-specific utilities
 │   └── UI/                      # Blazor (See src/UI/Agents.md)
 │       ├── Agents.md            ← UI-specific rules
 │       ├── Krafter.UI.Web.Client/  # WASM client
@@ -73,8 +84,8 @@ dotnet run --project src/UI/Krafter.UI.Web/Krafter.UI.Web.csproj
 dotnet ef migrations add <Name> --project src/Backend --context KrafterContext
 dotnet ef database update --project src/Backend --context KrafterContext
 
-# Regenerate Kiota client (after API changes)
-cd src/UI/Krafter.UI.Web.Client && kiota update -o ./Client
+# Build solution
+dotnet build Krafter.slnx
 ```
 
 ## 6. Commit Convention

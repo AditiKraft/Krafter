@@ -1,4 +1,4 @@
-﻿using Backend.Common.Models;
+using Krafter.Shared.Common.Models;
 using Microsoft.Extensions.Primitives;
 
 namespace Backend.Common.Extensions;

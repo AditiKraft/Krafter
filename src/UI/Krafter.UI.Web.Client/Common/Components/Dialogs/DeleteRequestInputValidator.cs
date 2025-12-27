@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Krafter.Api.Client.Models;
+using Krafter.Shared.Common.Models;
 
 namespace Krafter.UI.Web.Client.Common.Components.Dialogs;
 

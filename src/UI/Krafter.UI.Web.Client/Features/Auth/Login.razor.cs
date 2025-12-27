@@ -1,4 +1,4 @@
-﻿using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Common.Models;
@@ -22,7 +22,7 @@ public partial class Login(
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
     public bool isBusy { get; set; }
-    public TokenRequestInput TokenRequestInput { get; set; } = new();
+    public TokenRequest TokenRequestInput { get; set; } = new();
     private bool _shouldRedirect;
 
     protected override async Task OnInitializedAsync()
@@ -62,7 +62,7 @@ public partial class Login(
         }
     }
 
-    private async Task CreateToken(TokenRequestInput loginArgs)
+    private async Task CreateToken(TokenRequest loginArgs)
     {
         if (string.IsNullOrEmpty(ReturnUrl))
         {

@@ -2,9 +2,9 @@
 using System.Text.Json;
 using Backend.Application.Common;
 using Backend.Common.Interfaces.Auth;
-using Backend.Common.Models;
 using Backend.Features.Auth;
 using FluentValidation.Results;
+using Krafter.Shared.Common.Models;
 using Microsoft.Data.SqlClient;
 
 namespace Backend.Api.Middleware;

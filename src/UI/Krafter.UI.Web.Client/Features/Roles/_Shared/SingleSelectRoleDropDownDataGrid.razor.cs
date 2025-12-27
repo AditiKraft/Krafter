@@ -1,15 +1,15 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client.Common.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace Krafter.UI.Web.Client.Features.Roles._Shared;
 
 public partial class SingleSelectRoleDropDownDataGrid(
-    KrafterClient krafterClient
+    IRolesApi rolesApi
 ) : ComponentBase
 {
     private RadzenDropDownDataGrid<string> dropDownGrid;
-    private RoleDtoPaginationResponseResponse response;
+    private Response<PaginationResponse<RoleDto>>? response;
     private bool IsLoading = true;
     private IEnumerable<RoleDto>? Data;
     [Parameter] public GetRequestInput GetRequestInput { get; set; } = new();
@@ -29,17 +29,16 @@ public partial class SingleSelectRoleDropDownDataGrid(
         GetRequestInput.Filter = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
-        response = await krafterClient.Roles.GetPath.GetAsync(configuration =>
-        {
-            configuration.QueryParameters.Id = GetRequestInput.Id;
-            configuration.QueryParameters.History = GetRequestInput.History;
-            configuration.QueryParameters.IsDeleted = GetRequestInput.IsDeleted;
-            configuration.QueryParameters.SkipCount = GetRequestInput.SkipCount;
-            configuration.QueryParameters.MaxResultCount = GetRequestInput.MaxResultCount;
-            configuration.QueryParameters.Filter = GetRequestInput.Filter;
-            configuration.QueryParameters.OrderBy = GetRequestInput.OrderBy;
-            configuration.QueryParameters.Query = GetRequestInput.Query;
-        }, CancellationToken.None);
+        response = await rolesApi.GetRolesAsync(
+            GetRequestInput.Id,
+            GetRequestInput.History,
+            GetRequestInput.IsDeleted,
+            GetRequestInput.Query,
+            GetRequestInput.Filter,
+            GetRequestInput.OrderBy,
+            GetRequestInput.SkipCount,
+            GetRequestInput.MaxResultCount,
+            CancellationToken.None);
         if (response is { Data.Items: not null })
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
@@ -51,7 +50,7 @@ public partial class SingleSelectRoleDropDownDataGrid(
 
     private int GetCount()
     {
-        if (response is { Data: { Items: not null, TotalCount: { } totalCount } })
+        if (response is { Data: { Items: not null, TotalCount: var totalCount } })
         {
             return totalCount;
         }

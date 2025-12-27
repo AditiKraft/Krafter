@@ -1,5 +1,5 @@
-﻿using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Permissions;
+﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Models;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Services;

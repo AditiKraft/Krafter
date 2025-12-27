@@ -1,4 +1,4 @@
-﻿using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Contracts.Auth;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Storage;
 

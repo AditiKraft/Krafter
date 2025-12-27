@@ -1,34 +1,22 @@
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Common;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Extensions;
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
-using System.Net;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
 
 namespace Backend.Features.Users;
 
 public sealed class GetUsers
 {
-    public sealed class UserDto : CommonDtoProperty
-    {
-        public string? Id { get; set; }
-        public string? UserName { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? Email { get; set; }
-        public bool IsActive { get; set; }
-        public bool EmailConfirmed { get; set; }
-        public string? PhoneNumber { get; set; }
-    }
-
-
     internal sealed class Handler(KrafterContext db) : IScopedHandler
     {
         public async Task<Response<PaginationResponse<UserDto>>> Get(

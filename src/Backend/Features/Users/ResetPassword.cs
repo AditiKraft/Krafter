@@ -1,8 +1,8 @@
 using Backend.Api;
-using Backend.Common;
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,13 +10,6 @@ namespace Backend.Features.Users;
 
 public sealed class ResetPassword
 {
-    public sealed class ResetPasswordRequest
-    {
-        public string? Email { get; set; }
-        public string? Token { get; set; }
-        public string? Password { get; set; }
-    }
-
     internal sealed class Handler(UserManager<KrafterUser> userManager) : IScopedHandler
     {
         public async Task<Response> ResetPasswordAsync(ResetPasswordRequest request)
@@ -45,23 +38,6 @@ public sealed class ResetPassword
         }
     }
 
-    internal sealed class Validator : AbstractValidator<ResetPasswordRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email format");
-
-            RuleFor(p => p.Token)
-                .NotEmpty().WithMessage("Reset token is required");
-
-            RuleFor(p => p.Password)
-                .NotEmpty().WithMessage("New password is required")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters");
-        }
-    }
-
     public sealed class Route : IRouteRegistrar
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
@@ -76,8 +52,7 @@ public sealed class ResetPassword
                     Response res = await handler.ResetPasswordAsync(request);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Response>()
-                ;
+                .Produces<Response>();
         }
     }
 }

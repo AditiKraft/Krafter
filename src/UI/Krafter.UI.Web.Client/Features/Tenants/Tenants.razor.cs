@@ -1,25 +1,26 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Enums;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Tenants;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Permissions;
 using Krafter.UI.Web.Client.Common.Models;
-using Krafter.UI.Web.Client.Common.Enums;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Tenants;
 
 public partial class Tenants(
     CommonService commonService,
-    KrafterClient krafterClient,
+    ITenantsApi tenantsApi,
     DialogService dialogService
 ) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Tenants;
-    private RadzenDataGrid<TenantDto> grid;
+    private RadzenDataGrid<TenantDto> grid = default!;
     private bool IsLoading = true;
-    private GetRequestInput requestInput = new();
+    private Krafter.Shared.Common.Models.GetRequestInput requestInput = new();
 
-    private TenantDtoPaginationResponseResponse? response = new() { Data = new TenantDtoPaginationResponse() };
+    private Response<PaginationResponse<TenantDto>>? response = new() { Data = new PaginationResponse<TenantDto>() };
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,19 +38,14 @@ public partial class Tenants(
             requestInput.SkipCount = 0;
         }
 
-        response = await krafterClient.Tenants.GetPath.GetAsync(
-            configuration =>
-            {
-                configuration.QueryParameters.Id = requestInput.Id;
-                configuration.QueryParameters.History = requestInput.History;
-                configuration.QueryParameters.IsDeleted = requestInput.IsDeleted;
-                configuration.QueryParameters.SkipCount = requestInput.SkipCount;
-                configuration.QueryParameters.MaxResultCount = requestInput.MaxResultCount;
-                configuration.QueryParameters.Filter = requestInput.Filter;
-                configuration.QueryParameters.OrderBy = requestInput.OrderBy;
-                configuration.QueryParameters.Query = requestInput.Query;
-            }, CancellationToken.None
-        );
+        response = await tenantsApi.GetTenantsAsync(
+            requestInput.Id,
+            history: requestInput.History,
+            isDeleted: requestInput.IsDeleted,
+            filter: requestInput.Filter,
+            orderBy: requestInput.OrderBy,
+            skipCount: requestInput.SkipCount,
+            maxResultCount: requestInput.MaxResultCount);
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
@@ -70,12 +66,12 @@ public partial class Tenants(
 
     private async Task Delete(TenantDto input)
     {
-        if (response.Data.Items.Contains(input))
+        if (response?.Data?.Items?.Contains(input) == true)
         {
             await commonService.Delete(
                 new DeleteRequestInput
                 {
-                    Id = input.Id, DeleteReason = input.DeleteReason, EntityKind = (int)EntityKind.Tenant
+                    Id = input.Id, DeleteReason = input.DeleteReason, EntityKind = EntityKind.Tenant
                 }, $"Delete Tenant {input.Name}");
         }
         else

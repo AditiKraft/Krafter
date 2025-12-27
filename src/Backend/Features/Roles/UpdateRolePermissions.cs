@@ -1,28 +1,20 @@
 using System.Security.Claims;
 using Backend.Api;
 using Backend.Api.Authorization;
-using Backend.Common;
-using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
-using Backend.Common.Models;
-using Backend.Features.Auth;
 using Backend.Features.Roles._Shared;
 using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Features.Roles;
 
 public sealed class UpdateRolePermissions
 {
-    public sealed class UpdateRolePermissionsRequest
-    {
-        public string RoleId { get; set; } = default!;
-        public List<string> Permissions { get; set; } = [];
-    }
-
     internal sealed class Handler(
         RoleManager<KrafterRole> roleManager,
         KrafterContext db) : IScopedHandler
@@ -78,18 +70,6 @@ public sealed class UpdateRolePermissions
             }
 
             return new Response { Message = "Role permissions updated successfully" };
-        }
-    }
-
-    internal sealed class Validator : AbstractValidator<UpdateRolePermissionsRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.RoleId)
-                .NotEmpty().WithMessage("Role ID is required");
-
-            RuleFor(p => p.Permissions)
-                .NotNull().WithMessage("Permissions list cannot be null");
         }
     }
 

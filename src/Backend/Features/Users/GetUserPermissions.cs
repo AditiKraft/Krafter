@@ -1,12 +1,12 @@
 using Backend.Api;
 using Backend.Common;
-using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces.Auth;
-using Backend.Common.Models;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

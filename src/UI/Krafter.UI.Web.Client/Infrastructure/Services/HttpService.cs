@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
-using Krafter.UI.Web.Client.Common.Models;
+using Krafter.Shared.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 
 

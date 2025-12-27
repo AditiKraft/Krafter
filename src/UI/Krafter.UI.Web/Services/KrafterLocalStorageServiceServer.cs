@@ -1,9 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using Krafter.Api.Client.Models;
+using System.IdentityModel.Tokens.Jwt;
+using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Krafter.UI.Web.Services;
@@ -128,7 +126,7 @@ public class KrafterLocalStorageServiceServer(IHttpContextAccessor httpContextAc
             return null;
         }
 
-        var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+        var handler = new JwtSecurityTokenHandler();
 
         // Read token without validation (we just need to extract the claims)
         JwtSecurityToken? jwtToken = handler.ReadJwtToken(token);

@@ -1,4 +1,4 @@
-﻿using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
 using Krafter.UI.Web.Client.Common.Components.Dialogs;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Services;

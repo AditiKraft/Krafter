@@ -1,5 +1,5 @@
-using Backend.Common.Models;
 using Backend.Features.Tenants._Shared;
+using Krafter.Shared.Common.Models;
 
 namespace Backend.Common.Interfaces;
 
