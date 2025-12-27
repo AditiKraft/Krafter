@@ -1,13 +1,26 @@
-﻿<svg width="120" height="120"  viewBox="0 0 120 170" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+<svg width="120" height="120"  viewBox="0 0 120 170" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+
+    <defs>
+        <style>
+            .k-nav { fill: #FFFFFF; }
+            .k-grn { fill: #764AF1; }
+            .brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #FFFFFF; }
+            .tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #FFFFFF; }
+        </style>
+    </defs>
+
+    
+
+    
 
     <g>
         <g id="icon">
-            <rect id="svg_1" fill="#111111" class="k-nav" rx="6" height="44" width="44" y="13" x="10"/>
-            <polygon id="svg_2" fill="#33cc77" class="k-grn" points="60,13 104,13 60,57 "/>
-            <rect id="svg_3" fill="#111111" class="k-nav" rx="6" height="44" width="44" y="63" x="10"/>
-            <polygon id="svg_4" fill="#33cc77" class="k-grn" points="60,63 104,63 104,107 "/>
-            <rect id="svg_5" fill="#33cc77" class="k-grn" rx="6" height="44" width="44" y="113" x="10"/>
-            <rect id="svg_6" fill="#111111" class="k-nav" rx="6" height="44" width="44" y="113" x="60"/>
+            <rect id="svg_1" fill="#0F172A" class="k-nav" rx="6" height="44" width="44" y="13" x="10"/>
+            <polygon id="svg_2" fill="#764AF1" class="k-grn" points="60,13 104,13 60,57 "/>
+            <rect id="svg_3" fill="#0F172A" class="k-nav" rx="6" height="44" width="44" y="63" x="10"/>
+            <polygon id="svg_4" fill="#764AF1" class="k-grn" points="60,63 104,63 104,107 "/>
+            <rect id="svg_5" fill="#764AF1" class="k-grn" rx="6" height="44" width="44" y="113" x="10"/>
+            <rect id="svg_6" fill="#0F172A" class="k-nav" rx="6" height="44" width="44" y="113" x="60"/>
         </g>
     </g>
 </svg>

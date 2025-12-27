@@ -1,12 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 170" width="320" height="160" preserveAspectRatio="xMinYMid meet">
+
     <defs>
         <style>
-            .k-nav { fill: #ffffff; }
-            .k-grn { fill: #33cc77; }
-            .brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #ffffff; }
-            .tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #ffffff; }
+            .k-nav { fill: #0F172A; }
+            .k-grn { fill: #764AF1; }
+            .brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #0F172A; }
+            .tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #0F172A; }
         </style>
     </defs>
+
+    
+
+    
+    
     <g  id="icon" transform="translate(0,6)">
         <rect x="10" y="8" width="44" height="44" rx="6" class="k-nav" />
         <polygon points="60,8 104,8 60,52" class="k-grn" />

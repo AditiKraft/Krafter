@@ -10,7 +10,19 @@
       .ui { fill: #e7f3ff; stroke: #0066cc; }
       .build { fill: #ffebee; stroke: #f44336; }
     </style>
-  </defs>
+  
+        <linearGradient id="deepTechGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#764AF1" />
+            <stop offset="100%" stop-color="#06B6D4" />
+        </linearGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+</defs>
   
   <text x="500" y="30" class="title" text-anchor="middle">Project Dependencies</text>
   
@@ -89,7 +101,19 @@
     <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
     </marker>
-  </defs>
+  
+        <linearGradient id="deepTechGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#764AF1" />
+            <stop offset="100%" stop-color="#06B6D4" />
+        </linearGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+</defs>
   
   <line x1="300" y1="130" x2="350" y2="130" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
   <text x="310" y="125" class="text">Orchestrates</text>

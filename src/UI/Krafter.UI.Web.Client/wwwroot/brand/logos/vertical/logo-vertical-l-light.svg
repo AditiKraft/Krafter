@@ -1,11 +1,24 @@
 <svg width="120" height="180"  viewBox="0 0 120 170" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+
+    <defs>
+        <style>
+            .k-nav { fill: #0F172A; }
+            .k-grn { fill: #764AF1; }
+            .brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #0F172A; }
+            .tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #0F172A; }
+        </style>
+    </defs>
+
+    
+
+    
     <g>
         <g id="icon">
             <rect id="svg_1" fill="#ffffff" class="k-nav" rx="6" height="44" width="44" y="14" x="10"/>
-            <polygon id="svg_2" fill="#33cc77" class="k-grn" points="60,14 104,14 60,58 "/>
+            <polygon id="svg_2" fill="#764AF1" class="k-grn" points="60,14 104,14 60,58 "/>
             <rect id="svg_3" fill="#ffffff" class="k-nav" rx="6" height="44" width="44" y="64" x="10"/>
-            <polygon id="svg_4" fill="#33cc77" class="k-grn" points="60,64 104,64 104,108 "/>
-            <rect id="svg_5" fill="#33cc77" class="k-grn" rx="6" height="44" width="44" y="114" x="10"/>
+            <polygon id="svg_4" fill="#764AF1" class="k-grn" points="60,64 104,64 104,108 "/>
+            <rect id="svg_5" fill="#764AF1" class="k-grn" rx="6" height="44" width="44" y="114" x="10"/>
             <rect id="svg_6" fill="#ffffff" class="k-nav" rx="6" height="44" width="44" y="114" x="60"/>
         </g>
     </g>

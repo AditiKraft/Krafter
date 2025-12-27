@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 120 120" width="80" height="80">
   <defs>
     <style>
-      .k-nav { fill: #13294b; }
-      .k-grn { fill: #33cc77; }
+      .k-nav { fill: #0F172A; }
+      .k-grn { fill: #764AF1; }
 
       /* Modern animation system using CSS keyframes. Each tile uses CSS variables
          to set its initial offset and rotation so we can create a cohesive
