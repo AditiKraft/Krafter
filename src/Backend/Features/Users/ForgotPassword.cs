@@ -4,10 +4,11 @@ using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
 using Backend.Common;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -16,17 +17,13 @@ namespace Backend.Features.Users;
 
 public sealed class ForgotPassword
 {
-    public sealed class ForgotPasswordRequest
-    {
-        public string Email { get; set; } = default!;
-    }
-
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         ITenantGetterService tenantGetterService,
         IJobService jobService) : IScopedHandler
     {
-        public async Task<Response> ForgotPasswordAsync(ForgotPasswordRequest request)
+        public async Task<Response> ForgotPasswordAsync(
+            Krafter.Shared.Features.Users.ForgotPassword.ForgotPasswordRequest request)
         {
             KrafterUser? user = await userManager.FindByEmailAsync(request.Email.Normalize());
             if (user is null)
@@ -56,15 +53,6 @@ public sealed class ForgotPassword
         }
     }
 
-    internal sealed class Validator : AbstractValidator<ForgotPasswordRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email format");
-        }
-    }
 
     public sealed class Route : IRouteRegistrar
     {
@@ -74,7 +62,7 @@ public sealed class ForgotPassword
                 .AddFluentValidationFilter();
 
             userGroup.MapPost("/forgot-password", async (
-                    [FromBody] ForgotPasswordRequest request,
+                    [FromBody] Krafter.Shared.Features.Users.ForgotPassword.ForgotPasswordRequest request,
                     [FromServices] Handler handler) =>
                 {
                     Response res = await handler.ForgotPasswordAsync(request);

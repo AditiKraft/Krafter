@@ -1,9 +1,7 @@
 using Backend.Api;
 using Backend.Common;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Extensions;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
 using Backend.Infrastructure.Persistence;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
@@ -11,33 +9,18 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using Backend.Api.Authorization;
 using Backend.Features.Tenants._Shared;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
 
 namespace Backend.Features.Tenants;
 
 public sealed class Get
 {
-    public sealed class TenantDto
-    {
-        public string? Id { get; set; }
-        public string? Identifier { get; set; }
-        public string? Name { get; set; }
-
-        public string AdminEmail { get; set; } = default!;
-        public bool IsActive { get; set; }
-        public DateTime ValidUpto { get; set; }
-        public bool IsDeleted { get; set; }
-        public DateTime CreatedOn { get; set; }
-        public DateTime? PeriodEnd { get; set; }
-        public DateTime? PeriodStart { get; set; }
-        public UserInfo CreatedBy { get; set; }
-        public string? CreatedById { get; set; }
-
-        public string? DeleteReason { get; set; }
-    }
-
     internal sealed class Handler(TenantDbContext dbContext) : IScopedHandler
     {
-        public async Task<Response<PaginationResponse<TenantDto>>> Get(GetRequestInput requestInput,
+        public async Task<Response<PaginationResponse<Krafter.Shared.Features.Tenants.Get.TenantDto>>> Get(
+            GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
             ExpressionStarter<Tenant>? predicate = PredicateBuilder.New<Tenant>(true);
@@ -46,7 +29,7 @@ public sealed class Get
                 predicate = predicate.And(c => c.Id == requestInput.Id);
             }
 
-            IQueryable<TenantDto> queryableProducts = null;
+            IQueryable<Krafter.Shared.Features.Tenants.Get.TenantDto> queryableProducts = null;
             if (requestInput.History)
             {
                 if (requestInput.Filter == "CreatedOn desc")
@@ -56,7 +39,7 @@ public sealed class Get
 
                 predicate = predicate.And(c => EF.Property<DateTime>(c, "PeriodEnd") < DateTime.UtcNow);
                 queryableProducts = dbContext.Tenants.TemporalAll().Where(predicate)
-                    .Select(x => new TenantDto
+                    .Select(x => new Krafter.Shared.Features.Tenants.Get.TenantDto
                     {
                         Id = x.Id,
                         Name = x.Name,
@@ -78,7 +61,7 @@ public sealed class Get
                 {
                     predicate = predicate.And(c => c.IsDeleted == true);
                     queryableProducts = dbContext.Tenants.IgnoreQueryFilters().Where(predicate)
-                        .Select(x => new TenantDto
+                        .Select(x => new Krafter.Shared.Features.Tenants.Get.TenantDto
                         {
                             Id = x.Id,
                             Name = x.Name,
@@ -95,7 +78,7 @@ public sealed class Get
                 else
                 {
                     queryableProducts = dbContext.Tenants.Where(predicate)
-                        .Select(x => new TenantDto
+                        .Select(x => new Krafter.Shared.Features.Tenants.Get.TenantDto
                         {
                             Id = x.Id,
                             Name = x.Name,
@@ -121,11 +104,13 @@ public sealed class Get
                 queryableProducts = queryableProducts.OrderBy(requestInput.OrderBy);
             }
 
-            List<TenantDto> res = await queryableProducts.PageBy(requestInput).ToListAsync(cancellationToken);
+            List<Krafter.Shared.Features.Tenants.Get.TenantDto> res =
+                await queryableProducts.PageBy(requestInput).ToListAsync(cancellationToken);
 
-            return new Response<PaginationResponse<TenantDto>>
+            return new Response<PaginationResponse<Krafter.Shared.Features.Tenants.Get.TenantDto>>
             {
-                Data = new PaginationResponse<TenantDto>(res, await queryableProducts.CountAsync(cancellationToken),
+                Data = new PaginationResponse<Krafter.Shared.Features.Tenants.Get.TenantDto>(res,
+                    await queryableProducts.CountAsync(cancellationToken),
                     requestInput.SkipCount, requestInput.MaxResultCount)
             };
         }
@@ -142,10 +127,11 @@ public sealed class Get
                     [FromServices] Handler service, [AsParameters] GetRequestInput requestInput,
                     CancellationToken cancellationToken) =>
                 {
-                    Response<PaginationResponse<TenantDto>> res = await service.Get(requestInput, cancellationToken);
+                    Response<PaginationResponse<Krafter.Shared.Features.Tenants.Get.TenantDto>> res =
+                        await service.Get(requestInput, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Response<PaginationResponse<TenantDto>>>()
+                .Produces<Response<PaginationResponse<Krafter.Shared.Features.Tenants.Get.TenantDto>>>()
                 .MustHavePermission(KrafterAction.View, KrafterResource.Tenants);
         }
     }

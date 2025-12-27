@@ -1,5 +1,5 @@
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
+using Krafter.Shared.Features.Auth._Shared;
 
 namespace Backend.Features.Auth._Shared;
 

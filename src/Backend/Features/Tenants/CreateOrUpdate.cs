@@ -1,15 +1,17 @@
-﻿using Backend.Api;
+using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Application.Common;
 using Backend.Common;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
-using Backend.Common.Models;
 using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Features.Users._Shared;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,16 +21,6 @@ namespace Backend.Features.Tenants;
 
 public sealed class CreateOrUpdate
 {
-    public sealed class CreateOrUpdateTenantRequestInput
-    {
-        public string? Id { get; set; }
-        public string? Identifier { get; set; }
-        public string? Name { get; set; }
-        public string AdminEmail { get; set; } = default!;
-        public bool? IsActive { get; set; }
-        public DateTime? ValidUpto { get; set; }
-    }
-
     internal sealed class Handler(
         TenantDbContext dbContext,
         KrafterContext krafterContext,
@@ -36,7 +28,8 @@ public sealed class CreateOrUpdate
         IServiceProvider serviceProvider,
         ICurrentUser currentUser) : IScopedHandler
     {
-        public async Task<Response> CreateOrUpdateAsync(CreateOrUpdateTenantRequestInput requestInput)
+        public async Task<Response> CreateOrUpdateAsync(
+            Krafter.Shared.Features.Tenants.CreateOrUpdate.CreateOrUpdateTenantRequestInput requestInput)
         {
             if (!string.IsNullOrWhiteSpace(requestInput.Identifier))
             {
@@ -82,7 +75,8 @@ public sealed class CreateOrUpdate
                         GetSubTenantLinkBasedOnRootTenant(rootTenantLink, requestInput.Identifier);
                     requiredService.SetTenant(currentTenantDetails);
                     DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
-                    await seedService.SeedBasicData(new SeedBasicData.SeedDataRequestInput { });
+                    await seedService.SeedBasicData(
+                        new Krafter.Shared.Features.Tenants.SeedBasicData.SeedDataRequestInput { });
                 }
             }
             else
@@ -196,38 +190,6 @@ public sealed class CreateOrUpdate
         }
     }
 
-    internal sealed class Validator : AbstractValidator<CreateOrUpdateTenantRequestInput>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.Name)
-                .NotNull().NotEmpty().WithMessage("You must enter Name")
-                .MaximumLength(40)
-                .WithMessage("Name cannot be longer than 40 characters").When(c =>
-                    string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-            RuleFor(p => p.AdminEmail)
-                .NotEmpty()
-                .NotEmpty()
-                .EmailAddress()
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-            RuleFor(p => p.Identifier)
-                .NotEmpty()
-                .NotEmpty()
-                .MaximumLength(10)
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-
-            RuleFor(p => p.IsActive)
-                .NotNull()
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-            RuleFor(p => p.ValidUpto)
-                .NotNull()
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-        }
-    }
 
     public sealed class Route : IRouteRegistrar
     {
@@ -236,7 +198,7 @@ public sealed class CreateOrUpdate
             RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
 
             tenant.MapPost("/create-or-update", async
-            ([FromBody] CreateOrUpdateTenantRequestInput requestInput,
+            ([FromBody] Krafter.Shared.Features.Tenants.CreateOrUpdate.CreateOrUpdateTenantRequestInput requestInput,
                 [FromServices] Handler handler) =>
             {
                 Response res = await handler.CreateOrUpdateAsync(requestInput);
@@ -245,7 +207,7 @@ public sealed class CreateOrUpdate
 
             //tenant creation from landing page , allow Anonymous access
             tenant.MapPost("/create", async
-                ([FromBody] CreateOrUpdateTenantRequestInput requestInput,
+                ([FromBody] Krafter.Shared.Features.Tenants.CreateOrUpdate.CreateOrUpdateTenantRequestInput requestInput,
                     [FromServices] Handler handler) =>
                 {
                     requestInput.ValidUpto = DateTime.UtcNow.AddDays(7);

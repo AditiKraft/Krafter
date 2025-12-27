@@ -2,13 +2,14 @@ using System.Security.Claims;
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Common;
-using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
-using Backend.Common.Models;
 using Backend.Features.Auth;
 using Backend.Features.Roles._Shared;
 using Backend.Infrastructure.Persistence;
 using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,18 +18,12 @@ namespace Backend.Features.Roles;
 
 public sealed class UpdateRolePermissions
 {
-    public sealed class UpdateRolePermissionsRequest
-    {
-        public string RoleId { get; set; } = default!;
-        public List<string> Permissions { get; set; } = [];
-    }
-
     internal sealed class Handler(
         RoleManager<KrafterRole> roleManager,
         KrafterContext db) : IScopedHandler
     {
         public async Task<Response> UpdatePermissionsAsync(
-            UpdateRolePermissionsRequest request,
+            Krafter.Shared.Features.Roles.UpdateRolePermissions.UpdateRolePermissionsRequest request,
             CancellationToken cancellationToken)
         {
             KrafterRole? role = await roleManager.FindByIdAsync(request.RoleId);
@@ -81,18 +76,6 @@ public sealed class UpdateRolePermissions
         }
     }
 
-    internal sealed class Validator : AbstractValidator<UpdateRolePermissionsRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.RoleId)
-                .NotEmpty().WithMessage("Role ID is required");
-
-            RuleFor(p => p.Permissions)
-                .NotNull().WithMessage("Permissions list cannot be null");
-        }
-    }
-
     public sealed class Route : IRouteRegistrar
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
@@ -101,7 +84,7 @@ public sealed class UpdateRolePermissions
                 .AddFluentValidationFilter();
 
             roleGroup.MapPut("/update-permissions", async (
-                    [FromBody] UpdateRolePermissionsRequest request,
+                    [FromBody] Krafter.Shared.Features.Roles.UpdateRolePermissions.UpdateRolePermissionsRequest request,
                     [FromServices] Handler handler,
                     CancellationToken cancellationToken) =>
                 {

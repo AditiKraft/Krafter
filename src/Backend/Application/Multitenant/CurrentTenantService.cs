@@ -1,6 +1,6 @@
 ﻿using Backend.Application.Common;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
+using Krafter.Shared.Common.Models;
 
 namespace Backend.Application.Multitenant;
 

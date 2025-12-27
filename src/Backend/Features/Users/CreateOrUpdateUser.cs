@@ -2,39 +2,24 @@ using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
-using Backend.Common;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
-using Backend.Features.Auth;
 using Backend.Features.Roles._Shared;
-using Backend.Features.Tenants;
 using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Features.Users._Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PasswordGenerator = Backend.Common.PasswordGenerator;
 
 namespace Backend.Features.Users;
 
 public sealed class CreateOrUpdateUser
 {
-    public sealed class CreateUserRequest
-    {
-        public string? Id { get; set; }
-        public string FirstName { get; set; } = default!;
-        public string LastName { get; set; } = default!;
-        public string Email { get; set; } = default!;
-        public string? UserName { get; set; }
-        public string? PhoneNumber { get; set; }
-        public List<string>? Roles { get; set; }
-        public bool UpdateTenantEmail { get; set; }
-        public bool IsEmailConfirmed { get; set; }
-        public bool IsExternalLogin { get; set; }
-    }
-
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         RoleManager<KrafterRole> roleManager,
@@ -196,29 +181,6 @@ public sealed class CreateOrUpdateUser
             await tenantDbContext.SaveChangesAsync();
 
             return new Response();
-        }
-    }
-
-    internal sealed class Validator : AbstractValidator<CreateUserRequest>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.FirstName)
-                .NotEmpty().WithMessage("First name is required")
-                .MaximumLength(100).WithMessage("First name cannot exceed 100 characters");
-
-            RuleFor(p => p.LastName)
-                .NotEmpty().WithMessage("Last name is required")
-                .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters");
-
-            RuleFor(p => p.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email format")
-                .MaximumLength(256).WithMessage("Email cannot exceed 256 characters");
-
-            RuleFor(p => p.PhoneNumber)
-                .MaximumLength(20).When(p => !string.IsNullOrWhiteSpace(p.PhoneNumber))
-                .WithMessage("Phone number cannot exceed 20 characters");
         }
     }
 

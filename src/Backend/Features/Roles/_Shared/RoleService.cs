@@ -1,12 +1,9 @@
-﻿using System.Linq.Dynamic.Core;
 using Backend.Application.Common;
-using Backend.Common.Auth;
-using Backend.Common.Extensions;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using LinqKit;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Features.Roles._Shared;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

@@ -1,11 +1,12 @@
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Common;
-using Backend.Common.Auth.Permissions;
-using Backend.Common.Models;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,24 +15,20 @@ namespace Backend.Features.Users;
 
 public sealed class GetUserRoles
 {
-    public sealed class UserRoleDto
-    {
-        public string? RoleId { get; set; }
-        public string? RoleName { get; set; }
-        public string? Description { get; set; }
-        public bool Enabled { get; set; }
-    }
-
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         RoleManager<KrafterRole> roleManager) : IScopedHandler
     {
-        public async Task<Response<List<UserRoleDto>>> GetRolesAsync(string userId, CancellationToken cancellationToken)
+        public async Task<Response<List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>>> GetRolesAsync(
+            string userId, CancellationToken cancellationToken)
         {
             KrafterUser? user = await userManager.FindByIdAsync(userId);
             if (user is null)
             {
-                return new Response<List<UserRoleDto>> { IsError = true, Message = "User Not Found", StatusCode = 404 };
+                return new Response<List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>>
+                {
+                    IsError = true, Message = "User Not Found", StatusCode = 404
+                };
             }
 
             IList<string> userRoleNames = await userManager.GetRolesAsync(user);
@@ -41,13 +38,16 @@ public sealed class GetUserRoles
 
             if (roles is null || !roles.Any())
             {
-                return new Response<List<UserRoleDto>> { Data = new List<UserRoleDto>() };
+                return new Response<List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>>
+                {
+                    Data = new List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>()
+                };
             }
 
-            var userRoles = new List<UserRoleDto>();
+            var userRoles = new List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>();
             foreach (KrafterRole role in roles)
             {
-                userRoles.Add(new UserRoleDto
+                userRoles.Add(new Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto
                 {
                     RoleId = role.Id,
                     RoleName = role.Name,
@@ -56,7 +56,7 @@ public sealed class GetUserRoles
                 });
             }
 
-            return new Response<List<UserRoleDto>> { Data = userRoles };
+            return new Response<List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>> { Data = userRoles };
         }
     }
 
@@ -72,10 +72,11 @@ public sealed class GetUserRoles
                     [FromServices] Handler handler,
                     CancellationToken cancellationToken) =>
                 {
-                    Response<List<UserRoleDto>> res = await handler.GetRolesAsync(userId, cancellationToken);
+                    Response<List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>> res =
+                        await handler.GetRolesAsync(userId, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Response<List<UserRoleDto>>>()
+                .Produces<Response<List<Krafter.Shared.Features.Users.GetUserRoles.UserRoleDto>>>()
                 .MustHavePermission(KrafterAction.View, KrafterResource.UserRoles);
         }
     }

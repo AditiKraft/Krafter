@@ -7,6 +7,9 @@
   <Folder Name="/src/Backend/">
     <Project Path="src/Backend/Backend.csproj" />
   </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/Krafter.Shared/Krafter.Shared.csproj" />
+  </Folder>
   <Folder Name="/src/UI/">
     <Project Path="src/UI/Krafter.UI.Web.Client/Krafter.UI.Web.Client.csproj" />
     <Project Path="src/UI/Krafter.UI.Web/Krafter.UI.Web.csproj" />

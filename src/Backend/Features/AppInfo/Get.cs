@@ -1,20 +1,13 @@
-﻿using Backend.Api;
-using Backend.Common;
-using Backend.Infrastructure.Persistence;
+using Backend.Api;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.InteropServices;
-using Backend.Common.Models;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
 
 namespace Backend.Features.AppInfo;
 
 public sealed class Get
 {
-    public static class BuildInfo
-    {
-        public static string DateTimeUtc { get; set; } = "#DateTimeUtc";
-        public static string Build { get; set; } = "#Build";
-    }
-
     public sealed class Route : IRouteRegistrar
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
@@ -35,7 +28,7 @@ public sealed class Get
             var res = new Response<string>
             {
                 Data =
-                    $"Backend version {BuildInfo.Build}, built on {BuildInfo.DateTimeUtc}, running on {RuntimeInformation.FrameworkDescription}"
+                    $"Backend version {Krafter.Shared.Features.AppInfo.Get.BuildInfo.Build}, built on {Krafter.Shared.Features.AppInfo.Get.BuildInfo.DateTimeUtc}, running on {RuntimeInformation.FrameworkDescription}"
             };
             return res;
         }

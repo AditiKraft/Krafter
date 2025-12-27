@@ -1,19 +1,14 @@
-﻿using Backend.Api;
-using Backend.Api.Configuration;
+using Backend.Api;
 using Backend.Application.Common;
-using Backend.Common;
-using Backend.Common.Interfaces;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using System.Security.Claims;
 using System.Text.Json.Serialization;
-using Backend.Common.Models;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Features.Auth._Shared;
 
 namespace Backend.Features.Auth;
 
@@ -97,10 +92,6 @@ public sealed class ExternalAuth
         }
     }
 
-    public sealed class GoogleAuthRequest
-    {
-        public string Code { get; set; } = string.Empty;
-    }
 
     internal sealed class Handler(
         ITokenService tokenService,
@@ -109,7 +100,8 @@ public sealed class ExternalAuth
         RoleManager<KrafterRole> roleManager,
         GoogleAuthClient googleAuthClient) : IScopedHandler
     {
-        public async Task<Response<TokenResponse>> GetTokenAsync(GoogleAuthRequest request,
+        public async Task<Response<TokenResponse>> GetTokenAsync(
+            Krafter.Shared.Features.Auth.ExternalAuth.GoogleAuthRequest request,
             CancellationToken cancellationToken)
         {
             // Get the auth info using the code
@@ -181,7 +173,7 @@ public sealed class ExternalAuth
             // Token exchange endpoint
             productGroup.MapPost("/google", async (
                 HttpContext context,
-                GoogleAuthRequest request,
+                Krafter.Shared.Features.Auth.ExternalAuth.GoogleAuthRequest request,
                 Handler externalAuthService,
                 KrafterContext db,
                 UserManager<KrafterUser> userManager, RoleManager<KrafterRole> roleManager) =>
