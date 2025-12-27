@@ -30,11 +30,16 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
-		<PackageReference Include="Microsoft.Kiota.Bundle" Version="1.21.0" />
+		<PackageReference Include="Refit" Version="8.0.0" />
+		<PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
 		<PackageReference Include="Radzen.Blazor" Version="8.3.2" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
 	
 
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Krafter.Shared\Krafter.Shared.csproj" />
 	</ItemGroup> 	
 
 </Project>

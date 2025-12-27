@@ -1,9 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using Krafter.Api.Client.Models;
+using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Krafter.UI.Web.Services;

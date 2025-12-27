@@ -1,22 +1,22 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client.Common.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace Krafter.UI.Web.Client.Features.Users._Shared;
 
 public partial class MultiSelectUserDropDownDataGrid(
-    KrafterClient krafterClient
+    IUsersApi usersApi
 ) : ComponentBase
 {
-    private RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid;
-    private UserDtoPaginationResponseResponse? response;
+    private RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid = default!;
+    private Response<PaginationResponse<UserDto>>? response;
     private bool IsLoading = true;
     private IEnumerable<UserDto>? Data;
     [Parameter] public GetRequestInput GetRequestInput { get; set; } = new();
 
     private IEnumerable<string>? ValueEnumerable { get; set; }
 
-    private List<string> _value;
+    private List<string> _value = default!;
 
     [Parameter]
     public List<string> Value
@@ -46,20 +46,18 @@ public partial class MultiSelectUserDropDownDataGrid(
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
 
-        response = await krafterClient.Users.GetPath.GetAsync(configuration =>
-        {
-            configuration.QueryParameters.Id = GetRequestInput.Id;
-            configuration.QueryParameters.History = GetRequestInput.History;
-            configuration.QueryParameters.IsDeleted = GetRequestInput.IsDeleted;
-            configuration.QueryParameters.SkipCount = GetRequestInput.SkipCount;
-            configuration.QueryParameters.MaxResultCount = GetRequestInput.MaxResultCount;
-            configuration.QueryParameters.Filter = GetRequestInput.Filter;
-            configuration.QueryParameters.OrderBy = GetRequestInput.OrderBy;
-            configuration.QueryParameters.Query = GetRequestInput.Query;
-        });
+        response = await usersApi.GetUsersAsync(
+            id: GetRequestInput.Id,
+            history: GetRequestInput.History,
+            isDeleted: GetRequestInput.IsDeleted,
+            query: GetRequestInput.Query,
+            filter: GetRequestInput.Filter,
+            orderBy: GetRequestInput.OrderBy,
+            skipCount: GetRequestInput.SkipCount,
+            maxResultCount: GetRequestInput.MaxResultCount);
         if (response is { Data.Items: not null })
         {
-            Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
+            Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id ?? "")).ToList();
         }
 
         IsLoading = false;

@@ -202,3 +202,81 @@ public static class ProductCategoryConstant
 5. [ ] For DTOs: inherit from `CommonDtoProperty` if audit fields needed
 6. [ ] Build to verify: `dotnet build src/Krafter.Shared/Krafter.Shared.csproj`
 7. [ ] Update Backend imports from `Krafter.Shared.Contracts.<Feature>`
+
+## 8. Edge Cases: Adding New Feature Support
+
+### 8.1 Add EntityKind for Delete Operations
+When adding a new feature that supports soft-delete, add to `Common/Enums/EntityKind.cs`:
+
+```csharp
+// File: src/Krafter.Shared/Common/Enums/EntityKind.cs
+namespace Krafter.Shared.Common.Enums;
+
+public enum EntityKind
+{
+    None = 000,
+    Tenant = 001,
+    
+    // ... existing entries ...
+    
+    // Add your new entity (use next available number in appropriate group)
+    Product = 400,        // New feature
+    ProductCategory = 410 // Related entity
+}
+```
+
+**Numbering Convention:**
+- 000-099: Core entities
+- 100-199: Auth entities (User, Role, Claims)
+- 200-299: Course/Content entities
+- 300-399: Commerce entities (Cart, Order, Payment)
+- 400+: New feature entities
+
+### 8.2 Add Permissions for New Feature
+Add to `Common/Auth/Permissions/`:
+
+**Step 1: Add Resource** (`KrafterResource.cs`):
+```csharp
+namespace Krafter.Shared.Common.Auth.Permissions;
+
+public static class KrafterResource
+{
+    // ... existing resources ...
+    public const string Products = nameof(Products);
+}
+```
+
+**Step 2: Add Permissions** (`KrafterPermissions.cs`):
+```csharp
+private static readonly KrafterPermission[] AllPermissions =
+[
+    // ... existing permissions ...
+    
+    // Products - standard CRUD permissions
+    new("View Products", KrafterAction.View, KrafterResource.Products),
+    new("Create Products", KrafterAction.Create, KrafterResource.Products),
+    new("Update Products", KrafterAction.Update, KrafterResource.Products),
+    new("Delete Products", KrafterAction.Delete, KrafterResource.Products),
+    
+    // For admin-only features, add IsRoot: true
+    // new("Manage Products", KrafterAction.Update, KrafterResource.Products, IsRoot: true),
+];
+```
+
+**Permission Flags:**
+- `IsBasic = true`: Available to all authenticated users
+- `IsRoot = true`: Only available to root/super admin (like Tenant management)
+- Default (no flags): Available to Admin role
+
+### 8.3 Add API Route Constant
+Add to `Common/KrafterRoute.cs`:
+
+```csharp
+namespace Krafter.Shared.Common;
+
+public static class KrafterRoute
+{
+    // ... existing routes ...
+    public const string Products = "products";
+}
+```

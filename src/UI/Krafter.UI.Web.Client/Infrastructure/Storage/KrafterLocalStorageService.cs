@@ -1,6 +1,5 @@
 ﻿using Blazored.LocalStorage;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client.Features.Auth._Shared;
+using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Common.Constants;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Storage;

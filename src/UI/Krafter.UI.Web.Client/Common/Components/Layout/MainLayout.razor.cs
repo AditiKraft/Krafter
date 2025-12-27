@@ -1,7 +1,7 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Models;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 namespace Krafter.UI.Web.Client.Common.Components.Layout;
 
 public partial class MainLayout(
-    KrafterClient krafterClient,
+    IAppInfoApi appInfoApi,
     CookieThemeService CookieThemeService,
     MenuService menuService,
     LayoutService layoutService,
@@ -22,14 +22,14 @@ public partial class MainLayout(
 {
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
-    [CascadingParameter] private HttpContext HttpContext { get; set; }
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
-    private RadzenSidebar sidebar0;
-    private RadzenBody body0;
-    private RadzenButton wcagColorsInfo;
-    private RadzenButton rtlInfo;
-    private RadzenButton freeThemesInfo;
-    private RadzenButton premiumThemesInfo;
+    private RadzenSidebar sidebar0 = default!;
+    private RadzenBody body0 = default!;
+    private RadzenButton wcagColorsInfo = default!;
+    private RadzenButton rtlInfo = default!;
+    private RadzenButton freeThemesInfo = default!;
+    private RadzenButton premiumThemesInfo = default!;
     private bool sidebarExpanded = true;
     private bool configSidebarExpanded = false;
     private bool rendered;
@@ -37,7 +37,7 @@ public partial class MainLayout(
     private IEnumerable<Menu> menus = new List<Menu>();
 
     private ICollection<string>? cachedPermissionsAsync = new List<string>();
-    public StringResponse? AppInfo { get; set; }
+    public Response<string>? AppInfo { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -49,7 +49,7 @@ public partial class MainLayout(
 
     protected override async Task OnInitializedAsync()
     {
-        AppInfo = await krafterClient.AppInfo.GetAsync();
+        AppInfo = await appInfoApi.GetAppInfoAsync();
         cachedPermissionsAsync = await krafterLocalStorageService.GetCachedPermissionsAsync();
         if (cachedPermissionsAsync is null)
         {
@@ -72,7 +72,7 @@ public partial class MainLayout(
 
     private void FilterPanelMenu(ChangeEventArgs args)
     {
-        string? term = args.Value.ToString();
+        string? term = args.Value?.ToString();
         menus = string.IsNullOrEmpty(term) ? menuService.Menus : menuService.Filter(term);
     }
 
@@ -84,19 +84,19 @@ public partial class MainLayout(
 
     private bool HasChildPermission(Menu category)
     {
-        IEnumerable<string> childPermission = category.Children.Select(c => c.Permission);
+        IEnumerable<string> childPermission = category.Children?.Select(c => c.Permission) ?? Enumerable.Empty<string>();
 
-        return childPermission.Intersect(cachedPermissionsAsync).Count() > 0;
+        return childPermission.Intersect(cachedPermissionsAsync ?? Enumerable.Empty<string>()).Any();
     }
 
     private bool HasPermission(Menu category)
     {
         if (string.IsNullOrWhiteSpace(category.Permission) &&
-            (category.Children is null || category.Children.Count() == 0))
+            (category.Children is null || !category.Children.Any()))
         {
             return true;
         }
 
-        return cachedPermissionsAsync.Contains(category.Permission);
+        return cachedPermissionsAsync?.Contains(category.Permission) == true;
     }
 }

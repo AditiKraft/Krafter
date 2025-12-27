@@ -1,20 +1,20 @@
-﻿using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Contracts.Auth;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Storage;
 
 public interface IKrafterLocalStorageService
 {
-    public Task ClearCacheAsync();
+    Task ClearCacheAsync();
 
-    public ValueTask<DateTime> GetAuthTokenExpiryDate();
+    ValueTask<DateTime> GetAuthTokenExpiryDate();
 
-    public ValueTask<DateTime> GetRefreshTokenExpiryDate();
+    ValueTask<DateTime> GetRefreshTokenExpiryDate();
 
-    public ValueTask CacheAuthTokens(TokenResponse tokenResponse);
+    ValueTask CacheAuthTokens(TokenResponse tokenResponse);
 
-    public ValueTask<string?> GetCachedAuthTokenAsync();
+    ValueTask<string?> GetCachedAuthTokenAsync();
 
-    public ValueTask<string?> GetCachedRefreshTokenAsync();
+    ValueTask<string?> GetCachedRefreshTokenAsync();
 
-    public ValueTask<ICollection<string>?> GetCachedPermissionsAsync();
+    ValueTask<ICollection<string>?> GetCachedPermissionsAsync();
 }

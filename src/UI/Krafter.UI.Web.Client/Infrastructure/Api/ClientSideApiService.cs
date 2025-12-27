@@ -1,37 +1,34 @@
 ﻿using System.Net;
-using System.Net.Http.Json;
-using Krafter.Api.Client.Models;
-using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Models;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Auth;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Storage;
+using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Api;
 
 public class ClientSideApiService(
-    IHttpClientFactory httpClientFactory,
+    IAuthApi authApi,
+    IKrafterLocalStorageService localStorage,
     ILogger<ClientSideApiService> logger) : IApiService
 {
-    public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequestInput request,
+    public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
-            HttpResponseMessage response = await httpClientFactory
-                .CreateClient("KrafterUIBFF")
-                .PostAsync($"{KrafterRoute.Tokens}/create", JsonContent.Create(request));
-
-            Response<TokenResponse>? res = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
-
-            if (res == null)
+            Response<TokenResponse> response = await authApi.CreateTokenAsync(request, cancellationToken);
+            return response;
+        }
+        catch (ApiException ex)
+        {
+            logger.LogError(ex, "Error during client-side token creation");
+            return new Response<TokenResponse>
             {
-                return new Response<TokenResponse>
-                {
-                    IsError = true,
-                    Message = "Failed to create token. Please log in again.",
-                    StatusCode = (int)HttpStatusCode.InternalServerError
-                };
-            }
-
-            return res;
+                IsError = true,
+                Message = "Failed to create token. Please log in again.",
+                StatusCode = (int)ex.StatusCode
+            };
         }
         catch (Exception ex)
         {
@@ -50,22 +47,18 @@ public class ClientSideApiService(
     {
         try
         {
-            HttpResponseMessage response = await httpClientFactory
-                .CreateClient("KrafterUIBFF")
-                .PostAsync($"{KrafterRoute.Tokens}/refresh", JsonContent.Create(request));
-
-            Response<TokenResponse>? res = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
-            if (res == null)
+            Response<TokenResponse> response = await authApi.RefreshTokenAsync(request, cancellationToken);
+            return response;
+        }
+        catch (ApiException ex)
+        {
+            logger.LogError(ex, "Error during client-side token refresh");
+            return new Response<TokenResponse>
             {
-                return new Response<TokenResponse>
-                {
-                    IsError = true,
-                    Message = "Failed to refresh token. Please log in again.",
-                    StatusCode = (int)HttpStatusCode.InternalServerError
-                };
-            }
-
-            return res;
+                IsError = true,
+                Message = "Failed to refresh token. Please log in again.",
+                StatusCode = (int)ex.StatusCode
+            };
         }
         catch (Exception ex)
         {
@@ -79,27 +72,24 @@ public class ClientSideApiService(
         }
     }
 
-    public async Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequestInput request,
+    public async Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
-            HttpResponseMessage response = await httpClientFactory
-                .CreateClient("KrafterUIBFF")
-                .PostAsync($"{KrafterRoute.ExternalAuth}/google", JsonContent.Create(request));
-
-            Response<TokenResponse>? res = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
-            if (res == null)
+            var googleRequest = new GoogleAuthRequest { Code = request.Code ?? string.Empty };
+            Response<TokenResponse> response = await authApi.GoogleAuthAsync(googleRequest, cancellationToken);
+            return response;
+        }
+        catch (ApiException ex)
+        {
+            logger.LogError(ex, "Error during client-side external auth");
+            return new Response<TokenResponse>
             {
-                return new Response<TokenResponse>
-                {
-                    IsError = true,
-                    Message = "Failed to authenticate. Please try again.",
-                    StatusCode = (int)HttpStatusCode.InternalServerError
-                };
-            }
-
-            return res;
+                IsError = true,
+                Message = "Failed to authenticate. Please try again.",
+                StatusCode = (int)ex.StatusCode
+            };
         }
         catch (Exception ex)
         {
@@ -113,61 +103,36 @@ public class ClientSideApiService(
         }
     }
 
-    public async Task<Response<List<string>>> GetUserPermissionsAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            HttpResponseMessage response = await httpClientFactory
-                .CreateClient("KrafterUIBFF")
-                .GetAsync($"/{KrafterRoute.Users}/permissions");
-
-            Response<List<string>>? res = await response.Content.ReadFromJsonAsync<Response<List<string>>>();
-            if (res == null)
-            {
-                return new Response<List<string>>
-                {
-                    IsError = true,
-                    Message = "Failed to retrieve permissions. Please log in again.",
-                    Data = new List<string>(),
-                    StatusCode = (int)HttpStatusCode.InternalServerError
-                };
-            }
-
-            return res;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during client-side permissions retrieval");
-            return new Response<List<string>>
-            {
-                IsError = true,
-                Message = "Failed to retrieve permissions. Please log in again.",
-                Data = new List<string>(),
-                StatusCode = (int)HttpStatusCode.InternalServerError
-            };
-        }
-    }
-
     public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellationToken)
     {
         try
         {
-            HttpResponseMessage response = await httpClientFactory
-                .CreateClient("KrafterUIBFF")
-                .GetAsync($"{KrafterRoute.Tokens}/current");
+            string? token = await localStorage.GetCachedAuthTokenAsync();
+            string? refreshToken = await localStorage.GetCachedRefreshTokenAsync();
+            DateTime authTokenExpiryDate = await localStorage.GetAuthTokenExpiryDate();
+            DateTime refreshTokenExpiry = await localStorage.GetRefreshTokenExpiryDate();
+            ICollection<string>? permissions = await localStorage.GetCachedPermissionsAsync();
 
-            Response<TokenResponse>? res = await response.Content.ReadFromJsonAsync<Response<TokenResponse>>();
-            if (res == null)
+            if (!string.IsNullOrWhiteSpace(token) && !string.IsNullOrWhiteSpace(refreshToken))
             {
                 return new Response<TokenResponse>
                 {
-                    IsError = true,
-                    Message = "Failed to get current token.",
-                    StatusCode = (int)HttpStatusCode.InternalServerError
+                    Data = new TokenResponse(
+                        token,
+                        refreshToken,
+                        refreshTokenExpiry,
+                        authTokenExpiryDate,
+                        permissions?.ToList() ?? []),
+                    StatusCode = (int)HttpStatusCode.OK
                 };
             }
 
-            return res;
+            return new Response<TokenResponse>
+            {
+                IsError = true,
+                Message = "No valid token found. Please log in again.",
+                StatusCode = (int)HttpStatusCode.Unauthorized
+            };
         }
         catch (Exception ex)
         {
@@ -181,17 +146,8 @@ public class ClientSideApiService(
         }
     }
 
-    public async Task LogoutAsync(CancellationToken cancellationToken)
+    public Task LogoutAsync(CancellationToken cancellationToken)
     {
-        try
-        {
-            await httpClientFactory
-                .CreateClient("KrafterUIBFF")
-                .PostAsync($"{KrafterRoute.Tokens}/logout", null);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during client-side logout");
-        }
+        return localStorage.ClearCacheAsync();
     }
 }

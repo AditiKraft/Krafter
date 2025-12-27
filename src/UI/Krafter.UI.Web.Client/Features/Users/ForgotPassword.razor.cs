@@ -1,9 +1,10 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
-public partial class ForgotPassword(NavigationManager navigationManager, KrafterClient krafterClient) : ComponentBase
+public partial class ForgotPassword(NavigationManager navigationManager, IUsersApi usersApi) : ComponentBase
 {
     public ForgotPasswordRequest ForgotPasswordRequest { get; set; } = new();
     public bool IsBusy { get; set; }
@@ -12,7 +13,7 @@ public partial class ForgotPassword(NavigationManager navigationManager, Krafter
     private async Task SendForgotPasswordMail(ForgotPasswordRequest requestInput)
     {
         IsBusy = true;
-        Response? response = await krafterClient.Users.ForgotPassword.PostAsync(requestInput);
+        Response? response = await usersApi.ForgotPasswordAsync(requestInput);
         if (response is not null && response.IsError == false)
         {
             MailSent = true;

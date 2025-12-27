@@ -1,4 +1,4 @@
-﻿@using Krafter.Api.Client.Models
+﻿@using Krafter.Shared.Contracts.Roles
 @using Krafter.UI.Web.Client.Features.Roles._Shared
 <RadzenDropDownDataGrid Name="RoleDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="false" AllowClear="true" @bind-Value="@Value" Change="@((arg) => OnValueChanged(arg))"
                         LoadData="@LoadData" AllowFiltering="true"
@@ -16,8 +16,6 @@
             </Template>
         </RadzenDropDownDataGridColumn>
         <RadzenDropDownDataGridColumn Property="Name" Title="Name" Width="150px"/>
-        <RadzenDropDownDataGridColumn Property="KeyPosition" Title="Key Position" Width="80px"/>
-        <RadzenDropDownDataGridColumn Property="ProcessOwner" Title="Process Owner" Width="80px"/>
 
     </Columns>
 </RadzenDropDownDataGrid>

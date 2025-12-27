@@ -84,8 +84,8 @@ dotnet run --project src/UI/Krafter.UI.Web/Krafter.UI.Web.csproj
 dotnet ef migrations add <Name> --project src/Backend --context KrafterContext
 dotnet ef database update --project src/Backend --context KrafterContext
 
-# Regenerate Kiota client (after API changes)
-cd src/UI/Krafter.UI.Web.Client && kiota update -o ./Client
+# Build solution
+dotnet build Krafter.slnx
 ```
 
 ## 6. Commit Convention

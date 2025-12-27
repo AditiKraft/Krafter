@@ -13,6 +13,7 @@ public class CreateOrUpdateTenantRequest
     public string AdminEmail { get; set; } = default!;
     public bool? IsActive { get; set; }
     public DateTime? ValidUpto { get; set; }
+    public string? TablesToCopy { get; set; }
 }
 
 public class CreateOrUpdateTenantRequestValidator : AbstractValidator<CreateOrUpdateTenantRequest>
