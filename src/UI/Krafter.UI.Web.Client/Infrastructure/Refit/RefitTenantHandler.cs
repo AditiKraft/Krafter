@@ -5,20 +5,21 @@ using Krafter.UI.Web.Client.Infrastructure.Http;
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
 /// <summary>
-/// DelegatingHandler that injects tenant identifier and culture headers for Refit clients.
+/// DelegatingHandler that injects tenant identifier, culture headers, and rewrites URLs for Refit clients.
+/// In production, the backend URL is dynamically determined based on tenant subdomain.
 /// </summary>
-public class RefitTenantHandler(TenantIdentifier tenantIdentifier) : DelegatingHandler
+public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffClient = false) : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        (string tenantIdentifier, string remoteHostUrl, string rootDomain, string clientBaseAddress) tenantInfo =
+        (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress) tenantInfo =
             tenantIdentifier.Get();
 
         // Set static TenantInfo for backward compatibility
         TenantInfo.Identifier = tenantInfo.tenantIdentifier;
-        TenantInfo.HostUrl = tenantInfo.remoteHostUrl;
+        TenantInfo.HostUrl = tenantInfo.backendUrl;
         TenantInfo.MainDomain = tenantInfo.rootDomain;
 
         // Inject tenant header
@@ -29,10 +30,17 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier) : DelegatingH
         request.Headers.AcceptLanguage.Clear();
         request.Headers.AcceptLanguage.ParseAdd(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
-        // Ensure base address is set for relative URIs
-        if (request.RequestUri != null && !request.RequestUri.IsAbsoluteUri)
+        // Rewrite URL based on client type and tenant
+        if (request.RequestUri != null)
         {
-            request.RequestUri = new Uri(new Uri(tenantInfo.remoteHostUrl), request.RequestUri);
+            string targetBaseUrl = isBffClient ? tenantInfo.clientBaseAddress : tenantInfo.backendUrl;
+            
+            // Get the path and query from the original request
+            string pathAndQuery = request.RequestUri.IsAbsoluteUri 
+                ? request.RequestUri.PathAndQuery 
+                : request.RequestUri.ToString();
+            
+            request.RequestUri = new Uri(new Uri(targetBaseUrl), pathAndQuery);
         }
 
         return base.SendAsync(request, cancellationToken);

@@ -196,12 +196,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenti
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
-builder.Services.AddHttpClient("KrafterUIAPI",
-        client => { HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, client); })
-    .AddHttpMessageHandler<ServerAuthenticationHandler>()
-    .Services
-    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIAPI"));
-builder.Services.AddKrafterRefitClients(apiUrl);
+// Server uses apiUrl for both Backend and BFF since it manages cookies directly
+builder.Services.AddKrafterRefitClients(apiUrl, apiUrl);
 WebApplication app = builder.Build();
 app.UseOutputCache();
 

@@ -1,4 +1,4 @@
-using Krafter.UI.Web.Client.Infrastructure.Services;
+using Krafter.UI.Web.Client.Infrastructure.Http;
 using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
@@ -10,39 +10,47 @@ public static class RefitServiceExtensions
 {
     /// <summary>
     /// Registers all Refit API clients with the DI container.
+    /// Auth APIs use BFF (clientBaseAddress from TenantIdentifier), other APIs use Backend URL (dynamic per tenant).
+    /// URLs are rewritten at runtime by RefitTenantHandler based on tenant subdomain.
+    /// Fallback URLs are only used for local development; in production they can be null.
     /// </summary>
-    public static IServiceCollection AddKrafterRefitClients(this IServiceCollection services, string baseUrl)
+    public static IServiceCollection AddKrafterRefitClients(this IServiceCollection services, string? fallbackBackendUrl, string? fallbackBffUrl)
     {
-        // Register handlers
+        // Register auth handler
         services.AddTransient<RefitAuthHandler>();
-        services.AddTransient<RefitTenantHandler>();
 
         var refitSettings = new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() };
+        
+        // Use placeholder URLs - they will be rewritten by RefitTenantHandler at runtime
+        string placeholderUrl = fallbackBackendUrl ?? "https://placeholder.local";
+        string placeholderBffUrl = fallbackBffUrl ?? "https://placeholder.local";
 
-        // Register IAuthApi (no auth handler - used for login/refresh)
+        // Register IAuthApi pointing to BFF (for cookie-based token management)
+        // URL is rewritten by RefitTenantHandler to clientBaseAddress
         services.AddRefitClient<IAuthApi>(refitSettings)
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<RefitTenantHandler>();
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderBffUrl))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: true));
 
-        // Register authenticated API clients
+        // Register authenticated API clients pointing to Backend directly
+        // URL is rewritten by RefitTenantHandler to tenant-specific backendUrl
         services.AddRefitClient<IUsersApi>(refitSettings)
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<RefitTenantHandler>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<IRolesApi>(refitSettings)
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<RefitTenantHandler>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<ITenantsApi>(refitSettings)
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<RefitTenantHandler>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<IAppInfoApi>(refitSettings)
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-            .AddHttpMessageHandler<RefitTenantHandler>();
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false));
 
         return services;
     }

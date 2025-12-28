@@ -19,23 +19,21 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IKrafterLocalStorageService, KrafterLocalStorageService>();
 builder.Services.AddScoped<IApiService, ClientSideApiService>();
-builder.Services.AddUIServices(builder.Configuration["RemoteHostUrl"]);
+
+// BackendUrl/BffUrl are only needed for local development
+// In production, URLs are derived dynamically from tenant subdomain
+string? backendUrl = builder.Configuration["BackendUrl"];
+string? bffUrl = builder.Configuration["BffUrl"];
+
+builder.Services.AddUIServices(backendUrl);
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
 builder.Services.AddScoped<TenantIdentifier>();
 
-builder.Services.AddHttpClient("KrafterUIBFF",
-        client =>
-        {
-            HttpClientTenantConfigurator.SetBFFTenantHttpClientDefaults(builder.Services,
-                builder.Configuration["RemoteHostUrl"], client);
-        })
-    .Services
-    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIBFF"));
 builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStateProvider>()
     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddKrafterRefitClients(builder.Configuration["RemoteHostUrl"]!);
+builder.Services.AddKrafterRefitClients(backendUrl, bffUrl);
 
 await builder.Build().RunAsync();
