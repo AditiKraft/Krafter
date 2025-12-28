@@ -146,5 +146,19 @@ public class ClientSideApiService(
         }
     }
 
-    public Task LogoutAsync(CancellationToken cancellationToken) => localStorage.ClearCacheAsync();
+    public async Task LogoutAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Call BFF to clear HttpOnly cookies on the server
+            await authApi.LogoutAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error calling logout endpoint");
+        }
+        
+        // Clear local storage regardless of BFF call result
+        await localStorage.ClearCacheAsync();
+    }
 }

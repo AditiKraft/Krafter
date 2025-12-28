@@ -188,6 +188,9 @@ if (string.IsNullOrWhiteSpace(apiUrl))
     throw new Exception("API URL not found");
 }
 
+// Override RemoteHostUrl with Aspire service discovery URL for server-side Refit calls
+builder.Configuration["RemoteHostUrl"] = apiUrl;
+
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IKrafterLocalStorageService, KrafterLocalStorageServiceServer>();
 builder.Services.AddUIServices();

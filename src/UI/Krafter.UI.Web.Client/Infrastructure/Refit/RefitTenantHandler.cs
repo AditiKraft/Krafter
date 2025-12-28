@@ -7,6 +7,8 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 /// <summary>
 /// DelegatingHandler that injects tenant identifier, culture headers, and rewrites URLs for Refit clients.
 /// In production, the backend URL is dynamically determined based on tenant subdomain.
+/// On server-side (SSR), all requests go directly to Backend.
+/// On WASM, BFF clients go to clientBaseAddress (for cookie management), others go to Backend.
 /// </summary>
 public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffClient = false) : DelegatingHandler
 {
@@ -14,7 +16,7 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffCli
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress) tenantInfo =
+        (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress, bool isServerSide) tenantInfo =
             tenantIdentifier.Get();
 
         // Set static TenantInfo for backward compatibility
@@ -31,9 +33,13 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffCli
         request.Headers.AcceptLanguage.ParseAdd(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
         // Rewrite URL based on client type and tenant
+        // Server-side: Always use backendUrl (no BFF needed, server manages cookies directly)
+        // WASM: BFF clients use clientBaseAddress (for cookie management), others use backendUrl
         if (request.RequestUri != null)
         {
-            string targetBaseUrl = isBffClient ? tenantInfo.clientBaseAddress : tenantInfo.backendUrl;
+            string targetBaseUrl = tenantInfo.isServerSide 
+                ? tenantInfo.backendUrl 
+                : (isBffClient ? tenantInfo.clientBaseAddress : tenantInfo.backendUrl);
             
             // Get the path and query from the original request
             string pathAndQuery = request.RequestUri.IsAbsoluteUri 

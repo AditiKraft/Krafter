@@ -20,4 +20,7 @@ public interface IAuthApi
     [Post("/external-auth/google")]
     public Task<Response<TokenResponse>> GoogleAuthAsync([Body] GoogleAuthRequest request,
         CancellationToken cancellationToken = default);
+
+    [Post("/tokens/logout")]
+    public Task LogoutAsync(CancellationToken cancellationToken = default);
 }
