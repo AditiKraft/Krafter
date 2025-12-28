@@ -1,5 +1,4 @@
-﻿@using Krafter.Api.Client.Models
-@using Krafter.UI.Web.Client.Features.Roles
+﻿@using Krafter.Shared.Contracts.Roles
 @using Krafter.UI.Web.Client.Features.Roles
 <RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest __) => Submit(__))">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>

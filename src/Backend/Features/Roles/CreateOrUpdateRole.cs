@@ -1,15 +1,15 @@
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Application.Common;
-using Backend.Common;
-using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,35 +18,6 @@ namespace Backend.Features.Roles;
 
 public sealed class CreateOrUpdateRole
 {
-    public sealed class CreateOrUpdateRoleRequest
-    {
-        public string? Id { get; set; }
-        public string Name { get; set; } = default!;
-        public string? Description { get; set; }
-
-        public List<string> Permissions { get; set; } = default!;
-    }
-
-
-    public class RoleValidator : AbstractValidator<CreateOrUpdateRoleRequest>
-    {
-        public RoleValidator()
-        {
-            RuleFor(p => p.Name)
-                .NotNull().NotEmpty().WithMessage("You must enter Name")
-                .MaximumLength(13)
-                .WithMessage("Name cannot be longer than 13 characters")
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-
-            RuleFor(p => p.Description)
-                .NotNull().NotEmpty().WithMessage("You must enter Description")
-                .MaximumLength(100)
-                .WithMessage("Description cannot be longer than 100 characters")
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-        }
-    }
-
     public sealed class Handler(
         RoleManager<KrafterRole> roleManager,
         UserManager<KrafterUser> userManager,
@@ -124,7 +95,6 @@ public sealed class CreateOrUpdateRole
                         !request.Permissions.Contains(krafterRoleClaim.ClaimValue))
                     {
                         krafterRoleClaim.IsDeleted = true;
-
                         permissionsToRemove.Add(krafterRoleClaim);
                     }
                 }
@@ -135,7 +105,6 @@ public sealed class CreateOrUpdateRole
                         request.Permissions.Contains(krafterRoleClaim.ClaimValue))
                     {
                         krafterRoleClaim.IsDeleted = false;
-
                         permissionsToUpdate.Add(krafterRoleClaim);
                     }
                 }
@@ -170,7 +139,6 @@ public sealed class CreateOrUpdateRole
         }
     }
 
-
     public sealed class Route : IRouteRegistrar
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
@@ -179,10 +147,10 @@ public sealed class CreateOrUpdateRole
                 .AddFluentValidationFilter();
 
             roleGroup.MapPost("/create-or-update", async
-                ([FromBody] CreateOrUpdateRoleRequest createUserRequest,
+                ([FromBody] CreateOrUpdateRoleRequest request,
                     [FromServices] Handler roleService) =>
                 {
-                    Response res = await roleService.CreateOrUpdateAsync(createUserRequest);
+                    Response res = await roleService.CreateOrUpdateAsync(request);
                     return TypedResults.Ok(res);
                 })
                 .Produces<Response>()

@@ -1,11 +1,13 @@
 using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Common;
-using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
-using Backend.Common.Models;
 using Backend.Features.Roles._Shared;
 using Backend.Infrastructure.Persistence;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

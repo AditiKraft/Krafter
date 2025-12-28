@@ -1,7 +1,8 @@
-﻿using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
-using Backend.Common.Extensions;
+﻿using Backend.Common.Extensions;
 using Backend.Features.Users._Shared;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 

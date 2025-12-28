@@ -1,17 +1,17 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Krafter.Api.Client.Models;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Auth;
 using Krafter.Aspire.ServiceDefaults;
 using Krafter.UI.Web.Client;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Models;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Api;
 using Krafter.UI.Web.Client.Infrastructure.Http;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
-using Krafter.UI.Web.Client.Kiota;
 using Krafter.UI.Web.Components;
 using Krafter.UI.Web.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -188,20 +188,19 @@ if (string.IsNullOrWhiteSpace(apiUrl))
     throw new Exception("API URL not found");
 }
 
+// Override RemoteHostUrl with Aspire service discovery URL for server-side Refit calls
+builder.Configuration["RemoteHostUrl"] = apiUrl;
+
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IKrafterLocalStorageService, KrafterLocalStorageServiceServer>();
-builder.Services.AddUIServices(apiUrl);
+builder.Services.AddUIServices();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
-builder.Services.AddHttpClient("KrafterUIAPI",
-        client => { HttpClientTenantConfigurator.SetAPITenantHttpClientDefaults(builder.Services, client); })
-    .AddHttpMessageHandler<ServerAuthenticationHandler>()
-    .Services
-    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIAPI"));
-builder.Services.AddKrafterKiotaClient(builder.Configuration["RemoteHostUrl"]);
+// Server uses apiUrl for both Backend and BFF since it manages cookies directly
+builder.Services.AddKrafterRefitClients();
 WebApplication app = builder.Build();
 app.UseOutputCache();
 
@@ -262,7 +261,7 @@ static void MapAuthTokenEndpoints(WebApplication app)
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
-    app.MapPost("/tokens/create", async ([FromBody] TokenRequestInput request, IApiService apiService,
+    app.MapPost("/tokens/create", async ([FromBody] TokenRequest request, IApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
         Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
@@ -275,7 +274,7 @@ static void MapAuthTokenEndpoints(WebApplication app)
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost("/external-auth/google", async ([FromBody] TokenRequestInput request, IApiService apiService) =>
+    app.MapPost("/external-auth/google", async ([FromBody] TokenRequest request, IApiService apiService) =>
     {
         Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);

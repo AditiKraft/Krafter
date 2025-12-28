@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.0" />
     <ProjectReference Include="..\..\..\aspire\Krafter.Aspire.ServiceDefaults\Krafter.Aspire.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Krafter.Shared\Krafter.Shared.csproj" />
     <ProjectReference Include="..\Krafter.UI.Web.Client\Krafter.UI.Web.Client.csproj" />
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
@@ -18,13 +19,13 @@
   </ItemGroup>
 
 
-	<PropertyGroup>
-		<RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
-	</PropertyGroup>
+  <PropertyGroup>
+    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
 
   <PropertyGroup>
     <ContainerFamily>noble</ContainerFamily>
-	<ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
+    <ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
     <ContainerRepository>ghcr.io/aditikraft/krafter.ui.web</ContainerRepository>
     <ContainerRegistry>ghcr.io</ContainerRegistry>
   </PropertyGroup>

@@ -1,10 +1,10 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Enums;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Permissions;
 using Krafter.UI.Web.Client.Common.Models;
-using Krafter.UI.Web.Client.Common.Enums;
-using Krafter.UI.Web.Client.Common.Extensions;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Roles;
@@ -12,21 +12,21 @@ namespace Krafter.UI.Web.Client.Features.Roles;
 public partial class Roles(
     CommonService commonService,
     NavigationManager navigationManager,
-    KrafterClient krafterClient,
+    IRolesApi rolesApi,
     LayoutService layoutService,
     DialogService dialogService,
     NotificationService notificationService) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Roles;
-    private RadzenDataGrid<RoleDto> grid;
+    private RadzenDataGrid<RoleDto> grid = default!;
     private bool IsLoading = true;
 
-    private GetRequestInput RequestInput = new();
+    private Krafter.Shared.Common.Models.GetRequestInput RequestInput = new();
     public string IdentifierBasedOnPlacement = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        IdentifierBasedOnPlacement = RequestInput.GetIdentifierBasedOnPlacement(nameof(Roles));
+        IdentifierBasedOnPlacement = nameof(Roles);
 
         LocalAppSate.CurrentPageTitle = $"Roles";
 
@@ -34,7 +34,7 @@ public partial class Roles(
         await GetListAsync();
     }
 
-    private RoleDtoPaginationResponseResponse? response = new() { Data = new RoleDtoPaginationResponse() };
+    private Response<PaginationResponse<RoleDto>>? response = new() { Data = new PaginationResponse<RoleDto>() };
 
     private async Task GetListAsync(bool resetPaginationData = false)
     {
@@ -44,19 +44,15 @@ public partial class Roles(
             RequestInput.SkipCount = 0;
         }
 
-        response = await krafterClient.Roles.GetPath.GetAsync(
-            configuration =>
-            {
-                configuration.QueryParameters.Id = RequestInput.Id;
-                configuration.QueryParameters.History = RequestInput.History;
-                configuration.QueryParameters.IsDeleted = RequestInput.IsDeleted;
-                configuration.QueryParameters.SkipCount = RequestInput.SkipCount;
-                configuration.QueryParameters.MaxResultCount = RequestInput.MaxResultCount;
-                configuration.QueryParameters.Filter = RequestInput.Filter;
-                configuration.QueryParameters.OrderBy = RequestInput.OrderBy;
-                configuration.QueryParameters.Query = RequestInput.Query;
-            }, CancellationToken.None
-        );
+        response = await rolesApi.GetRolesAsync(
+            RequestInput.Id,
+            RequestInput.History,
+            RequestInput.IsDeleted,
+            RequestInput.Query,
+            RequestInput.Filter,
+            RequestInput.OrderBy,
+            RequestInput.SkipCount,
+            RequestInput.MaxResultCount);
 
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
@@ -78,12 +74,12 @@ public partial class Roles(
 
     private async Task DeleteRole(RoleDto roleDto)
     {
-        if (response.Data.Items.Contains(roleDto))
+        if (response?.Data?.Items?.Contains(roleDto) == true)
         {
             await commonService.Delete(
                 new DeleteRequestInput
                 {
-                    Id = roleDto.Id, DeleteReason = roleDto.DeleteReason, EntityKind = (int)EntityKind.KrafterRole
+                    Id = roleDto.Id, DeleteReason = roleDto.DeleteReason, EntityKind = EntityKind.KrafterRole
                 }, $"Delete Role {roleDto.Name}");
         }
         else

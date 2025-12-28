@@ -2,16 +2,17 @@ using System.Security.Claims;
 using Backend.Application.BackgroundJobs;
 using Backend.Application.Notifications;
 using Backend.Common;
-using Backend.Common.Auth;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
-using Backend.Common.Models;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
+using Krafter.Shared.Contracts.Tenants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static Backend.Features.Tenants.SeedBasicData;
 
 namespace Backend.Features.Tenants._Shared;
 
@@ -23,7 +24,7 @@ public class DataSeedService(
     RoleManager<KrafterRole> roleManager,
     UserManager<KrafterUser> userManager) : IScopedHandler
 {
-    public async Task<Response> SeedBasicData(SeedDataRequestInput requestInput)
+    public async Task<Response> SeedBasicData(SeedDataRequest request)
     {
         CurrentTenantDetails currentTenantResponse = tenantGetterService.Tenant;
 
@@ -130,7 +131,6 @@ public class DataSeedService(
                     IsActive = true,
                     IsOwner = true
                 };
-                //generate aspnet core valid password
                 password = PasswordGenerator.GeneratePassword();
             }
 

@@ -1,19 +1,20 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class CreateOrUpdateUser(
     DialogService dialogService,
-    KrafterClient krafterClient
+    IUsersApi usersApi
 ) : ComponentBase
 {
     [Parameter] public UserDto? UserInput { get; set; } = new();
 
     private CreateUserRequest CreateUserRequest = new();
     private CreateUserRequest OriginalCreateUserRequest = new();
-    public UserRoleDtoListResponse? UserRoles { get; set; }
+    public Response<List<UserRoleDto>>? UserRoles { get; set; }
     private bool isBusy = false;
 
     protected override async Task OnInitializedAsync()
@@ -30,11 +31,11 @@ public partial class CreateOrUpdateUser(
 
             if (!string.IsNullOrWhiteSpace(UserInput.Id))
             {
-                UserRoles = await krafterClient.Users.GetRoles[UserInput.Id].GetAsync();
+                UserRoles = await usersApi.GetUserRolesAsync(UserInput.Id);
                 CreateUserRequest.Roles = UserRoles?
                     .Data?
                     .Where(c => !string.IsNullOrEmpty(c.RoleId))
-                    .Select(c => c.RoleId!).ToList();
+                    .Select(c => c.RoleId!).ToList() ?? new List<string>();
                 OriginalCreateUserRequest.Roles = CreateUserRequest.Roles;
             }
         }
@@ -86,7 +87,7 @@ public partial class CreateOrUpdateUser(
                 finalInput.UpdateTenantEmail = true;
             }
 
-            Response? result = await krafterClient.Users.CreateOrUpdate.PostAsync(finalInput);
+            Response? result = await usersApi.CreateOrUpdateUserAsync(finalInput);
             isBusy = false;
             StateHasChanged();
             if (result is not null && result.IsError == false)

@@ -1,10 +1,10 @@
 ﻿using FluentValidation;
-using Krafter.Api.Client.Models;
+using Krafter.Shared.Contracts.Tenants;
 using Krafter.UI.Web.Client.Common.Validators;
 
 namespace Krafter.UI.Web.Client.Features.Tenants;
 
-public class TenantValidator : AbstractValidator<CreateOrUpdateTenantRequestInput>
+public class TenantValidator : AbstractValidator<CreateOrUpdateTenantRequest>
 {
     public TenantValidator()
     {

@@ -1,12 +1,12 @@
-﻿using Backend.Api;
+using Backend.Api;
 using Backend.Api.Configuration;
 using Backend.Application.Common;
-using Backend.Common;
-using Backend.Common.Models;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -15,14 +15,6 @@ namespace Backend.Features.Auth;
 
 public sealed class GetToken
 {
-    public sealed class TokenRequestInput
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public bool IsExternalLogin { get; set; } = false;
-        public string Code { get; set; }
-    }
-
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         ITokenService tokenService,
@@ -34,16 +26,17 @@ public sealed class GetToken
         private readonly SecuritySettings _securitySettings = securitySettings.Value;
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
-        public async Task<Response<TokenResponse>> GetTokenAsync(TokenRequestInput requestInput, string ipAddress,
+        public async Task<Response<TokenResponse>> GetTokenAsync(
+            TokenRequest request, string ipAddress,
             CancellationToken cancellationToken)
         {
-            KrafterUser? user = await userManager.FindByEmailAsync(requestInput.Email.Trim().Normalize());
+            KrafterUser? user = await userManager.FindByEmailAsync(request.Email.Trim().Normalize());
             if (user is null)
             {
                 throw new UnauthorizedException("Invalid Email or Password");
             }
 
-            if (!await userManager.CheckPasswordAsync(user, requestInput.Password))
+            if (!await userManager.CheckPasswordAsync(user, request.Password))
             {
                 throw new KrafterException("Invalid Email or Password");
             }
@@ -73,7 +66,7 @@ public sealed class GetToken
                 .AddFluentValidationFilter();
 
             productGroup.MapPost("/create", async
-            ([FromBody] TokenRequestInput request, HttpContext context,
+            ([FromBody] TokenRequest request, HttpContext context,
                 [FromServices] Handler handler) =>
             {
                 string? ipAddress = GetIpAddress(context);
@@ -87,21 +80,6 @@ public sealed class GetToken
             return httpContext.Request.Headers.ContainsKey("X-Forwarded-For")
                 ? httpContext.Request.Headers["X-Forwarded-For"]
                 : httpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "N/A";
-        }
-    }
-
-
-    public class TokenRequestValidator : AbstractValidator<TokenRequestInput>
-    {
-        public TokenRequestValidator()
-        {
-            RuleFor(p => p.Email).Cascade(CascadeMode.Stop)
-                .NotEmpty()
-                .EmailAddress()
-                .WithMessage("Invalid Email Address.");
-
-            RuleFor(p => p.Password).Cascade(CascadeMode.Stop)
-                .NotEmpty();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Krafter.Shared.Common.Auth.Permissions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Krafter.UI.Web.Client.Common.Permissions;
 

@@ -3,9 +3,10 @@ using Backend.Application.Common;
 using Backend.Common.Extensions;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
-using Backend.Common.Models;
 using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Hubs;
 using Mapster;
 using Microsoft.AspNetCore.SignalR;
 

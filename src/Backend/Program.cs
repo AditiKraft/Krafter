@@ -5,16 +5,16 @@ using Backend.Api.Middleware;
 using Backend.Application.BackgroundJobs;
 using Backend.Application.Multitenant;
 using Backend.Application.Notifications;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
-using Backend.Features.Auth;
 using Backend.Hubs;
 using Backend.Infrastructure.Persistence;
 using Backend.Infrastructure.Persistence.Tenants;
 using FluentValidation;
 using Krafter.Aspire.ServiceDefaults;
+using Krafter.Shared.Common.Auth.Permissions;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Krafter.Shared.Contracts.Auth;
 
 namespace Backend;
 
@@ -63,7 +63,7 @@ public static class Program
 
         // FluentValidation
         builder.AddFluentValidationEndpointFilter();
-        builder.Services.AddValidatorsFromAssemblyContaining<GetToken.TokenRequestValidator>();
+        builder.Services.AddValidatorsFromAssemblyContaining<TokenRequestValidator>();
 
         // Background Jobs (TickerQ)
         builder.Services.AddBackgroundJobs();

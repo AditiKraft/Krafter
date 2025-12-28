@@ -1,5 +1,3 @@
-@using Krafter.UI.Web.Client.Common.Permissions
-@using Krafter.UI.Web.Client.Common.Permissions
 @using Krafter.UI.Web.Client.Features.Auth._Shared
 @attribute [Route(RoutePath)]
 @attribute [MustHavePermission(KrafterAction.View, KrafterResource.Roles)]
@@ -35,7 +33,7 @@
                     <ChildContent>
 
 
-                        @if (KrafterRoleConstant.IsDefault(data.Name!) == false)
+                        @if (Shared.Contracts.Roles.KrafterRoleConstant.IsDefault(data.Name!) == false)
                         {
                             <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Update, KrafterResource.Roles))">
                                 <RadzenSplitButtonItem Text="Edit" Value="@KrafterAction.Update" Icon="edit"/>

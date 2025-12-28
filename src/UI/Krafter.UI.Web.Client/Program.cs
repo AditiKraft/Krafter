@@ -2,7 +2,7 @@
 using Krafter.UI.Web.Client;
 using Krafter.UI.Web.Client.Common.Validators;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
-using Krafter.UI.Web.Client.Kiota;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 using Krafter.UI.Web.Client.Infrastructure.Auth;
 using Krafter.UI.Web.Client.Infrastructure.Storage;
@@ -19,23 +19,17 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IKrafterLocalStorageService, KrafterLocalStorageService>();
 builder.Services.AddScoped<IApiService, ClientSideApiService>();
-builder.Services.AddUIServices(builder.Configuration["RemoteHostUrl"]);
+
+builder.Services.AddUIServices();
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
 builder.Services.AddScoped<TenantIdentifier>();
 
-builder.Services.AddHttpClient("KrafterUIBFF",
-        client =>
-        {
-            HttpClientTenantConfigurator.SetBFFTenantHttpClientDefaults(builder.Services,
-                builder.Configuration["RemoteHostUrl"], client);
-        })
-    .Services
-    .AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("KrafterUIBFF"));
 builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStateProvider>()
     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddKrafterKiotaClient(builder.Configuration["RemoteHostUrl"]);
+// URLs are rewritten dynamically by RefitTenantHandler based on tenant
+builder.Services.AddKrafterRefitClients();
 
 await builder.Build().RunAsync();

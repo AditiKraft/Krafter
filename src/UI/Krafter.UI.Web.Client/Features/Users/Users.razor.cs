@@ -1,13 +1,11 @@
-﻿using Krafter.Api.Client;
-using Krafter.Api.Client.Models;
+﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Enums;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Permissions;
 using Krafter.UI.Web.Client.Common.Models;
-using Krafter.UI.Web.Client.Common.Enums;
+using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
-using Microsoft.Kiota.Abstractions;
-using GetRequestBuilder = Krafter.Api.Client.Users.Get.GetRequestBuilder;
-
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
@@ -16,14 +14,14 @@ public partial class Users(
     NavigationManager navigationManager,
     LayoutService layoutService,
     DialogService dialogService,
-    KrafterClient krafterClient
+    IUsersApi usersApi
 ) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Users;
-    private RadzenDataGrid<UserDto> grid;
-    private GetRequestInput requestInput = new();
+    private RadzenDataGrid<UserDto> grid = default!;
+    private Krafter.Shared.Common.Models.GetRequestInput requestInput = new();
 
-    private UserDtoPaginationResponseResponse? response = new() { Data = new UserDtoPaginationResponse() };
+    private Response<PaginationResponse<UserDto>>? response = new() { Data = new PaginationResponse<UserDto>() };
 
     private bool IsLoading = true;
 
@@ -54,28 +52,18 @@ public partial class Users(
             requestInput.SkipCount = 0;
         }
 
-        response = await krafterClient.Users.GetPath.GetAsync(RequestConfiguration(requestInput),
-            CancellationToken.None);
+        response = await usersApi.GetUsersAsync(
+            requestInput.Id,
+            requestInput.History,
+            requestInput.IsDeleted,
+            requestInput.Query,
+            requestInput.Filter,
+            requestInput.OrderBy,
+            requestInput.SkipCount,
+            requestInput.MaxResultCount);
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
-
-    private Action<RequestConfiguration<GetRequestBuilder.GetRequestBuilderGetQueryParameters>>? RequestConfiguration(
-        GetRequestInput requestInput)
-    {
-        return configuration =>
-        {
-            configuration.QueryParameters.Id = requestInput.Id;
-            configuration.QueryParameters.History = requestInput.History;
-            configuration.QueryParameters.IsDeleted = requestInput.IsDeleted;
-            configuration.QueryParameters.SkipCount = requestInput.SkipCount;
-            configuration.QueryParameters.MaxResultCount = requestInput.MaxResultCount;
-            configuration.QueryParameters.Filter = requestInput.Filter;
-            configuration.QueryParameters.OrderBy = requestInput.OrderBy;
-            configuration.QueryParameters.Query = requestInput.Query;
-        };
-    }
-
 
     private async Task AddUser()
     {
@@ -98,7 +86,7 @@ public partial class Users(
             await commonService.Delete(
                 new DeleteRequestInput
                 {
-                    Id = user.Id, DeleteReason = user.DeleteReason, EntityKind = (int)EntityKind.KrafterUser
+                    Id = user.Id, DeleteReason = user.DeleteReason, EntityKind = EntityKind.KrafterUser
                 }, $"Delete User {user.FirstName}");
         }
         else

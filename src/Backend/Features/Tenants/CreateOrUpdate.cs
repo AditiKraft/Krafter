@@ -1,15 +1,16 @@
-﻿using Backend.Api;
+using Backend.Api;
 using Backend.Api.Authorization;
 using Backend.Application.Common;
-using Backend.Common;
-using Backend.Common.Auth.Permissions;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
-using Backend.Common.Models;
 using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
-using FluentValidation;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Tenants;
+using Krafter.Shared.Contracts.Users;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,16 +20,6 @@ namespace Backend.Features.Tenants;
 
 public sealed class CreateOrUpdate
 {
-    public sealed class CreateOrUpdateTenantRequestInput
-    {
-        public string? Id { get; set; }
-        public string? Identifier { get; set; }
-        public string? Name { get; set; }
-        public string AdminEmail { get; set; } = default!;
-        public bool? IsActive { get; set; }
-        public DateTime? ValidUpto { get; set; }
-    }
-
     internal sealed class Handler(
         TenantDbContext dbContext,
         KrafterContext krafterContext,
@@ -36,20 +27,20 @@ public sealed class CreateOrUpdate
         IServiceProvider serviceProvider,
         ICurrentUser currentUser) : IScopedHandler
     {
-        public async Task<Response> CreateOrUpdateAsync(CreateOrUpdateTenantRequestInput requestInput)
+        public async Task<Response> CreateOrUpdateAsync(CreateOrUpdateTenantRequest request)
         {
-            if (!string.IsNullOrWhiteSpace(requestInput.Identifier))
+            if (!string.IsNullOrWhiteSpace(request.Identifier))
             {
-                requestInput.Identifier = requestInput.Identifier.Trim();
+                request.Identifier = request.Identifier.Trim();
             }
 
-            if (string.IsNullOrWhiteSpace(requestInput.Id))
+            if (string.IsNullOrWhiteSpace(request.Id))
             {
-                if (!string.IsNullOrWhiteSpace(requestInput.Identifier))
+                if (!string.IsNullOrWhiteSpace(request.Identifier))
                 {
                     Tenant? existingTenant = await dbContext.Tenants
                         .AsNoTracking()
-                        .FirstOrDefaultAsync(c => c.Identifier.ToLower() == requestInput.Identifier.ToLower());
+                        .FirstOrDefaultAsync(c => c.Identifier.ToLower() == request.Identifier.ToLower());
                     if (existingTenant is not null)
                     {
                         return new Response
@@ -61,17 +52,17 @@ public sealed class CreateOrUpdate
                     }
                 }
 
-                requestInput.Id = Guid.NewGuid().ToString();
-                Tenant entity = requestInput.Adapt<Tenant>();
-                entity.ValidUpto = new DateTime(requestInput.ValidUpto.Value.Year,
-                    requestInput.ValidUpto.Value.Month, requestInput.ValidUpto.Value.Day, 0, 0, 0, 0, 0,
+                request.Id = Guid.NewGuid().ToString();
+                Tenant entity = request.Adapt<Tenant>();
+                entity.ValidUpto = new DateTime(request.ValidUpto!.Value.Year,
+                    request.ValidUpto.Value.Month, request.ValidUpto.Value.Day, 0, 0, 0, 0, 0,
                     DateTimeKind.Utc);
                 entity.CreatedById = currentUser.GetUserId();
 
                 dbContext.Tenants.Add(entity);
                 await dbContext.SaveChangesAsync();
                 await krafterContext.SaveChangesAsync([nameof(Tenant)]);
-                //TODO need to user hangfire here
+
                 string rootTenantLink = tenantGetterService.Tenant.TenantLink;
                 using (IServiceScope scope = serviceProvider.CreateScope())
                 {
@@ -79,33 +70,33 @@ public sealed class CreateOrUpdate
                         scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
                     CurrentTenantDetails currentTenantDetails = entity.Adapt<CurrentTenantDetails>();
                     currentTenantDetails.TenantLink =
-                        GetSubTenantLinkBasedOnRootTenant(rootTenantLink, requestInput.Identifier);
+                        GetSubTenantLinkBasedOnRootTenant(rootTenantLink, request.Identifier);
                     requiredService.SetTenant(currentTenantDetails);
                     DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
-                    await seedService.SeedBasicData(new SeedBasicData.SeedDataRequestInput { });
+                    await seedService.SeedBasicData(new SeedDataRequest());
                 }
             }
             else
             {
-                Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == requestInput.Id);
+                Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == request.Id);
                 if (tenant is null)
                 {
                     throw new KrafterException(
                         "Unable to find tenant, please try again later or contact support.");
                 }
 
-                if (!string.IsNullOrWhiteSpace(requestInput.Name))
+                if (!string.IsNullOrWhiteSpace(request.Name))
                 {
-                    tenant.Name = requestInput.Name;
+                    tenant.Name = request.Name;
                 }
 
-                if (!string.IsNullOrWhiteSpace(requestInput.Identifier))
+                if (!string.IsNullOrWhiteSpace(request.Identifier))
                 {
-                    tenant.Identifier = requestInput.Identifier;
+                    tenant.Identifier = request.Identifier;
                 }
 
-                if (!string.IsNullOrWhiteSpace(requestInput.AdminEmail) &&
-                    requestInput.AdminEmail != tenant.AdminEmail)
+                if (!string.IsNullOrWhiteSpace(request.AdminEmail) &&
+                    request.AdminEmail != tenant.AdminEmail)
                 {
                     string rootTenantLink = tenantGetterService.Tenant.TenantLink;
                     using (IServiceScope scope = serviceProvider.CreateScope())
@@ -114,7 +105,7 @@ public sealed class CreateOrUpdate
                             scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
                         CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
                         currentTenantDetails.TenantLink =
-                            GetSubTenantLinkBasedOnRootTenant(rootTenantLink, requestInput.Identifier);
+                            GetSubTenantLinkBasedOnRootTenant(rootTenantLink, request.Identifier);
                         requiredService.SetTenant(currentTenantDetails);
 
                         UserManager<KrafterUser> userManager1 =
@@ -126,22 +117,22 @@ public sealed class CreateOrUpdate
                         {
                             await userService.CreateOrUpdateAsync(new CreateUserRequest
                             {
-                                Id = user.Id, Email = requestInput.AdminEmail, UpdateTenantEmail = false
+                                Id = user.Id, Email = request.AdminEmail, UpdateTenantEmail = false
                             });
                         }
                     }
 
-                    tenant.AdminEmail = requestInput.AdminEmail;
+                    tenant.AdminEmail = request.AdminEmail;
                 }
 
-                if (requestInput.IsActive.HasValue)
+                if (request.IsActive.HasValue)
                 {
-                    tenant.IsActive = requestInput.IsActive ?? false;
+                    tenant.IsActive = request.IsActive ?? false;
                 }
 
-                if (requestInput.ValidUpto.HasValue)
+                if (request.ValidUpto.HasValue)
                 {
-                    tenant.ValidUpto = requestInput.ValidUpto.Value;
+                    tenant.ValidUpto = request.ValidUpto.Value;
                 }
 
                 await dbContext.SaveChangesAsync();
@@ -151,11 +142,16 @@ public sealed class CreateOrUpdate
             return new Response();
         }
 
-        internal string GetSubTenantLinkBasedOnRootTenant(string tenantDomain, string identifier)
+        internal string GetSubTenantLinkBasedOnRootTenant(string tenantDomain, string? identifier)
         {
             if (tenantDomain.EndsWith("/"))
             {
                 tenantDomain = tenantDomain.Substring(0, tenantDomain.Length - 1);
+            }
+
+            if (string.IsNullOrWhiteSpace(identifier))
+            {
+                return tenantDomain;
             }
 
             // Check if running on localhost and return tenantDomain as it is
@@ -196,39 +192,6 @@ public sealed class CreateOrUpdate
         }
     }
 
-    internal sealed class Validator : AbstractValidator<CreateOrUpdateTenantRequestInput>
-    {
-        public Validator()
-        {
-            RuleFor(p => p.Name)
-                .NotNull().NotEmpty().WithMessage("You must enter Name")
-                .MaximumLength(40)
-                .WithMessage("Name cannot be longer than 40 characters").When(c =>
-                    string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-            RuleFor(p => p.AdminEmail)
-                .NotEmpty()
-                .NotEmpty()
-                .EmailAddress()
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-            RuleFor(p => p.Identifier)
-                .NotEmpty()
-                .NotEmpty()
-                .MaximumLength(10)
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-
-            RuleFor(p => p.IsActive)
-                .NotNull()
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-
-            RuleFor(p => p.ValidUpto)
-                .NotNull()
-                .When(c => string.IsNullOrWhiteSpace(c.Id) || FluentValidationConfig.IsRunningOnUI);
-        }
-    }
-
     public sealed class Route : IRouteRegistrar
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
@@ -236,21 +199,21 @@ public sealed class CreateOrUpdate
             RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
 
             tenant.MapPost("/create-or-update", async
-            ([FromBody] CreateOrUpdateTenantRequestInput requestInput,
+            ([FromBody] CreateOrUpdateTenantRequest request,
                 [FromServices] Handler handler) =>
             {
-                Response res = await handler.CreateOrUpdateAsync(requestInput);
+                Response res = await handler.CreateOrUpdateAsync(request);
                 return TypedResults.Ok(res);
             }).MustHavePermission(KrafterAction.Create, KrafterResource.Tenants);
 
-            //tenant creation from landing page , allow Anonymous access
+            // Tenant creation from landing page, allow Anonymous access
             tenant.MapPost("/create", async
-                ([FromBody] CreateOrUpdateTenantRequestInput requestInput,
+                ([FromBody] CreateOrUpdateTenantRequest request,
                     [FromServices] Handler handler) =>
                 {
-                    requestInput.ValidUpto = DateTime.UtcNow.AddDays(7);
-                    requestInput.IsActive = true;
-                    Response res = await handler.CreateOrUpdateAsync(requestInput);
+                    request.ValidUpto = DateTime.UtcNow.AddDays(7);
+                    request.IsActive = true;
+                    Response res = await handler.CreateOrUpdateAsync(request);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
