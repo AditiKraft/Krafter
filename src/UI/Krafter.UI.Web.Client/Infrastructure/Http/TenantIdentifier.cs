@@ -43,12 +43,15 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         {
             tenantIdentifier = "krafter"; // adjust if you want different local logic
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
+            // For local dev, RemoteHostUrl is the full backend URL (e.g., https://localhost:5199)
             backendUrl = configuration["RemoteHostUrl"] ?? throw new InvalidOperationException("RemoteHostUrl not configured");
         }
         else
         {
             string[] strings = host.Split('.');
             tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
+            // For production, RemoteHostUrl is the domain (e.g., api.getkrafter.dev)
+            // Backend URL is built as: https://{tenant}.{RemoteHostUrl}
             string remoteHostUrl = configuration["RemoteHostUrl"] ?? "api.getkrafter.dev";
             backendUrl = $"https://{tenantIdentifier}.{remoteHostUrl}";
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
