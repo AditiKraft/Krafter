@@ -98,6 +98,7 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 - **⚡ Real-Time Updates** - SignalR integration for live notifications
 - **📊 Observability** - OpenTelemetry with Aspire orchestration
 - **🎨 Modern UI** - Radzen components with theming support
+- **🔌 Refit API Client** - Type-safe HTTP client with automatic token handling
 
 ## 🏛️ Architecture
 
@@ -172,7 +173,7 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 - **Blazor WebAssembly** - Client-side SPA
 - **Blazor Server** - Server-side rendering
 - **Radzen Blazor** - UI component library
-- **Microsoft Kiota** - API client generation
+- **Refit** - Type-safe REST API client
 - **Blazored LocalStorage** - Browser storage
 - **FluentValidation.Blazor** - Client-side validation
 - **Mapster** - Object mapping
@@ -196,8 +197,6 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 ### Install Tools
 
 - EF Core tools: `dotnet tool install --global dotnet-ef`
-- Kiota CLI (optional, for API client regen):
-  - `dotnet tool install --global Microsoft.Kiota.Cli`
 
 ### Quick Start
 
@@ -416,8 +415,8 @@ dotnet user-secrets init
 
 # set JWT and TickerQ basic auth
 dotnet user-secrets set "SecuritySettings:JwtSettings:Key" "<long-random-32+ chars>"
-dotlet user-secrets set "TickerQBasicAuth:Username" "<username>"
-dotlet user-secrets set "TickerQBasicAuth:Password" "<password>"
+dotnet user-secrets set "TickerQBasicAuth:Username" "<username>"
+dotnet user-secrets set "TickerQBasicAuth:Password" "<password>"
 ```
 
 From the Blazor Server host (`src/UI/Krafter.UI.Web`):
@@ -436,29 +435,40 @@ dotnet user-secrets set "Jwt:Key" "<same-long-random-key-as-backend>"
 
 ```
 Krafter/
+├── Agents.md                        # AI agent instructions (entry point)
 ├── aspire/                          # Aspire orchestration
 │   ├── Krafter.Aspire.AppHost/     # Orchestration host
 │   └── Krafter.Aspire.ServiceDefaults/ # Shared configuration
 ├── src/
+│   ├── Krafter.Shared/              # Shared contracts library
+│   │   ├── Agents.md               # Shared-specific AI instructions
+│   │   ├── Contracts/              # API DTOs (Auth, Users, Roles, Tenants)
+│   │   ├── Common/                 # Shared utilities, permissions, models
+│   │   └── Hubs/                   # SignalR hub contracts
 │   ├── Backend/                     # ASP.NET Core API (VSA)
+│   │   ├── Agents.md               # Backend-specific AI instructions
 │   │   ├── Features/               # Vertical slices (Auth, Users, Roles, Tenants)
-│   │   ├── Infrastructure/         # Persistence, Jobs, Multi-tenancy
-│   │   ├── Common/                 # Shared utilities, permissions
-│   │   ├── Api/                    # API configuration, middleware
-│   │   └── Program.cs             # Entry point
+│   │   ├── Infrastructure/         # Persistence, Background Jobs
+│   │   ├── Application/            # Auth, Multi-tenancy, Notifications
+│   │   ├── Api/                    # API configuration, middleware, authorization
+│   │   ├── Entities/               # Base entity classes
+│   │   ├── Hubs/                   # SignalR hubs
+│   │   └── Program.cs              # Entry point
 │   └── UI/
+│       ├── Agents.md               # UI-specific AI instructions
 │       ├── Krafter.UI.Web.Client/  # Blazor WebAssembly
-│       │   ├── Features/          # Feature-based UI components
-│       │   ├── Infrastructure/    # Services, Auth, API clients
-│       │   ├── Common/            # Shared components, models
-│       │   └── Client/            # Auto-generated Kiota client
-│       └── Krafter.UI.Web/        # Blazor Server host
-├── build/                          # NUKE build project
-├── .github/                        # GitHub Actions workflows
-└── README.md                       # This file
+│       │   ├── Features/           # Feature-based UI components
+│       │   ├── Infrastructure/     # Refit clients, Auth, Services
+│       │   └── Common/             # Shared components, models
+│       └── Krafter.UI.Web/         # Blazor Server host
+├── tests/                           # Test projects
+├── build/                           # NUKE build automation
+├── docs/                            # Documentation assets
+├── .github/                         # GitHub Actions workflows
+└── README.md                        # This file
 ```
 
-For detailed structure, see [.github/copilot-instructions.md](.github/copilot-instructions.md)
+For detailed structure, see [Agents.md](Agents.md) and sub-project Agents.md files.
 
 ## 📖 Development Guide
 
@@ -478,11 +488,12 @@ For detailed structure, see [.github/copilot-instructions.md](.github/copilot-in
 2. Add list page: `<Feature>s.razor` + `<Feature>s.razor.cs`
 3. Add form dialog: `CreateOrUpdate<Feature>.razor` + `.razor.cs`
 4. Add route constant to `Common/Constants/KrafterRoute.cs`
-5. Update permissions in `Common/Permissions/KrafterPermissions.cs`
-6. Update `Infrastructure/Services/MenuService.cs` for navigation
-7. Regenerate Kiota client: `kiota update`
+5. Create Refit interface: `Infrastructure/Refit/I<Feature>sApi.cs`
+6. Register Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`
+7. Update permissions in `Common/Permissions/KrafterPermissions.cs`
+8. Update `Infrastructure/Services/MenuService.cs` for navigation
 
-For complete guidelines, see [Development Workflow](.github/copilot-instructions.md#14-development-workflow)
+For complete guidelines, see [Agents.md](Agents.md) and the sub-project Agents.md files in `src/Backend/`, `src/UI/`, and `src/Krafter.Shared/`.
 
 ### Key Commands
 
@@ -502,12 +513,6 @@ dotnet ef migrations add <Name> --project src/Backend --context TenantDbContext
 dotnet ef database update --project src/Backend --context KrafterContext
 dotnet ef database update --project src/Backend --context BackgroundJobsContext
 dotnet ef database update --project src/Backend --context TenantDbContext
-
-# Regenerate Kiota API client (run from the Client folder containing kiota-lock.json)
-cd src/UI/Krafter.UI.Web.Client/Client
-kiota update
-# Or from repo root:
-# kiota update --lock-file-path src/UI/Krafter.UI.Web.Client/Client/kiota-lock.json
 ```
 
 ## 🐳 Deployment
@@ -571,12 +576,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - [.NET Team](https://github.com/dotnet) - For the amazing .NET platform
 - [Radzen](https://www.radzen.com/) - For the excellent Blazor components
-- [Microsoft Kiota](https://github.com/microsoft/kiota) - For the API client generator
+- [Refit](https://github.com/reactiveui/refit) - For the type-safe REST client
 - [NUKE Build](https://nuke.build/) - For the build automation framework
 
 ## 📞 Support
 
-- **Documentation**: [Copilot Instructions](.github/copilot-instructions.md)
+- **Documentation**: [Agents.md](Agents.md) (AI instructions and project structure)
 - **Issues**: [GitHub Issues](https://github.com/AditiKraft/Krafter/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/AditiKraft/Krafter/discussions)
 
