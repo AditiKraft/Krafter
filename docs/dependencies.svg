@@ -1,4 +1,4 @@
-<svg width="1000" height="500" xmlns="http://www.w3.org/2000/svg">
+<svg width="1000" height="580" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
       .title { font: bold 20px sans-serif; fill: #F8FAFC; }
@@ -8,8 +8,15 @@
       .aspire { fill: #052e16; stroke: #22C55E; }
       .backend { fill: #451a03; stroke: #F59E0B; }
       .ui { fill: #172554; stroke: #3B82F6; }
+      .shared { fill: #3b0764; stroke: #A855F7; }
       .build { fill: #450a0a; stroke: #EF4444; }
     </style>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+
+  <!-- Aspire Orchestration -->
   <rect x="50" y="60" width="250" height="140" rx="8" class="aspire box"/>
   <text x="175" y="85" class="subtitle" text-anchor="middle">Aspire Orchestration</text>
   
@@ -22,80 +29,100 @@
   <text x="235" y="120" class="subtitle" text-anchor="middle">Defaults</text>
   <text x="200" y="140" class="text">Config</text>
   <text x="200" y="155" class="text">Telemetry</text>
+
+  <!-- Shared Library -->
+  <rect x="50" y="230" width="250" height="140" rx="8" class="shared box"/>
+  <text x="175" y="255" class="subtitle" text-anchor="middle">Krafter.Shared</text>
+  
+  <rect x="70" y="270" width="100" height="80" rx="5" class="box"/>
+  <text x="120" y="290" class="subtitle" text-anchor="middle">Contracts</text>
+  <text x="80" y="310" class="text">DTOs</text>
+  <text x="80" y="325" class="text">Requests</text>
+  <text x="80" y="340" class="text">Responses</text>
+  
+  <rect x="190" y="270" width="90" height="80" rx="5" class="box"/>
+  <text x="235" y="290" class="subtitle" text-anchor="middle">Common</text>
+  <text x="200" y="310" class="text">Utilities</text>
+  <text x="200" y="325" class="text">Hubs</text>
   
   <!-- Backend -->
-  <rect x="350" y="60" width="280" height="380" rx="8" class="backend box"/>
+  <rect x="350" y="60" width="280" height="420" rx="8" class="backend box"/>
   <text x="490" y="85" class="subtitle" text-anchor="middle">Backend API</text>
   
   <rect x="370" y="100" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="120" class="subtitle" text-anchor="middle">Features (VSA)</text>
-  <text x="380" y="140" class="text">Auth, Users, Roles, Tenants</text>
+  <text x="490" y="120" class="subtitle" text-anchor="middle">Api</text>
+  <text x="380" y="140" class="text">Routes, Swagger, CORS, Auth Config</text>
   
   <rect x="370" y="165" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="185" class="subtitle" text-anchor="middle">Infrastructure</text>
-  <text x="380" y="205" class="text">Persistence, Jobs, Multi-tenant</text>
+  <text x="490" y="185" class="subtitle" text-anchor="middle">Application</text>
+  <text x="380" y="205" class="text">Services, Interfaces, Behaviors</text>
   
   <rect x="370" y="230" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="250" class="subtitle" text-anchor="middle">API Configuration</text>
-  <text x="380" y="270" class="text">Auth, Swagger, Routes, CORS</text>
+  <text x="490" y="250" class="subtitle" text-anchor="middle">Features (VSA)</text>
+  <text x="380" y="270" class="text">Auth, Users, Roles, Tenants</text>
   
   <rect x="370" y="295" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="315" class="subtitle" text-anchor="middle">Common</text>
-  <text x="380" y="335" class="text">Permissions, Models, Extensions</text>
+  <text x="490" y="315" class="subtitle" text-anchor="middle">Entities</text>
+  <text x="380" y="335" class="text">Domain Models, EF Configurations</text>
   
-  <rect x="370" y="360" width="240" height="60" rx="5" class="box"/>
-  <text x="490" y="380" class="subtitle" text-anchor="middle">SignalR Hubs</text>
-  <text x="380" y="400" class="text">Real-time Communication</text>
+  <rect x="370" y="360" width="240" height="50" rx="5" class="box"/>
+  <text x="490" y="380" class="subtitle" text-anchor="middle">Infrastructure</text>
+  <text x="380" y="400" class="text">Persistence, Jobs, Multi-tenant</text>
+  
+  <rect x="370" y="425" width="115" height="40" rx="5" class="box"/>
+  <text x="427" y="450" class="subtitle" text-anchor="middle">Hubs</text>
+  
+  <rect x="495" y="425" width="115" height="40" rx="5" class="box"/>
+  <text x="552" y="450" class="subtitle" text-anchor="middle">Common</text>
   
   <!-- UI Projects -->
-  <rect x="680" y="60" width="280" height="380" rx="8" class="ui box"/>
+  <rect x="680" y="60" width="280" height="420" rx="8" class="ui box"/>
   <text x="820" y="85" class="subtitle" text-anchor="middle">UI Projects</text>
   
-  <rect x="700" y="100" width="240" height="160" rx="5" class="box"/>
+  <rect x="700" y="100" width="240" height="175" rx="5" class="box"/>
   <text x="820" y="120" class="subtitle" text-anchor="middle">UI.Web.Client (WASM)</text>
   <text x="710" y="140" class="text">- Features (Auth, Users, etc.)</text>
   <text x="710" y="155" class="text">- Infrastructure</text>
   <text x="710" y="170" class="text">- Common Components</text>
-  <text x="710" y="185" class="text">- Kiota API Client</text>
-  <text x="710" y="200" class="text">- SignalR Integration</text>
-  <text x="710" y="215" class="text">- Radzen Components</text>
-  <text x="710" y="230" class="text">- Permission System</text>
-  <text x="710" y="245" class="text">- LocalStorage</text>
+  <text x="710" y="185" class="text">- Models</text>
+  <text x="710" y="200" class="text">- Kiota API Client</text>
+  <text x="710" y="215" class="text">- SignalR Integration</text>
+  <text x="710" y="230" class="text">- Radzen Components</text>
+  <text x="710" y="245" class="text">- Permission System</text>
+  <text x="710" y="260" class="text">- LocalStorage</text>
   
-  <rect x="700" y="275" width="240" height="145" rx="5" class="box"/>
-  <text x="820" y="295" class="subtitle" text-anchor="middle">UI.Web (Server Host)</text>
-  <text x="710" y="315" class="text">- App.razor Component</text>
-  <text x="710" y="330" class="text">- Server-side API</text>
-  <text x="710" y="345" class="text">- Auth Persistence</text>
-  <text x="710" y="360" class="text">- Static Files (wwwroot)</text>
-  <text x="710" y="375" class="text">- Prerendering</text>
-  <text x="710" y="390" class="text">- References Client WASM</text>
-  <text x="710" y="405" class="text">- Aspire Integration</text>
+  <rect x="700" y="290" width="240" height="170" rx="5" class="box"/>
+  <text x="820" y="310" class="subtitle" text-anchor="middle">UI.Web (Server Host)</text>
+  <text x="710" y="330" class="text">- Components</text>
+  <text x="710" y="345" class="text">- Services</text>
+  <text x="710" y="360" class="text">- Server-side API</text>
+  <text x="710" y="375" class="text">- Auth Persistence</text>
+  <text x="710" y="390" class="text">- Static Files (wwwroot)</text>
+  <text x="710" y="405" class="text">- Prerendering</text>
+  <text x="710" y="420" class="text">- References Client WASM</text>
+  <text x="710" y="435" class="text">- Aspire Integration</text>
   
   <!-- Build -->
-  <rect x="350" y="470" width="280" height="80" rx="8" class="build box"/>
-  <text x="490" y="495" class="subtitle" text-anchor="middle">Build (_build)</text>
-  <text x="360" y="515" class="text">- NUKE Build Automation</text>
-  <text x="360" y="530" class="text">- Docker Image Publishing</text>
-  <text x="360" y="545" class="text">- CI/CD Pipeline (GitHub Actions)</text>
+  <rect x="350" y="510" width="280" height="60" rx="8" class="build box"/>
+  <text x="490" y="535" class="subtitle" text-anchor="middle">Build (_build)</text>
+  <text x="360" y="555" class="text">NUKE Build | Docker | GitHub Actions</text>
   
   <!-- Arrows -->
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
-    </marker>
-</defs>
-  
   <line x1="300" y1="130" x2="350" y2="130" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
   <text x="310" y="125" class="text">Orchestrates</text>
   
   <line x1="630" y1="220" x2="680" y2="220" stroke="#0066cc" stroke-width="2" marker-end="url(#arrow)"/>
   <text x="640" y="215" class="text">REST API</text>
   
-  <line x1="820" y1="260" x2="820" y2="275" stroke="#512BD4" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="830" y="270" class="text">References</text>
+  <line x1="820" y1="275" x2="820" y2="290" stroke="#512BD4" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="830" y="285" class="text">References</text>
+  
+  <!-- Shared references -->
+  <line x1="300" y1="300" x2="350" y2="250" stroke="#A855F7" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="300" y1="300" x2="680" y2="200" stroke="#A855F7" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="310" y="295" class="text">Shared Contracts</text>
   
   <line x1="300" y1="180" x2="350" y2="220" stroke="#673ab7" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <line x1="300" y1="180" x2="820" y2="275" stroke="#673ab7" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="300" y1="180" x2="700" y2="400" stroke="#673ab7" stroke-width="1.5" stroke-dasharray="3,3"/>
   <text x="310" y="175" class="text">ServiceDefaults</text>
 </svg>
