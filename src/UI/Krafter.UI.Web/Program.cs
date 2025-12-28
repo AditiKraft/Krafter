@@ -190,14 +190,14 @@ if (string.IsNullOrWhiteSpace(apiUrl))
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IKrafterLocalStorageService, KrafterLocalStorageServiceServer>();
-builder.Services.AddUIServices(apiUrl);
+builder.Services.AddUIServices();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
 // Server uses apiUrl for both Backend and BFF since it manages cookies directly
-builder.Services.AddKrafterRefitClients(apiUrl, apiUrl);
+builder.Services.AddKrafterRefitClients();
 WebApplication app = builder.Build();
 app.UseOutputCache();
 

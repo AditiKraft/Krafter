@@ -20,12 +20,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IKrafterLocalStorageService, KrafterLocalStorageService>();
 builder.Services.AddScoped<IApiService, ClientSideApiService>();
 
-// BackendUrl/BffUrl are only needed for local development
-// In production, URLs are derived dynamically from tenant subdomain
-string? backendUrl = builder.Configuration["BackendUrl"];
-string? bffUrl = builder.Configuration["BffUrl"];
-
-builder.Services.AddUIServices(backendUrl);
+builder.Services.AddUIServices();
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
 builder.Services.AddScoped<TenantIdentifier>();
 
@@ -34,6 +29,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStatePro
 
 builder.Services.AddCascadingAuthenticationState();
 
-builder.Services.AddKrafterRefitClients(backendUrl, bffUrl);
+// URLs are rewritten dynamically by RefitTenantHandler based on tenant
+builder.Services.AddKrafterRefitClients();
 
 await builder.Build().RunAsync();

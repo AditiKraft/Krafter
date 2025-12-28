@@ -12,23 +12,21 @@ public static class RefitServiceExtensions
     /// Registers all Refit API clients with the DI container.
     /// Auth APIs use BFF (clientBaseAddress from TenantIdentifier), other APIs use Backend URL (dynamic per tenant).
     /// URLs are rewritten at runtime by RefitTenantHandler based on tenant subdomain.
-    /// Fallback URLs are only used for local development; in production they can be null.
     /// </summary>
-    public static IServiceCollection AddKrafterRefitClients(this IServiceCollection services, string? fallbackBackendUrl, string? fallbackBffUrl)
+    public static IServiceCollection AddKrafterRefitClients(this IServiceCollection services)
     {
         // Register auth handler
         services.AddTransient<RefitAuthHandler>();
 
         var refitSettings = new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() };
         
-        // Use placeholder URLs - they will be rewritten by RefitTenantHandler at runtime
-        string placeholderUrl = fallbackBackendUrl ?? "https://placeholder.local";
-        string placeholderBffUrl = fallbackBffUrl ?? "https://placeholder.local";
+        // Placeholder URL - will be rewritten by RefitTenantHandler at runtime
+        const string placeholderUrl = "https://placeholder.local";
 
         // Register IAuthApi pointing to BFF (for cookie-based token management)
         // URL is rewritten by RefitTenantHandler to clientBaseAddress
         services.AddRefitClient<IAuthApi>(refitSettings)
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderBffUrl))
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
             .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: true));
 
         // Register authenticated API clients pointing to Backend directly

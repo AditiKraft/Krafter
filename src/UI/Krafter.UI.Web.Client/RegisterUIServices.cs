@@ -7,7 +7,7 @@ namespace Krafter.UI.Web.Client;
 
 public static class RegisterUIServices
 {
-    public static void AddUIServices(this IServiceCollection service, string? backendUrl = null)
+    public static void AddUIServices(this IServiceCollection service)
     {
         service.AddRadzenCookieThemeService(options =>
         {

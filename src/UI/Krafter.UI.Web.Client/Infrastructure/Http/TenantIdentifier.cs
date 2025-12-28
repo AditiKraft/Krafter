@@ -43,7 +43,7 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         {
             tenantIdentifier = "krafter"; // adjust if you want different local logic
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
-            backendUrl = configuration["BackendUrl"] ?? throw new InvalidOperationException("BackendUrl not configured");
+            backendUrl = configuration["RemoteHostUrl"] ?? throw new InvalidOperationException("RemoteHostUrl not configured");
         }
         else
         {
