@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Users;
 
-/// <summary>
-/// Request model for initiating a password reset.
-/// </summary>
 public class ForgotPasswordRequest
 {
     public string Email { get; set; } = default!;

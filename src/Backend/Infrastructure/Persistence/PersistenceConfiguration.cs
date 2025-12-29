@@ -3,9 +3,6 @@ using Backend.Features;
 
 namespace Backend.Infrastructure.Persistence;
 
-/// <summary>
-/// Auto-registration for IScopedService and IScopedHandler markers
-/// </summary>
 public static class PersistenceConfiguration
 {
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services)

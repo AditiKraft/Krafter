@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Tenants;
 
-/// <summary>
-/// Request model for creating or updating a tenant.
-/// </summary>
 public class CreateOrUpdateTenantRequest
 {
     public string? Id { get; set; }

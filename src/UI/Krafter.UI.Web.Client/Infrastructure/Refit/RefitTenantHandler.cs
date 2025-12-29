@@ -4,12 +4,6 @@ using Krafter.UI.Web.Client.Infrastructure.Http;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// DelegatingHandler that injects tenant identifier, culture headers, and rewrites URLs for Refit clients.
-/// In production, the backend URL is dynamically determined based on tenant subdomain.
-/// On server-side (SSR), all requests go directly to Backend.
-/// On WASM, BFF clients go to clientBaseAddress (for cookie management), others go to Backend.
-/// </summary>
 public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffClient = false) : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(

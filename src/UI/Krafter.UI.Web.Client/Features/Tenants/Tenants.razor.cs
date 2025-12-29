@@ -11,6 +11,7 @@ namespace Krafter.UI.Web.Client.Features.Tenants;
 
 public partial class Tenants(
     CommonService commonService,
+    ApiCallService api,
     ITenantsApi tenantsApi,
     DialogService dialogService
 ) : ComponentBase, IDisposable
@@ -38,14 +39,14 @@ public partial class Tenants(
             requestInput.SkipCount = 0;
         }
 
-        response = await tenantsApi.GetTenantsAsync(
+        response = await api.CallAsync(() => tenantsApi.GetTenantsAsync(
             requestInput.Id,
             history: requestInput.History,
             isDeleted: requestInput.IsDeleted,
             filter: requestInput.Filter,
             orderBy: requestInput.OrderBy,
             skipCount: requestInput.SkipCount,
-            maxResultCount: requestInput.MaxResultCount);
+            maxResultCount: requestInput.MaxResultCount));
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }

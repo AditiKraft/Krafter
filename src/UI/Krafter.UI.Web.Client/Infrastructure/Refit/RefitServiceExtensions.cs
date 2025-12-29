@@ -3,16 +3,8 @@ using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// Extension methods for registering Refit API clients.
-/// </summary>
 public static class RefitServiceExtensions
 {
-    /// <summary>
-    /// Registers all Refit API clients with the DI container.
-    /// Auth APIs use BFF (clientBaseAddress from TenantIdentifier), other APIs use Backend URL (dynamic per tenant).
-    /// URLs are rewritten at runtime by RefitTenantHandler based on tenant subdomain.
-    /// </summary>
     public static IServiceCollection AddKrafterRefitClients(this IServiceCollection services)
     {
         // Register auth handler

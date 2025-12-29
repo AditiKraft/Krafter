@@ -1,10 +1,12 @@
 ﻿using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Users._Shared;
 
 public partial class MultiSelectUserDropDownDataGrid(
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
 {
@@ -46,7 +48,7 @@ public partial class MultiSelectUserDropDownDataGrid(
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
 
-        response = await usersApi.GetUsersAsync(
+        response = await api.CallAsync(() => usersApi.GetUsersAsync(
             GetRequestInput.Id,
             GetRequestInput.History,
             GetRequestInput.IsDeleted,
@@ -54,7 +56,7 @@ public partial class MultiSelectUserDropDownDataGrid(
             GetRequestInput.Filter,
             GetRequestInput.OrderBy,
             GetRequestInput.SkipCount,
-            GetRequestInput.MaxResultCount);
+            GetRequestInput.MaxResultCount), showErrorNotification: true);
         if (response is { Data.Items: not null })
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id ?? "")).ToList();

@@ -2,9 +2,6 @@ using Scalar.AspNetCore;
 
 namespace Backend.Api.Configuration;
 
-/// <summary>
-/// Swagger/OpenAPI configuration
-/// </summary>
 public static class SwaggerConfiguration
 {
     public static IServiceCollection AddSwaggerConfiguration(this IServiceCollection services)

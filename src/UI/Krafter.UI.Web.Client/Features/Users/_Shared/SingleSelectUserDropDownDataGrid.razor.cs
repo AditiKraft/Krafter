@@ -1,10 +1,12 @@
 ﻿using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Users._Shared;
 
 public partial class SingleSelectUserDropDownDataGrid(
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
 {
@@ -32,7 +34,7 @@ public partial class SingleSelectUserDropDownDataGrid(
         IsLoading = true;
         if (!string.IsNullOrWhiteSpace(RoleId))
         {
-            Response<PaginationResponse<UserInfo>>? response = await usersApi.GetUsersByRoleAsync(
+            Response<PaginationResponse<UserInfo>> response = await api.CallAsync(() => usersApi.GetUsersByRoleAsync(
                 RoleId,
                 GetRequestInput.Id,
                 GetRequestInput.History,
@@ -41,7 +43,7 @@ public partial class SingleSelectUserDropDownDataGrid(
                 GetRequestInput.Filter,
                 GetRequestInput.OrderBy,
                 GetRequestInput.SkipCount,
-                GetRequestInput.MaxResultCount);
+                GetRequestInput.MaxResultCount), showErrorNotification: true);
             if (response is { Data.Items: not null })
             {
                 Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id ?? "")).ToList();
@@ -50,7 +52,7 @@ public partial class SingleSelectUserDropDownDataGrid(
         }
         else
         {
-            Response<PaginationResponse<UserDto>>? response = await usersApi.GetUsersAsync(
+            Response<PaginationResponse<UserDto>> response = await api.CallAsync(() => usersApi.GetUsersAsync(
                 GetRequestInput.Id,
                 GetRequestInput.History,
                 GetRequestInput.IsDeleted,
@@ -58,7 +60,7 @@ public partial class SingleSelectUserDropDownDataGrid(
                 GetRequestInput.Filter,
                 GetRequestInput.OrderBy,
                 GetRequestInput.SkipCount,
-                GetRequestInput.MaxResultCount);
+                GetRequestInput.MaxResultCount), showErrorNotification: true);
             if (response is { Data.Items: not null })
             {
                 TotalCount = response.Data.TotalCount;

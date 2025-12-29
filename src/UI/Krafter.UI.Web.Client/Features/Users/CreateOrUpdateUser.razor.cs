@@ -1,12 +1,14 @@
-﻿using Krafter.Shared.Common.Models;
+using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class CreateOrUpdateUser(
     DialogService dialogService,
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
 {
@@ -31,7 +33,7 @@ public partial class CreateOrUpdateUser(
 
             if (!string.IsNullOrWhiteSpace(UserInput.Id))
             {
-                UserRoles = await usersApi.GetUserRolesAsync(UserInput.Id);
+                UserRoles = await api.CallAsync(() => usersApi.GetUserRolesAsync(UserInput.Id), showErrorNotification: true);
                 CreateUserRequest.Roles = UserRoles?
                     .Data?
                     .Where(c => !string.IsNullOrEmpty(c.RoleId))
@@ -46,51 +48,12 @@ public partial class CreateOrUpdateUser(
         if (UserInput is not null)
         {
             isBusy = true;
-            CreateUserRequest finalInput = new();
-            if (string.IsNullOrWhiteSpace(input.Id))
-            {
-                finalInput = input;
-            }
-            else
-            {
-                finalInput.Id = input.Id;
-                if (input.Email != OriginalCreateUserRequest.Email)
-                {
-                    finalInput.Email = input.Email;
-                }
-
-                if (input.FirstName != OriginalCreateUserRequest.FirstName)
-                {
-                    finalInput.FirstName = input.FirstName;
-                }
-
-                if (input.LastName != OriginalCreateUserRequest.LastName)
-                {
-                    finalInput.LastName = input.LastName;
-                }
-
-                if (input.PhoneNumber != OriginalCreateUserRequest.PhoneNumber)
-                {
-                    finalInput.PhoneNumber = input.PhoneNumber;
-                }
-
-                if (input.UserName != OriginalCreateUserRequest.UserName)
-                {
-                    finalInput.UserName = input.UserName;
-                }
-
-                if (!input.Roles.ToHashSet().SetEquals(OriginalCreateUserRequest.Roles))
-                {
-                    finalInput.Roles = input.Roles;
-                }
-
-                finalInput.UpdateTenantEmail = true;
-            }
-
-            Response? result = await usersApi.CreateOrUpdateUserAsync(finalInput);
+            Response result = await api.CallAsync(
+                () => usersApi.CreateOrUpdateUserAsync(input),
+                successMessage: "User saved successfully");
             isBusy = false;
             StateHasChanged();
-            if (result is not null && result.IsError == false)
+            if (result is { IsError: false })
             {
                 dialogService.Close(true);
             }

@@ -5,9 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Api.Configuration;
 
-/// <summary>
-/// Database configuration for multi-DB support (PostgreSQL + MySQL)
-/// </summary>
 public static class DatabaseConfiguration
 {
     public static IServiceCollection AddDatabaseConfiguration(

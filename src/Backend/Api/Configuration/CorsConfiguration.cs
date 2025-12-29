@@ -1,8 +1,5 @@
 namespace Backend.Api.Configuration;
 
-/// <summary>
-/// CORS policy configuration for frontend origins
-/// </summary>
 public static class CorsConfiguration
 {
     private const string PolicyName = "AllowSpecificOrigins";

@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Roles;
 
-/// <summary>
-/// Request model for updating role permissions.
-/// </summary>
 public class UpdateRolePermissionsRequest
 {
     public string RoleId { get; set; } = default!;

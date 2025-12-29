@@ -5,9 +5,6 @@ using TickerQ.EntityFrameworkCore.DependencyInjection;
 
 namespace Backend.Application.BackgroundJobs;
 
-/// <summary>
-/// TickerQ background jobs configuration
-/// </summary>
 public static class BackgroundJobsConfiguration
 {
     public static IServiceCollection AddBackgroundJobs(this IServiceCollection services)

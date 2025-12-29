@@ -12,10 +12,10 @@ namespace Krafter.UI.Web.Client.Features.Roles;
 public partial class Roles(
     CommonService commonService,
     NavigationManager navigationManager,
+    ApiCallService api,
     IRolesApi rolesApi,
     LayoutService layoutService,
-    DialogService dialogService,
-    NotificationService notificationService) : ComponentBase, IDisposable
+    DialogService dialogService) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Roles;
     private RadzenDataGrid<RoleDto> grid = default!;
@@ -44,7 +44,7 @@ public partial class Roles(
             RequestInput.SkipCount = 0;
         }
 
-        response = await rolesApi.GetRolesAsync(
+        response = await api.CallAsync(() => rolesApi.GetRolesAsync(
             RequestInput.Id,
             RequestInput.History,
             RequestInput.IsDeleted,
@@ -52,7 +52,7 @@ public partial class Roles(
             RequestInput.Filter,
             RequestInput.OrderBy,
             RequestInput.SkipCount,
-            RequestInput.MaxResultCount);
+            RequestInput.MaxResultCount));
 
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
