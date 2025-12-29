@@ -24,5 +24,6 @@ public static class RegisterUIServices
 
         service.AddScoped<IAuthenticationService, AuthenticationService>();
         service.AddScoped<NotificationService>();
+        service.AddScoped<ApiCallService>();
     }
 }
