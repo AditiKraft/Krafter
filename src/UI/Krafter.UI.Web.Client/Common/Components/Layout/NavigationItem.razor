@@ -1,12 +1,6 @@
 ﻿@if (!Example.New && !Example.Updated)
 {
-    <RadzenPanelMenuItem @bind-Expanded=@Expanded Text="@Example.Name" Path="@GetUrl()" aria-label="@Example.Name">
-
-        <Template>
-            <img src="@($"svg/icons/{Example.Icon}.svg")"/>
-            @Example.Name
-        </Template>
-
+    <RadzenPanelMenuItem @bind-Expanded=@Expanded Text="@Example.Name" Path="@GetUrl()" Icon="@Example.Icon" aria-label="@Example.Name">
         <ChildContent>@ChildContent</ChildContent>
     </RadzenPanelMenuItem>
 }
