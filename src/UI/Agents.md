@@ -7,6 +7,7 @@
 - **Code-Behind**: ALWAYS split `.razor` (markup) and `.razor.cs` (logic).
 - **Feature-Based**: Group by feature, not by component type.
 - **Refit Interfaces**: Use typed Refit interfaces (`IUsersApi`, `IRolesApi`, etc.) for ALL API calls. Never use raw `HttpClient`.
+- **External APIs**: Also use Refit for external/third-party APIs. Create interface in `Infrastructure/Refit/` and register in `RefitServiceExtensions.cs` without auth handlers.
 - **Shared Contracts**: Use DTOs from `Krafter.Shared.Contracts.*` - never duplicate models in UI.
 
 ## 2. Decision Tree: Where Does This Code Go?
@@ -425,7 +426,33 @@ services.AddRefitClient<IProductsApi>(refitSettings)
     .AddHttpMessageHandler<RefitAuthHandler>();
 ```
 
-### 6.3 Usage in Components
+### 6.3 External API Pattern (Third-Party APIs)
+```csharp
+// In Infrastructure/Refit/IWeatherApi.cs
+using Refit;
+
+namespace Krafter.UI.Web.Client.Infrastructure.Refit;
+
+public interface IWeatherApi
+{
+    [Get("/{city}")]
+    Task<WeatherResponse> GetWeatherAsync(string city, [Query] string format = "j1");
+}
+
+// Response models for external API (define in same file or separate)
+public class WeatherResponse
+{
+    public CurrentCondition[]? current_condition { get; set; }
+}
+```
+
+```csharp
+// Register in RefitServiceExtensions.cs - NO auth/tenant handlers for external APIs
+services.AddRefitClient<IWeatherApi>(refitSettings)
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://wttr.in"));
+```
+
+### 6.4 Usage in Components
 ```csharp
 // ✅ CORRECT - Inject Refit interface via primary constructor
 public partial class Products(IProductsApi productsApi) : ComponentBase
