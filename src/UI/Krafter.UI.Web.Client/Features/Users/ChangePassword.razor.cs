@@ -1,12 +1,13 @@
 ﻿using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class ChangePassword(
     NavigationManager navigationManager,
-    NotificationService notificationService,
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
 {
@@ -20,12 +21,13 @@ public partial class ChangePassword(
     private async Task SubmitChangePassword(ChangePasswordRequest requestInput)
     {
         IsBusy = true;
-        Response? response = await usersApi.ChangePasswordAsync(requestInput);
+        Response response = await api.CallAsync(
+            () => usersApi.ChangePasswordAsync(requestInput),
+            successMessage: "Your password has been changed successfully",
+            successTitle: "Password Change");
         IsBusy = false;
         if (response is { IsError: false })
         {
-            notificationService.Notify(NotificationSeverity.Success, "Password Change",
-                "Your password has been changed successfully");
             navigationManager.NavigateTo(!string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/products");
         }
     }

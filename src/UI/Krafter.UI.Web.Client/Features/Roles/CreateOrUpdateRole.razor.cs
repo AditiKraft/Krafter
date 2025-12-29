@@ -2,14 +2,15 @@ using Krafter.Shared.Common.Auth.Permissions;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Roles;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Roles;
 
 public partial class CreateOrUpdateRole(
     DialogService dialogService,
-    IRolesApi rolesApi,
-    NotificationService notificationService) : ComponentBase
+    ApiCallService api,
+    IRolesApi rolesApi) : ComponentBase
 {
     private IEnumerable<string> selectedStandards = default!;
 
@@ -54,7 +55,9 @@ public partial class CreateOrUpdateRole(
                                 IsRoot = o.IsRoot,
                                 FinalPermission = KrafterPermission.NameFor(o.Action, o.Resource)
                             }))).ToList();
-                Response<RoleDto>? rolePermissions = await rolesApi.GetRolePermissionsAsync(UserDetails.Id);
+                Response<RoleDto> rolePermissions = await api.CallAsync(
+                    () => rolesApi.GetRolePermissionsAsync(UserDetails.Id),
+                    showErrorNotification: true);
                 CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<string>();
                 OriginalCreateUserRequest.Permissions = CreateUserRequest.Permissions;
             }
@@ -66,7 +69,9 @@ public partial class CreateOrUpdateRole(
         if (UserDetails is not null)
         {
             isBusy = true;
-            Response? result = await rolesApi.CreateOrUpdateRoleAsync(input);
+            Response result = await api.CallAsync(
+                () => rolesApi.CreateOrUpdateRoleAsync(input),
+                successMessage: "Role saved successfully");
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

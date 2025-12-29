@@ -1,12 +1,14 @@
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class CreateOrUpdateUser(
     DialogService dialogService,
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
 {
@@ -31,7 +33,7 @@ public partial class CreateOrUpdateUser(
 
             if (!string.IsNullOrWhiteSpace(UserInput.Id))
             {
-                UserRoles = await usersApi.GetUserRolesAsync(UserInput.Id);
+                UserRoles = await api.CallAsync(() => usersApi.GetUserRolesAsync(UserInput.Id), showErrorNotification: true);
                 CreateUserRequest.Roles = UserRoles?
                     .Data?
                     .Where(c => !string.IsNullOrEmpty(c.RoleId))
@@ -46,7 +48,9 @@ public partial class CreateOrUpdateUser(
         if (UserInput is not null)
         {
             isBusy = true;
-            Response? result = await usersApi.CreateOrUpdateUserAsync(input);
+            Response result = await api.CallAsync(
+                () => usersApi.CreateOrUpdateUserAsync(input),
+                successMessage: "User saved successfully");
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

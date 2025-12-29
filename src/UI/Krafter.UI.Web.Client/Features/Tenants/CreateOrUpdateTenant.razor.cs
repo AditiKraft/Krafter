@@ -1,12 +1,14 @@
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Tenants;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Tenants;
 
 public partial class CreateOrUpdateTenant(
     DialogService dialogService,
+    ApiCallService api,
     ITenantsApi tenantsApi
 ) : ComponentBase
 {
@@ -27,7 +29,9 @@ public partial class CreateOrUpdateTenant(
         if (TenantInput is not null)
         {
             isBusy = true;
-            Response? result = await tenantsApi.CreateOrUpdateTenantAsync(input);
+            Response result = await api.CallAsync(
+                () => tenantsApi.CreateOrUpdateTenantAsync(input),
+                successMessage: "Tenant saved successfully");
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

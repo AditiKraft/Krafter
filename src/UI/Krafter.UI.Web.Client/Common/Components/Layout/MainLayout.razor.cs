@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 namespace Krafter.UI.Web.Client.Common.Components.Layout;
 
 public partial class MainLayout(
+    ApiCallService api,
     IAppInfoApi appInfoApi,
     CookieThemeService CookieThemeService,
     MenuService menuService,
@@ -49,7 +50,7 @@ public partial class MainLayout(
 
     protected override async Task OnInitializedAsync()
     {
-        AppInfo = await appInfoApi.GetAppInfoAsync();
+        AppInfo = await api.CallAsync(() => appInfoApi.GetAppInfoAsync(), showErrorNotification: false);
         cachedPermissionsAsync = await krafterLocalStorageService.GetCachedPermissionsAsync();
         if (cachedPermissionsAsync is null)
         {

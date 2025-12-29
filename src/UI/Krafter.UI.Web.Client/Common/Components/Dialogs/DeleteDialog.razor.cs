@@ -1,12 +1,13 @@
 ﻿using Krafter.Shared.Common.Enums;
 using Krafter.Shared.Common.Models;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Common.Components.Dialogs;
 
 public partial class DeleteDialog(
     DialogService dialogService,
-    NotificationService notificationService,
+    ApiCallService api,
     IUsersApi usersApi,
     IRolesApi rolesApi,
     ITenantsApi tenantsApi
@@ -29,62 +30,55 @@ public partial class DeleteDialog(
                     break;
 
                 case EntityKind.KrafterRole:
-                    Response? roleResult = await rolesApi.DeleteRoleAsync(
-                        new DeleteRequestInput
-                        {
-                            DeleteReason = deleteRequestInput.DeleteReason,
-                            Id = deleteRequestInput.Id,
-                            EntityKind = EntityKind.KrafterRole
-                        });
+                    Response roleResult = await api.CallAsync(
+                        () => rolesApi.DeleteRoleAsync(
+                            new DeleteRequestInput
+                            {
+                                DeleteReason = deleteRequestInput.DeleteReason,
+                                Id = deleteRequestInput.Id,
+                                EntityKind = EntityKind.KrafterRole
+                            }),
+                        successMessage: "Role deleted successfully");
 
-                    if (roleResult is not null)
-                    {
-                        result.IsError = roleResult.IsError;
-                        result.StatusCode = roleResult.StatusCode;
-                        result.Message = roleResult.Message;
-                    }
-
+                    result.IsError = roleResult.IsError;
+                    result.StatusCode = roleResult.StatusCode;
+                    result.Message = roleResult.Message;
                     break;
 
                 case EntityKind.KrafterUser:
-                    Response? userResult = await usersApi.DeleteUserAsync(
-                        new DeleteRequestInput
-                        {
-                            DeleteReason = deleteRequestInput.DeleteReason,
-                            Id = deleteRequestInput.Id,
-                            EntityKind = EntityKind.KrafterUser
-                        });
+                    Response userResult = await api.CallAsync(
+                        () => usersApi.DeleteUserAsync(
+                            new DeleteRequestInput
+                            {
+                                DeleteReason = deleteRequestInput.DeleteReason,
+                                Id = deleteRequestInput.Id,
+                                EntityKind = EntityKind.KrafterUser
+                            }),
+                        successMessage: "User deleted successfully");
 
-                    if (userResult is not null)
-                    {
-                        result.IsError = userResult.IsError;
-                        result.StatusCode = userResult.StatusCode;
-                        result.Message = userResult.Message;
-                    }
-
+                    result.IsError = userResult.IsError;
+                    result.StatusCode = userResult.StatusCode;
+                    result.Message = userResult.Message;
                     break;
 
                 case EntityKind.Tenant:
-                    Response? tenantResult = await tenantsApi.DeleteTenantAsync(
-                        new DeleteRequestInput
-                        {
-                            DeleteReason = deleteRequestInput.DeleteReason,
-                            Id = deleteRequestInput.Id,
-                            EntityKind = EntityKind.Tenant
-                        });
+                    Response tenantResult = await api.CallAsync(
+                        () => tenantsApi.DeleteTenantAsync(
+                            new DeleteRequestInput
+                            {
+                                DeleteReason = deleteRequestInput.DeleteReason,
+                                Id = deleteRequestInput.Id,
+                                EntityKind = EntityKind.Tenant
+                            }),
+                        successMessage: "Tenant deleted successfully");
 
-                    if (tenantResult is not null)
-                    {
-                        result.IsError = tenantResult.IsError;
-                        result.StatusCode = tenantResult.StatusCode;
-                        result.Message = tenantResult.Message;
-                    }
-
+                    result.IsError = tenantResult.IsError;
+                    result.StatusCode = tenantResult.StatusCode;
+                    result.Message = tenantResult.Message;
                     break;
 
                 default:
                     isBusy = false;
-                    notificationService.Notify(NotificationSeverity.Error, "Error", "Invalid Entity Kind");
                     return;
             }
 

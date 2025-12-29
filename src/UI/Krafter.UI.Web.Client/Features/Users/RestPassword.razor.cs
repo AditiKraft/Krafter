@@ -1,12 +1,13 @@
 ﻿using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class RestPassword(
     NavigationManager navigationManager,
-    NotificationService notificationService,
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
 {
@@ -21,11 +22,13 @@ public partial class RestPassword(
     {
         requestInput.Token = Token;
         IsBusy = true;
-        Response? response = await usersApi.ResetPasswordAsync(requestInput);
+        Response response = await api.CallAsync(
+            () => usersApi.ResetPasswordAsync(requestInput),
+            successMessage: "Password reset successfully",
+            successTitle: "Password Reset");
         IsBusy = false;
-        if (response is { IsError: true })
+        if (response is { IsError: false })
         {
-            notificationService.Notify(NotificationSeverity.Success, "Password Reset", "Password reset successfully");
             navigationManager.NavigateTo("/login");
         }
     }

@@ -1,10 +1,12 @@
 ﻿using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Roles;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Roles._Shared;
 
 public partial class MultiSelectRoleDropDownDataGrid(
+    ApiCallService api,
     IRolesApi rolesApi
 ) : ComponentBase
 {
@@ -46,7 +48,7 @@ public partial class MultiSelectRoleDropDownDataGrid(
         GetRequestInput.Filter = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
-        response = await rolesApi.GetRolesAsync(
+        response = await api.CallAsync(() => rolesApi.GetRolesAsync(
             GetRequestInput.Id,
             GetRequestInput.History,
             GetRequestInput.IsDeleted,
@@ -55,7 +57,7 @@ public partial class MultiSelectRoleDropDownDataGrid(
             GetRequestInput.OrderBy,
             GetRequestInput.SkipCount,
             GetRequestInput.MaxResultCount,
-            CancellationToken.None);
+            CancellationToken.None), showErrorNotification: true);
         if (response is { Data.Items: not null })
         {
             Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();

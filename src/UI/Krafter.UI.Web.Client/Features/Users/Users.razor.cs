@@ -14,6 +14,7 @@ public partial class Users(
     NavigationManager navigationManager,
     LayoutService layoutService,
     DialogService dialogService,
+    ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase, IDisposable
 {
@@ -52,7 +53,7 @@ public partial class Users(
             requestInput.SkipCount = 0;
         }
 
-        response = await usersApi.GetUsersAsync(
+        response = await api.CallAsync(() => usersApi.GetUsersAsync(
             requestInput.Id,
             requestInput.History,
             requestInput.IsDeleted,
@@ -60,7 +61,7 @@ public partial class Users(
             requestInput.Filter,
             requestInput.OrderBy,
             requestInput.SkipCount,
-            requestInput.MaxResultCount);
+            requestInput.MaxResultCount));
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
