@@ -1,4 +1,4 @@
-﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Auth.Permissions;
 using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Models;
 
@@ -12,7 +12,7 @@ public class MenuService
         {
             Name = "Home",
             Path = "/",
-            Icon = "course-icon-static",
+            Icon = "home",
             Title = "Manage Courses",
             Description =
                 "Manage courses, including creation, updates, and access control for course listings.",
@@ -21,7 +21,7 @@ public class MenuService
         new Menu
         {
             Name = "Account",
-            Icon = "account-icon-static",
+            Icon = "account_circle",
             Children = new[]
             {
                 new Menu
@@ -30,7 +30,7 @@ public class MenuService
                     Path = KrafterRoute.Users,
                     Title = "User Management",
                     Description = "Manage user accounts, including creation, updates, and access control.",
-                    Icon = "user-icon-static",
+                    Icon = "people",
                     Tags = new[] { "users", "accounts", "profiles", "authentication" },
                     Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Users)
                 },
@@ -40,7 +40,7 @@ public class MenuService
                     Path = KrafterRoute.Roles,
                     Title = "Role Management",
                     Description = "Manage user roles and associated permissions within the system.",
-                    Icon = "role-icon-static",
+                    Icon = "admin_panel_settings",
                     Tags = new[] { "roles", "permissions", "access control", "user groups" },
                     Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Roles)
                 }
@@ -50,7 +50,7 @@ public class MenuService
         {
             Name = "Tenants",
             Path = KrafterRoute.Tenants,
-            Icon = "tenant-icon-static",
+            Icon = "business",
             Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Tenants),
             Title = "Tenant Management",
             Description = "Manage multiple tenants within the system, including creation and updates.",
