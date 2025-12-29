@@ -2,9 +2,6 @@ using Krafter.Shared.Common.Models;
 
 namespace Krafter.Shared.Contracts.Users;
 
-/// <summary>
-/// Data transfer object for user information.
-/// </summary>
 public class UserDto : CommonDtoProperty
 {
     public string? UserName { get; set; }

@@ -5,9 +5,6 @@ using Backend.Infrastructure.Persistence.Notifications;
 
 namespace Backend.Application.Notifications;
 
-/// <summary>
-/// Email/SMTP notification configuration
-/// </summary>
 public static class NotificationConfiguration
 {
     public static IServiceCollection AddNotificationServices(

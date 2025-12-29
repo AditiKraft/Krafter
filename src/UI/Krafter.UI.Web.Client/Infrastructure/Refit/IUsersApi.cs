@@ -4,9 +4,6 @@ using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// Refit interface for user management endpoints.
-/// </summary>
 public interface IUsersApi
 {
     [Get("/users/get")]

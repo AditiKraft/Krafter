@@ -6,17 +6,10 @@ using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Services;
 
-/// <summary>
-/// Wrapper service for API calls that handles exceptions and shows notifications on errors.
-/// Always returns Response or Response&lt;T&gt; with IsError=true on failure.
-/// </summary>
 public class ApiCallService(NotificationService notificationService)
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    /// <summary>
-    /// Executes an API call that returns Response&lt;T&gt; and handles errors/success with notifications.
-    /// </summary>
     public async Task<Response<T>> CallAsync<T>(
         Func<Task<Response<T>>> apiCall,
         string? errorTitle = null,
@@ -56,9 +49,6 @@ public class ApiCallService(NotificationService notificationService)
     }
 
 
-    /// <summary>
-    /// Executes an API call that returns Response (no data) and handles errors/success with notifications.
-    /// </summary>
     public async Task<Response> CallAsync(
         Func<Task<Response>> apiCall,
         string? errorTitle = null,
@@ -286,9 +276,6 @@ public class ApiCallService(NotificationService notificationService)
     }
 }
 
-/// <summary>
-/// FluentValidation error response format from ASP.NET Core
-/// </summary>
 public class ValidationErrorResponse
 {
     public string? Type { get; set; }

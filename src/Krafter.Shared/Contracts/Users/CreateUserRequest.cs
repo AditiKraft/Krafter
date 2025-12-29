@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Users;
 
-/// <summary>
-/// Request model for creating or updating a user.
-/// </summary>
 public class CreateUserRequest
 {
     public string? Id { get; set; }

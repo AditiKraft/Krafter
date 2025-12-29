@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Roles;
 
-/// <summary>
-/// Request model for creating or updating a role.
-/// </summary>
 public class CreateOrUpdateRoleRequest
 {
     public string? Id { get; set; }

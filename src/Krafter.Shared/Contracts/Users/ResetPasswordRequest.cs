@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Users;
 
-/// <summary>
-/// Request model for resetting a user's password.
-/// </summary>
 public class ResetPasswordRequest
 {
     public string? Email { get; set; }

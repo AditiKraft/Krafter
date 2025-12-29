@@ -4,9 +4,6 @@ using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// Refit interface for role management endpoints.
-/// </summary>
 public interface IRolesApi
 {
     [Get("/roles/get")]

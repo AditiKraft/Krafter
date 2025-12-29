@@ -7,11 +7,6 @@ using Krafter.UI.Web.Client.Infrastructure.Storage;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// DelegatingHandler that injects Bearer token and handles token refresh for Refit clients.
-/// Uses TokenSynchronizationManager to prevent multiple concurrent refresh attempts when
-/// multiple API calls detect an expired token simultaneously.
-/// </summary>
 public class RefitAuthHandler(
     IKrafterLocalStorageService localStorage,
     IAuthenticationService authenticationService,

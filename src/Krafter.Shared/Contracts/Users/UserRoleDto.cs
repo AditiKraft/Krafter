@@ -1,8 +1,5 @@
 namespace Krafter.Shared.Contracts.Users;
 
-/// <summary>
-/// Data transfer object for user role assignment information.
-/// </summary>
 public class UserRoleDto
 {
     public string? RoleId { get; set; }

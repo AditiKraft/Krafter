@@ -2,9 +2,6 @@ using Krafter.Shared.Common.Models;
 
 namespace Krafter.Shared.Contracts.Tenants;
 
-/// <summary>
-/// Data transfer object for tenant information.
-/// </summary>
 public class TenantDto
 {
     public string? Id { get; set; }

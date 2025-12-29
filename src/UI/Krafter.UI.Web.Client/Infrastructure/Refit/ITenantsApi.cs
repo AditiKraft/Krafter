@@ -4,9 +4,6 @@ using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// Refit interface for tenant management endpoints.
-/// </summary>
 public interface ITenantsApi
 {
     [Get("/tenants/get")]

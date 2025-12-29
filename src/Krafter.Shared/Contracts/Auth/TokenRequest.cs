@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Auth;
 
-/// <summary>
-/// Request model for obtaining an authentication token.
-/// </summary>
 public class TokenRequest
 {
     public string Email { get; set; } = string.Empty;

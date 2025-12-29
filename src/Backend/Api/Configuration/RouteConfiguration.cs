@@ -4,9 +4,6 @@ using Backend.Features.Auth;
 
 namespace Backend.Api.Configuration;
 
-/// <summary>
-/// VSA route discovery and registration
-/// </summary>
 public static class RouteConfiguration
 {
     public static IServiceCollection AddRouteDiscovery(this IServiceCollection services)

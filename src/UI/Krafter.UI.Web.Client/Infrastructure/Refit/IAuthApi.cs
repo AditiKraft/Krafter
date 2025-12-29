@@ -4,9 +4,6 @@ using Refit;
 
 namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
-/// <summary>
-/// Refit interface for authentication endpoints.
-/// </summary>
 public interface IAuthApi
 {
     [Post("/tokens/create")]

@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace Krafter.Shared.Contracts.Users;
 
-/// <summary>
-/// Request model for changing a user's password.
-/// </summary>
 public class ChangePasswordRequest
 {
     public string Password { get; set; } = default!;
