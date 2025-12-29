@@ -12,7 +12,6 @@ public partial class CreateOrUpdateTenant(
 {
     [Parameter] public TenantDto? TenantInput { get; set; } = new();
     private CreateOrUpdateTenantRequest CreateRequest = new();
-    private CreateOrUpdateTenantRequest OriginalCreateRequest = new();
     private bool isBusy = false;
 
     protected override async Task OnInitializedAsync()

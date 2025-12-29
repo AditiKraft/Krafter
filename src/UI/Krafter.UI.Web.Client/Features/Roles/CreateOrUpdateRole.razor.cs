@@ -35,9 +35,6 @@ public partial class CreateOrUpdateRole(
 
     private bool isBusy = false;
 
-    private bool KeyPosition;
-    private bool ProcessOwner;
-
     protected override async Task OnInitializedAsync()
     {
         if (UserDetails is not null)
@@ -72,29 +69,14 @@ public partial class CreateOrUpdateRole(
             Response? result = await rolesApi.CreateOrUpdateRoleAsync(input);
             isBusy = false;
             StateHasChanged();
-            if (result is null || result is { IsError: true })
+            if (result is { IsError: false })
             {
-                if (string.IsNullOrWhiteSpace(input.Id))
-                {
-                    await dialogService.Alert(
-                        "If you need to add a backup user and person in charge to this role, first add this role to the user by updating the user. Then come back here again and click on update to choose the backup person and person in charge.",
-                        "Information", new AlertOptions { OkButtonText = "OK", Top = "5vh" });
-                }
-
                 dialogService.Close(true);
             }
         }
         else
         {
             dialogService.Close(false);
-        }
-    }
-
-    private void OnChange(object? value)
-    {
-        if (value is null)
-        {
-            //CreateUserRequest.BackupUserId = "";
         }
     }
 

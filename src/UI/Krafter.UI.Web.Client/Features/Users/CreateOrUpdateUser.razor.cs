@@ -49,7 +49,7 @@ public partial class CreateOrUpdateUser(
             Response? result = await usersApi.CreateOrUpdateUserAsync(input);
             isBusy = false;
             StateHasChanged();
-            if (result is not null && result.IsError == false)
+            if (result is { IsError: false })
             {
                 dialogService.Close(true);
             }
