@@ -85,18 +85,17 @@ public sealed class CreateOrUpdate
                         "Unable to find tenant, please try again later or contact support.");
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.Name))
+                if (request.Name != tenant.Name)
                 {
                     tenant.Name = request.Name;
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.Identifier))
+                if (request.Identifier != tenant.Identifier)
                 {
                     tenant.Identifier = request.Identifier;
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.AdminEmail) &&
-                    request.AdminEmail != tenant.AdminEmail)
+                if (request.AdminEmail != tenant.AdminEmail)
                 {
                     string rootTenantLink = tenantGetterService.Tenant.TenantLink;
                     using (IServiceScope scope = serviceProvider.CreateScope())
@@ -125,14 +124,14 @@ public sealed class CreateOrUpdate
                     tenant.AdminEmail = request.AdminEmail;
                 }
 
-                if (request.IsActive.HasValue)
+                if (request.IsActive != tenant.IsActive)
                 {
-                    tenant.IsActive = request.IsActive ?? false;
+                    tenant.IsActive = request.IsActive ?? tenant.IsActive;
                 }
 
-                if (request.ValidUpto.HasValue)
+                if (request.ValidUpto != tenant.ValidUpto)
                 {
-                    tenant.ValidUpto = request.ValidUpto.Value;
+                    tenant.ValidUpto = request.ValidUpto ?? tenant.ValidUpto;
                 }
 
                 await dbContext.SaveChangesAsync();

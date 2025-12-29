@@ -89,22 +89,22 @@ public sealed class CreateOrUpdateUser
                     return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.FirstName))
+                if (request.FirstName != user.FirstName)
                 {
                     user.FirstName = request.FirstName;
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.LastName))
+                if (request.LastName != user.LastName)
                 {
                     user.LastName = request.LastName;
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+                if (request.PhoneNumber != user.PhoneNumber)
                 {
                     user.PhoneNumber = request.PhoneNumber;
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.Email) && user.Email != request.Email)
+                if (request.Email != user.Email)
                 {
                     if (request.UpdateTenantEmail)
                     {

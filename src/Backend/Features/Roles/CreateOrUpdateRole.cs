@@ -46,23 +46,25 @@ public sealed class CreateOrUpdateRole
                     throw new NotFoundException("Role Not Found");
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.Name) || !string.IsNullOrWhiteSpace(request.Description))
+                if (request.Name != role.Name)
                 {
                     if (KrafterRoleConstant.IsDefault(role.Name!))
                     {
                         throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
                     }
 
-                    if (!string.IsNullOrWhiteSpace(request.Name))
+                    role.Name = request.Name;
+                    role.NormalizedName = request.Name?.ToUpperInvariant();
+                }
+
+                if (request.Description != role.Description)
+                {
+                    if (KrafterRoleConstant.IsDefault(role.Name!))
                     {
-                        role.Name = request.Name;
-                        role.NormalizedName = request.Name.ToUpperInvariant();
+                        throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
                     }
 
-                    if (!string.IsNullOrWhiteSpace(request.Description))
-                    {
-                        role.Description = request.Description;
-                    }
+                    role.Description = request.Description;
                 }
 
                 IdentityResult result = await roleManager.UpdateAsync(role);
@@ -125,14 +127,7 @@ public sealed class CreateOrUpdateRole
                 db.RoleClaims.UpdateRange(permissionsToUpdate);
                 db.RoleClaims.UpdateRange(permissionsToRemove);
             }
-            else
-            {
-                List<KrafterRoleClaim> permissions = await db.RoleClaims
-                    .IgnoreQueryFilters()
-                    .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.RoleId == request.Id &&
-                                c.ClaimType == KrafterClaims.Permission)
-                    .ToListAsync();
-            }
+
 
             await db.SaveChangesAsync(new List<string>());
             return new Response();
