@@ -1,111 +1,247 @@
 /* ==========================================================================
-   Deep Tech Color Palette - CSS Custom Properties
+   Krafter Design System - CSS Custom Properties
+   Compatible with Radzen Light & Dark Themes
+   ========================================================================== */
+
+/* ==========================================================================
+   Radzen CSS Variable Overrides - Primary Color Integration
+   These override Radzen's default theme colors with Krafter brand colors
    ========================================================================== */
 :root {
-    /* ========== Core Brand Colors (Unified with Logo) ========== */
-    --color-primary: #764AF1;
-    /* Logo Purple (Main Brand) */
-    --color-primary-hover: #8B5CF6;
-    /* Interactive states */
-    --color-primary-active: #5B2DCF;
-    /* Active states */
-    --color-primary-dark: #3D1A99;
-    /* Deep Violet (Dark Anchor) */
-    --color-primary-light: #A78BFA;
-    /* Light Purple */
+    /* ========== Radzen Primary Color Overrides ========== */
+    --rz-primary: #764AF1;
+    --rz-primary-light: #A78BFA;
+    --rz-primary-lighter: #C4B5FD;
+    --rz-primary-dark: #5B2DCF;
+    --rz-primary-darker: #3D1A99;
+    
+    --rz-secondary: #06B6D4;
+    --rz-secondary-light: #22D3EE;
+    --rz-secondary-lighter: #67E8F9;
+    --rz-secondary-dark: #0891B2;
+    --rz-secondary-darker: #0E7490;
+    
+    --rz-info: #3B82F6;
+    --rz-info-light: #60A5FA;
+    --rz-info-lighter: #93C5FD;
+    --rz-info-dark: #2563EB;
+    --rz-info-darker: #1D4ED8;
+    
+    --rz-success: #10B981;
+    --rz-success-light: #34D399;
+    --rz-success-lighter: #6EE7B7;
+    --rz-success-dark: #059669;
+    --rz-success-darker: #047857;
+    
+    --rz-warning: #F59E0B;
+    --rz-warning-light: #FBBF24;
+    --rz-warning-lighter: #FCD34D;
+    --rz-warning-dark: #D97706;
+    --rz-warning-darker: #B45309;
+    
+    --rz-danger: #EF4444;
+    --rz-danger-light: #F87171;
+    --rz-danger-lighter: #FCA5A5;
+    --rz-danger-dark: #DC2626;
+    --rz-danger-darker: #B91C1C;
 
-    /* ========== Secondary Accent Colors ========== */
-    --color-accent-cyan: #06B6D4;
-    /* Neon Cyan (AI Highlight) */
-    --color-accent-cyan-hover: #22D3EE;
-    /* Cyan Hover */
-    --color-accent-pink: #EC4899;
-    /* Hot Pink (CTAs) */
-    --color-accent-pink-hover: #F472B6;
-    /* Pink Hover */
+    /* ========== Krafter Custom Properties ========== */
+    --kr-primary: #764AF1;
+    --kr-primary-hover: #8B5CF6;
+    --kr-primary-active: #5B2DCF;
+    --kr-primary-dark: #3D1A99;
+    --kr-primary-light: #A78BFA;
 
-    /* ========== Dark Theme Background ========== */
-    --color-bg-primary: #0F172A;
-    /* Slate 900 */
-    --color-bg-secondary: #1E293B;
-    /* Slate 800 */
-    --color-bg-tertiary: #020617;
-    /* Slate 950 (Absolute Deep) */
+    --kr-accent-cyan: #06B6D4;
+    --kr-accent-cyan-hover: #22D3EE;
+    --kr-accent-pink: #EC4899;
+    --kr-accent-pink-hover: #F472B6;
 
-    /* ========== Surface Colors (Glassmorphism) ========== */
-    --color-surface: rgba(30, 41, 59, 0.7);
-    /* Cards, Panels */
-    --color-surface-hover: rgba(51, 65, 85, 0.8);
-    /* Hover State */
-    --color-surface-active: rgba(71, 85, 105, 0.9);
-    /* Active State */
-    --color-surface-border: rgba(255, 255, 255, 0.08);
-    /* Glass Borders */
+    --kr-bg-primary: #FFFFFF;
+    --kr-bg-secondary: #F8FAFC;
+    --kr-bg-tertiary: #F1F5F9;
 
-    /* ========== Text Colors ========== */
-    --color-text-primary: #F8FAFC;
-    /* Slate 50 */
-    --color-text-secondary: #CBD5E1;
-    /* Slate 300 */
-    --color-text-tertiary: #94A3B8;
-    /* Slate 400 */
-    --color-text-muted: #64748B;
-    /* Slate 500 */
+    --kr-surface: rgba(248, 250, 252, 0.9);
+    --kr-surface-hover: rgba(241, 245, 249, 0.95);
+    --kr-surface-active: rgba(226, 232, 240, 1);
+    --kr-surface-border: rgba(0, 0, 0, 0.08);
 
-    /* ========== Status Colors ========== */
-    --color-success: #10B981;
-    /* Emerald */
-    --color-warning: #F59E0B;
-    /* Amber */
-    --color-error: #EF4444;
-    /* Red */
-    --color-info: #3B82F6;
-    /* Blue */
+    --kr-text-primary: #0F172A;
+    --kr-text-secondary: #334155;
+    --kr-text-tertiary: #64748B;
+    --kr-text-muted: #94A3B8;
 
-    /* ========== Borders & Dividers ========== */
-    --color-border: rgba(255, 255, 255, 0.08);
-    /* Default Border */
-    --color-border-light: rgba(255, 255, 255, 0.12);
-    /* Highlighted Border */
-    --color-divider: rgba(255, 255, 255, 0.06);
-    /* Separators */
+    --kr-success: #10B981;
+    --kr-success-bg: rgba(16, 185, 129, 0.1);
+    --kr-warning: #F59E0B;
+    --kr-warning-bg: rgba(245, 158, 11, 0.1);
+    --kr-error: #EF4444;
+    --kr-error-bg: rgba(239, 68, 68, 0.1);
+    --kr-info: #3B82F6;
+    --kr-info-bg: rgba(59, 130, 246, 0.1);
 
-    /* ========== Code Syntax Colors ========== */
-    --color-code-keyword: #C084FC;
-    /* Keywords */
-    --color-code-class: #F472B6;
-    /* Class Names */
-    --color-code-type: #22D3EE;
-    /* Type Names */
-    --color-code-string: #34D399;
-    /* Strings */
+    --kr-border: rgba(0, 0, 0, 0.08);
+    --kr-border-light: rgba(0, 0, 0, 0.12);
+    --kr-divider: rgba(0, 0, 0, 0.06);
+
+    --kr-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --kr-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --kr-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --kr-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --kr-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+    --kr-glow-primary: 0 0 20px rgba(118, 74, 241, 0.3);
+    --kr-glow-cyan: 0 0 20px rgba(6, 182, 212, 0.3);
+    --kr-glow-pink: 0 0 20px rgba(236, 72, 153, 0.3);
+
+    --kr-gradient-primary: linear-gradient(135deg, #3D1A99 0%, #764AF1 50%, #EC4899 100%);
+    --kr-gradient-cyan: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+    --kr-gradient-text: linear-gradient(to right, #764AF1, #06B6D4);
+
+    --kr-glass-bg: rgba(255, 255, 255, 0.7);
+    --kr-glass-border: rgba(0, 0, 0, 0.08);
+    --kr-glass-blur: blur(12px);
+
+    --kr-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --kr-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --kr-radius-sm: 0.375rem;
+    --kr-radius-md: 0.5rem;
+    --kr-radius-lg: 0.75rem;
+    --kr-radius-xl: 1rem;
+    --kr-radius-2xl: 1.5rem;
+
+    --kr-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --kr-transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ==========================================================================
+   Dark Theme - Radzen Variable Overrides
+   ========================================================================== */
+.dark,
+.material-dark,
+.material3-dark,
+.standard-dark,
+.software-dark,
+.humanistic-dark,
+.fluent-dark,
+html[class*="-dark"] {
+    --kr-bg-primary: #0F172A;
+    --kr-bg-secondary: #1E293B;
+    --kr-bg-tertiary: #020617;
+
+    --kr-surface: rgba(30, 41, 59, 0.7);
+    --kr-surface-hover: rgba(51, 65, 85, 0.8);
+    --kr-surface-active: rgba(71, 85, 105, 0.9);
+    --kr-surface-border: rgba(255, 255, 255, 0.08);
+
+    --kr-text-primary: #F8FAFC;
+    --kr-text-secondary: #CBD5E1;
+    --kr-text-tertiary: #94A3B8;
+    --kr-text-muted: #64748B;
+
+    --kr-border: rgba(255, 255, 255, 0.08);
+    --kr-border-light: rgba(255, 255, 255, 0.12);
+    --kr-divider: rgba(255, 255, 255, 0.06);
+
+    --kr-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    --kr-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    --kr-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+    --kr-glow-primary: 0 0 20px rgba(118, 74, 241, 0.5);
+    --kr-glow-cyan: 0 0 20px rgba(6, 182, 212, 0.5);
+
+    --kr-glass-bg: rgba(30, 41, 59, 0.7);
+    --kr-glass-border: rgba(255, 255, 255, 0.08);
 }
 
 /* ==========================================================================
    Base Styles
    ========================================================================== */
-html,
-body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-a,
-.btn-link {
-    color: var(--color-primary);
+html, body {
+    font-family: var(--kr-font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--rz-base-200, #e2e8f0);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--rz-primary);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--rz-primary-light);
+}
+
+/* ==========================================================================
+   Bootstrap Overrides
+   ========================================================================== */
+a, .btn-link {
+    color: var(--rz-primary);
+}
+
+a:hover, .btn-link:hover {
+    color: var(--rz-primary-light);
 }
 
 .btn-primary {
-    color: var(--color-text-primary);
-    background-color: var(--color-primary);
-    border-color: var(--color-primary-hover);
+    background: var(--kr-gradient-primary);
+    border: none;
 }
 
-.btn:focus,
-.btn:active:focus,
-.btn-link.nav-link:focus,
-.form-control:focus,
-.form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--color-primary);
+.btn:focus, .btn:active:focus, .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(118, 74, 241, 0.25);
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid var(--rz-success);
+}
+
+.invalid {
+    outline: 1px solid var(--rz-danger);
+}
+
+.validation-message {
+    color: var(--rz-danger);
+}
+
+/* ==========================================================================
+   Blazor Error Boundary
+   ========================================================================== */
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3LjgyOSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N7MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, var(--rz-danger);
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+    border-radius: var(--kr-radius-md);
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
+
+/* ==========================================================================
+   App Loading
+   ========================================================================== */
+.app-loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
 .content {
@@ -116,52 +252,325 @@ h1:focus {
     outline: none;
 }
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid var(--color-success);
+
+/* ==========================================================================
+   Radzen Component Enhancements
+   These add visual polish on top of Radzen's themed components
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   BUTTONS - Primary gets gradient effect
+   -------------------------------------------------------------------------- */
+.rz-button.rz-primary,
+.rz-button.rz-button-md.rz-primary,
+.rz-button.rz-button-sm.rz-primary {
+    background: var(--kr-gradient-primary) !important;
+    border-color: transparent !important;
+    transition: all var(--kr-transition-base);
 }
 
-.invalid {
-    outline: 1px solid var(--color-error);
+.rz-button.rz-primary:hover:not(:disabled),
+.rz-button.rz-button-md.rz-primary:hover:not(:disabled),
+.rz-button.rz-button-sm.rz-primary:hover:not(:disabled) {
+    box-shadow: var(--kr-glow-primary);
+    filter: brightness(1.1);
 }
 
-.validation-message {
-    color: var(--color-error);
+/* Secondary button hover */
+.rz-button.rz-secondary:hover:not(:disabled) {
+    background-color: var(--rz-secondary) !important;
+    color: white !important;
 }
 
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3LjgyOSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N7MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, var(--color-error);
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
+/* Light/Cancel buttons - subtle hover */
+.rz-button.rz-light:hover:not(:disabled),
+.rz-button.rz-base:hover:not(:disabled) {
+    border-color: var(--rz-primary) !important;
+    color: var(--rz-primary) !important;
 }
 
-.blazor-error-boundary::after {
-    content: "An error has occurred."
+/* Danger button glow */
+.rz-button.rz-danger:hover:not(:disabled) {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
 }
 
-.darker-border-checkbox.form-check-input {
-    border-color: var(--color-border-light);
+/* Success button glow */
+.rz-button.rz-success:hover:not(:disabled) {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
 }
 
-.app-loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+/* Info button - use cyan */
+.rz-button.rz-info {
+    background-color: var(--kr-accent-cyan) !important;
+    border-color: var(--kr-accent-cyan) !important;
 }
 
-/* Infinite Scroll Grid */
+.rz-button.rz-info:hover:not(:disabled) {
+    box-shadow: var(--kr-glow-cyan);
+}
+
+/* --------------------------------------------------------------------------
+   SPLIT BUTTON - Actions dropdown styling
+   -------------------------------------------------------------------------- */
+.rz-splitbutton {
+    transition: all var(--kr-transition-base);
+}
+
+/* Light/flat split buttons - hover effect */
+.rz-splitbutton .rz-button:hover:not(:disabled) {
+    border-color: var(--rz-primary) !important;
+    color: var(--rz-primary) !important;
+    background-color: rgba(118, 74, 241, 0.08) !important;
+}
+
+/* Primary split button */
+.rz-splitbutton.rz-primary .rz-button,
+.rz-splitbutton .rz-button.rz-primary {
+    background: var(--kr-gradient-primary) !important;
+    border-color: transparent !important;
+}
+
+/* Split button menu */
+.rz-splitbutton-menu {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+.rz-splitbutton-menu .rz-menuitem:hover,
+.rz-splitbutton-menu .rz-navigation-item:hover {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+    color: var(--rz-primary) !important;
+}
+
+.rz-splitbutton-menu .rz-menuitem:hover .rzi {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   FORM INPUTS - Focus states
+   -------------------------------------------------------------------------- */
+.rz-textbox:focus,
+.rz-inputtext:focus,
+.rz-textarea:focus,
+.rz-dropdown.rz-state-focused,
+.rz-multiselect.rz-state-focused,
+.rz-autocomplete.rz-state-focused input {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+/* Checkbox/Radio checked */
+.rz-chkbox-box.rz-state-active,
+.rz-radiobutton-box.rz-state-active {
+    background-color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+/* Switch checked */
+.rz-switch.rz-switch-checked .rz-switch-handle {
+    background-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   DATA GRID
+   -------------------------------------------------------------------------- */
+.rz-data-grid .rz-state-highlight,
+.rz-datatable .rz-state-highlight,
+.rz-grid-table tr.rz-state-highlight {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+}
+
+.rz-sortable-column:hover {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   PAGINATION
+   -------------------------------------------------------------------------- */
+.rz-paginator .rz-state-active,
+.rz-pager .rz-state-active {
+    background-color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+.rz-paginator button:hover:not(.rz-state-active):not(:disabled) {
+    border-color: var(--rz-primary-light) !important;
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   TABS
+   -------------------------------------------------------------------------- */
+.rz-tabview-nav .rz-tabview-selected .rz-tabview-nav-link,
+.rz-tabs .rz-state-active {
+    color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   NAVIGATION / SIDEBAR
+   -------------------------------------------------------------------------- */
+.rz-navigation-item-active,
+.rz-navigation-item.rz-state-active {
+    color: var(--rz-primary) !important;
+}
+
+.rz-navigation-item:hover {
+    color: var(--rz-primary-light) !important;
+}
+
+.rz-sidebar .rz-navigation-item-active {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+    border-left: 3px solid var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   DROPDOWN / SELECT
+   -------------------------------------------------------------------------- */
+.rz-dropdown-item.rz-state-highlight,
+.rz-listbox-item.rz-state-highlight,
+.rz-multiselect-item.rz-state-highlight {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+    color: var(--rz-primary) !important;
+}
+
+.rz-dropdown-item:hover:not(.rz-state-highlight),
+.rz-listbox-item:hover:not(.rz-state-highlight) {
+    background-color: rgba(118, 74, 241, 0.05) !important;
+}
+
+/* --------------------------------------------------------------------------
+   DIALOGS / MODALS
+   -------------------------------------------------------------------------- */
+.rz-dialog {
+    border-radius: var(--kr-radius-xl) !important;
+    box-shadow: var(--kr-shadow-2xl) !important;
+}
+
+.rz-dialog-titlebar {
+    border-bottom: 1px solid var(--kr-divider) !important;
+}
+
+.rz-dialog-close:hover {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   NOTIFICATIONS / ALERTS
+   -------------------------------------------------------------------------- */
+.rz-notification {
+    border-radius: var(--kr-radius-lg) !important;
+    box-shadow: var(--kr-shadow-xl) !important;
+}
+
+.rz-notification.rz-success,
+.rz-alert.rz-success {
+    border-left: 4px solid var(--rz-success) !important;
+}
+
+.rz-notification.rz-warning,
+.rz-alert.rz-warning {
+    border-left: 4px solid var(--rz-warning) !important;
+}
+
+.rz-notification.rz-error,
+.rz-alert.rz-error {
+    border-left: 4px solid var(--rz-danger) !important;
+}
+
+.rz-notification.rz-info,
+.rz-alert.rz-info {
+    border-left: 4px solid var(--rz-info) !important;
+}
+
+/* --------------------------------------------------------------------------
+   BADGES & CHIPS
+   -------------------------------------------------------------------------- */
+.rz-badge.rz-primary {
+    background-color: var(--rz-primary) !important;
+}
+
+.rz-chip.rz-primary {
+    background-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   PROGRESS BAR
+   -------------------------------------------------------------------------- */
+.rz-progressbar-value {
+    background: var(--kr-gradient-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   CALENDAR / DATE PICKER
+   -------------------------------------------------------------------------- */
+.rz-datepicker .rz-state-active,
+.rz-calendar .rz-state-active {
+    background-color: var(--rz-primary) !important;
+}
+
+.rz-datepicker td:hover:not(.rz-state-active),
+.rz-calendar td:hover:not(.rz-state-active) {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   SLIDER
+   -------------------------------------------------------------------------- */
+.rz-slider .rz-slider-range {
+    background-color: var(--rz-primary) !important;
+}
+
+.rz-slider .rz-slider-handle {
+    background-color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   CARDS
+   -------------------------------------------------------------------------- */
+.rz-card {
+    border-radius: var(--kr-radius-xl) !important;
+    transition: all var(--kr-transition-base);
+}
+
+.rz-card:hover {
+    box-shadow: var(--kr-shadow-lg);
+}
+
+/* --------------------------------------------------------------------------
+   TOOLTIPS
+   -------------------------------------------------------------------------- */
+.rz-tooltip {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+/* --------------------------------------------------------------------------
+   LINKS
+   -------------------------------------------------------------------------- */
+.rz-link {
+    color: var(--rz-primary) !important;
+}
+
+.rz-link:hover {
+    color: var(--rz-primary-light) !important;
+}
+
+
+/* ==========================================================================
+   Infinite Scroll Grid (Custom Component)
+   ========================================================================== */
 .kr-bit-infinite-scroll-grid {
     width: 100%;
     display: flex;
     flex-wrap: wrap;
     margin: -0.5rem;
-    /* Compensate for item padding */
 }
 
 .kr-bit-infinite-scroll-item {
     padding: 0.5rem;
     width: 25%;
-    /* 4 items per row */
     box-sizing: border-box;
 }
 
@@ -170,14 +579,12 @@ h1:focus {
     display: flex;
 }
 
-/* Ensure content doesn't overflow cards */
 .kr-bit-infinite-scroll-card {
     overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
-/* Handle text overflow */
 .kr-text-truncate {
     max-width: 100%;
     white-space: nowrap;
@@ -185,23 +592,16 @@ h1:focus {
     text-overflow: ellipsis;
 }
 
-/* Responsive breakpoints */
 @media (max-width: 1200px) {
-    .kr-bit-infinite-scroll-item {
-        width: 33.333%;
-    }
+    .kr-bit-infinite-scroll-item { width: 33.333%; }
 }
 
 @media (max-width: 768px) {
-    .kr-bit-infinite-scroll-item {
-        width: 50%;
-    }
+    .kr-bit-infinite-scroll-item { width: 50%; }
 }
 
 @media (max-width: 480px) {
-    .kr-bit-infinite-scroll-item {
-        width: 100%;
-    }
+    .kr-bit-infinite-scroll-item { width: 100%; }
 }
 
 .kr-bit-infinite-scroll-loading {
@@ -209,7 +609,1060 @@ h1:focus {
     justify-content: center;
     width: 100%;
     padding: 1rem 0;
-    clear: both;
 }
 
-/* End of Infinite Scroll Grid */
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+/* Glass morphism */
+.kr-glass {
+    background: var(--kr-glass-bg);
+    backdrop-filter: var(--kr-glass-blur);
+    -webkit-backdrop-filter: var(--kr-glass-blur);
+    border: 1px solid var(--kr-glass-border);
+    border-radius: var(--kr-radius-xl);
+}
+
+/* Gradient text */
+.kr-gradient-text {
+    background: var(--kr-gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Glow effects */
+.kr-glow-primary { box-shadow: var(--kr-glow-primary); }
+.kr-glow-cyan { box-shadow: var(--kr-glow-cyan); }
+.kr-glow-pink { box-shadow: var(--kr-glow-pink); }
+
+/* Hover lift */
+.kr-hover-lift {
+    transition: transform var(--kr-transition-base), box-shadow var(--kr-transition-base);
+}
+
+.kr-hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--kr-shadow-xl);
+}
+
+/* Status badges */
+.kr-status-success { color: var(--kr-success); background-color: var(--kr-success-bg); }
+.kr-status-warning { color: var(--kr-warning); background-color: var(--kr-warning-bg); }
+.kr-status-error { color: var(--kr-error); background-color: var(--kr-error-bg); }
+.kr-status-info { color: var(--kr-info); background-color: var(--kr-info-bg); }
+
+
+/* ==========================================================================
+   Additional Radzen Components - Complete Coverage
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   LAYOUT COMPONENTS
+   -------------------------------------------------------------------------- */
+.rz-layout {
+    transition: all var(--kr-transition-base);
+}
+
+.rz-header {
+    border-bottom: 1px solid var(--kr-border);
+}
+
+.rz-footer {
+    border-top: 1px solid var(--kr-border);
+}
+
+.rz-sidebar {
+    border-right: 1px solid var(--kr-border);
+}
+
+.rz-sidebar-second {
+    border-left: 1px solid var(--kr-border);
+}
+
+/* Sidebar toggle button */
+.rz-sidebar-toggle:hover {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   PANEL MENU (Sidebar Navigation)
+   -------------------------------------------------------------------------- */
+.rz-panelmenu .rz-navigation-item-wrapper:hover {
+    background-color: rgba(118, 74, 241, 0.08) !important;
+}
+
+.rz-panelmenu .rz-navigation-item-active .rz-navigation-item-wrapper {
+    background-color: rgba(118, 74, 241, 0.12) !important;
+    border-left: 3px solid var(--rz-primary) !important;
+}
+
+.rz-panelmenu .rz-navigation-item-icon-active,
+.rz-panelmenu .rz-navigation-item-text-active {
+    color: var(--rz-primary) !important;
+}
+
+.rz-panelmenu .rz-navigation-item-wrapper:hover .rz-navigation-item-icon,
+.rz-panelmenu .rz-navigation-item-wrapper:hover .rz-navigation-item-text {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   TEXT BOX & PASSWORD
+   -------------------------------------------------------------------------- */
+.rz-textbox,
+.rz-password,
+.rz-textarea {
+    transition: border-color var(--kr-transition-fast), box-shadow var(--kr-transition-fast);
+}
+
+.rz-textbox:focus,
+.rz-password:focus,
+.rz-textarea:focus {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+/* Search input */
+.rz-search-input:focus {
+    border-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   DROPDOWN DATA GRID
+   -------------------------------------------------------------------------- */
+.rz-dropdown-datagrid {
+    transition: border-color var(--kr-transition-fast);
+}
+
+.rz-dropdown-datagrid.rz-state-focused {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+.rz-dropdown-datagrid-panel {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+.rz-dropdown-datagrid-panel .rz-state-highlight {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   RADIO BUTTON LIST
+   -------------------------------------------------------------------------- */
+.rz-radio-btn-box.rz-state-active {
+    border-color: var(--rz-primary) !important;
+}
+
+.rz-radio-btn-box.rz-state-active .rz-radio-btn-icon {
+    background-color: var(--rz-primary) !important;
+}
+
+.rz-radio-btn-label:hover {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   SWITCH
+   -------------------------------------------------------------------------- */
+.rz-switch {
+    transition: all var(--kr-transition-fast);
+}
+
+.rz-switch.rz-switch-checked .rz-switch-track {
+    background-color: var(--rz-primary-light) !important;
+}
+
+.rz-switch.rz-switch-checked .rz-switch-handle {
+    background-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   LABEL
+   -------------------------------------------------------------------------- */
+.rz-label {
+    transition: color var(--kr-transition-fast);
+}
+
+/* --------------------------------------------------------------------------
+   ALERT
+   -------------------------------------------------------------------------- */
+.rz-alert {
+    border-radius: var(--kr-radius-md) !important;
+}
+
+.rz-alert.rz-primary {
+    border-left: 4px solid var(--rz-primary) !important;
+}
+
+.rz-alert.rz-secondary {
+    border-left: 4px solid var(--rz-secondary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   TEXT COMPONENT
+   -------------------------------------------------------------------------- */
+.rz-text-display-h1,
+.rz-text-display-h2,
+.rz-text-display-h3,
+.rz-text-h1,
+.rz-text-h2,
+.rz-text-h3,
+.rz-text-h4,
+.rz-text-h5,
+.rz-text-h6 {
+    color: var(--kr-text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   TEMPLATE FORM
+   -------------------------------------------------------------------------- */
+.rz-form-field:focus-within {
+    border-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   NUMERIC INPUT
+   -------------------------------------------------------------------------- */
+.rz-spinner:focus-within {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+.rz-spinner-button:hover {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   DATE PICKER
+   -------------------------------------------------------------------------- */
+.rz-datepicker-trigger:hover {
+    color: var(--rz-primary) !important;
+}
+
+.rz-datepicker-calendar .rz-state-active {
+    background-color: var(--rz-primary) !important;
+    color: white !important;
+}
+
+.rz-datepicker-calendar td:hover:not(.rz-state-active):not(.rz-state-disabled) {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+}
+
+.rz-datepicker-calendar .rz-datepicker-today {
+    border-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   AUTOCOMPLETE
+   -------------------------------------------------------------------------- */
+.rz-autocomplete:focus-within {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+.rz-autocomplete-panel {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+.rz-autocomplete-item:hover {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+}
+
+.rz-autocomplete-item.rz-state-highlight {
+    background-color: rgba(118, 74, 241, 0.15) !important;
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   MULTISELECT
+   -------------------------------------------------------------------------- */
+.rz-multiselect:focus-within,
+.rz-multiselect.rz-state-focused {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+.rz-multiselect-panel {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+/* --------------------------------------------------------------------------
+   CHIPS
+   -------------------------------------------------------------------------- */
+.rz-chip {
+    border-radius: var(--kr-radius-full) !important;
+    transition: all var(--kr-transition-fast);
+}
+
+.rz-chip.rz-primary {
+    background-color: var(--rz-primary) !important;
+}
+
+.rz-chip .rz-chip-remove:hover {
+    color: var(--rz-danger) !important;
+}
+
+/* --------------------------------------------------------------------------
+   POPUP / OVERLAY
+   -------------------------------------------------------------------------- */
+.rz-popup {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-xl) !important;
+}
+
+/* --------------------------------------------------------------------------
+   LOADING / SPINNER
+   -------------------------------------------------------------------------- */
+.rz-spinner-circle {
+    stroke: var(--rz-primary) !important;
+}
+
+.rz-loading-overlay {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   CONTEXT MENU
+   -------------------------------------------------------------------------- */
+.rz-contextmenu {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+.rz-contextmenu .rz-menuitem:hover {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   BREADCRUMB
+   -------------------------------------------------------------------------- */
+.rz-breadcrumb-item a:hover {
+    color: var(--rz-primary) !important;
+}
+
+.rz-breadcrumb-item.rz-state-active {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   STEPS
+   -------------------------------------------------------------------------- */
+.rz-steps .rz-steps-item.rz-state-active .rz-steps-number {
+    background-color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+.rz-steps .rz-steps-item.rz-state-complete .rz-steps-number {
+    background-color: var(--rz-success) !important;
+    border-color: var(--rz-success) !important;
+}
+
+/* --------------------------------------------------------------------------
+   ACCORDION
+   -------------------------------------------------------------------------- */
+.rz-accordion-header:hover {
+    color: var(--rz-primary) !important;
+}
+
+.rz-accordion-header.rz-state-active {
+    color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   FIELDSET
+   -------------------------------------------------------------------------- */
+.rz-fieldset {
+    border-radius: var(--kr-radius-lg) !important;
+}
+
+.rz-fieldset-legend {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   PANEL
+   -------------------------------------------------------------------------- */
+.rz-panel {
+    border-radius: var(--kr-radius-lg) !important;
+}
+
+.rz-panel-titlebar {
+    border-bottom: 1px solid var(--kr-divider) !important;
+}
+
+/* --------------------------------------------------------------------------
+   TREE
+   -------------------------------------------------------------------------- */
+.rz-treenode-content:hover {
+    background-color: rgba(118, 74, 241, 0.08) !important;
+}
+
+.rz-treenode-content.rz-state-highlight {
+    background-color: rgba(118, 74, 241, 0.12) !important;
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   LISTBOX
+   -------------------------------------------------------------------------- */
+.rz-listbox {
+    border-radius: var(--kr-radius-md) !important;
+}
+
+.rz-listbox-item:hover:not(.rz-state-highlight) {
+    background-color: rgba(118, 74, 241, 0.08) !important;
+}
+
+.rz-listbox-item.rz-state-highlight {
+    background-color: rgba(118, 74, 241, 0.15) !important;
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   UPLOAD
+   -------------------------------------------------------------------------- */
+.rz-fileupload-choose:hover {
+    background-color: var(--rz-primary) !important;
+}
+
+.rz-fileupload-buttonbar .rz-button.rz-primary {
+    background: var(--kr-gradient-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   GRAVATAR / PROFILE
+   -------------------------------------------------------------------------- */
+.rz-gravatar {
+    border-radius: var(--kr-radius-full) !important;
+}
+
+/* --------------------------------------------------------------------------
+   MENU (Horizontal)
+   -------------------------------------------------------------------------- */
+.rz-menu .rz-menuitem:hover {
+    background-color: rgba(118, 74, 241, 0.08) !important;
+}
+
+.rz-menu .rz-menuitem.rz-state-active {
+    color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   PROFILE MENU
+   -------------------------------------------------------------------------- */
+.rz-profile-menu .rz-navigation-item:hover {
+    background-color: rgba(118, 74, 241, 0.08) !important;
+}
+
+/* --------------------------------------------------------------------------
+   SCHEDULER (if used)
+   -------------------------------------------------------------------------- */
+.rz-scheduler-nav-button:hover {
+    color: var(--rz-primary) !important;
+}
+
+.rz-scheduler .rz-event {
+    background-color: var(--rz-primary) !important;
+    border-color: var(--rz-primary-dark) !important;
+}
+
+/* --------------------------------------------------------------------------
+   CHART (if used)
+   -------------------------------------------------------------------------- */
+.rz-chart .rz-series-primary {
+    fill: var(--rz-primary) !important;
+    stroke: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   GAUGE (if used)
+   -------------------------------------------------------------------------- */
+.rz-arc-gauge .rz-arc-gauge-value {
+    fill: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   RATING
+   -------------------------------------------------------------------------- */
+.rz-rating .rz-rating-icon.rz-state-active {
+    color: var(--rz-warning) !important;
+}
+
+.rz-rating .rz-rating-icon:hover {
+    color: var(--rz-warning-light) !important;
+}
+
+/* --------------------------------------------------------------------------
+   COLOR PICKER
+   -------------------------------------------------------------------------- */
+.rz-colorpicker-panel {
+    border-radius: var(--kr-radius-md) !important;
+    box-shadow: var(--kr-shadow-lg) !important;
+}
+
+/* --------------------------------------------------------------------------
+   MASK INPUT
+   -------------------------------------------------------------------------- */
+.rz-mask:focus {
+    border-color: var(--rz-primary) !important;
+    box-shadow: 0 0 0 2px rgba(118, 74, 241, 0.2) !important;
+}
+
+/* --------------------------------------------------------------------------
+   TIMELINE
+   -------------------------------------------------------------------------- */
+.rz-timeline .rz-timeline-marker {
+    background-color: var(--rz-primary) !important;
+    border-color: var(--rz-primary) !important;
+}
+
+.rz-timeline .rz-timeline-connector {
+    background-color: var(--rz-primary-light) !important;
+}
+
+/* --------------------------------------------------------------------------
+   SPLITTER
+   -------------------------------------------------------------------------- */
+.rz-splitter-bar:hover {
+    background-color: var(--rz-primary-light) !important;
+}
+
+.rz-splitter-bar:active {
+    background-color: var(--rz-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   SCROLLBAR (Radzen specific)
+   -------------------------------------------------------------------------- */
+.rz-body::-webkit-scrollbar-thumb {
+    background: var(--rz-primary);
+}
+
+/* --------------------------------------------------------------------------
+   FOCUS VISIBLE (Accessibility)
+   -------------------------------------------------------------------------- */
+.rz-button:focus-visible,
+.rz-link:focus-visible,
+.rz-navigation-item:focus-visible {
+    outline: 2px solid var(--rz-primary) !important;
+    outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   PREMIUM ENHANCEMENTS - Krafter Design System Polish
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   BACKGROUND TEXTURE (Dark Theme Only)
+   Fractal noise + radial glow for premium "wall-painted" feel
+   -------------------------------------------------------------------------- */
+.dark body,
+.material-dark body,
+.material3-dark body,
+.standard-dark body,
+.software-dark body,
+.humanistic-dark body,
+.fluent-dark body,
+html[class*="-dark"] body {
+    background-color: #020617;
+    background-image: 
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse at 50% 0%, rgba(118, 74, 241, 0.08) 0%, transparent 50%);
+    background-attachment: fixed;
+}
+
+/* --------------------------------------------------------------------------
+   GLASSMORPHISM CARDS (Dark Theme)
+   -------------------------------------------------------------------------- */
+.dark .rz-card,
+.material-dark .rz-card,
+.standard-dark .rz-card,
+html[class*="-dark"] .rz-card {
+    background: linear-gradient(
+        145deg,
+        rgba(30, 41, 59, 0.6) 0%,
+        rgba(15, 23, 42, 0.8) 100%
+    ) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .rz-card:hover,
+html[class*="-dark"] .rz-card:hover {
+    border-color: rgba(118, 74, 241, 0.3) !important;
+    box-shadow: 
+        0 20px 40px -15px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(118, 74, 241, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   GLASSMORPHISM DIALOGS (Dark Theme)
+   -------------------------------------------------------------------------- */
+.dark .rz-dialog,
+html[class*="-dark"] .rz-dialog {
+    background: linear-gradient(
+        180deg,
+        rgba(30, 41, 59, 0.95) 0%,
+        rgba(15, 23, 42, 0.98) 100%
+    ) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED BUTTON ANIMATIONS
+   -------------------------------------------------------------------------- */
+.rz-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ripple effect base */
+.rz-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.rz-button:active::after {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+}
+
+/* Primary button enhanced glow */
+.rz-button.rz-primary {
+    box-shadow: 0 4px 15px rgba(118, 74, 241, 0.3);
+}
+
+.rz-button.rz-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 25px rgba(118, 74, 241, 0.4),
+        0 0 40px rgba(118, 74, 241, 0.2);
+}
+
+.rz-button.rz-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED FORM INPUTS
+   -------------------------------------------------------------------------- */
+.rz-textbox,
+.rz-password,
+.rz-textarea,
+.rz-dropdown,
+.rz-multiselect,
+.rz-autocomplete,
+.rz-spinner {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Floating label effect enhancement */
+.rz-form-field.rz-float-label .rz-placeholder {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Input glow on focus (dark theme) */
+.dark .rz-textbox:focus,
+.dark .rz-password:focus,
+.dark .rz-textarea:focus,
+html[class*="-dark"] .rz-textbox:focus,
+html[class*="-dark"] .rz-password:focus,
+html[class*="-dark"] .rz-textarea:focus {
+    box-shadow: 
+        0 0 0 2px rgba(118, 74, 241, 0.2),
+        0 0 20px rgba(118, 74, 241, 0.15) !important;
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED DATA GRID
+   -------------------------------------------------------------------------- */
+.rz-datatable {
+    border-radius: var(--kr-radius-lg) !important;
+    overflow: hidden;
+}
+
+/* Header styling */
+.rz-datatable thead th {
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+/* Row hover with subtle animation */
+.rz-datatable tbody tr {
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.rz-datatable tbody tr:hover {
+    background-color: rgba(118, 74, 241, 0.04) !important;
+}
+
+/* Alternating rows (subtle) */
+.rz-datatable tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dark .rz-datatable tbody tr:nth-child(even),
+html[class*="-dark"] .rz-datatable tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED SIDEBAR
+   -------------------------------------------------------------------------- */
+.rz-sidebar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark theme sidebar glass effect */
+.dark .rz-sidebar,
+html[class*="-dark"] .rz-sidebar {
+    background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.95) 0%,
+        rgba(2, 6, 23, 0.98) 100%
+    ) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Navigation item animations */
+.rz-panelmenu .rz-navigation-item-wrapper {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: var(--kr-radius-md);
+    margin: 2px 8px;
+}
+
+.rz-panelmenu .rz-navigation-item-wrapper:hover {
+    transform: translateX(4px);
+}
+
+/* Active item indicator */
+.rz-panelmenu .rz-navigation-item-active .rz-navigation-item-wrapper {
+    position: relative;
+}
+
+.rz-panelmenu .rz-navigation-item-active .rz-navigation-item-wrapper::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: var(--kr-gradient-primary);
+    border-radius: 0 2px 2px 0;
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED NOTIFICATIONS
+   -------------------------------------------------------------------------- */
+.rz-notification {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED DIALOGS
+   -------------------------------------------------------------------------- */
+.rz-dialog-wrapper {
+    animation: fadeIn 0.2s ease;
+}
+
+.rz-dialog {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Dialog close button */
+.rz-dialog-close {
+    transition: all 0.2s ease;
+    border-radius: var(--kr-radius-md);
+}
+
+.rz-dialog-close:hover {
+    background-color: rgba(118, 74, 241, 0.1) !important;
+    transform: rotate(90deg);
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED TOOLTIPS
+   -------------------------------------------------------------------------- */
+.rz-tooltip {
+    animation: tooltipFadeIn 0.15s ease;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED DROPDOWN PANELS
+   -------------------------------------------------------------------------- */
+.rz-dropdown-panel,
+.rz-multiselect-panel,
+.rz-autocomplete-panel,
+.rz-splitbutton-menu {
+    animation: dropdownSlide 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED TABS
+   -------------------------------------------------------------------------- */
+.rz-tabview-nav {
+    position: relative;
+}
+
+.rz-tabview-nav .rz-tabview-nav-link {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.rz-tabview-nav .rz-tabview-nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--kr-gradient-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+}
+
+.rz-tabview-nav li.rz-tabview-selected .rz-tabview-nav-link::after {
+    width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED PAGINATION
+   -------------------------------------------------------------------------- */
+.rz-paginator button {
+    transition: all 0.2s ease;
+}
+
+.rz-paginator button:hover:not(:disabled):not(.rz-state-active) {
+    transform: scale(1.1);
+}
+
+.rz-paginator .rz-state-active {
+    box-shadow: 0 4px 12px rgba(118, 74, 241, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED CHECKBOXES
+   -------------------------------------------------------------------------- */
+.rz-chkbox-box {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rz-chkbox-box.rz-state-active {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 3px rgba(118, 74, 241, 0.2);
+}
+
+/* Checkmark animation */
+.rz-chkbox-box .rz-chkbox-icon {
+    animation: checkmark 0.2s ease;
+}
+
+@keyframes checkmark {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED SWITCHES
+   -------------------------------------------------------------------------- */
+.rz-switch .rz-switch-handle {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rz-switch.rz-switch-checked .rz-switch-handle {
+    box-shadow: 0 0 10px rgba(118, 74, 241, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   ENHANCED PROGRESS BAR
+   -------------------------------------------------------------------------- */
+.rz-progressbar-value {
+    position: relative;
+    overflow: hidden;
+}
+
+.rz-progressbar-value::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* --------------------------------------------------------------------------
+   LOADING STATES
+   -------------------------------------------------------------------------- */
+.rz-datatable.rz-datatable-loading tbody {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Skeleton loading effect */
+.kr-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--kr-surface) 25%,
+        var(--kr-surface-hover) 50%,
+        var(--kr-surface) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton 1.5s ease infinite;
+    border-radius: var(--kr-radius-md);
+}
+
+@keyframes skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* --------------------------------------------------------------------------
+   SELECTION HIGHLIGHT
+   -------------------------------------------------------------------------- */
+::selection {
+    background-color: rgba(118, 74, 241, 0.3);
+    color: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   FOCUS RING (Accessibility)
+   -------------------------------------------------------------------------- */
+*:focus-visible {
+    outline: 2px solid var(--rz-primary);
+    outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   PRINT STYLES
+   -------------------------------------------------------------------------- */
+@media print {
+    .rz-sidebar,
+    .rz-header,
+    .rz-footer,
+    .rz-dialog-overlay {
+        display: none !important;
+    }
+    
+    .rz-body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .rz-button {
+        box-shadow: none !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   REDUCED MOTION (Accessibility)
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
