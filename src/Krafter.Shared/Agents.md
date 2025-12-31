@@ -23,7 +23,9 @@
 │                                                             │
 │ Shared constant (role names, routes)?                       │
 │   → Contracts/<Feature>/<Name>Constant.cs                   │
-│   → Or Common/Constants/                                    │
+│                                                             │
+│ API route constant?                                         │
+│   → Common/KrafterRoute.cs                                  │
 │                                                             │
 │ Permission definitions?                                     │
 │   → Common/Auth/Permissions/KrafterPermissions.cs           │
@@ -67,6 +69,7 @@ src/Krafter.Shared/
 │       ├── CreateOrUpdateTenantRequest.cs
 │       └── SeedDataRequest.cs
 ├── Common/
+│   ├── KrafterRoute.cs          ← API route constants
 │   ├── Auth/
 │   │   ├── KrafterClaims.cs
 │   │   └── Permissions/
@@ -77,11 +80,18 @@ src/Krafter.Shared/
 │   │   ├── Response.cs          ← Standard API response wrapper
 │   │   ├── PaginationResponse.cs
 │   │   ├── CommonDtoProperty.cs ← Base DTO with audit fields
+│   │   ├── DeleteRequestInput.cs ← Delete request model
+│   │   ├── DeleteRequestInputValidator.cs
+│   │   ├── GetRequestInput.cs   ← Standard query parameters
+│   │   ├── RestoreRequestInput.cs
+│   │   ├── DropDownDto.cs
+│   │   ├── CurrentTenantDetails.cs
 │   │   └── UserInfo.cs
 │   ├── Enums/
 │   │   ├── EntityKind.cs
 │   │   └── RecordState.cs
 │   └── Extensions/
+│       └── AuthExtensions.cs
 └── Hubs/
     └── SignalRMethods.cs
 ```
@@ -280,3 +290,8 @@ public static class KrafterRoute
     public const string Products = "products";
 }
 ```
+
+---
+Last Updated: 2025-12-31
+Verified Against: Contracts/Users/CreateUserRequest.cs, Contracts/Users/UserDto.cs, Common/Models/CommonDtoProperty.cs, Common/Enums/EntityKind.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
+---

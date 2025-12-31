@@ -105,9 +105,21 @@ refactor(tenants): consolidate tenant operations
 4. **Minimal Diffs**: Only modify what is strictly necessary.
 5. **Test Build**: Always verify `dotnet build` succeeds.
 
-## 8. When to Create New Agents.md Files
+## 8. Agents.md Evolution & Maintenance
 
-> **AI Agents SHOULD propose creating a new `Agents.md` when:**
+> **CRITICAL**: Agents.md files are LIVING DOCUMENTS that MUST evolve with the codebase.
+
+### 8.1 When to UPDATE Existing Agents.md
+
+| Trigger | Action |
+|---------|--------|
+| New pattern discovered in code | Add to relevant Agents.md with code example |
+| Existing pattern changes | Update the documentation immediately |
+| AI agent makes repeated mistakes | Add to "Common Mistakes" section |
+| New library/tool integrated | Document usage patterns |
+| Code review reveals undocumented convention | Add to appropriate section |
+
+### 8.2 When to CREATE New Agents.md Files
 
 | Trigger | Action |
 |---------|--------|
@@ -115,12 +127,47 @@ refactor(tenants): consolidate tenant operations
 | A new infrastructure area is added (e.g., messaging, caching) | Create `Infrastructure/<Area>/Agents.md` |
 | CI/CD or deployment rules become complex | Create `.github/Agents.md` |
 | Aspire orchestration has custom rules | Create `aspire/Agents.md` |
+| A sub-area has 3+ unique patterns not in parent | Create sub-directory Agents.md |
 
-### Template for New Agents.md
+### 8.3 When to SPLIT/BREAKDOWN Agents.md
+
+> **Split when a single Agents.md exceeds ~500 lines or covers too many concerns**
+
+```
+BEFORE (monolithic):
+src/Backend/Agents.md (800+ lines covering everything)
+
+AFTER (split by concern):
+src/Backend/Agents.md (core patterns, ~200 lines)
+├── Features/Auth/Agents.md (auth-specific patterns)
+├── Features/Tenants/Agents.md (multi-tenant patterns)
+├── Infrastructure/Persistence/Agents.md (EF Core patterns)
+└── Infrastructure/BackgroundJobs/Agents.md (TickerQ patterns)
+```
+
+### 8.4 Hierarchy & Inheritance
+
+```
+Agents.md (ROOT - global rules)
+    ↓ inherits
+src/Backend/Agents.md (backend-specific)
+    ↓ inherits
+src/Backend/Features/Auth/Agents.md (auth-specific)
+```
+
+**Rules:**
+- Child Agents.md inherits all rules from parent
+- Child can OVERRIDE parent rules (document why)
+- Child should only contain rules SPECIFIC to that area
+- Always reference parent: `> See also: ../Agents.md`
+
+### 8.5 Template for New Agents.md
+
 ```markdown
 # <Area> AI Instructions
 
 > **SCOPE**: <What this file covers>
+> **PARENT**: See also: <path to parent Agents.md>
 
 ## 1. Core Principles
 - <Key rule 1>
@@ -130,14 +177,38 @@ refactor(tenants): consolidate tenant operations
 <Where does code go?>
 
 ## 3. Code Templates
-<Copy-paste examples>
+<Copy-paste examples from ACTUAL code>
 
 ## 4. Checklist
 <Step-by-step for new work>
+
+## 5. Common Mistakes
+<What AI agents get wrong>
+
+## 6. Evolution Triggers
+<When to update THIS file>
 ```
 
-### Rule for AI Agents
-When you notice a sub-area has become complex enough to warrant its own instructions:
-1. **Suggest** creating a new `Agents.md` in that directory.
-2. **Draft** the file based on the template above.
-3. **Ask** the user for approval before creating.
+### 8.6 AI Agent Responsibilities
+
+**When working on code:**
+1. **Check** if current patterns match Agents.md
+2. **Flag** any discrepancies found
+3. **Suggest** updates when patterns evolve
+4. **Propose** new Agents.md when complexity warrants
+
+**When updating Agents.md:**
+1. **Verify** against actual code (not assumptions)
+2. **Include** real code snippets from codebase
+3. **Reference** actual file paths
+4. **Ask** user approval before creating new files
+
+### 8.7 Version Tracking
+
+Add to each Agents.md:
+```markdown
+---
+Last Updated: YYYY-MM-DD
+Verified Against: [list key files checked]
+---
+```

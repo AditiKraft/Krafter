@@ -146,8 +146,9 @@ namespace Krafter.UI.Web.Client.Features.Products;
 
 public partial class Products(
     CommonService commonService,
-    IProductsApi productsApi,
-    DialogService dialogService
+    DialogService dialogService,
+    ApiCallService api,        // CRITICAL: Always inject ApiCallService
+    IProductsApi productsApi
 ) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Products;
@@ -161,8 +162,8 @@ public partial class Products(
 
     protected override async Task OnInitializedAsync()
     {
-        LocalAppSate.CurrentPageTitle = "Products";
-        dialogService.OnClose += Close;
+        LocalAppSate.CurrentPageTitle = "Products";  // Set page title
+        dialogService.OnClose += Close;              // Subscribe to dialog close
         await Get();
     }
 
@@ -172,14 +173,16 @@ public partial class Products(
         if (resetPaginationData)
             requestInput.SkipCount = 0;
 
-        response = await productsApi.GetProductsAsync(
+        // CRITICAL: Use ApiCallService wrapper for ALL API calls
+        response = await api.CallAsync(() => productsApi.GetProductsAsync(
             id: requestInput.Id,
             history: requestInput.History,
             isDeleted: requestInput.IsDeleted,
+            query: requestInput.Query,
             filter: requestInput.Filter,
             orderBy: requestInput.OrderBy,
             skipCount: requestInput.SkipCount,
-            maxResultCount: requestInput.MaxResultCount);
+            maxResultCount: requestInput.MaxResultCount));
         
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
@@ -239,16 +242,17 @@ public partial class Products(
             await Delete(data);
     }
 
-    private async void Close(object? result)
+    // IMPORTANT: Use dynamic type for result parameter
+    private async void Close(dynamic result)
     {
-        if (result is not bool)
+        if (result == null || !result.Equals(true))
             return;
-        await grid.Reload();
+        await Get();
     }
 
     public void Dispose()
     {
-        dialogService.OnClose -= Close;
+        dialogService.OnClose -= Close;  // CRITICAL: Unsubscribe to prevent memory leaks
         dialogService.Dispose();
     }
 }
@@ -304,12 +308,14 @@ public partial class Products(
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Products;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
+using Krafter.UI.Web.Client.Infrastructure.Services;
 using Mapster;
 
 namespace Krafter.UI.Web.Client.Features.Products;
 
 public partial class CreateOrUpdateProduct(
     DialogService dialogService,
+    ApiCallService api,        // CRITICAL: Always inject ApiCallService
     IProductsApi productsApi
 ) : ComponentBase
 {
@@ -333,24 +339,11 @@ public partial class CreateOrUpdateProduct(
         {
             isBusy = true;
             
-            // For updates, only send changed fields
-            CreateProductRequest finalInput = new();
-            if (string.IsNullOrWhiteSpace(input.Id))
-            {
-                finalInput = input;
-            }
-            else
-            {
-                finalInput.Id = input.Id;
-                if (input.Name != OriginalCreateRequest.Name)
-                    finalInput.Name = input.Name;
-                if (input.Price != OriginalCreateRequest.Price)
-                    finalInput.Price = input.Price;
-                if (input.IsActive != OriginalCreateRequest.IsActive)
-                    finalInput.IsActive = input.IsActive;
-            }
-
-            Response? result = await productsApi.CreateOrUpdateProductAsync(finalInput);
+            // CRITICAL: Use ApiCallService wrapper with success message
+            Response result = await api.CallAsync(
+                () => productsApi.CreateOrUpdateProductAsync(input),
+                successMessage: "Product saved successfully");
+            
             isBusy = false;
             StateHasChanged();
             
@@ -363,7 +356,7 @@ public partial class CreateOrUpdateProduct(
         }
     }
 
-    private void Cancel() => dialogService.Close(false);
+    private void Cancel() => dialogService.Close();
 }
 ```
 
@@ -383,9 +376,71 @@ public partial class CreateOrUpdateProduct(
 </AuthorizeView>
 ```
 
-## 6. API Calls via Refit
+## 6. API Calls via ApiCallService (CRITICAL)
 
-### 6.1 Refit Interface Pattern
+> **⚠️ IMPORTANT**: ALL API calls in UI components MUST use `ApiCallService.CallAsync()` wrapper. NEVER call Refit interfaces directly!
+
+### 6.1 ApiCallService Pattern (REQUIRED)
+
+```csharp
+// ✅ CORRECT - Always use ApiCallService wrapper
+public partial class Products(
+    ApiCallService api,        // REQUIRED - Always inject this
+    IProductsApi productsApi,  // Refit interface
+    DialogService dialogService
+) : ComponentBase
+{
+    private async Task GetListAsync()
+    {
+        // ✅ CORRECT - Wrap Refit call with ApiCallService
+        response = await api.CallAsync(() => productsApi.GetProductsAsync(
+            requestInput.Id,
+            requestInput.History,
+            requestInput.IsDeleted,
+            requestInput.Query,
+            requestInput.Filter,
+            requestInput.OrderBy,
+            requestInput.SkipCount,
+            requestInput.MaxResultCount));
+    }
+
+    private async void Submit(CreateProductRequest input)
+    {
+        // ✅ With success message notification
+        Response result = await api.CallAsync(
+            () => productsApi.CreateOrUpdateProductAsync(input),
+            successMessage: "Product saved successfully");
+        
+        if (result is { IsError: false })
+            dialogService.Close(true);
+    }
+}
+
+// ❌ WRONG - Never call Refit directly
+response = await productsApi.GetProductsAsync(...);  // NO! Missing error handling
+```
+
+### 6.2 ApiCallService Features
+
+The `ApiCallService` provides:
+- Automatic error handling and notifications
+- Consistent response parsing
+- Success message display
+- HTTP exception handling
+
+```csharp
+// Full signature with all options
+Response<T> result = await api.CallAsync<T>(
+    () => refitApi.MethodAsync(),           // Required: API call
+    errorTitle: "Custom Error Title",        // Optional: Override error title
+    errorMessage: "Custom error message",    // Optional: Override error message
+    successMessage: "Operation successful",  // Optional: Show success notification
+    successTitle: "Success",                 // Optional: Override success title
+    showErrorNotification: true              // Optional: Disable error notifications
+);
+```
+
+### 6.3 Refit Interface Pattern
 ```csharp
 // In Infrastructure/Refit/IProductsApi.cs
 using Krafter.Shared.Common.Models;
@@ -399,6 +454,9 @@ public interface IProductsApi
     [Get("/products/get")]
     Task<Response<PaginationResponse<ProductDto>>> GetProductsAsync(
         [Query] string? id = null,
+        [Query] bool history = false,
+        [Query] bool isDeleted = false,
+        [Query] string? query = null,
         [Query] string? filter = null,
         [Query] string? orderBy = null,
         [Query] int skipCount = 0,
@@ -417,16 +475,16 @@ public interface IProductsApi
 }
 ```
 
-### 6.2 Register in RefitServiceExtensions.cs
+### 6.4 Register in RefitServiceExtensions.cs
 ```csharp
 // Add to RefitServiceExtensions.AddKrafterRefitClients()
 services.AddRefitClient<IProductsApi>(refitSettings)
-    .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
-    .AddHttpMessageHandler<RefitTenantHandler>()
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+    .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
     .AddHttpMessageHandler<RefitAuthHandler>();
 ```
 
-### 6.3 External API Pattern (Third-Party APIs)
+### 6.5 External API Pattern (Third-Party APIs)
 ```csharp
 // In Infrastructure/Refit/IWeatherApi.cs
 using Refit;
@@ -450,46 +508,6 @@ public class WeatherResponse
 // Register in RefitServiceExtensions.cs - NO auth/tenant handlers for external APIs
 services.AddRefitClient<IWeatherApi>(refitSettings)
     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://wttr.in"));
-```
-
-### 6.4 Usage in Components
-```csharp
-// ✅ CORRECT - Inject Refit interface via primary constructor
-public partial class Products(IProductsApi productsApi) : ComponentBase
-{
-    private async Task GetListAsync()
-    {
-        var response = await productsApi.GetProductsAsync(
-            filter: "active",
-            skipCount: 0,
-            maxResultCount: 10);
-
-        if (response?.IsError == false)
-        {
-            products = response.Data?.Items;
-        }
-    }
-}
-
-// ❌ WRONG - Never use HttpClient directly
-var response = await httpClient.GetAsync("/products");
-```
-
-### 6.4 Response Handling
-```csharp
-// All API responses use Response<T> wrapper from Krafter.Shared.Common.Models
-var response = await productsApi.GetProductsAsync();
-
-if (response?.IsError == true)
-{
-    // Handle error - response.Message contains error details
-    notificationService.Notify(NotificationSeverity.Error, response.Message);
-    return;
-}
-
-// Success - access data via response.Data
-var items = response.Data?.Items ?? [];
-var totalCount = response.Data?.TotalCount ?? 0;
 ```
 
 ## 7. New Feature Checklist
@@ -532,7 +550,11 @@ var totalCount = response.Data?.TotalCount ?? 0;
        Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Products)
    }
    ```
-9. [ ] Test with `dotnet build` and browser
+9. [ ] Add `EntityKind` enum value in `Krafter.Shared/Common/Enums/EntityKind.cs`
+10. [ ] Update `Common/Components/Dialogs/DeleteDialog.razor.cs`:
+    - Add new Refit interface to constructor
+    - Add case to switch statement for new entity
+11. [ ] Test with `dotnet build` and browser
 
 
 ## 8. Existing Refit Interfaces
@@ -707,6 +729,39 @@ public enum EntityKind
 }
 ```
 
+### 12.3 Update DeleteDialog for New Entity
+When adding a new entity type, update `Common/Components/Dialogs/DeleteDialog.razor.cs` switch statement:
+
+```csharp
+case EntityKind.Product:
+    Response productResult = await api.CallAsync(
+        () => productsApi.DeleteProductAsync(
+            new DeleteRequestInput
+            {
+                DeleteReason = deleteRequestInput.DeleteReason,
+                Id = deleteRequestInput.Id,
+                EntityKind = EntityKind.Product
+            }),
+        successMessage: "Product deleted successfully");
+
+    result.IsError = productResult.IsError;
+    result.StatusCode = productResult.StatusCode;
+    result.Message = productResult.Message;
+    break;
+```
+
+**IMPORTANT**: Also inject the new Refit interface in DeleteDialog constructor:
+```csharp
+public partial class DeleteDialog(
+    DialogService dialogService,
+    ApiCallService api,
+    IUsersApi usersApi,
+    IRolesApi rolesApi,
+    ITenantsApi tenantsApi,
+    IProductsApi productsApi  // Add new API interface
+) : ComponentBase
+```
+
 ## 13. Edge Cases: _Imports.razor Updates
 
 When adding a new feature with new contracts, update `_Imports.razor`:
@@ -717,3 +772,177 @@ When adding a new feature with new contracts, update `_Imports.razor`:
 ```
 
 This makes `ProductDto`, `CreateProductRequest`, etc. available in all Blazor components without explicit `@using` statements.
+
+
+## 14. LocalAppSate (Global UI State)
+
+`LocalAppSate` is a static class that holds UI-wide state settings.
+
+### 14.1 Setting Page Title
+```csharp
+protected override async Task OnInitializedAsync()
+{
+    LocalAppSate.CurrentPageTitle = "Products";  // Displayed in header/breadcrumb
+    // ... rest of initialization
+}
+```
+
+### 14.2 Available Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| `CurrentPageTitle` | `string` | Current page title for header |
+| `Density` | `Density` | RadzenDataGrid density setting |
+| `ShowCellDataAsTooltip` | `bool` | Show cell overflow as tooltip |
+| `AllowColumnResize` | `bool` | Allow grid column resizing |
+
+### 14.3 Usage in Components
+```razor
+<RadzenDataGrid 
+    Density="LocalAppSate.Density" 
+    ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip"
+    AllowColumnResize="LocalAppSate.AllowColumnResize"
+    ...>
+```
+
+## 15. Component Lifecycle Best Practices
+
+### 15.1 Required Pattern for List Pages
+
+```csharp
+public partial class Products(
+    CommonService commonService,
+    DialogService dialogService,
+    ApiCallService api,
+    IProductsApi productsApi
+) : ComponentBase, IDisposable  // MUST implement IDisposable
+{
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Set page title
+        LocalAppSate.CurrentPageTitle = "Products";
+        
+        // 2. Subscribe to dialog close event
+        dialogService.OnClose += Close;
+        
+        // 3. Load initial data
+        await GetListAsync();
+    }
+
+    // Use dynamic type for result parameter
+    private async void Close(dynamic result)
+    {
+        if (result == null || !result.Equals(true))
+            return;
+        await GetListAsync();
+    }
+
+    public void Dispose()
+    {
+        // CRITICAL: Always unsubscribe from events
+        dialogService.OnClose -= Close;
+        dialogService.Dispose();
+    }
+}
+```
+
+### 15.2 Common Mistakes
+
+```csharp
+// ❌ WRONG - Missing IDisposable
+public partial class Products(...) : ComponentBase
+{
+    // Memory leak! Events not unsubscribed
+}
+
+// ❌ WRONG - Wrong Close signature
+private async void Close(object? result)  // Should be dynamic
+{
+    if (result is not bool)  // This pattern doesn't work correctly
+        return;
+}
+
+// ✅ CORRECT - Use dynamic type
+private async void Close(dynamic result)
+{
+    if (result == null || !result.Equals(true))
+        return;
+    await GetListAsync();
+}
+```
+
+## 16. GetRequestInput Standard Parameters
+
+The `GetRequestInput` class from `Krafter.Shared.Common.Models` provides standard query parameters:
+
+```csharp
+public class GetRequestInput
+{
+    public string? Id { get; set; }           // Filter by specific ID
+    public bool History { get; set; }          // Include historical records
+    public bool IsDeleted { get; set; }        // Include soft-deleted records
+    public string? Query { get; set; }         // Free-text search
+    public string? Filter { get; set; }        // Dynamic LINQ filter
+    public string? OrderBy { get; set; }       // Dynamic LINQ ordering
+    public int SkipCount { get; set; } = 0;    // Pagination offset
+    public int MaxResultCount { get; set; } = 10;  // Page size
+}
+```
+
+### Usage in Refit Interface
+```csharp
+[Get("/products/get")]
+Task<Response<PaginationResponse<ProductDto>>> GetProductsAsync(
+    [Query] string? id = null,
+    [Query] bool history = false,
+    [Query] bool isDeleted = false,
+    [Query] string? query = null,
+    [Query] string? filter = null,
+    [Query] string? orderBy = null,
+    [Query] int skipCount = 0,
+    [Query] int maxResultCount = 10,
+    CancellationToken cancellationToken = default);
+```
+
+
+---
+
+## 17. Evolution & Maintenance
+
+> **PARENT**: See also: [Root Agents.md](../../Agents.md) for global evolution rules.
+
+### 17.1 When to UPDATE This File
+
+| Trigger | Action |
+|---------|--------|
+| New component pattern discovered | Add to Section 4 Code Templates |
+| ApiCallService signature changes | Update Section 6 immediately |
+| New Refit interface added | Add to Section 8 Existing Refit Interfaces |
+| LocalAppSate properties change | Update Section 14 |
+| Dialog/form pattern changes | Update relevant template sections |
+| AI agent makes repeated UI mistakes | Add to Section 15.2 Common Mistakes |
+
+### 17.2 When to CREATE Child Agents.md
+
+| Trigger | Location |
+|---------|----------|
+| A feature has 5+ unique UI patterns | `Features/<Feature>/Agents.md` |
+| Common components grow complex | `Common/Components/Agents.md` |
+| Infrastructure services have unique patterns | `Infrastructure/Agents.md` |
+| Authentication UI becomes complex | `Features/Auth/Agents.md` |
+
+### 17.3 Common Mistakes (AI Agents)
+
+| Mistake | Correct Approach |
+|---------|-----------------|
+| Calling Refit directly without ApiCallService | Always use `api.CallAsync(() => refitApi.Method())` |
+| Using `Close(object? result)` signature | Use `Close(dynamic result)` |
+| Missing `IDisposable` on list pages | Always implement `IDisposable` and unsubscribe events |
+| Forgetting `dialogService.OnClose += Close` | Subscribe in `OnInitializedAsync` |
+| Not setting `LocalAppSate.CurrentPageTitle` | Set in `OnInitializedAsync` |
+| Creating DTOs in UI project | Use DTOs from `Krafter.Shared.Contracts.*` |
+| Missing permission attribute on page | Add `@attribute [MustHavePermission(...)]` |
+
+---
+Last Updated: 2025-12-31
+Verified Against: Features/Users/Users.razor.cs, Features/Users/CreateOrUpdateUser.razor.cs, Features/Roles/CreateOrUpdateRole.razor.cs, Infrastructure/Services/ApiCallService.cs
+---

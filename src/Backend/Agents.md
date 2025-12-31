@@ -291,13 +291,24 @@ public DbSet<Product> Products => Set<Product>();
 **ALL handlers MUST return `Response<T>` or `Response`.**
 
 ```csharp
-// ✅ CORRECT
-return Response<ProductDto>.Success(new ProductDto());
-return Response.Failure("Not found", 404);
+// ✅ CORRECT - Use constructor initialization
+return new Response { IsError = true, Message = "Product not found", StatusCode = 404 };
+return new Response<ProductDto> { Data = productDto };
+return new Response();  // Success with default values (IsError = false, StatusCode = 200)
+
+// For generic responses with data:
+return new Response<PaginationResponse<ProductDto>> 
+{ 
+    Data = new PaginationResponse<ProductDto>(items, totalCount, skipCount, maxResultCount) 
+};
+
+// ❌ WRONG - These static methods DO NOT EXIST
+return Response<ProductDto>.Success(dto);  // NO! This method doesn't exist
+return Response.Failure("Not found", 404);  // NO! This method doesn't exist
 
 // ❌ WRONG - Never do this
 return product;           // Raw type
-throw new Exception();    // Unhandled exception
+throw new Exception();    // Unhandled exception (use custom exceptions instead)
 return null;              // Null response
 ```
 
@@ -468,3 +479,302 @@ dotnet ef database update --project src/Backend --context KrafterContext
 # Remove last migration (if needed)
 dotnet ef migrations remove --project src/Backend --context KrafterContext
 ```
+
+
+## 11. Exception Handling (IMPORTANT)
+
+Krafter uses custom exception types that are caught by `ExceptionMiddleware` and converted to appropriate HTTP responses.
+
+### 11.1 Custom Exception Types
+
+```csharp
+// Located in Backend/Application/Common/
+
+// General business logic errors - returns 400 Bad Request
+throw new KrafterException("Operation failed: reason here");
+
+// Resource not found - returns 404 Not Found
+throw new NotFoundException("User Not Found");
+
+// Access denied - returns 403 Forbidden
+throw new ForbiddenException("Not allowed to modify Admin Role.");
+
+// Authentication failed - returns 401 Unauthorized
+throw new UnauthorizedException("Invalid credentials");
+```
+
+### 11.2 When to Use Exceptions vs Response
+
+```csharp
+// ✅ Use Response for expected business outcomes
+if (entity is null)
+    return new Response { IsError = true, Message = "Product not found", StatusCode = 404 };
+
+// ✅ Use Exceptions for unexpected errors or security violations
+if (KrafterRoleConstant.IsDefault(role.Name!))
+    throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
+
+// ✅ Use Exceptions when you want to abort the entire operation
+if (!result.Succeeded)
+    throw new KrafterException($"Register role failed {result.Errors}");
+```
+
+### 11.3 Exception Handling in Actual Code
+```csharp
+// From Features/Roles/CreateOrUpdateRole.cs
+public async Task<Response> CreateOrUpdateAsync(CreateOrUpdateRoleRequest request)
+{
+    if (role == null)
+    {
+        throw new NotFoundException("Role Not Found");
+    }
+
+    if (KrafterRoleConstant.IsDefault(role.Name!))
+    {
+        throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
+    }
+
+    IdentityResult result = await roleManager.UpdateAsync(role);
+    if (!result.Succeeded)
+    {
+        throw new KrafterException($"Update role failed {result.Errors}");
+    }
+
+    return new Response();
+}
+```
+
+## 12. Dual DbContext Architecture
+
+Krafter uses TWO database contexts for different purposes:
+
+### 12.1 KrafterContext (Main Context)
+- **Purpose**: All feature entities, Identity tables
+- **Tenant Isolation**: Has query filters for `TenantId`
+- **Usage**: Most operations use this context
+
+```csharp
+internal sealed class Handler(KrafterContext db) : IScopedHandler
+{
+    public async Task<Response> DoSomethingAsync()
+    {
+        // All queries automatically filtered by TenantId
+        var users = await db.Users.ToListAsync();
+        await db.SaveChangesAsync();
+    }
+}
+```
+
+### 12.2 TenantDbContext (Cross-Tenant Context)
+- **Purpose**: Tenant management, cross-tenant operations
+- **Tenant Isolation**: NO automatic filtering
+- **Usage**: Only for tenant CRUD and admin operations
+
+```csharp
+internal sealed class Handler(
+    KrafterContext db,
+    TenantDbContext tenantDbContext) : IScopedHandler
+{
+    public async Task<Response> UpdateTenantAsync()
+    {
+        // Access tenants without tenant filtering
+        var tenant = await tenantDbContext.Tenants
+            .FirstOrDefaultAsync(c => c.Id == tenantId);
+        
+        // Save to both contexts if needed
+        await tenantDbContext.SaveChangesAsync();
+        await db.SaveChangesAsync();
+    }
+}
+```
+
+### 12.3 When to Use Each Context
+
+| Scenario | Context to Use |
+|----------|---------------|
+| CRUD on feature entities (Users, Roles, Products) | `KrafterContext` |
+| Tenant management (create, update, delete tenants) | `TenantDbContext` |
+| Cross-tenant queries (admin dashboards) | `TenantDbContext` |
+| Updating tenant email when user email changes | Both contexts |
+
+## 13. Background Jobs with TickerQ
+
+### 13.1 Enqueueing a Job
+
+```csharp
+internal sealed class Handler(
+    KrafterContext db,
+    IJobService jobService) : IScopedHandler
+{
+    public async Task<Response> CreateUserAsync(CreateUserRequest request)
+    {
+        // ... create user logic ...
+
+        // Send welcome email via background job
+        await jobService.EnqueueAsync(
+            new SendEmailRequestInput 
+            { 
+                Email = user.Email, 
+                Subject = "Welcome!", 
+                HtmlMessage = $"Hello {user.FirstName}..." 
+            },
+            "SendEmailJob",
+            CancellationToken.None);
+
+        return new Response();
+    }
+}
+```
+
+### 13.2 Available Job Types
+- `SendEmailJob` - Sends email via configured SMTP
+
+### 13.3 Creating New Job Types
+Add to `Infrastructure/BackgroundJobs/JobService.cs`:
+
+```csharp
+public class Jobs(IEmailService emailService)
+{
+    [TickerFunction(nameof(SendEmailJob))]
+    public async Task SendEmailJob(TickerFunctionContext<SendEmailRequestInput> tickerContext,
+        CancellationToken cancellationToken)
+    {
+        await emailService.SendEmailAsync(
+            tickerContext.Request.Email,
+            tickerContext.Request.Subject,
+            tickerContext.Request.HtmlMessage);
+    }
+    
+    // Add new job types here
+    [TickerFunction(nameof(MyNewJob))]
+    public async Task MyNewJob(TickerFunctionContext<MyJobInput> tickerContext,
+        CancellationToken cancellationToken)
+    {
+        // Job implementation
+    }
+}
+```
+
+## 14. Delete Operations (Soft Delete Pattern)
+
+Krafter uses soft delete - entities are marked as deleted, not removed from database.
+
+### 14.1 Delete Handler Pattern
+
+```csharp
+// From Features/Users/DeleteUser.cs
+internal sealed class Handler(
+    UserManager<KrafterUser> userManager,
+    KrafterContext db) : IScopedHandler
+{
+    public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
+    {
+        KrafterUser? user = await userManager.FindByIdAsync(requestInput.Id);
+        if (user is null)
+        {
+            return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
+        }
+
+        // Business rule validation
+        if (user.IsOwner)
+        {
+            return new Response { IsError = true, Message = "Owner cannot be deleted", StatusCode = 403 };
+        }
+
+        // Soft delete - set flags, don't remove
+        user.IsDeleted = true;
+        user.DeleteReason = requestInput.DeleteReason;
+        db.Users.Update(user);
+
+        // Also soft-delete related entities if needed
+        List<KrafterUserRole> userRoles = await db.UserRoles
+            .Where(c => c.UserId == requestInput.Id)
+            .ToListAsync();
+
+        foreach (KrafterUserRole userRole in userRoles)
+        {
+            userRole.IsDeleted = true;
+        }
+
+        await db.SaveChangesAsync();
+        return new Response();
+    }
+}
+```
+
+### 14.2 Delete Route Pattern
+
+```csharp
+// Delete uses POST, not DELETE HTTP method
+userGroup.MapPost("/delete", async (
+        [FromBody] DeleteRequestInput request,
+        [FromServices] Handler handler) =>
+    {
+        Response res = await handler.DeleteAsync(request);
+        return Results.Json(res, statusCode: res.StatusCode);
+    })
+    .Produces<Response>()
+    .MustHavePermission(KrafterAction.Delete, KrafterResource.Users);
+```
+
+**Important**: Delete endpoints use `MapPost("/delete", ...)` NOT `MapDelete("/", ...)`
+
+## 15. Object Mapping with Mapster
+
+Krafter uses Mapster for object-to-object mapping.
+
+```csharp
+using Mapster;
+
+// Map DTO to Entity
+Tenant entity = request.Adapt<Tenant>();
+
+// Map Entity to DTO
+TenantDto dto = tenant.Adapt<TenantDto>();
+
+// Map to existing object
+request.Adapt(existingEntity);
+```
+
+
+---
+
+## 16. Evolution & Maintenance
+
+> **PARENT**: See also: [Root Agents.md](../../Agents.md) for global evolution rules.
+
+### 16.1 When to UPDATE This File
+
+| Trigger | Action |
+|---------|--------|
+| New handler pattern discovered | Add to Section 4 Code Templates |
+| New exception type added | Add to Section 11 Exception Handling |
+| New DbContext or data access pattern | Add to Section 12 |
+| New background job type | Add to Section 13 |
+| EF Core configuration pattern changes | Add to Section 10 |
+| AI agent makes repeated Backend mistakes | Add to Common Mistakes section |
+
+### 16.2 When to CREATE Child Agents.md
+
+| Trigger | Location |
+|---------|----------|
+| Auth feature has 5+ unique patterns | `Features/Auth/Agents.md` |
+| Tenant operations become complex | `Features/Tenants/Agents.md` |
+| EF Core has 3+ advanced patterns | `Infrastructure/Persistence/Agents.md` |
+| Background jobs grow beyond email | `Infrastructure/BackgroundJobs/Agents.md` |
+
+### 16.3 Common Mistakes (AI Agents)
+
+| Mistake | Correct Approach |
+|---------|-----------------|
+| Using `Response.Failure()` static method | Use constructor: `new Response { IsError = true, Message = "..." }` |
+| Forgetting tenant query filter in EF config | Always add `HasQueryFilter(c => c.TenantId == ...)` |
+| Using `MapDelete` for delete endpoints | Use `MapPost("/delete", ...)` |
+| Throwing raw `Exception` | Use `KrafterException`, `NotFoundException`, `ForbiddenException` |
+| Missing `IScopedHandler` interface | All handlers must implement `IScopedHandler` |
+| Forgetting to add DbSet to KrafterContext | Add `public virtual DbSet<Entity> Entities { get; set; }` |
+
+---
+Last Updated: 2025-12-31
+Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/CreateOrUpdate.cs, Infrastructure/Persistence/KrafterContext.cs
+---
