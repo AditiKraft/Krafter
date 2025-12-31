@@ -5,7 +5,7 @@ namespace Backend.Common.Interfaces;
 
 public interface ITenantFinderService
 {
-    public Task<Tenant> Find(string? identifier);
+    public Task<Response<Tenant>> Find(string? identifier);
 }
 
 public interface ITenantGetterService

@@ -1,6 +1,5 @@
 using Backend.Api;
 using Backend.Api.Authorization;
-using Backend.Application.Common;
 using Backend.Common.Interfaces;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
@@ -35,7 +34,7 @@ public sealed class CreateOrUpdateRole
                 IdentityResult result = await roleManager.CreateAsync(role);
                 if (!result.Succeeded)
                 {
-                    throw new KrafterException($"Register role failed {result.Errors.ToString()}");
+                    return Response.BadRequest($"Register role failed {result.Errors.ToString()}");
                 }
             }
             else
@@ -43,14 +42,14 @@ public sealed class CreateOrUpdateRole
                 role = await roleManager.FindByIdAsync(request.Id);
                 if (role == null)
                 {
-                    throw new NotFoundException("Role Not Found");
+                    return Response.NotFound("Role Not Found");
                 }
 
                 if (request.Name != role.Name)
                 {
                     if (KrafterRoleConstant.IsDefault(role.Name!))
                     {
-                        throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
+                        return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
                     }
 
                     role.Name = request.Name;
@@ -61,7 +60,7 @@ public sealed class CreateOrUpdateRole
                 {
                     if (KrafterRoleConstant.IsDefault(role.Name!))
                     {
-                        throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
+                        return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
                     }
 
                     role.Description = request.Description;
@@ -70,7 +69,7 @@ public sealed class CreateOrUpdateRole
                 IdentityResult result = await roleManager.UpdateAsync(role);
                 if (!result.Succeeded)
                 {
-                    throw new KrafterException($"Update role failed {result.Errors.ToString()}");
+                    return Response.BadRequest($"Update role failed {result.Errors.ToString()}");
                 }
             }
 
@@ -78,7 +77,7 @@ public sealed class CreateOrUpdateRole
             {
                 if (role.Name == KrafterRoleConstant.Admin)
                 {
-                    throw new KrafterException("Not allowed to modify Permissions for this Role.");
+                    return Response.BadRequest("Not allowed to modify Permissions for this Role.");
                 }
 
                 List<KrafterRoleClaim> permissions = await db.RoleClaims

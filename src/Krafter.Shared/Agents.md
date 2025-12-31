@@ -188,7 +188,58 @@ public static class ProductCategoryConstant
 | Constant class | `<Entity>Constant` | `KrafterRoleConstant` |
 | Namespace | `Krafter.Shared.Contracts.<Feature>` | `Krafter.Shared.Contracts.Users` |
 
-## 6. Rules
+## 6. Response Class Factory Methods
+
+The `Response` and `Response<T>` classes in `Common/Models/Response.cs` provide static factory methods for creating responses.
+
+### 6.1 Error Factory Methods
+
+```csharp
+// Non-generic Response
+Response.NotFound("Resource not found");      // 404
+Response.BadRequest("Invalid input");         // 400
+Response.Unauthorized("Invalid credentials"); // 401
+Response.Forbidden("Access denied");          // 403
+Response.Conflict("Resource already exists"); // 409
+Response.CustomError("Custom error", 422);    // Custom status code
+
+// Generic Response<T>
+Response<UserDto>.NotFound("User not found");
+Response<UserDto>.BadRequest("Invalid input");
+Response<UserDto>.Unauthorized("Invalid credentials");
+Response<UserDto>.Forbidden("Access denied");
+Response<UserDto>.Conflict("User already exists");
+Response<UserDto>.CustomError("Custom error", 422);
+```
+
+### 6.2 Success Factory Methods
+
+```csharp
+// Non-generic Response
+Response.Success();                           // 200, no message
+Response.Success("Operation completed");      // 200, with message
+
+// Generic Response<T>
+Response<UserDto>.Success(userDto);           // 200, with data
+Response<UserDto>.Success(userDto, "User created"); // 200, with data and message
+```
+
+### 6.3 Factory Method Behavior
+
+All error factory methods:
+- Set `IsError = true`
+- Set `StatusCode` to the appropriate HTTP status code
+- Set `Message` to the provided message
+- Set `Error.Message` to the provided message
+- For `Response<T>`, set `Data = default`
+
+All success factory methods:
+- Set `IsError = false`
+- Set `StatusCode = 200`
+- Set `Message` to the provided message (optional)
+- For `Response<T>`, set `Data` to the provided data
+
+## 7. Rules
 
 ### DO:
 - ✅ Include XML documentation on all public classes
@@ -203,7 +254,7 @@ public static class ProductCategoryConstant
 - ❌ Add Entity Framework attributes (those belong in Backend)
 - ❌ Create nested classes for DTOs - use flat structure
 
-## 7. New Contract Checklist
+## 8. New Contract Checklist
 
 1. [ ] Create file in `Contracts/<Feature>/`
 2. [ ] Add namespace `Krafter.Shared.Contracts.<Feature>`
@@ -213,9 +264,9 @@ public static class ProductCategoryConstant
 6. [ ] Build to verify: `dotnet build src/Krafter.Shared/Krafter.Shared.csproj`
 7. [ ] Update Backend imports from `Krafter.Shared.Contracts.<Feature>`
 
-## 8. Edge Cases: Adding New Feature Support
+## 9. Edge Cases: Adding New Feature Support
 
-### 8.1 Add EntityKind for Delete Operations
+### 9.1 Add EntityKind for Delete Operations
 When adding a new feature that supports soft-delete, add to `Common/Enums/EntityKind.cs`:
 
 ```csharp
@@ -242,7 +293,7 @@ public enum EntityKind
 - 300-399: Commerce entities (Cart, Order, Payment)
 - 400+: New feature entities
 
-### 8.2 Add Permissions for New Feature
+### 9.2 Add Permissions for New Feature
 Add to `Common/Auth/Permissions/`:
 
 **Step 1: Add Resource** (`KrafterResource.cs`):
@@ -278,7 +329,7 @@ private static readonly KrafterPermission[] AllPermissions =
 - `IsRoot = true`: Only available to root/super admin (like Tenant management)
 - Default (no flags): Available to Admin role
 
-### 8.3 Add API Route Constant
+### 9.3 Add API Route Constant
 Add to `Common/KrafterRoute.cs`:
 
 ```csharp
@@ -293,5 +344,5 @@ public static class KrafterRoute
 
 ---
 Last Updated: 2025-12-31
-Verified Against: Contracts/Users/CreateUserRequest.cs, Contracts/Users/UserDto.cs, Common/Models/CommonDtoProperty.cs, Common/Enums/EntityKind.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
+Verified Against: Contracts/Users/CreateUserRequest.cs, Contracts/Users/UserDto.cs, Common/Models/CommonDtoProperty.cs, Common/Models/Response.cs, Common/Enums/EntityKind.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
 ---

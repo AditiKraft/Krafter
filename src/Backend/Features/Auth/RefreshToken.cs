@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text;
 using Backend.Api;
 using Backend.Api.Configuration;
-using Backend.Application.Common;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
@@ -35,18 +34,23 @@ public sealed class RefreshToken
             string ipAddress,
             CancellationToken cancellationToken)
         {
-            ClaimsPrincipal userPrincipal = GetPrincipalFromExpiredToken(request.Token);
+            ClaimsPrincipal? userPrincipal = GetPrincipalFromExpiredToken(request.Token);
+            if (userPrincipal is null)
+            {
+                return Response<TokenResponse>.Unauthorized("Invalid token.");
+            }
+
             string? userEmail = userPrincipal.GetEmail();
 
             if (string.IsNullOrEmpty(userEmail))
             {
-                throw new UnauthorizedException("Invalid token.");
+                return Response<TokenResponse>.Unauthorized("Invalid token.");
             }
 
             KrafterUser? user = await userManager.FindByEmailAsync(userEmail);
             if (user is null)
             {
-                throw new UnauthorizedException("Authentication failed.");
+                return Response<TokenResponse>.Unauthorized("Authentication failed.");
             }
 
             UserRefreshToken? refreshToken = await krafterContext.UserRefreshTokens
@@ -56,16 +60,13 @@ public sealed class RefreshToken
                 refreshToken.RefreshToken != request.RefreshToken ||
                 refreshToken.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
-                throw new UnauthorizedException("Invalid or expired refresh token.");
+                return Response<TokenResponse>.Unauthorized("Invalid or expired refresh token.");
             }
 
-            return new Response<TokenResponse>
-            {
-                Data = await tokenService.GenerateTokensAndUpdateUser(user, ipAddress)
-            };
+            return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress));
         }
 
-        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -85,7 +86,7 @@ public sealed class RefreshToken
                 !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                     StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new UnauthorizedException("Invalid token.");
+                return null;
             }
 
             return principal;

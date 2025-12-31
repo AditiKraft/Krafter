@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Backend.Api.Configuration;
-using Backend.Application.Common;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
 using Krafter.Shared.Common.Auth;
@@ -28,15 +27,15 @@ public class TokenService(
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
 
-    public async Task<TokenResponse> GenerateTokensAndUpdateUser(string userId, string ipAddress)
+    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress)
     {
         KrafterUser? user = await userManager.FindByIdAsync(userId);
         if (user is null)
         {
-            throw new UnauthorizedException("Authentication Failed.");
+            return Response<TokenResponse>.Unauthorized("Authentication Failed.");
         }
 
-        return await GenerateTokensAndUpdateUser(user, ipAddress);
+        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress));
     }
 
     public async Task<TokenResponse> GenerateTokensAndUpdateUser(KrafterUser user, string ipAddress)

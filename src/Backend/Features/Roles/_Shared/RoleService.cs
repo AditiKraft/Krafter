@@ -1,4 +1,3 @@
-using Backend.Application.Common;
 using Backend.Common.Interfaces;
 using Backend.Features.Users._Shared;
 using Backend.Infrastructure.Persistence;
@@ -22,9 +21,9 @@ public class RoleService(
         KrafterRole? res = await db.Roles.SingleOrDefaultAsync(x => x.Id == id);
         if (res is not null)
         {
-            return new Response<RoleDto> { Data = res.Adapt<RoleDto>() };
+            return Response<RoleDto>.Success(res.Adapt<RoleDto>());
         }
 
-        throw new NotFoundException("Role Not Found");
+        return Response<RoleDto>.NotFound("Role Not Found");
     }
 }

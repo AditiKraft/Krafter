@@ -1,9 +1,7 @@
 using Backend.Api;
 using Backend.Api.Configuration;
-using Backend.Application.Common;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Users._Shared;
-using Backend.Infrastructure.Persistence;
 using Krafter.Shared.Common;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Auth;
@@ -18,7 +16,6 @@ public sealed class GetToken
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
         ITokenService tokenService,
-        KrafterContext krafterContext,
         IOptions<JwtSettings> jwtSettings,
         IOptions<SecuritySettings> securitySettings
     ) : IScopedHandler
@@ -33,28 +30,25 @@ public sealed class GetToken
             KrafterUser? user = await userManager.FindByEmailAsync(request.Email.Trim().Normalize());
             if (user is null)
             {
-                throw new UnauthorizedException("Invalid Email or Password");
+                return Response<TokenResponse>.Unauthorized("Invalid Email or Password");
             }
 
             if (!await userManager.CheckPasswordAsync(user, request.Password))
             {
-                throw new KrafterException("Invalid Email or Password");
+                return Response<TokenResponse>.BadRequest("Invalid Email or Password");
             }
 
             if (!user.IsActive)
             {
-                throw new KrafterException("User Not Active. Please contact the administrator.");
+                return Response<TokenResponse>.BadRequest("User Not Active. Please contact the administrator.");
             }
 
             if (_securitySettings.RequireConfirmedAccount && !user.EmailConfirmed)
             {
-                throw new KrafterException("E-Mail not confirmed.");
+                return Response<TokenResponse>.BadRequest("E-Mail not confirmed.");
             }
 
-            return new Response<TokenResponse>
-            {
-                Data = await tokenService.GenerateTokensAndUpdateUser(user, ipAddress)
-            };
+            return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress));
         }
     }
 
@@ -71,7 +65,7 @@ public sealed class GetToken
             {
                 string? ipAddress = GetIpAddress(context);
                 Response<TokenResponse> res = await handler.GetTokenAsync(request, ipAddress!, CancellationToken.None);
-                return TypedResults.Ok(res);
+                return Results.Json(res, statusCode: res.StatusCode);
             }).Produces<Response<TokenResponse>>();
         }
 

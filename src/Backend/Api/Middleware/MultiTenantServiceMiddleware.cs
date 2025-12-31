@@ -34,7 +34,16 @@ public class MultiTenantServiceMiddleware(
             tenantIdentifier = KrafterInitialConstants.RootTenant.Identifier;
         }
 
-        Tenant tenant = await tenantFinderService.Find(tenantIdentifier);
+        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier);
+        if (tenantResponse.IsError || tenantResponse.Data is null)
+        {
+            context.Response.StatusCode = tenantResponse.StatusCode;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { error = tenantResponse.Message });
+            return;
+        }
+
+        Tenant tenant = tenantResponse.Data;
         CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
         currentTenantDetails.TenantLink = context.Request.GetOrigin();
         currentTenantDetails.IpAddress = context.Connection?.RemoteIpAddress?.ToString();

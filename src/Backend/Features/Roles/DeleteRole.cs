@@ -1,6 +1,5 @@
 using Backend.Api;
 using Backend.Api.Authorization;
-using Backend.Application.Common;
 using Backend.Common.Interfaces;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
@@ -28,11 +27,14 @@ public sealed class DeleteRole
         {
             KrafterRole? role = await roleManager.FindByIdAsync(requestInput.Id);
 
-            _ = role ?? throw new NotFoundException("Role Not Found");
+            if (role is null)
+            {
+                return Response.NotFound("Role Not Found");
+            }
 
             if (KrafterRoleConstant.IsDefault(role.Name!))
             {
-                throw new ForbiddenException($"Not allowed to delete {role.Name} Role.");
+                return Response.Forbidden($"Not allowed to delete {role.Name} Role.");
             }
 
             role.IsDeleted = true;

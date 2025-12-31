@@ -1,5 +1,4 @@
 using Backend.Api;
-using Backend.Application.Common;
 using Backend.Features.Auth._Shared;
 using Backend.Features.Roles._Shared;
 using Backend.Features.Users._Shared;
@@ -108,14 +107,14 @@ public sealed class ExternalAuth
 
             if (tokens == null)
             {
-                throw new UnauthorizedException("Invalid token");
+                return Response<TokenResponse>.Unauthorized("Invalid token");
             }
 
             // Get user info from Google
             GoogleAuthClient.GoogleUserInfo? userInfo = await googleAuthClient.GetUserInfoAsync(tokens.AccessToken);
             if (userInfo == null)
             {
-                throw new UnauthorizedException("Invalid user info");
+                return Response<TokenResponse>.Unauthorized("Invalid user info");
             }
 
             // Find or create user based on email
@@ -125,7 +124,7 @@ public sealed class ExternalAuth
                 KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
                 if (basic is null)
                 {
-                    throw new NotFoundException("Basic Role Not Found.");
+                    return Response<TokenResponse>.NotFound("Basic Role Not Found.");
                 }
 
                 user = new KrafterUser
@@ -147,15 +146,15 @@ public sealed class ExternalAuth
                 IdentityResult result = await userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
-                    throw new KrafterException("An error occurred while creating user.");
+                    return Response<TokenResponse>.BadRequest("An error occurred while creating user.");
                 }
 
                 db.UserRoles.Add(new KrafterUserRole { RoleId = basic.Id, UserId = user.Id });
                 await db.SaveChangesAsync(new List<string>(), true, cancellationToken);
             }
 
-            TokenResponse res = await tokenService.GenerateTokensAndUpdateUser(user.Id, string.Empty);
-            return new Response<TokenResponse> { Data = res };
+            Response<TokenResponse> res = await tokenService.GenerateTokensAndUpdateUser(user.Id, string.Empty);
+            return res;
         }
     }
 

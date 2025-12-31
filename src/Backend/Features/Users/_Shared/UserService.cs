@@ -70,7 +70,10 @@ public class UserService(
     {
         //var user = await userManager.Asn.FindByIdAsync(userId);
         KrafterUser? user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
-        _ = user ?? throw new NotFoundException("User Not Found.");
+        if (user is null)
+        {
+            return Response<List<string>>.NotFound("User Not Found.");
+        }
 
         IList<string> userRoles = await userManager.GetRolesAsync(user);
         var permissions = new List<string>();
@@ -85,14 +88,18 @@ public class UserService(
                 .ToListAsync(cancellationToken));
         }
 
-        return new Response<List<string>> { Data = permissions.Distinct().ToList() };
+        return Response<List<string>>.Success(permissions.Distinct().ToList());
     }
 
     public async Task<Response<bool>> HasPermissionAsync(string userId, string permission,
         CancellationToken cancellationToken)
     {
         Response<List<string>>? permissions = await GetPermissionsAsync(userId, cancellationToken);
-        return new Response<bool> { Data = permissions?.Data?.Contains(permission) ?? false };
+        if (permissions.IsError)
+        {
+            return Response<bool>.NotFound(permissions.Message ?? "User Not Found.");
+        }
+        return Response<bool>.Success(permissions?.Data?.Contains(permission) ?? false);
     }
 
     public async Task<Response> CreateOrUpdateAsync(CreateUserRequest request)
@@ -105,7 +112,7 @@ public class UserService(
             KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
             if (basic is null)
             {
-                throw new NotFoundException("Basic Role Not Found.");
+                return Response.NotFound("Basic Role Not Found.");
             }
 
             request.Roles ??= new List<string>();
@@ -124,7 +131,7 @@ public class UserService(
             IdentityResult result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
             {
-                throw new KrafterException("An error occurred while creating user.");
+                return Response.BadRequest("An error occurred while creating user.");
             }
 
             string loginUrl = $"{tenantGetterService.Tenant.TenantLink}/login";
@@ -143,7 +150,10 @@ public class UserService(
         else
         {
             user = await userManager.FindByIdAsync(request.Id);
-            _ = user ?? throw new NotFoundException("User Not Found.");
+            if (user is null)
+            {
+                return Response.NotFound("User Not Found.");
+            }
 
             if (!string.IsNullOrWhiteSpace(request.FirstName) && user.FirstName != request.FirstName)
             {
@@ -181,7 +191,7 @@ public class UserService(
             IdentityResult result = await userManager.UpdateAsync(user);
             if (!result.Succeeded)
             {
-                throw new KrafterException($"Update profile failed {result.Errors.ToString()}");
+                return Response.BadRequest($"Update profile failed {result.Errors.ToString()}");
             }
 
             await signInManager.RefreshSignInAsync(user);
@@ -254,6 +264,6 @@ public class UserService(
 
         await db.SaveChangesAsync(new List<string>());
         await tenantDbContext.SaveChangesAsync();
-        return new Response();
+        return Response.Success();
     }
 }

@@ -1,6 +1,5 @@
 using Backend.Api;
 using Backend.Api.Authorization;
-using Backend.Application.Common;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
 using Backend.Features.Tenants._Shared;
@@ -81,7 +80,7 @@ public sealed class CreateOrUpdate
                 Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == request.Id);
                 if (tenant is null)
                 {
-                    throw new KrafterException(
+                    return Response.BadRequest(
                         "Unable to find tenant, please try again later or contact support.");
                 }
 

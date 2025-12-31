@@ -1,6 +1,5 @@
 using Backend.Api;
 using Backend.Api.Authorization;
-using Backend.Application.Common;
 using Backend.Common;
 using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
@@ -22,13 +21,13 @@ public sealed class Delete
             Tenant? tenant = await dbContext.Tenants.AsNoTracking().FirstOrDefaultAsync(c => c.Id == requestInput.Id);
             if (tenant is null)
             {
-                throw new KrafterException(
+                return Response.BadRequest(
                     "Unable to find tenant, please try again later or contact support.");
             }
 
             if (tenant.Id == KrafterInitialConstants.RootTenant.Id)
             {
-                throw new ForbiddenException(
+                return Response.Forbidden(
                     "You cannot delete the root tenant.");
             }
 

@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Backend.Application.Common;
 using Backend.Common.Extensions;
 using Backend.Common.Interfaces;
 using Backend.Common.Interfaces.Auth;
@@ -14,6 +13,8 @@ namespace Backend.Hubs;
 
 public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
 {
+    private const string AuthenticationFailedMessage = "Authentication Failed.";
+
     public async Task SendMessage(string user, string message) =>
         await Clients.All.SendAsync(nameof(SignalRMethods.ReceiveMessage), user, message);
 
@@ -31,14 +32,14 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
                 tenantSetterService, currentUser);
             if (res is null)
             {
-                throw new UnauthorizedException("Authentication Failed.");
+                throw new HubException(AuthenticationFailedMessage);
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, $"GroupTenant-{res.Id}");
         }
         else
         {
-            throw new UnauthorizedException("Authentication Failed.");
+            throw new HubException(AuthenticationFailedMessage);
         }
 
         await base.OnConnectedAsync();
@@ -47,7 +48,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
     }
 
 
-    private async Task<CurrentTenantDetails> SetTenantContextAsync(
+    private async Task<CurrentTenantDetails?> SetTenantContextAsync(
         HttpContext httpContext,
         HubCallerContext context,
         ITenantFinderService tenantFinderService,
@@ -55,7 +56,13 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
         ICurrentUser currentUser)
     {
         string tenantIdentifier = GetTenantIdentifier(httpContext);
-        Tenant tenant = await tenantFinderService.Find(tenantIdentifier);
+        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier);
+        if (tenantResponse.IsError || tenantResponse.Data is null)
+        {
+            return null;
+        }
+
+        Tenant tenant = tenantResponse.Data;
         CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
         currentTenantDetails.TenantLink = httpContext.Request.GetOrigin();
         currentTenantDetails.IpAddress = httpContext.Connection.RemoteIpAddress?.ToString();
@@ -104,14 +111,14 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
                 tenantSetterService, currentUser);
             if (res is null)
             {
-                throw new UnauthorizedException("Authentication Failed.");
+                throw new HubException(AuthenticationFailedMessage);
             }
 
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"GroupTenant-{res.Id}");
         }
         else
         {
-            throw new UnauthorizedException("Authentication Failed.");
+            throw new HubException(AuthenticationFailedMessage);
         }
 
         await base.OnConnectedAsync();

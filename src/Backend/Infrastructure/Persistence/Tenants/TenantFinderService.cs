@@ -1,37 +1,37 @@
-using Backend.Application.Common;
 using Backend.Common.Interfaces;
 using Backend.Features.Tenants._Shared;
 using Backend.Features.Users._Shared;
+using Krafter.Shared.Common.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Infrastructure.Persistence.Tenants;
 
 public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinderService
 {
-    public async Task<Tenant> Find(string? identifier)
+    public async Task<Response<Tenant>> Find(string? identifier)
     {
         if (string.IsNullOrWhiteSpace(identifier))
         {
-            return KrafterInitialConstants.KrafterTenant;
+            return Response<Tenant>.Success(KrafterInitialConstants.KrafterTenant);
         }
 
         Tenant? tenant = await tenantDbContext.Tenants.AsNoTracking()
             .SingleOrDefaultAsync(c => c.Identifier == identifier);
         if (tenant is null)
         {
-            return KrafterInitialConstants.KrafterTenant;
+            return Response<Tenant>.Success(KrafterInitialConstants.KrafterTenant);
         }
 
         if (tenant.IsActive == false)
         {
-            throw new KrafterException("Tenant is not active");
+            return Response<Tenant>.BadRequest("Tenant is not active");
         }
 
         if (tenant.ValidUpto < DateTime.UtcNow)
         {
-            throw new KrafterException("Tenant validity expired");
+            return Response<Tenant>.BadRequest("Tenant validity expired");
         }
 
-        return tenant;
+        return Response<Tenant>.Success(tenant);
     }
 }

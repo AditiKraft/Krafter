@@ -290,8 +290,34 @@ public DbSet<Product> Products => Set<Product>();
 ## 5. Response Pattern (MANDATORY)
 **ALL handlers MUST return `Response<T>` or `Response`.**
 
+### 5.1 Factory Methods (PREFERRED)
+Use static factory methods for cleaner, more readable code:
+
 ```csharp
-// ✅ CORRECT - Use constructor initialization
+// ✅ PREFERRED - Use factory methods for error responses
+return Response.NotFound("Product not found");           // 404
+return Response.BadRequest("Invalid input");             // 400
+return Response.Unauthorized("Invalid credentials");     // 401
+return Response.Forbidden("Access denied");              // 403
+return Response.Conflict("Resource already exists");     // 409
+return Response.CustomError("Custom error", 422);        // Custom status code
+
+// ✅ PREFERRED - Use factory methods for success responses
+return Response.Success();                               // 200, no message
+return Response.Success("Operation completed");          // 200, with message
+
+// ✅ For generic Response<T>
+return Response<ProductDto>.NotFound("Product not found");
+return Response<ProductDto>.BadRequest("Invalid input");
+return Response<ProductDto>.Success(productDto);         // 200, with data
+return Response<ProductDto>.Success(productDto, "Product created"); // 200, with data and message
+```
+
+### 5.2 Constructor Initialization (ALTERNATIVE)
+Constructor initialization is still valid but less preferred:
+
+```csharp
+// ✅ CORRECT - Constructor initialization (still works)
 return new Response { IsError = true, Message = "Product not found", StatusCode = 404 };
 return new Response<ProductDto> { Data = productDto };
 return new Response();  // Success with default values (IsError = false, StatusCode = 200)
@@ -301,11 +327,11 @@ return new Response<PaginationResponse<ProductDto>>
 { 
     Data = new PaginationResponse<ProductDto>(items, totalCount, skipCount, maxResultCount) 
 };
+```
 
-// ❌ WRONG - These static methods DO NOT EXIST
-return Response<ProductDto>.Success(dto);  // NO! This method doesn't exist
-return Response.Failure("Not found", 404);  // NO! This method doesn't exist
+### 5.3 What NOT to Do
 
+```csharp
 // ❌ WRONG - Never do this
 return product;           // Raw type
 throw new Exception();    // Unhandled exception (use custom exceptions instead)
@@ -503,44 +529,89 @@ throw new ForbiddenException("Not allowed to modify Admin Role.");
 throw new UnauthorizedException("Invalid credentials");
 ```
 
-### 11.2 When to Use Exceptions vs Response
+### 11.2 When to Use Factory Methods vs Exceptions
+
+**PREFERRED: Use Response Factory Methods** for expected business outcomes:
 
 ```csharp
-// ✅ Use Response for expected business outcomes
+// ✅ PREFERRED - Use factory methods for expected error conditions
 if (entity is null)
-    return new Response { IsError = true, Message = "Product not found", StatusCode = 404 };
+    return Response.NotFound("Product not found");
 
-// ✅ Use Exceptions for unexpected errors or security violations
+if (!isValid)
+    return Response.BadRequest("Invalid input data");
+
+if (!hasPermission)
+    return Response.Forbidden("Access denied");
+
+if (!isAuthenticated)
+    return Response.Unauthorized("Invalid credentials");
+```
+
+**ALTERNATIVE: Use Exceptions** for security violations or when you want to abort the entire operation:
+
+```csharp
+// ✅ Use Exceptions for security-critical violations
 if (KrafterRoleConstant.IsDefault(role.Name!))
     throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
 
-// ✅ Use Exceptions when you want to abort the entire operation
+// ✅ Use Exceptions when you want to abort and rollback
 if (!result.Succeeded)
     throw new KrafterException($"Register role failed {result.Errors}");
 ```
 
-### 11.3 Exception Handling in Actual Code
+### 11.3 SignalR Hub Error Handling
+
+SignalR Hubs are different from HTTP handlers - they don't return `Response` objects. Use `HubException` for SignalR error handling:
+
 ```csharp
-// From Features/Roles/CreateOrUpdateRole.cs
+using Microsoft.AspNetCore.SignalR;
+
+public class RealtimeHub : Hub
+{
+    private const string AuthenticationFailedMessage = "Authentication Failed.";
+
+    public override async Task OnConnectedAsync()
+    {
+        // ✅ Use HubException for SignalR errors (NOT Response factory methods)
+        if (authFailed)
+        {
+            throw new HubException(AuthenticationFailedMessage);
+        }
+        
+        await base.OnConnectedAsync();
+    }
+}
+```
+
+**Why HubException?**
+- SignalR methods return `Task` (void), not `Response` objects
+- `HubException` is specifically designed for SignalR error handling
+- It properly sends error messages to connected clients
+- It's the recommended pattern from Microsoft for SignalR error scenarios
+
+### 11.4 Exception Handling in Actual Code
+```csharp
+// From Features/Roles/CreateOrUpdateRole.cs - Using factory methods (PREFERRED)
 public async Task<Response> CreateOrUpdateAsync(CreateOrUpdateRoleRequest request)
 {
     if (role == null)
     {
-        throw new NotFoundException("Role Not Found");
+        return Response.NotFound("Role Not Found");
     }
 
     if (KrafterRoleConstant.IsDefault(role.Name!))
     {
-        throw new ForbiddenException($"Not allowed to modify {role.Name} Role.");
+        return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
     }
 
     IdentityResult result = await roleManager.UpdateAsync(role);
     if (!result.Succeeded)
     {
-        throw new KrafterException($"Update role failed {result.Errors}");
+        return Response.BadRequest($"Update role failed {result.Errors}");
     }
 
-    return new Response();
+    return Response.Success();
 }
 ```
 
@@ -767,14 +838,15 @@ request.Adapt(existingEntity);
 
 | Mistake | Correct Approach |
 |---------|-----------------|
-| Using `Response.Failure()` static method | Use constructor: `new Response { IsError = true, Message = "..." }` |
+| Using constructor for error responses | Use factory methods: `Response.NotFound("...")`, `Response.BadRequest("...")` |
 | Forgetting tenant query filter in EF config | Always add `HasQueryFilter(c => c.TenantId == ...)` |
 | Using `MapDelete` for delete endpoints | Use `MapPost("/delete", ...)` |
 | Throwing raw `Exception` | Use `KrafterException`, `NotFoundException`, `ForbiddenException` |
+| Using `UnauthorizedException` in SignalR Hubs | Use `HubException` for SignalR error handling |
 | Missing `IScopedHandler` interface | All handlers must implement `IScopedHandler` |
 | Forgetting to add DbSet to KrafterContext | Add `public virtual DbSet<Entity> Entities { get; set; }` |
 
 ---
 Last Updated: 2025-12-31
-Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/CreateOrUpdate.cs, Infrastructure/Persistence/KrafterContext.cs
+Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/CreateOrUpdate.cs, Infrastructure/Persistence/KrafterContext.cs, Hubs/RealtimeHub.cs, Common/Models/Response.cs
 ---
