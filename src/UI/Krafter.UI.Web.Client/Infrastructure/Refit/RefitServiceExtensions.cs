@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Krafter.UI.Web.Client.Infrastructure.Http;
 using Refit;
 
@@ -10,8 +12,10 @@ public static class RefitServiceExtensions
         // Register auth handler
         services.AddTransient<RefitAuthHandler>();
 
-        var refitSettings = new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer() };
-        
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        options.Converters.Add(new JsonNumberEnumConverter<EntityKind>());
+        var refitSettings = new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer(options) };
+
         // Placeholder URL - will be rewritten by RefitTenantHandler at runtime
         const string placeholderUrl = "https://placeholder.local";
 
@@ -19,28 +23,28 @@ public static class RefitServiceExtensions
         // URL is rewritten by RefitTenantHandler to clientBaseAddress
         services.AddRefitClient<IAuthApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: true));
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), true));
 
         // Register authenticated API clients pointing to Backend directly
         // URL is rewritten by RefitTenantHandler to tenant-specific backendUrl
         services.AddRefitClient<IUsersApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<IRolesApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<ITenantsApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<IAppInfoApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false));
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false));
 
         return services;
     }
