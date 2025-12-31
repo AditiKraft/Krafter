@@ -4,6 +4,7 @@ using System.Text;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Auth;
 using Krafter.Aspire.ServiceDefaults;
+using Krafter.Shared.Common.Auth;
 using Krafter.UI.Web.Client;
 using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Features.Auth._Shared;

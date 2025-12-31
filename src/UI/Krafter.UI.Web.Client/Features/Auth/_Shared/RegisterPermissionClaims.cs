@@ -1,4 +1,5 @@
-﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Auth.Permissions;
 using Krafter.UI.Web.Client.Common.Constants;
 using Microsoft.AspNetCore.Authorization;
 

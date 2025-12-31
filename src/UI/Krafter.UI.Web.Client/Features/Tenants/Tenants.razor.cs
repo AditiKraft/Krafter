@@ -1,4 +1,5 @@
-﻿using Krafter.Shared.Common.Auth.Permissions;
+using Krafter.Shared.Common;
+using Krafter.Shared.Common.Auth.Permissions;
 using Krafter.Shared.Common.Enums;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Tenants;

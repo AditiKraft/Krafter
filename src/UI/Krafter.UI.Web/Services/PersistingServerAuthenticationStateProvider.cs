@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Components.Web;
 using System.Diagnostics;
 using System.Security.Claims;
+using Krafter.Shared.Common.Auth;
+using Krafter.Shared.Common.Extensions;
 using Krafter.Shared.Common.Models;
 using Krafter.UI.Web.Client.Common.Constants;
-using Krafter.UI.Web.Client.Common.Extensions;
 
 
 namespace Krafter.UI.Web.Services;

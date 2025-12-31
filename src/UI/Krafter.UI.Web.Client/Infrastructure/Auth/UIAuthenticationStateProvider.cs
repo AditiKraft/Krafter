@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
+using Krafter.Shared.Common.Auth;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Auth;
 using Krafter.UI.Web.Client.Common.Constants;

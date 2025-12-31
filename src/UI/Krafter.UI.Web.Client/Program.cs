@@ -1,6 +1,5 @@
-﻿using Blazored.LocalStorage;
+using Blazored.LocalStorage;
 using Krafter.UI.Web.Client;
-using Krafter.UI.Web.Client.Common.Validators;
 using Krafter.UI.Web.Client.Features.Auth._Shared;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
@@ -12,7 +11,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Http;
 
-FluentValidationConfig.IsRunningOnUI = true;
+
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddRadzenComponents();

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Krafter.Shared.Common.Enums;
 using Krafter.UI.Web.Client.Infrastructure.Http;
 using Refit;
 
