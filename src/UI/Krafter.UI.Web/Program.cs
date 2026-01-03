@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Krafter.Shared.Common;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Auth;
 using Krafter.Aspire.ServiceDefaults;
@@ -256,32 +257,32 @@ static bool IsTokenExpired(string token)
 
 static void MapAuthTokenEndpoints(WebApplication app)
 {
-    app.MapGet("/tokens/current", async (IApiService apiService) =>
+    app.MapGet($"/{KrafterRoute.Tokens}/current", async (IApiService apiService) =>
     {
         Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
-    app.MapPost("/tokens/create", async ([FromBody] TokenRequest request, IApiService apiService,
+    app.MapPost($"/{KrafterRoute.Tokens}", async ([FromBody] TokenRequest request, IApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
         Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     });
-    app.MapPost("/tokens/refresh", async ([FromBody] RefreshTokenRequest request, IApiService apiService,
+    app.MapPost($"/{KrafterRoute.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request, IApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
         Response<TokenResponse> tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost("/external-auth/google", async ([FromBody] TokenRequest request, IApiService apiService) =>
+    app.MapPost($"/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}", async ([FromBody] TokenRequest request, IApiService apiService) =>
     {
         Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost("/tokens/logout", async (IApiService apiService) =>
+    app.MapPost($"/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();

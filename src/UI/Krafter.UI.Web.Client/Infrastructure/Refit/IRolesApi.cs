@@ -6,24 +6,24 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public interface IRolesApi
 {
-    [Get("/roles/get")]
+    [Get("/roles")]
     public Task<Response<PaginationResponse<RoleDto>>> GetRolesAsync(
         [Query] GetRequestInput request,
         CancellationToken cancellationToken = default);
 
-    [Post("/roles/create-or-update")]
+    [Post("/roles")]
     public Task<Response> CreateOrUpdateRoleAsync([Body] CreateOrUpdateRoleRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/roles/delete")]
-    public Task<Response> DeleteRoleAsync([Body] DeleteRequestInput request,
+    [Delete("/roles/{id}")]
+    public Task<Response> DeleteRoleAsync(string id,
         CancellationToken cancellationToken = default);
 
-    [Get("/roles/get-by-id-with-permissions/{roleId}")]
+    [Get("/roles/{roleId}/permissions")]
     public Task<Response<RoleDto>> GetRolePermissionsAsync(string roleId,
         CancellationToken cancellationToken = default);
 
-    [Put("/roles/update-permissions")]
+    [Put("/roles/permissions")]
     public Task<Response> UpdateRolePermissionsAsync([Body] UpdateRolePermissionsRequest request,
         CancellationToken cancellationToken = default);
 }

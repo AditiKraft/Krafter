@@ -1,6 +1,5 @@
 using Krafter.Shared.Common;
 using Krafter.Shared.Common.Auth.Permissions;
-using Krafter.Shared.Common.Enums;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Users;
 using Krafter.UI.Web.Client.Common.Constants;
@@ -11,7 +10,6 @@ using Krafter.UI.Web.Client.Infrastructure.Services;
 namespace Krafter.UI.Web.Client.Features.Users;
 
 public partial class Users(
-    CommonService commonService,
     NavigationManager navigationManager,
     LayoutService layoutService,
     DialogService dialogService,
@@ -75,18 +73,21 @@ public partial class Users(
 
     private async Task DeleteUser(UserDto user)
     {
-        if (response?.Data is not null && response.Data.Items is not null && response.Data.Items.Contains(user))
+        bool? confirmed = await dialogService.Confirm(
+            $"Are you sure you want to delete user '{user.FirstName} {user.LastName}'?",
+            "Delete User",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+        if (confirmed == true)
         {
-            await commonService.Delete(
-                new DeleteRequestInput
-                {
-                    Id = user.Id, DeleteReason = user.DeleteReason, EntityKind = EntityKind.KrafterUser
-                }, $"Delete User {user.FirstName}");
-        }
-        else
-        {
-            grid.CancelEditRow(user);
-            await grid.Reload();
+            Response result = await api.CallAsync(
+                () => usersApi.DeleteUserAsync(user.Id),
+                successMessage: "User deleted successfully");
+
+            if (!result.IsError)
+            {
+                await GetListAsync();
+            }
         }
     }
 

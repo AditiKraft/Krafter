@@ -18,9 +18,9 @@ public sealed class DeleteUser
         UserManager<KrafterUser> userManager,
         KrafterContext db) : IScopedHandler
     {
-        public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
+        public async Task<Response> DeleteAsync(string id)
         {
-            KrafterUser? user = await userManager.FindByIdAsync(requestInput.Id);
+            KrafterUser? user = await userManager.FindByIdAsync(id);
             if (user is null)
             {
                 return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
@@ -32,11 +32,10 @@ public sealed class DeleteUser
             }
 
             user.IsDeleted = true;
-            user.DeleteReason = requestInput.DeleteReason;
             db.Users.Update(user);
 
             List<KrafterUserRole> userRoles = await db.UserRoles
-                .Where(c => c.UserId == requestInput.Id)
+                .Where(c => c.UserId == id)
                 .ToListAsync();
 
             foreach (KrafterUserRole userRole in userRoles)
@@ -57,11 +56,11 @@ public sealed class DeleteUser
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapPost("/delete", async (
-                    [FromBody] DeleteRequestInput request,
+            userGroup.MapDelete($"/{RouteSegment.ById}", async (
+                    [FromRoute] string id,
                     [FromServices] Handler handler) =>
                 {
-                    Response res = await handler.DeleteAsync(request);
+                    Response res = await handler.DeleteAsync(id);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()

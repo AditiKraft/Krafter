@@ -80,7 +80,7 @@ public sealed class UpdateRolePermissions
             RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
-            roleGroup.MapPut("/update-permissions", async (
+            roleGroup.MapPut("/permissions", async (
                     [FromBody] UpdateRolePermissionsRequest request,
                     [FromServices] Handler handler,
                     CancellationToken cancellationToken) =>

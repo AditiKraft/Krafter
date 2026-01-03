@@ -846,7 +846,88 @@ request.Adapt(existingEntity);
 | Missing `IScopedHandler` interface | All handlers must implement `IScopedHandler` |
 | Forgetting to add DbSet to KrafterContext | Add `public virtual DbSet<Entity> Entities { get; set; }` |
 
+## 17. Route Constants (KrafterRoute & RouteSegment)
+
+### 17.1 Overview
+Krafter uses centralized route constants defined in `src/Krafter.Shared/Common/KrafterRoute.cs`:
+
+```csharp
+// Base route prefixes
+public static class KrafterRoute
+{
+    public const string Roles = "roles";
+    public const string Tenants = "tenants";
+    public const string Tokens = "tokens";
+    public const string Users = "users";
+    public const string AppInfo = "app-info";
+    public const string ExternalAuth = "external-auth";
+}
+
+// REST-compliant route segments
+public static class RouteSegment
+{
+    public const string ById = "{id}";
+    public const string UserRoles = "{userId}/roles";
+    public const string RolePermissions = "{roleId}/permissions";
+    public const string ByRole = "by-role/{roleId}";
+    public const string Permissions = "permissions";
+    public const string Refresh = "refresh";
+    public const string Logout = "logout";
+    // ... etc
+}
+```
+
+### 17.2 Usage in Backend (Minimal APIs)
+Backend endpoints SHOULD use `KrafterRoute` and `RouteSegment` constants:
+
+```csharp
+// ✅ CORRECT - Use constants in Backend
+public sealed class Route : IRouteRegistrar
+{
+    public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
+    {
+        RouteGroupBuilder group = endpointRouteBuilder
+            .MapGroup(KrafterRoute.Users)
+            .AddFluentValidationFilter();
+
+        // Standard REST endpoints
+        group.MapGet("/", async (...) => { ... });                    // GET /users
+        group.MapPost("/", async (...) => { ... });                   // POST /users
+        group.MapDelete($"/{RouteSegment.ById}", async (...) => { }); // DELETE /users/{id}
+        
+        // Nested resources
+        group.MapGet($"/{RouteSegment.UserRoles}", async (           // GET /users/{userId}/roles
+            [FromRoute] string userId, ...) => { ... });
+    }
+}
+```
+
+### 17.3 Route Parameter Matching (CRITICAL)
+When using `RouteSegment` constants with route parameters, the method parameter name MUST match:
+
+```csharp
+// RouteSegment.ById = "{id}"
+// ✅ CORRECT - Parameter name matches route placeholder
+group.MapDelete($"/{RouteSegment.ById}", async ([FromRoute] string id, ...) => { });
+
+// ❌ WRONG - Parameter name doesn't match
+group.MapDelete($"/{RouteSegment.ById}", async ([FromRoute] string roleId, ...) => { });
+// Error: 'roleId' is not a route parameter
+
+// RouteSegment.UserRoles = "{userId}/roles"
+// ✅ CORRECT
+group.MapGet($"/{RouteSegment.UserRoles}", async ([FromRoute] string userId, ...) => { });
+```
+
+### 17.4 Where to Use Constants
+
+| Layer | Use Constants? | Reason |
+|-------|---------------|--------|
+| Backend (Minimal APIs) | ✅ Yes | ASP.NET Core handles interpolated strings correctly |
+| BFF (Program.cs) | ✅ Yes | Same as backend - server-side ASP.NET |
+| Refit Interfaces | ❌ No | Refit has runtime issues with route parameters in interpolated strings |
+
 ---
-Last Updated: 2025-12-31
-Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/CreateOrUpdate.cs, Infrastructure/Persistence/KrafterContext.cs, Hubs/RealtimeHub.cs, Common/Models/Response.cs
+Last Updated: 2026-01-03
+Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/CreateOrUpdate.cs, Infrastructure/Persistence/KrafterContext.cs, Hubs/RealtimeHub.cs, Common/Models/Response.cs, src/Krafter.Shared/Common/KrafterRoute.cs
 ---

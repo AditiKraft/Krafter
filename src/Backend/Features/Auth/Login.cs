@@ -59,7 +59,7 @@ public sealed class GetToken
             RouteGroupBuilder productGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Tokens)
                 .AddFluentValidationFilter();
 
-            productGroup.MapPost("/create", async
+            productGroup.MapPost("/", async
             ([FromBody] TokenRequest request, HttpContext context,
                 [FromServices] Handler handler) =>
             {

@@ -18,7 +18,6 @@ public static class RegisterUIServices
         service.AddScoped<ThemeManager>();
         service.AddScoped<SignalRService>();
         service.AddBlazoredSessionStorage();
-        service.AddScoped<CommonService>();
         service.AddScoped<MenuService>();
         service.AddScoped<LayoutService>();
 

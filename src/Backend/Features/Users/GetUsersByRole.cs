@@ -88,7 +88,7 @@ public sealed class GetUsersByRole
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapGet("/by-role/{roleId}", async (
+            userGroup.MapGet($"/{RouteSegment.ByRole}", async (
                     [FromRoute] string roleId,
                     [FromServices] Handler handler,
                     [AsParameters] GetRequestInput requestInput,

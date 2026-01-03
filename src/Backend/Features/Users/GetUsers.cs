@@ -119,7 +119,7 @@ public sealed class GetUsers
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapGet("/get", async (
+            userGroup.MapGet("/", async (
                     [FromServices] Handler handler,
                     [AsParameters] GetRequestInput requestInput,
                     CancellationToken cancellationToken) =>

@@ -14,7 +14,7 @@ public sealed class SeedBasicData
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
             RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
-            tenant.MapPost("/seed-data", async
+            tenant.MapPost($"/{RouteSegment.SeedData}", async
                 ([FromBody] SeedDataRequest request,
                     [FromServices] DataSeedService tenantSeedService) =>
                 {

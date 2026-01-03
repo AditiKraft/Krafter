@@ -1,6 +1,5 @@
 using Krafter.Shared.Common;
 using Krafter.Shared.Common.Auth.Permissions;
-using Krafter.Shared.Common.Enums;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Roles;
 using Krafter.UI.Web.Client.Common.Constants;
@@ -11,7 +10,6 @@ using Krafter.UI.Web.Client.Infrastructure.Services;
 namespace Krafter.UI.Web.Client.Features.Roles;
 
 public partial class Roles(
-    CommonService commonService,
     NavigationManager navigationManager,
     ApiCallService api,
     IRolesApi rolesApi,
@@ -67,18 +65,21 @@ public partial class Roles(
 
     private async Task DeleteRole(RoleDto roleDto)
     {
-        if (response?.Data?.Items?.Contains(roleDto) == true)
+        bool? confirmed = await dialogService.Confirm(
+            $"Are you sure you want to delete role '{roleDto.Name}'?",
+            "Delete Role",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+        if (confirmed == true)
         {
-            await commonService.Delete(
-                new DeleteRequestInput
-                {
-                    Id = roleDto.Id, DeleteReason = roleDto.DeleteReason, EntityKind = EntityKind.KrafterRole
-                }, $"Delete Role {roleDto.Name}");
-        }
-        else
-        {
-            grid.CancelEditRow(roleDto);
-            await grid.Reload();
+            Response result = await api.CallAsync(
+                () => rolesApi.DeleteRoleAsync(roleDto.Id),
+                successMessage: "Role deleted successfully");
+
+            if (!result.IsError)
+            {
+                await GetListAsync();
+            }
         }
     }
 

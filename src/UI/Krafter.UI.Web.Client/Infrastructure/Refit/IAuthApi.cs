@@ -1,3 +1,4 @@
+using Krafter.Shared.Common;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Auth;
 using Refit;
@@ -6,7 +7,7 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public interface IAuthApi
 {
-    [Post("/tokens/create")]
+    [Post("/tokens")]
     public Task<Response<TokenResponse>> CreateTokenAsync([Body] TokenRequest request,
         CancellationToken cancellationToken = default);
 

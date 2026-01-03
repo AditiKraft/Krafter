@@ -57,7 +57,7 @@ public sealed class ForgotPassword
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapPost("/forgot-password", async (
+            userGroup.MapPost($"/{RouteSegment.ForgotPassword}", async (
                     [FromBody] ForgotPasswordRequest request,
                     [FromServices] Handler handler) =>
                 {

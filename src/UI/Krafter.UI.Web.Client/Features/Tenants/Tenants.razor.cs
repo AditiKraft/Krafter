@@ -1,6 +1,5 @@
 using Krafter.Shared.Common;
 using Krafter.Shared.Common.Auth.Permissions;
-using Krafter.Shared.Common.Enums;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Tenants;
 using Krafter.UI.Web.Client.Common.Constants;
@@ -11,7 +10,6 @@ using Krafter.UI.Web.Client.Infrastructure.Services;
 namespace Krafter.UI.Web.Client.Features.Tenants;
 
 public partial class Tenants(
-    CommonService commonService,
     ApiCallService api,
     ITenantsApi tenantsApi,
     DialogService dialogService
@@ -61,18 +59,21 @@ public partial class Tenants(
 
     private async Task Delete(TenantDto input)
     {
-        if (response?.Data?.Items?.Contains(input) == true)
+        bool? confirmed = await dialogService.Confirm(
+            $"Are you sure you want to delete tenant '{input.Name}'?",
+            "Delete Tenant",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+        if (confirmed == true)
         {
-            await commonService.Delete(
-                new DeleteRequestInput
-                {
-                    Id = input.Id, DeleteReason = input.DeleteReason, EntityKind = EntityKind.Tenant
-                }, $"Delete Tenant {input.Name}");
-        }
-        else
-        {
-            grid.CancelEditRow(input);
-            await grid.Reload();
+            Response result = await api.CallAsync(
+                () => tenantsApi.DeleteTenantAsync(input.Id),
+                successMessage: "Tenant deleted successfully");
+
+            if (!result.IsError)
+            {
+                await Get();
+            }
         }
     }
 

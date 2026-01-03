@@ -36,11 +36,11 @@ public sealed class GetRoleById
             RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
-            roleGroup.MapGet("/get-by-id/{roleId}", async (
-                    [FromRoute] string roleId,
+            roleGroup.MapGet($"/{RouteSegment.ById}", async (
+                    [FromRoute] string id,
                     [FromServices] Handler handler) =>
                 {
-                    Response<RoleDto> res = await handler.GetByIdAsync(roleId);
+                    Response<RoleDto> res = await handler.GetByIdAsync(id);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<RoleDto>>()

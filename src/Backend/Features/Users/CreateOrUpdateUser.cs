@@ -192,7 +192,7 @@ public sealed class CreateOrUpdateUser
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapPost("/create-or-update", async (
+            userGroup.MapPost("/", async (
                     [FromBody] CreateUserRequest request,
                     [FromServices] Handler handler) =>
                 {

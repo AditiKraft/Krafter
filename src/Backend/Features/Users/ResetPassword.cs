@@ -45,7 +45,7 @@ public sealed class ResetPassword
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapPost("/reset-password", async (
+            userGroup.MapPost($"/{RouteSegment.ResetPassword}", async (
                     [FromBody] ResetPasswordRequest request,
                     [FromServices] Handler handler) =>
                 {

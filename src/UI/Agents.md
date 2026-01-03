@@ -880,17 +880,102 @@ public class GetRequestInput
 
 ### Usage in Refit Interface
 ```csharp
-[Get("/products/get")]
+[Get("/products")]
 Task<Response<PaginationResponse<ProductDto>>> GetProductsAsync(
-    [Query] string? id = null,
-    [Query] bool history = false,
-    [Query] bool isDeleted = false,
-    [Query] string? query = null,
-    [Query] string? filter = null,
-    [Query] string? orderBy = null,
-    [Query] int skipCount = 0,
-    [Query] int maxResultCount = 10,
+    [Query] GetRequestInput request,
     CancellationToken cancellationToken = default);
+```
+
+## 18. Refit Route Patterns (CRITICAL)
+
+### 18.1 Refit Limitation with Route Constants
+Refit has a runtime limitation with interpolated strings containing route parameters. **Always use literal strings in Refit interfaces.**
+
+```csharp
+// ❌ WRONG - Refit can't match route parameters from interpolated constants
+[Get($"/{KrafterRoute.Roles}/{RouteSegment.RolePermissions}")]
+Task<Response<RoleDto>> GetRolePermissionsAsync(string roleId, ...);
+// Error: "URL /roles/{roleId}/permissions has parameter roleid, but no method parameter matches"
+
+// ✅ CORRECT - Use literal strings for routes with parameters
+[Get("/roles/{roleId}/permissions")]
+Task<Response<RoleDto>> GetRolePermissionsAsync(string roleId, ...);
+```
+
+### 18.2 When to Use What
+
+| Route Type | Example | Approach |
+|------------|---------|----------|
+| No parameters | `/roles`, `/users` | Can use constants (but literal is safer) |
+| With `{id}` parameter | `/roles/{id}` | **Must use literal string** |
+| With named parameters | `/users/{userId}/roles` | **Must use literal string** |
+| Nested resources | `/roles/{roleId}/permissions` | **Must use literal string** |
+
+### 18.3 Complete Refit Interface Example
+```csharp
+// File: Infrastructure/Refit/IRolesApi.cs
+using Krafter.Shared.Common.Models;
+using Krafter.Shared.Contracts.Roles;
+using Refit;
+
+namespace Krafter.UI.Web.Client.Infrastructure.Refit;
+
+public interface IRolesApi
+{
+    // ✅ No route parameter - literal string
+    [Get("/roles")]
+    Task<Response<PaginationResponse<RoleDto>>> GetRolesAsync(
+        [Query] GetRequestInput request,
+        CancellationToken cancellationToken = default);
+
+    // ✅ No route parameter - literal string
+    [Post("/roles")]
+    Task<Response> CreateOrUpdateRoleAsync([Body] CreateOrUpdateRoleRequest request,
+        CancellationToken cancellationToken = default);
+
+    // ✅ Route parameter {id} - literal string, parameter name matches
+    [Delete("/roles/{id}")]
+    Task<Response> DeleteRoleAsync(string id,
+        CancellationToken cancellationToken = default);
+
+    // ✅ Route parameter {roleId} - literal string, parameter name matches
+    [Get("/roles/{roleId}/permissions")]
+    Task<Response<RoleDto>> GetRolePermissionsAsync(string roleId,
+        CancellationToken cancellationToken = default);
+
+    // ✅ Body only, no route parameter
+    [Put("/roles/permissions")]
+    Task<Response> UpdateRolePermissionsAsync([Body] UpdateRolePermissionsRequest request,
+        CancellationToken cancellationToken = default);
+}
+```
+
+### 18.4 Route Constants Usage Summary
+
+| Layer | Use `KrafterRoute`/`RouteSegment`? | Reason |
+|-------|-----------------------------------|--------|
+| Backend (Minimal APIs) | ✅ Yes | ASP.NET Core handles correctly |
+| BFF (Program.cs) | ✅ Yes | Server-side ASP.NET |
+| Refit Interfaces | ❌ No - Literal strings only | Refit runtime limitation |
+
+### 18.5 Common Mistakes
+
+```csharp
+// ❌ WRONG - Using constants with route parameters
+[Get($"/{KrafterRoute.Users}/{RouteSegment.UserRoles}")]
+Task<Response<List<UserRoleDto>>> GetUserRolesAsync(string userId, ...);
+
+// ❌ WRONG - Parameter name doesn't match route placeholder
+[Delete("/users/{id}")]
+Task<Response> DeleteUserAsync(string userId, ...);  // Should be 'id'
+
+// ✅ CORRECT - Literal string, parameter name matches
+[Delete("/users/{id}")]
+Task<Response> DeleteUserAsync(string id, ...);
+
+// ✅ CORRECT - Literal string, parameter name matches
+[Get("/users/{userId}/roles")]
+Task<Response<List<UserRoleDto>>> GetUserRolesAsync(string userId, ...);
 ```
 
 
@@ -932,8 +1017,10 @@ Task<Response<PaginationResponse<ProductDto>>> GetProductsAsync(
 | Creating DTOs in UI project | Use DTOs from `Krafter.Shared.Contracts.*` |
 | Missing permission attribute on page | Add `@attribute [MustHavePermission(...)]` |
 | Passing individual query params to Refit Get methods | Use `[Query] GetRequestInput` - matches backend's `[AsParameters]` pattern |
+| Using `KrafterRoute`/`RouteSegment` constants in Refit | Use literal strings - Refit has runtime issues with interpolated route parameters |
+| Refit parameter name doesn't match route placeholder | `[Delete("/users/{id}")]` requires parameter named `id`, not `userId` |
 
 ---
-Last Updated: 2025-12-31
-Verified Against: Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs
+Last Updated: 2026-01-03
+Verified Against: Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs
 ---

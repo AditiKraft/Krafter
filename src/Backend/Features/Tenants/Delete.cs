@@ -16,9 +16,9 @@ public sealed class Delete
 {
     internal sealed class Handler(TenantDbContext dbContext, KrafterContext krafterContext) : IScopedHandler
     {
-        public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
+        public async Task<Response> DeleteAsync(string id)
         {
-            Tenant? tenant = await dbContext.Tenants.AsNoTracking().FirstOrDefaultAsync(c => c.Id == requestInput.Id);
+            Tenant? tenant = await dbContext.Tenants.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
             if (tenant is null)
             {
                 return Response.BadRequest(
@@ -32,7 +32,6 @@ public sealed class Delete
             }
 
             tenant.IsDeleted = true;
-            tenant.DeleteReason = requestInput.DeleteReason;
             dbContext.Tenants.Update(tenant);
             await dbContext.SaveChangesAsync();
             await krafterContext.SaveChangesAsync([nameof(Tenant)]);
@@ -46,11 +45,11 @@ public sealed class Delete
         {
             RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
 
-            tenant.MapPost("/delete", async
-                ([FromBody] DeleteRequestInput requestInput,
+            tenant.MapDelete($"/{RouteSegment.ById}", async
+                ([FromRoute] string id,
                     [FromServices] Handler handler) =>
                 {
-                    Response res = await handler.DeleteAsync(requestInput);
+                    Response res = await handler.DeleteAsync(id);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()

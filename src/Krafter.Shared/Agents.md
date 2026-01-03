@@ -342,7 +342,95 @@ public static class KrafterRoute
 }
 ```
 
+## 10. Route Constants (KrafterRoute & RouteSegment)
+
+### 10.1 Overview
+Route constants are defined in `Common/KrafterRoute.cs` and used across Backend and BFF:
+
+```csharp
+// Base route prefixes for API endpoints
+public static class KrafterRoute
+{
+    public const string Roles = "roles";
+    public const string Tenants = "tenants";
+    public const string Tokens = "tokens";
+    public const string Users = "users";
+    public const string AppInfo = "app-info";
+    public const string ExternalAuth = "external-auth";
+}
+
+// REST-compliant route segments
+public static class RouteSegment
+{
+    // Standard REST
+    public const string ById = "{id}";
+    
+    // Nested resources
+    public const string UserRoles = "{userId}/roles";
+    public const string RolePermissions = "{roleId}/permissions";
+    public const string ByRole = "by-role/{roleId}";
+    public const string Permissions = "permissions";
+    
+    // Auth actions
+    public const string Refresh = "refresh";
+    public const string Logout = "logout";
+    public const string Google = "google";
+    
+    // User actions
+    public const string ChangePassword = "change-password";
+    public const string ForgotPassword = "forgot-password";
+    public const string ResetPassword = "reset-password";
+    
+    // Tenant actions
+    public const string SeedData = "seed-data";
+}
+```
+
+### 10.2 Usage Guidelines
+
+| Layer | Use Constants? | Example |
+|-------|---------------|---------|
+| Backend (Minimal APIs) | ✅ Yes | `MapGroup(KrafterRoute.Users)` |
+| BFF (Program.cs) | ✅ Yes | `$"/{KrafterRoute.Tokens}/{RouteSegment.Refresh}"` |
+| Refit Interfaces | ❌ No | Use literal strings: `[Get("/users/{id}")]` |
+
+### 10.3 Why Refit Can't Use Constants
+Refit parses route strings at runtime to match `{paramName}` placeholders to method parameters. When using interpolated strings with constants, Refit's parameter matching fails with errors like:
+```
+"URL /roles/{roleId}/permissions has parameter roleid, but no method parameter matches"
+```
+
+### 10.4 Adding New Route Constants
+
+**Step 1: Add base route** (if new feature):
+```csharp
+public static class KrafterRoute
+{
+    public const string Products = "products";
+}
+```
+
+**Step 2: Add route segments** (if needed):
+```csharp
+public static class RouteSegment
+{
+    public const string ProductCategories = "{productId}/categories";
+}
+```
+
+**Step 3: Use in Backend**:
+```csharp
+group.MapGet($"/{RouteSegment.ProductCategories}", async (
+    [FromRoute] string productId, ...) => { });
+```
+
+**Step 4: Use literal string in Refit**:
+```csharp
+[Get("/products/{productId}/categories")]
+Task<Response<List<CategoryDto>>> GetCategoriesAsync(string productId, ...);
+```
+
 ---
-Last Updated: 2025-12-31
+Last Updated: 2026-01-03
 Verified Against: Contracts/Users/CreateUserRequest.cs, Contracts/Users/UserDto.cs, Common/Models/CommonDtoProperty.cs, Common/Models/Response.cs, Common/Enums/EntityKind.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
 ---

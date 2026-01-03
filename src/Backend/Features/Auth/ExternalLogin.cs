@@ -165,7 +165,7 @@ public sealed class ExternalAuth
             RouteGroupBuilder productGroup = app.MapGroup(KrafterRoute.ExternalAuth)
                 .AddFluentValidationFilter();
 
-            productGroup.MapPost("/google", async (
+            productGroup.MapPost($"/{RouteSegment.Google}", async (
                 HttpContext context,
                 GoogleAuthRequest request,
                 Handler externalAuthService,

@@ -52,7 +52,7 @@ public sealed class GetRoleByIdWithPermissions
             RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
-            roleGroup.MapGet("/get-by-id-with-permissions/{roleId}", async (
+            roleGroup.MapGet($"/{RouteSegment.RolePermissions}", async (
                     [FromRoute] string roleId,
                     [FromServices] Handler handler,
                     CancellationToken cancellationToken) =>

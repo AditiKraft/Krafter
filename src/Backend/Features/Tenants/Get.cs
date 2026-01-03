@@ -123,7 +123,7 @@ public sealed class Get
         {
             RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
 
-            tenant.MapGet("/get", async
+            tenant.MapGet("/", async
                 (
                     [FromServices] Handler service, [AsParameters] GetRequestInput requestInput,
                     CancellationToken cancellationToken) =>

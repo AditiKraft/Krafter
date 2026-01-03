@@ -6,7 +6,7 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public interface IUsersApi
 {
-    [Get("/users/get")]
+    [Get("/users")]
     public Task<Response<PaginationResponse<UserDto>>> GetUsersAsync(
         [Query] GetRequestInput request,
         CancellationToken cancellationToken = default);
@@ -17,18 +17,18 @@ public interface IUsersApi
         [Query] GetRequestInput request,
         CancellationToken cancellationToken = default);
 
-    [Post("/users/create-or-update")]
+    [Post("/users")]
     public Task<Response> CreateOrUpdateUserAsync([Body] CreateUserRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/users/delete")]
-    public Task<Response> DeleteUserAsync([Body] DeleteRequestInput request,
+    [Delete("/users/{id}")]
+    public Task<Response> DeleteUserAsync(string id,
         CancellationToken cancellationToken = default);
 
     [Get("/users/permissions")]
     public Task<Response<List<string>>> GetPermissionsAsync(CancellationToken cancellationToken = default);
 
-    [Get("/users/get-roles/{userId}")]
+    [Get("/users/{userId}/roles")]
     public Task<Response<List<UserRoleDto>>> GetUserRolesAsync(string userId,
         CancellationToken cancellationToken = default);
 

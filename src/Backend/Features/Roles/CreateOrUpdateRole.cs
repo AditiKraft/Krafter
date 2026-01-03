@@ -140,7 +140,7 @@ public sealed class CreateOrUpdateRole
             RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
-            roleGroup.MapPost("/create-or-update", async
+            roleGroup.MapPost("/", async
                 ([FromBody] CreateOrUpdateRoleRequest request,
                     [FromServices] Handler roleService) =>
                 {

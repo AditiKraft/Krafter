@@ -69,7 +69,7 @@ public sealed class ChangePassword
             RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
                 .AddFluentValidationFilter();
 
-            userGroup.MapPost("/change-password", async (
+            userGroup.MapPost($"/{RouteSegment.ChangePassword}", async (
                     [FromBody] ChangePasswordRequest request,
                     [FromServices] Handler handler) =>
                 {

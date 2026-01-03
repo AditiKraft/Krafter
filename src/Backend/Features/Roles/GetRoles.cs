@@ -114,7 +114,7 @@ public sealed class GetRoles
             RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
-            roleGroup.MapGet("/get", async (
+            roleGroup.MapGet("/", async (
                     [FromServices] Handler handler,
                     [AsParameters] GetRequestInput requestInput,
                     CancellationToken cancellationToken) =>

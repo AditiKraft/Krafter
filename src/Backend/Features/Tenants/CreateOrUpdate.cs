@@ -196,26 +196,13 @@ public sealed class CreateOrUpdate
         {
             RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
 
-            tenant.MapPost("/create-or-update", async
+            tenant.MapPost("/", async
             ([FromBody] CreateOrUpdateTenantRequest request,
                 [FromServices] Handler handler) =>
             {
                 Response res = await handler.CreateOrUpdateAsync(request);
                 return TypedResults.Ok(res);
             }).MustHavePermission(KrafterAction.Create, KrafterResource.Tenants);
-
-            // Tenant creation from landing page, allow Anonymous access
-            tenant.MapPost("/create", async
-                ([FromBody] CreateOrUpdateTenantRequest request,
-                    [FromServices] Handler handler) =>
-                {
-                    request.ValidUpto = DateTime.UtcNow.AddDays(7);
-                    request.IsActive = true;
-                    Response res = await handler.CreateOrUpdateAsync(request);
-                    return Results.Json(res, statusCode: res.StatusCode);
-                })
-                .Produces<Response>()
-                .AllowAnonymous();
         }
     }
 }

@@ -23,9 +23,9 @@ public sealed class DeleteRole
         KrafterContext db,
         ITenantGetterService tenantGetterService) : IScopedHandler
     {
-        public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
+        public async Task<Response> DeleteAsync(string id)
         {
-            KrafterRole? role = await roleManager.FindByIdAsync(requestInput.Id);
+            KrafterRole? role = await roleManager.FindByIdAsync(id);
 
             if (role is null)
             {
@@ -38,11 +38,10 @@ public sealed class DeleteRole
             }
 
             role.IsDeleted = true;
-            role.DeleteReason = requestInput.DeleteReason;
             db.Roles.Update(role);
 
             List<KrafterRoleClaim> krafterRoleClaims = await db.RoleClaims
-                .Where(c => c.RoleId == requestInput.Id &&
+                .Where(c => c.RoleId == id &&
                             c.ClaimType == KrafterClaims.Permission)
                 .ToListAsync();
             foreach (KrafterRoleClaim krafterRoleClaim in krafterRoleClaims)
@@ -62,12 +61,12 @@ public sealed class DeleteRole
             RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
                 .AddFluentValidationFilter();
 
-            roleGroup.MapPost("/delete", async
-                ([FromBody] DeleteRequestInput roleRequestInput,
-                    [FromServices] Handler roleService) =>
+            roleGroup.MapDelete($"/{RouteSegment.ById}", async
+                ([FromRoute] string id,
+                    [FromServices] Handler handler) =>
                 {
-                    Response res = await roleService.DeleteAsync(roleRequestInput);
-                    return TypedResults.Ok(res);
+                    Response res = await handler.DeleteAsync(id);
+                    return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
                 .MustHavePermission(KrafterAction.Delete, KrafterResource.Roles);

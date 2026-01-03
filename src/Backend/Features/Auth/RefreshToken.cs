@@ -101,7 +101,7 @@ public sealed class RefreshToken
                 .MapGroup(KrafterRoute.Tokens)
                 .AddFluentValidationFilter();
 
-            tokenGroup.MapPost("/refresh", async (
+            tokenGroup.MapPost($"/{RouteSegment.Refresh}", async (
                     [FromBody] RefreshTokenRequest request,
                     HttpContext context,
                     [FromServices] Handler handler,

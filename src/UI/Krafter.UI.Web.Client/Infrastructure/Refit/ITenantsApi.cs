@@ -6,17 +6,17 @@ namespace Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public interface ITenantsApi
 {
-    [Get("/tenants/get")]
+    [Get("/tenants")]
     public Task<Response<PaginationResponse<TenantDto>>> GetTenantsAsync(
         [Query] GetRequestInput request,
         CancellationToken cancellationToken = default);
 
-    [Post("/tenants/create-or-update")]
+    [Post("/tenants")]
     public Task<Response> CreateOrUpdateTenantAsync([Body] CreateOrUpdateTenantRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/tenants/delete")]
-    public Task<Response> DeleteTenantAsync([Body] DeleteRequestInput request,
+    [Delete("/tenants/{id}")]
+    public Task<Response> DeleteTenantAsync(string id,
         CancellationToken cancellationToken = default);
 
     [Post("/tenants/seed-data")]
