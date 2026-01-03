@@ -683,8 +683,42 @@ The UI imports permissions via `_Imports.razor`:
 
 ## 12. Edge Cases: Delete Operations
 
-### 12.1 Using CommonService.Delete
-The `CommonService.Delete` method handles delete confirmation dialog:
+### 12.1 Using Radzen DialogService.Confirm (RECOMMENDED)
+Use Radzen's built-in `DialogService.Confirm()` for delete confirmations:
+
+```csharp
+// From Features/Roles/Roles.razor.cs
+private async Task DeleteRole(RoleDto roleDto)
+{
+    // Show confirmation dialog
+    bool? confirmed = await dialogService.Confirm(
+        $"Are you sure you want to delete role '{roleDto.Name}'?",
+        "Delete Role",
+        new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+    if (confirmed == true)
+    {
+        // Call API with ApiCallService wrapper
+        Response result = await api.CallAsync(
+            () => rolesApi.DeleteRoleAsync(roleDto.Id),
+            successMessage: "Role deleted successfully");
+
+        if (!result.IsError)
+        {
+            await GetListAsync();
+        }
+    }
+}
+```
+
+**Key Points:**
+- `DialogService.Confirm()` returns `bool?` (true = confirmed, false/null = cancelled)
+- Use `ConfirmOptions` to customize button text
+- Always wrap API call with `ApiCallService.CallAsync()`
+- Refresh the list after successful deletion
+
+### 12.2 Using CommonService.Delete (ALTERNATIVE)
+For entities that need the `DeleteDialog` component with delete reason:
 
 ```csharp
 private async Task Delete(ProductDto input)
@@ -708,7 +742,14 @@ private async Task Delete(ProductDto input)
 }
 ```
 
-### 12.2 Add EntityKind for New Feature
+### 12.3 When to Use Which Pattern
+
+| Pattern | Use When |
+|---------|----------|
+| `DialogService.Confirm()` | Simple delete confirmation, no delete reason needed |
+| `CommonService.Delete()` | Need to capture delete reason, use shared DeleteDialog |
+
+### 12.4 Add EntityKind for New Feature
 Before using delete, ensure `EntityKind` enum has your entity in `src/Krafter.Shared/Common/Enums/EntityKind.cs`:
 
 ```csharp
@@ -719,7 +760,7 @@ public enum EntityKind
 }
 ```
 
-### 12.3 Update DeleteDialog for New Entity
+### 12.5 Update DeleteDialog for New Entity
 When adding a new entity type, update `Common/Components/Dialogs/DeleteDialog.razor.cs` switch statement:
 
 ```csharp
@@ -1019,6 +1060,7 @@ Task<Response<List<UserRoleDto>>> GetUserRolesAsync(string userId, ...);
 | Passing individual query params to Refit Get methods | Use `[Query] GetRequestInput` - matches backend's `[AsParameters]` pattern |
 | Using `KrafterRoute`/`RouteSegment` constants in Refit | Use literal strings - Refit has runtime issues with interpolated route parameters |
 | Refit parameter name doesn't match route placeholder | `[Delete("/users/{id}")]` requires parameter named `id`, not `userId` |
+| Creating custom delete dialog for simple confirmations | Use `DialogService.Confirm()` for simple delete confirmations |
 
 ---
 Last Updated: 2026-01-03

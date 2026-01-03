@@ -726,9 +726,9 @@ public class Jobs(IEmailService emailService)
 }
 ```
 
-## 14. Delete Operations (Soft Delete Pattern)
+## 14. Delete Operations (REST-Compliant Pattern)
 
-Krafter uses soft delete - entities are marked as deleted, not removed from database.
+Krafter uses soft delete with REST-compliant HTTP DELETE method.
 
 ### 14.1 Delete Handler Pattern
 
@@ -738,9 +738,9 @@ internal sealed class Handler(
     UserManager<KrafterUser> userManager,
     KrafterContext db) : IScopedHandler
 {
-    public async Task<Response> DeleteAsync(DeleteRequestInput requestInput)
+    public async Task<Response> DeleteAsync(string id)
     {
-        KrafterUser? user = await userManager.FindByIdAsync(requestInput.Id);
+        KrafterUser? user = await userManager.FindByIdAsync(id);
         if (user is null)
         {
             return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
@@ -754,12 +754,11 @@ internal sealed class Handler(
 
         // Soft delete - set flags, don't remove
         user.IsDeleted = true;
-        user.DeleteReason = requestInput.DeleteReason;
         db.Users.Update(user);
 
         // Also soft-delete related entities if needed
         List<KrafterUserRole> userRoles = await db.UserRoles
-            .Where(c => c.UserId == requestInput.Id)
+            .Where(c => c.UserId == id)
             .ToListAsync();
 
         foreach (KrafterUserRole userRole in userRoles)
@@ -773,22 +772,25 @@ internal sealed class Handler(
 }
 ```
 
-### 14.2 Delete Route Pattern
+### 14.2 Delete Route Pattern (REST-Compliant)
 
 ```csharp
-// Delete uses POST, not DELETE HTTP method
-userGroup.MapPost("/delete", async (
-        [FromBody] DeleteRequestInput request,
+// DELETE uses HTTP DELETE method with {id} route parameter
+userGroup.MapDelete($"/{RouteSegment.ById}", async (
+        [FromRoute] string id,
         [FromServices] Handler handler) =>
     {
-        Response res = await handler.DeleteAsync(request);
+        Response res = await handler.DeleteAsync(id);
         return Results.Json(res, statusCode: res.StatusCode);
     })
     .Produces<Response>()
     .MustHavePermission(KrafterAction.Delete, KrafterResource.Users);
 ```
 
-**Important**: Delete endpoints use `MapPost("/delete", ...)` NOT `MapDelete("/", ...)`
+**Important**: 
+- Delete endpoints use `MapDelete("/{id}", ...)` with HTTP DELETE method
+- ID comes from route parameter, not request body
+- Use `RouteSegment.ById` constant for consistency
 
 ## 15. Object Mapping with Mapster
 
@@ -840,7 +842,7 @@ request.Adapt(existingEntity);
 |---------|-----------------|
 | Using constructor for error responses | Use factory methods: `Response.NotFound("...")`, `Response.BadRequest("...")` |
 | Forgetting tenant query filter in EF config | Always add `HasQueryFilter(c => c.TenantId == ...)` |
-| Using `MapDelete` for delete endpoints | Use `MapPost("/delete", ...)` |
+| Using `MapPost("/delete", ...)` for delete endpoints | Use `MapDelete($"/{RouteSegment.ById}", ...)` with HTTP DELETE |
 | Throwing raw `Exception` | Use `KrafterException`, `NotFoundException`, `ForbiddenException` |
 | Using `UnauthorizedException` in SignalR Hubs | Use `HubException` for SignalR error handling |
 | Missing `IScopedHandler` interface | All handlers must implement `IScopedHandler` |
