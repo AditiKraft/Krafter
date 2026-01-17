@@ -1,5 +1,5 @@
 {
-  "name": ".NET Aspire",
+  "name": "Krafter Dev",
   "image": "mcr.microsoft.com/devcontainers/dotnet:10.0-noble",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
@@ -8,16 +8,30 @@
       "installZsh": true,
       "configureZshAsDefaultShell": true,
       "username": "vscode"
-    }
+    },
+     "ghcr.io/iambipinpaul/devcontainer-features/oh-my-posh:1.0.3": {
+
+      "theme": "https://raw.githubusercontent.com/iAmBipinPaul/oh-my-posh/main/oh-my-posh.json"
+     }
   },
-  "postCreateCommand": "dotnet restore && dotnet tool install --global dotnet-ef --version 10.0.0",
-  "postStartCommand": "dotnet dev-certs https --trust",
+  "containerEnv": {
+    "DOTNET_NOLOGO": "true",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
+    "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "true"
+  },
+  "postCreateCommand": "dotnet restore && dotnet tool install --global dotnet-ef || echo \"dotnet-ef already installed\"",
+  "postStartCommand": "dotnet dev-certs https --trust 2>/dev/null || echo \"Dev certs trust skipped (Linux limitation)\"",
+  "forwardPorts": [],
   "customizations": {
     "jetbrains": {
       "settings": {},
       "plugins": [
         "com.github.copilot",
-        "Key Promoter X"
+        "Key Promoter X",
+        "me.rafaelldi.aspire",
+        "com.intellij.ml.llm",
+        "org.jetbrains.plugins.github"
       ]
     },
     "vscode": {
