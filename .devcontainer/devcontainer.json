@@ -9,8 +9,7 @@
       "configureZshAsDefaultShell": true,
       "username": "vscode"
     },
-     "ghcr.io/iambipinpaul/devcontainer-features/oh-my-posh:1.0.3": {
-
+     "ghcr.io/iambipinpaul/devcontainer-features/oh-my-posh:": {
       "theme": "https://raw.githubusercontent.com/iAmBipinPaul/oh-my-posh/main/oh-my-posh.json"
      }
   },
