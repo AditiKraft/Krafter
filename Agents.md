@@ -52,6 +52,11 @@ Krafter is a .NET 10 full-stack platform with:
 - UI roles: `src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md`
 - UI tenants: `src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md`
 
+## 2.3 Bugfix Fast Path
+1. Locate the closest matching feature `Agents.md` and read it.
+2. Find the exact operation file (one file per operation) and trace request/response types in Shared.
+3. Apply minimal diff; verify response shape and route/permission usage.
+
 ## 3. Solution Structure
 ```
 Krafter/
@@ -233,6 +238,6 @@ Verified Against: [list key files checked]
 ```
 
 ---
-Last Updated: 2026-01-25
+Last Updated: 2026-01-26
 Verified Against: Agents.md, src/Backend/Agents.md, src/Backend/Infrastructure/Persistence/Agents.md, src/Backend/Infrastructure/BackgroundJobs/Agents.md, src/Backend/Features/Auth/Agents.md, src/Backend/Features/Users/Agents.md, src/Backend/Features/Tenants/Agents.md, src/Krafter.Shared/Agents.md, src/UI/Agents.md, src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md
 ---
