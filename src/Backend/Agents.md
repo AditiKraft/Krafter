@@ -1,16 +1,17 @@
 # Backend AI Instructions (Vertical Slice Architecture)
 
 > **SCOPE**: API endpoints, handlers, entities, and backend feature organization.
-> **PARENT**: See also: ../Agents.md
+> **PARENT**: See also: ../../Agents.md
 
 ## Quick Start: New Backend Feature
-1. Add shared request/response DTOs in `src/Krafter.Shared/Contracts/<Feature>/` (see `src/Krafter.Shared/Agents.md`).
-2. Add operations in `src/Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
-3. Add entity in `src/Backend/Features/<Feature>/_Shared/<Entity>.cs` if needed.
-4. Add DbSet + model configuration in `src/Backend/Infrastructure/Persistence/KrafterContext.cs`.
-5. Add permissions + routes in Shared (`src/Krafter.Shared/Common/Auth/Permissions/` and `src/Krafter.Shared/Common/KrafterRoute.cs`).
-6. Map endpoints using `KrafterRoute` and `RouteSegment`.
-7. Run migrations if schema changed.
+1. If `src/Backend/Features/<Feature>/Agents.md` exists, read it first.
+2. Add shared request/response DTOs in `src/Krafter.Shared/Contracts/<Feature>/` (see `src/Krafter.Shared/Agents.md`).
+3. Add operations in `src/Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
+4. Add entity in `src/Backend/Features/<Feature>/_Shared/<Entity>.cs` if needed.
+5. Add DbSet + model configuration in `src/Backend/Infrastructure/Persistence/KrafterContext.cs`.
+6. Add permissions + routes in Shared (`src/Krafter.Shared/Common/Auth/Permissions/` and `src/Krafter.Shared/Common/KrafterRoute.cs`).
+7. Map endpoints using `KrafterRoute` and `RouteSegment`.
+8. Run migrations if schema changed.
 
 ## Core Rules
 - One file per operation: Handler + Route (validator stays with request in Shared).
@@ -68,7 +69,9 @@ public sealed class GetUsers
 ## Related Agents
 - `src/Backend/Infrastructure/Persistence/Agents.md`
 - `src/Backend/Infrastructure/BackgroundJobs/Agents.md`
+- `src/Backend/Features/Auth/Agents.md`
 - `src/Backend/Features/Users/Agents.md`
+- `src/Backend/Features/Tenants/Agents.md`
 
 ## References (real code)
 - `src/Backend/Features/Users/CreateOrUpdateUser.cs`
@@ -90,6 +93,6 @@ public sealed class GetUsers
 - Add feature-specific Agents when a feature grows beyond 5 operations.
 
 ---
-Last Updated: 2026-01-25
-Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/Get.cs, Features/Tenants/Delete.cs, Infrastructure/Persistence/KrafterContext.cs, src/Krafter.Shared/Common/KrafterRoute.cs
+Last Updated: 2026-01-26
+Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateOrUpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/Get.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateOrUpdate.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/Krafter.Shared/Common/KrafterRoute.cs
 ---

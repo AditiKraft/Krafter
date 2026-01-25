@@ -1,7 +1,7 @@
 # Shared Library AI Instructions
 
 > **SCOPE**: API contracts (DTOs, Requests, Responses), shared constants, and common utilities used by Backend and UI.
-> **PARENT**: See also: ../Agents.md
+> **PARENT**: See also: ../../Agents.md
 
 ## 1. Core Principles
 - Contracts only; no business logic.
@@ -85,6 +85,6 @@ return Response<UserDto>.Success(dto);
 - New permissions or routes added.
 
 ---
-Last Updated: 2026-01-25
+Last Updated: 2026-01-26
 Verified Against: Contracts/Users/CreateUserRequest.cs, Common/Models/Response.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
 ---
