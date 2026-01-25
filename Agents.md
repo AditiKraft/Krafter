@@ -33,6 +33,30 @@ Krafter is a .NET 10 full-stack platform with:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## 2.1 New Feature Flow (Short Version)
+1. If a feature-level `Agents.md` exists, read it first.
+2. Add contracts + validators in `src/Krafter.Shared/Contracts/<Feature>/`.
+3. Add permissions/routes in `src/Krafter.Shared/Common/`.
+4. Add Backend operations in `src/Backend/Features/<Feature>/`.
+5. Add UI Refit + pages in `src/UI/Krafter.UI.Web.Client/`.
+
+## 2.2 Deep Dives
+- Backend persistence: `src/Backend/Infrastructure/Persistence/Agents.md`
+- Backend background jobs: `src/Backend/Infrastructure/BackgroundJobs/Agents.md`
+- Backend auth: `src/Backend/Features/Auth/Agents.md`
+- Backend Users feature: `src/Backend/Features/Users/Agents.md`
+- Backend tenants: `src/Backend/Features/Tenants/Agents.md`
+- UI Refit: `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
+- UI auth: `src/UI/Krafter.UI.Web.Client/Features/Auth/Agents.md`
+- UI users: `src/UI/Krafter.UI.Web.Client/Features/Users/Agents.md`
+- UI roles: `src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md`
+- UI tenants: `src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md`
+
+## 2.3 Bugfix Fast Path
+1. Locate the closest matching feature `Agents.md` and read it.
+2. Find the exact operation file (one file per operation) and trace request/response types in Shared.
+3. Apply minimal diff; verify response shape and route/permission usage.
+
 ## 3. Solution Structure
 ```
 Krafter/
@@ -212,3 +236,8 @@ Last Updated: YYYY-MM-DD
 Verified Against: [list key files checked]
 ---
 ```
+
+---
+Last Updated: 2026-01-26
+Verified Against: Agents.md, src/Backend/Agents.md, src/Backend/Infrastructure/Persistence/Agents.md, src/Backend/Infrastructure/BackgroundJobs/Agents.md, src/Backend/Features/Auth/Agents.md, src/Backend/Features/Users/Agents.md, src/Backend/Features/Tenants/Agents.md, src/Krafter.Shared/Agents.md, src/UI/Agents.md, src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md
+---
