@@ -4,7 +4,7 @@
 
 ## 1. Core Principles
 - **Hybrid Blazor**: WebAssembly + Server rendering.
-- **Code-Behind**: ALWAYS split `.razor` (markup) and `.razor.cs` (logic).
+- **Code-Behind**: Use `.razor` + `.razor.cs` for pages/components with logic; static/simple markup can stay single-file.
 - **Feature-Based**: Group by feature, not by component type.
 - **Refit Interfaces**: Use typed Refit interfaces (`IUsersApi`, `IRolesApi`, etc.) for ALL API calls. Never use raw `HttpClient`.
 - **External APIs**: Also use Refit for external/third-party APIs. Create interface in `Infrastructure/Refit/` and register in `RefitServiceExtensions.cs` without auth handlers.
@@ -38,10 +38,10 @@
 │   → Infrastructure/Services/ or Infrastructure/Api/         │
 │                                                             │
 │ Permission definition?                                      │
-│   → Common/Permissions/KrafterPermissions.cs                │
+│   → src/Krafter.Shared/Common/Auth/Permissions/             │
 │                                                             │
 │ Route constant?                                             │
-│   → Common/Constants/KrafterRoute.cs                        │
+│   → src/Krafter.Shared/Common/KrafterRoute.cs               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -76,8 +76,9 @@ src/UI/Krafter.UI.Web.Client/
 │   └── Api/ClientSideApiService.cs
 ├── Common/
 │   ├── Components/Layout/
-│   ├── Permissions/KrafterPermissions.cs
-│   └── Constants/KrafterRoute.cs
+│   ├── Components/Dialogs/
+│   ├── Permissions/MustHavePermissionAttribute.cs
+│   └── Constants/StorageConstants.cs
 └── _Imports.razor                   ← Global usings (includes Shared contracts)
 ```
 
@@ -133,19 +134,16 @@ src/UI/Krafter.UI.Web.Client/
 
 ### 4.2 List Page - Code-Behind (.razor.cs)
 ```csharp
-using Krafter.Shared.Common.Enums;
+using Krafter.Shared.Common;
 using Krafter.Shared.Common.Models;
 using Krafter.Shared.Contracts.Products;
-using Krafter.UI.Web.Client.Common.Constants;
 using Krafter.UI.Web.Client.Common.Models;
-using Krafter.UI.Web.Client.Common.Permissions;
 using Krafter.UI.Web.Client.Infrastructure.Refit;
 using Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace Krafter.UI.Web.Client.Features.Products;
 
 public partial class Products(
-    CommonService commonService,
     DialogService dialogService,
     ApiCallService api,        // CRITICAL: Always inject ApiCallService
     IProductsApi productsApi
@@ -208,20 +206,21 @@ public partial class Products(
 
     private async Task Delete(ProductDto input)
     {
-        if (response?.Data?.Items?.Contains(input) == true)
+        bool? confirmed = await dialogService.Confirm(
+            $"Are you sure you want to delete product '{input.Name}'?",
+            "Delete Product",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+        if (confirmed == true)
         {
-            await commonService.Delete(
-                new DeleteRequestInput
-                {
-                    Id = input.Id,
-                    DeleteReason = input.DeleteReason,
-                    EntityKind = EntityKind.Product
-                }, $"Delete Product {input.Name}");
-        }
-        else
-        {
-            grid.CancelEditRow(input);
-            await grid.Reload();
+            Response result = await api.CallAsync(
+                () => productsApi.DeleteProductAsync(input.Id),
+                successMessage: "Product deleted successfully");
+
+            if (!result.IsError)
+            {
+                await Get();
+            }
         }
     }
 
@@ -235,10 +234,9 @@ public partial class Products(
             await Delete(data);
     }
 
-    // IMPORTANT: Use dynamic type for result parameter
-    private async void Close(dynamic result)
+    private async void Close(object? result)
     {
-        if (result == null || !result.Equals(true))
+        if (result is not bool)
             return;
         await Get();
     }
@@ -386,15 +384,7 @@ public partial class Products(
     private async Task GetListAsync()
     {
         // ✅ CORRECT - Wrap Refit call with ApiCallService
-        response = await api.CallAsync(() => productsApi.GetProductsAsync(
-            requestInput.Id,
-            requestInput.History,
-            requestInput.IsDeleted,
-            requestInput.Query,
-            requestInput.Filter,
-            requestInput.OrderBy,
-            requestInput.SkipCount,
-            requestInput.MaxResultCount));
+        response = await api.CallAsync(() => productsApi.GetProductsAsync(requestInput));
     }
 
     private async void Submit(CreateProductRequest input)
@@ -410,7 +400,7 @@ public partial class Products(
 }
 
 // ❌ WRONG - Never call Refit directly
-response = await productsApi.GetProductsAsync(...);  // NO! Missing error handling
+response = await productsApi.GetProductsAsync(requestInput);  // NO! Missing error handling
 ```
 
 ### 6.2 ApiCallService Features
@@ -446,19 +436,19 @@ public interface IProductsApi
 {
     // Use [Query] with GetRequestInput - Refit serializes all properties as query params
     // This matches backend's [AsParameters] GetRequestInput pattern
-    [Get("/products/get")]
+    [Get("/products")]
     Task<Response<PaginationResponse<ProductDto>>> GetProductsAsync(
         [Query] GetRequestInput request,
         CancellationToken cancellationToken = default);
 
-    [Post("/products/create-or-update")]
+    [Post("/products")]
     Task<Response> CreateOrUpdateProductAsync(
         [Body] CreateProductRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/products/delete")]
+    [Delete("/products/{id}")]
     Task<Response> DeleteProductAsync(
-        [Body] DeleteRequestInput request,
+        string id,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -502,25 +492,25 @@ services.AddRefitClient<IWeatherApi>(refitSettings)
 1. [ ] Create `Features/<Feature>/` folder
 2. [ ] Create `<Feature>s.razor` + `<Feature>s.razor.cs` (List page)
 3. [ ] Create `CreateOrUpdate<Feature>.razor` + `.razor.cs` (Form dialog)
-4. [ ] Add route constant to `Common/Constants/KrafterRoute.cs`:
+4. [ ] Add route constant to `src/Krafter.Shared/Common/KrafterRoute.cs`:
    ```csharp
-   public const string Products = "/products";
+   public const string Products = "products";
    ```
-5. [ ] Add permissions to `Common/Permissions/KrafterPermissions.cs` (mirror backend)
+5. [ ] Add permissions to `src/Krafter.Shared/Common/Auth/Permissions/KrafterPermissions.cs` (mirror backend)
 6. [ ] Create Refit interface `Infrastructure/Refit/I<Feature>sApi.cs`:
    ```csharp
    public interface IProductsApi
    {
-       [Get("/products/get")]
+       [Get("/products")]
        Task<Response<PaginationResponse<ProductDto>>> GetProductsAsync(
            [Query] GetRequestInput request,
            CancellationToken cancellationToken = default);
        
-       [Post("/products/create-or-update")]
+       [Post("/products")]
        Task<Response> CreateOrUpdateProductAsync([Body] CreateProductRequest request, ...);
        
-       [Post("/products/delete")]
-       Task<Response> DeleteProductAsync([Body] DeleteRequestInput request, ...);
+       [Delete("/products/{id}")]
+       Task<Response> DeleteProductAsync(string id, ...);
    }
    ```
 7. [ ] Register Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`:
@@ -540,21 +530,17 @@ services.AddRefitClient<IWeatherApi>(refitSettings)
        Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Products)
    }
    ```
-9. [ ] Add `EntityKind` enum value in `Krafter.Shared/Common/Enums/EntityKind.cs`
-10. [ ] Update `Common/Components/Dialogs/DeleteDialog.razor.cs`:
-    - Add new Refit interface to constructor
-    - Add case to switch statement for new entity
-11. [ ] Test with `dotnet build` and browser
+9. [ ] Test with `dotnet build` and browser
 
 
 ## 8. Existing Refit Interfaces
 
 | Interface | Endpoints | Usage |
 |-----------|-----------|-------|
-| `IAuthApi` | `/tokens/create`, `/tokens/refresh`, `/external-auth/google` | Login, token refresh |
-| `IUsersApi` | `/users/get`, `/users/create-or-update`, `/users/delete`, etc. | User management |
-| `IRolesApi` | `/roles/get`, `/roles/create-or-update`, `/roles/delete`, etc. | Role management |
-| `ITenantsApi` | `/tenants/get`, `/tenants/create-or-update`, `/tenants/delete` | Tenant management |
+| `IAuthApi` | `/tokens`, `/tokens/refresh`, `/external-auth/google`, `/tokens/logout`, `/tokens/current` | Login, token refresh |
+| `IUsersApi` | `/users`, `/users/by-role/{roleId}`, `/users/{id}`, `/users/{userId}/roles`, `/users/permissions`, `/users/change-password`, `/users/forgot-password`, `/users/reset-password` | User management |
+| `IRolesApi` | `/roles`, `/roles/{id}`, `/roles/{roleId}/permissions`, `/roles/permissions` | Role management |
+| `ITenantsApi` | `/tenants`, `/tenants/{id}`, `/tenants/seed-data` | Tenant management |
 | `IAppInfoApi` | `/app-info` | Application info |
 
 ## 9. Key Imports (from _Imports.razor)
@@ -577,11 +563,9 @@ services.AddRefitClient<IWeatherApi>(refitSettings)
 | `Response<T>` | `Krafter.Shared.Common.Models` | API response wrapper |
 | `PaginationResponse<T>` | `Krafter.Shared.Common.Models` | Paginated list response |
 | `GetRequestInput` | `Krafter.Shared.Common.Models` | Standard query parameters |
-| `DeleteRequestInput` | `Krafter.Shared.Common.Models` | Delete request with reason |
 | `UserDto` | `Krafter.Shared.Contracts.Users` | User data transfer object |
 | `RoleDto` | `Krafter.Shared.Contracts.Roles` | Role data transfer object |
 | `TenantDto` | `Krafter.Shared.Contracts.Tenants` | Tenant data transfer object |
-| `EntityKind` | `Krafter.Shared.Common.Enums` | Entity type enum for delete |
 
 ## 11. Edge Cases: Menu & Navigation
 
@@ -637,11 +621,11 @@ private Menu[] allMenus = new[]
 };
 ```
 
-### 11.2 Add Route Constant (UI)
-Update `Common/Constants/KrafterRoute.cs`:
+### 11.2 Add Route Constant (Shared)
+Update `src/Krafter.Shared/Common/KrafterRoute.cs`:
 
 ```csharp
-namespace Krafter.UI.Web.Client.Common.Constants;
+namespace Krafter.Shared.Common;
 
 public static class KrafterRoute
 {
@@ -717,82 +701,6 @@ private async Task DeleteRole(RoleDto roleDto)
 - Always wrap API call with `ApiCallService.CallAsync()`
 - Refresh the list after successful deletion
 
-### 12.2 Using CommonService.Delete (ALTERNATIVE)
-For entities that need the `DeleteDialog` component with delete reason:
-
-```csharp
-private async Task Delete(ProductDto input)
-{
-    if (response?.Data?.Items?.Contains(input) == true)
-    {
-        await commonService.Delete(
-            new DeleteRequestInput
-            {
-                Id = input.Id,
-                DeleteReason = input.DeleteReason,  // Optional reason
-                EntityKind = EntityKind.Product     // Must match enum in Shared
-            }, 
-            $"Delete Product {input.Name}");  // Dialog title
-    }
-    else
-    {
-        grid.CancelEditRow(input);
-        await grid.Reload();
-    }
-}
-```
-
-### 12.3 When to Use Which Pattern
-
-| Pattern | Use When |
-|---------|----------|
-| `DialogService.Confirm()` | Simple delete confirmation, no delete reason needed |
-| `CommonService.Delete()` | Need to capture delete reason, use shared DeleteDialog |
-
-### 12.4 Add EntityKind for New Feature
-Before using delete, ensure `EntityKind` enum has your entity in `src/Krafter.Shared/Common/Enums/EntityKind.cs`:
-
-```csharp
-public enum EntityKind
-{
-    // ... existing ...
-    Product = 400,  // Add your entity
-}
-```
-
-### 12.5 Update DeleteDialog for New Entity
-When adding a new entity type, update `Common/Components/Dialogs/DeleteDialog.razor.cs` switch statement:
-
-```csharp
-case EntityKind.Product:
-    Response productResult = await api.CallAsync(
-        () => productsApi.DeleteProductAsync(
-            new DeleteRequestInput
-            {
-                DeleteReason = deleteRequestInput.DeleteReason,
-                Id = deleteRequestInput.Id,
-                EntityKind = EntityKind.Product
-            }),
-        successMessage: "Product deleted successfully");
-
-    result.IsError = productResult.IsError;
-    result.StatusCode = productResult.StatusCode;
-    result.Message = productResult.Message;
-    break;
-```
-
-**IMPORTANT**: Also inject the new Refit interface in DeleteDialog constructor:
-```csharp
-public partial class DeleteDialog(
-    DialogService dialogService,
-    ApiCallService api,
-    IUsersApi usersApi,
-    IRolesApi rolesApi,
-    ITenantsApi tenantsApi,
-    IProductsApi productsApi  // Add new API interface
-) : ComponentBase
-```
-
 ## 13. Edge Cases: _Imports.razor Updates
 
 When adding a new feature with new contracts, update `_Imports.razor`:
@@ -841,7 +749,6 @@ protected override async Task OnInitializedAsync()
 
 ```csharp
 public partial class Products(
-    CommonService commonService,
     DialogService dialogService,
     ApiCallService api,
     IProductsApi productsApi
@@ -859,10 +766,9 @@ public partial class Products(
         await GetListAsync();
     }
 
-    // Use dynamic type for result parameter
-    private async void Close(dynamic result)
+    private async void Close(object? result)
     {
-        if (result == null || !result.Equals(true))
+        if (result is not bool)
             return;
         await GetListAsync();
     }
@@ -885,17 +791,16 @@ public partial class Products(...) : ComponentBase
     // Memory leak! Events not unsubscribed
 }
 
-// ❌ WRONG - Wrong Close signature
-private async void Close(object? result)  // Should be dynamic
+// ❌ WRONG - Not checking dialog result or refreshing data
+private async void Close(object? result)
 {
-    if (result is not bool)  // This pattern doesn't work correctly
-        return;
+    await GetListAsync();  // Unconditional reload or no guard
 }
 
-// ✅ CORRECT - Use dynamic type
-private async void Close(dynamic result)
+// ✅ CORRECT - Check result and refresh
+private async void Close(object? result)
 {
-    if (result == null || !result.Equals(true))
+    if (result is not bool)
         return;
     await GetListAsync();
 }
@@ -1051,7 +956,7 @@ Task<Response<List<UserRoleDto>>> GetUserRolesAsync(string userId, ...);
 | Mistake | Correct Approach |
 |---------|-----------------|
 | Calling Refit directly without ApiCallService | Always use `api.CallAsync(() => refitApi.Method())` |
-| Using `Close(object? result)` signature | Use `Close(dynamic result)` |
+| Refreshing on dialog close without checking result | Guard with `if (result is not bool) return;` |
 | Missing `IDisposable` on list pages | Always implement `IDisposable` and unsubscribe events |
 | Forgetting `dialogService.OnClose += Close` | Subscribe in `OnInitializedAsync` |
 | Not setting `LocalAppSate.CurrentPageTitle` | Set in `OnInitializedAsync` |
@@ -1063,6 +968,6 @@ Task<Response<List<UserRoleDto>>> GetUserRolesAsync(string userId, ...);
 | Creating custom delete dialog for simple confirmations | Use `DialogService.Confirm()` for simple delete confirmations |
 
 ---
-Last Updated: 2026-01-03
-Verified Against: Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs
+Last Updated: 2026-01-25
+Verified Against: Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs, _Imports.razor
 ---

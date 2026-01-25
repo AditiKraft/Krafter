@@ -11,7 +11,7 @@ Features/<Feature>/<Operation>.cs
 └── Route        (Endpoint Mapping)
 ```
 
-**Note**: Request/Response DTOs are in `src/Shared/Krafter.Shared/Contracts/<Feature>/`
+**Note**: Request/Response DTOs are in `src/Krafter.Shared/Contracts/<Feature>/`
 
 ## 2. Decision Tree: Where Does This Code Go?
 
@@ -171,7 +171,7 @@ public sealed class CreateOrUpdateProduct
                 .MapGroup(KrafterRoute.Products)
                 .AddFluentValidationFilter();
 
-            group.MapPost("/create-or-update", async (
+            group.MapPost("/", async (
                     [FromBody] CreateProductRequest request,
                     [FromServices] Handler handler) =>
                 {
@@ -254,7 +254,7 @@ public sealed class Get
                 .MapGroup(KrafterRoute.Products)
                 .AddFluentValidationFilter();
 
-            group.MapGet("/get", async (
+            group.MapGet("/", async (
                     [FromServices] Handler handler,
                     [AsParameters] GetRequestInput requestInput,
                     CancellationToken cancellationToken) =>
@@ -930,6 +930,6 @@ group.MapGet($"/{RouteSegment.UserRoles}", async ([FromRoute] string userId, ...
 | Refit Interfaces | ❌ No | Refit has runtime issues with route parameters in interpolated strings |
 
 ---
-Last Updated: 2026-01-03
-Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/CreateOrUpdate.cs, Infrastructure/Persistence/KrafterContext.cs, Hubs/RealtimeHub.cs, Common/Models/Response.cs, src/Krafter.Shared/Common/KrafterRoute.cs
+Last Updated: 2026-01-25
+Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/Get.cs, Features/Tenants/Delete.cs, Infrastructure/Persistence/KrafterContext.cs, Hubs/RealtimeHub.cs, Common/Models/Response.cs, src/Krafter.Shared/Common/KrafterRoute.cs
 ---

@@ -212,3 +212,8 @@ Last Updated: YYYY-MM-DD
 Verified Against: [list key files checked]
 ---
 ```
+
+---
+Last Updated: 2026-01-25
+Verified Against: Agents.md, src/Backend/Agents.md, src/Krafter.Shared/Agents.md, src/UI/Agents.md
+---

@@ -242,7 +242,7 @@ All success factory methods:
 ## 7. Rules
 
 ### DO:
-- ✅ Include XML documentation on all public classes
+- ✅ Prefer XML documentation on public classes when the file already uses it; keep style consistent
 - ✅ Use `default!` for non-nullable properties that will be set by deserializer
 - ✅ Keep validators in the same file as their request class
 - ✅ Inherit from `CommonDtoProperty` for DTOs with audit fields
@@ -258,7 +258,7 @@ All success factory methods:
 
 1. [ ] Create file in `Contracts/<Feature>/`
 2. [ ] Add namespace `Krafter.Shared.Contracts.<Feature>`
-3. [ ] Add XML documentation comment
+3. [ ] Add XML documentation comment if the file already uses XML docs
 4. [ ] For requests: include FluentValidation validator
 5. [ ] For DTOs: inherit from `CommonDtoProperty` if audit fields needed
 6. [ ] Build to verify: `dotnet build src/Krafter.Shared/Krafter.Shared.csproj`
@@ -431,6 +431,6 @@ Task<Response<List<CategoryDto>>> GetCategoriesAsync(string productId, ...);
 ```
 
 ---
-Last Updated: 2026-01-03
-Verified Against: Contracts/Users/CreateUserRequest.cs, Contracts/Users/UserDto.cs, Common/Models/CommonDtoProperty.cs, Common/Models/Response.cs, Common/Enums/EntityKind.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
+Last Updated: 2026-01-25
+Verified Against: Contracts/Users/CreateUserRequest.cs, Common/Models/Response.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
 ---
