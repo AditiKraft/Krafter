@@ -33,6 +33,18 @@ Krafter is a .NET 10 full-stack platform with:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## 2.1 New Feature Flow (Short Version)
+1. Add contracts + validators in `src/Krafter.Shared/Contracts/<Feature>/`.
+2. Add permissions/routes in `src/Krafter.Shared/Common/`.
+3. Add Backend operations in `src/Backend/Features/<Feature>/`.
+4. Add UI Refit + pages in `src/UI/Krafter.UI.Web.Client/`.
+
+## 2.2 Deep Dives
+- Backend persistence: `src/Backend/Infrastructure/Persistence/Agents.md`
+- Backend background jobs: `src/Backend/Infrastructure/BackgroundJobs/Agents.md`
+- Backend Users feature: `src/Backend/Features/Users/Agents.md`
+- UI Refit: `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
+
 ## 3. Solution Structure
 ```
 Krafter/
@@ -215,5 +227,5 @@ Verified Against: [list key files checked]
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Agents.md, src/Backend/Agents.md, src/Krafter.Shared/Agents.md, src/UI/Agents.md
+Verified Against: Agents.md, src/Backend/Agents.md, src/Backend/Infrastructure/Persistence/Agents.md, src/Backend/Infrastructure/BackgroundJobs/Agents.md, src/Backend/Features/Users/Agents.md, src/Krafter.Shared/Agents.md, src/UI/Agents.md, src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md
 ---
