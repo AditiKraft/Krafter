@@ -24,6 +24,7 @@ internal class Build : NukeBuild
     private AbsolutePath BuildInfoPath => SourceDirectory / "Backend" / "Features" / "AppInfo" / "Get.cs";
     private AbsolutePath KrafterAPIPath => SourceDirectory / "Backend" / "Backend.csproj";
     private AbsolutePath KrafterUIPath => SourceDirectory / "UI" / "Krafter.UI.Web" / "Krafter.UI.Web.csproj";
+    private AbsolutePath TemplateProjectPath => RootDirectory / "AditiKraft.Krafter.Templates.csproj";
     private readonly int MajorVersion = DateTime.UtcNow.Year;
     private readonly int MinorVersion = DateTime.UtcNow.Month;
     private readonly int PatchVersion = DateTime.UtcNow.Day;
@@ -34,6 +35,7 @@ internal class Build : NukeBuild
     private bool IsMaster;
     [GitRepository] private readonly GitRepository Repository;
     [Parameter("Personal Access Token")] private readonly string PAT;
+    [Parameter("NuGet API Key for publishing templates")] private readonly string NuGetPAT;
     [Parameter("Deployment Webhook Url")] private readonly string DeploymentWebhookUrl;
     private GitHubActions GitHubActions => GitHubActions.Instance;
 
@@ -175,6 +177,45 @@ internal class Build : NukeBuild
 
                     DockerTag = $"{BranchName}-{buildNumber}";
                 }
+            }
+        });
+
+    // ============================================
+    // Template Targets
+    // ============================================
+
+    private Target PackTemplate => _ => _
+        .Description("Pack the Krafter template as a NuGet package")
+        .Executes(() =>
+        {
+            DotNetTasks.DotNetPack(s => s
+                .SetProject(TemplateProjectPath)
+                .SetConfiguration(Configuration.Release)
+                .SetOutputDirectory(RootDirectory / "bin" / "Release"));
+            
+            Serilog.Log.Information("✅ Template package created successfully!");
+        });
+
+    private Target PublishTemplate => _ => _
+        .DependsOn(PackTemplate)
+        .Description("Publish the template to NuGet.org")
+        .Requires(() => NuGetPAT)
+        .Executes(() =>
+        {
+            var packagePath = (RootDirectory / "bin" / "Release").GlobFiles("*.nupkg").FirstOrDefault();
+            if (packagePath != null)
+            {
+                DotNetTasks.DotNetNuGetPush(s => s
+                    .SetTargetPath(packagePath)
+                    .SetSource("https://api.nuget.org/v3/index.json")
+                    .SetApiKey(NuGetPAT));
+                
+                Serilog.Log.Information("✅ Template published to NuGet successfully!");
+                Serilog.Log.Information("🌐 Package: https://www.nuget.org/packages/AditiKraft.Krafter.Templates");
+            }
+            else
+            {
+                throw new Exception("❌ Package file not found!");
             }
         });
 }

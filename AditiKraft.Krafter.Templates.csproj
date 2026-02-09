@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="**\*" Exclude="**\bin\**;**\obj\**;**\.git\**;**\.vs\**;**\.idea\**;**\*.user;**\.DS_Store;AditiKraft.Krafter.Templates.csproj" />
+    <Content Include="**\*" Exclude="**\bin\**;**\obj\**;**\.git\**;**\.vs\**;**\.idea\**;**\.nuke\**;**\*.user;**\.DS_Store;AditiKraft.Krafter.Templates.csproj" />
     <Compile Remove="**\*" />
   </ItemGroup>
 

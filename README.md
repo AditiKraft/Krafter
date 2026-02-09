@@ -587,6 +587,42 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+## 📦 .NET Template
+
+You can use Krafter as a template to quickly scaffold new projects with a single command.
+
+### Install the Template from NuGet
+
+```bash
+dotnet new install AditiKraft.Krafter.Templates
+```
+
+### Create a New Project
+
+```bash
+dotnet new krafter -n MyCompanyApp
+cd MyCompanyApp
+dotnet run --project aspire/MyCompanyApp.Aspire.AppHost/MyCompanyApp.Aspire.AppHost.csproj
+```
+
+> **Important:** Always use the `-n` parameter to specify your project name. This replaces "Krafter" with "MyCompanyApp" throughout the entire codebase (namespaces, project files, folder names, etc.).
+
+### Update the Template
+
+```bash
+dotnet new update
+```
+
+### Uninstall the Template
+
+```bash
+dotnet new uninstall AditiKraft.Krafter.Templates
+```
+
+---
+
+---
+
 <div align="center">
 
 **Built with ❤️ by [Aditi Kraft](https://github.com/AditiKraft)**
