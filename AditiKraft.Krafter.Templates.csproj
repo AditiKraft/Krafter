@@ -3,6 +3,7 @@
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageVersion>1.0.0</PackageVersion>
+    <Version>$(PackageVersion)</Version>
     <PackageId>AditiKraft.Krafter.Templates</PackageId>
     <Title>AditiKraft Krafter Full-Stack Template</Title>
     <Authors>Aditi Kraft</Authors>

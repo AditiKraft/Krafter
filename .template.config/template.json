@@ -17,16 +17,6 @@
   },
   "sourceName": "Krafter",
   "preferNameDirectory": true,
-  "symbols": {
-    "ProjectName": {
-      "type": "parameter",
-      "datatype": "string",
-      "replaces": "Krafter",
-      "fileRename": "Krafter",
-      "defaultValue": "MyApp",
-      "description": "The name of the project"
-    }
-  },
   "sources": [
     {
       "modifiers": [
@@ -38,7 +28,10 @@
             "**/bin/**",
             "**/obj/**",
             "**/*.user",
-            "**/.DS_Store"
+            "**/.DS_Store",
+            ".nuke/**",
+            "AditiKraft.Krafter.Templates.csproj",
+            "pack-and-install.cmd"
           ]
         }
       ]

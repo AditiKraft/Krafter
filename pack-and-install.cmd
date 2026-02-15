@@ -35,6 +35,8 @@ for %%f in (bin\Release\*.nupkg) do (
         pause
         exit /b 1
     )
+    echo.
+    echo Installed: %%f
 )
 
 echo.
