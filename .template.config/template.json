@@ -30,6 +30,7 @@
             "**/*.user",
             "**/.DS_Store",
             ".nuke/temp/**",
+            ".template.config/**",
             "AditiKraft.Krafter.Templates.csproj",
             "pack-and-install.cmd"
           ]
