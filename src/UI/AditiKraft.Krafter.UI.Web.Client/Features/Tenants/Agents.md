@@ -36,8 +36,8 @@ Response result = await api.CallAsync(
 - Tenant list filtering or history behavior changes.
 
 ## References (real code)
-- `src/UI/Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
 
 ---
 Last Updated: 2026-01-25

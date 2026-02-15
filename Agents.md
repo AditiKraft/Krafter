@@ -35,22 +35,22 @@ Krafter is a .NET 10 full-stack platform with:
 
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
-2. Add contracts + validators in `src/Krafter.Shared/Contracts/<Feature>/`.
-3. Add permissions/routes in `src/Krafter.Shared/Common/`.
-4. Add Backend operations in `src/Backend/Features/<Feature>/`.
-5. Add UI Refit + pages in `src/UI/Krafter.UI.Web.Client/`.
+2. Add contracts + validators in `src/AditiKraft.Krafter.Shared/Contracts/<Feature>/`.
+3. Add permissions/routes in `src/AditiKraft.Krafter.Shared/Common/`.
+4. Add Backend operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/`.
+5. Add UI Refit + pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/`.
 
 ## 2.2 Deep Dives
-- Backend persistence: `src/Backend/Infrastructure/Persistence/Agents.md`
-- Backend background jobs: `src/Backend/Infrastructure/BackgroundJobs/Agents.md`
-- Backend auth: `src/Backend/Features/Auth/Agents.md`
-- Backend Users feature: `src/Backend/Features/Users/Agents.md`
-- Backend tenants: `src/Backend/Features/Tenants/Agents.md`
-- UI Refit: `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
-- UI auth: `src/UI/Krafter.UI.Web.Client/Features/Auth/Agents.md`
-- UI users: `src/UI/Krafter.UI.Web.Client/Features/Users/Agents.md`
-- UI roles: `src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md`
-- UI tenants: `src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md`
+- Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
+- Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/Agents.md`
+- Backend auth: `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
+- Backend Users feature: `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
+- Backend tenants: `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
+- UI Refit: `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
+- UI auth: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md`
+- UI users: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md`
+- UI roles: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md`
+- UI tenants: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md`
 
 ## 2.3 Bugfix Fast Path
 1. Locate the closest matching feature `Agents.md` and read it.
@@ -59,13 +59,13 @@ Krafter is a .NET 10 full-stack platform with:
 
 ## 3. Solution Structure
 ```
-Krafter/
+AditiKraft.Krafter/
 ├── Agents.md                    ← YOU ARE HERE
 ├── aspire/                      # Aspire orchestration
-│   ├── Krafter.Aspire.AppHost/
-│   └── Krafter.Aspire.ServiceDefaults/
+│   ├── AditiKraft.Krafter.Aspire.AppHost/
+│   └── AditiKraft.Krafter.Aspire.ServiceDefaults/
 ├── src/
-│   ├── Krafter.Shared/          # Shared contracts library
+│   ├── AditiKraft.Krafter.Shared/          # Shared contracts library
 │   │   ├── Agents.md            ← Shared-specific rules
 │   │   ├── Contracts/           # API DTOs, Requests, Responses
 │   │   │   ├── Auth/
@@ -73,15 +73,15 @@ Krafter/
 │   │   │   ├── Roles/
 │   │   │   └── Tenants/
 │   │   └── Common/              # Shared utilities, models
-│   ├── Backend/                 # API (See src/Backend/Agents.md)
+│   ├── AditiKraft.Krafter.Backend/                 # API (See src/AditiKraft.Krafter.Backend/Agents.md)
 │   │   ├── Agents.md            ← Backend-specific rules
 │   │   ├── Features/            # Vertical slices (business logic)
 │   │   ├── Infrastructure/      # Persistence, Jobs
 │   │   └── Common/              # Backend-specific utilities
 │   └── UI/                      # Blazor (See src/UI/Agents.md)
 │       ├── Agents.md            ← UI-specific rules
-│       ├── Krafter.UI.Web.Client/  # WASM client
-│       └── Krafter.UI.Web/         # Server host
+│       ├── AditiKraft.Krafter.UI.Web.Client/  # WASM client
+│       └── AditiKraft.Krafter.UI.Web/         # Server host
 ```
 
 ## 4. Global Coding Conventions
@@ -96,20 +96,20 @@ Krafter/
 ## 5. Development Commands
 ```bash
 # Run entire solution (recommended)
-dotnet run --project aspire/Krafter.Aspire.AppHost/Krafter.Aspire.AppHost.csproj
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 
 # Run Backend only
-dotnet run --project src/Backend/Backend.csproj
+dotnet run --project src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj
 
 # Run UI only
-dotnet run --project src/UI/Krafter.UI.Web/Krafter.UI.Web.csproj
+dotnet run --project src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj
 
 # Database migrations
-dotnet ef migrations add <Name> --project src/Backend --context KrafterContext
-dotnet ef database update --project src/Backend --context KrafterContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet ef database update --project src/AditiKraft.Krafter.Backend --context KrafterContext
 
 # Build solution
-dotnet build Krafter.slnx
+dotnet build AditiKraft.Krafter.slnx
 ```
 
 ## 6. Commit Convention
@@ -238,6 +238,6 @@ Verified Against: [list key files checked]
 ```
 
 ---
-Last Updated: 2026-01-26
-Verified Against: Agents.md, src/Backend/Agents.md, src/Backend/Infrastructure/Persistence/Agents.md, src/Backend/Infrastructure/BackgroundJobs/Agents.md, src/Backend/Features/Auth/Agents.md, src/Backend/Features/Users/Agents.md, src/Backend/Features/Tenants/Agents.md, src/Krafter.Shared/Agents.md, src/UI/Agents.md, src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md
+Last Updated: 2026-02-09
+Verified Against: Agents.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Shared/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
 ---

@@ -59,11 +59,11 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - Tenant admin email sync changes.
 
 ## References (real code)
-- `src/Backend/Features/Tenants/CreateOrUpdate.cs`
-- `src/Backend/Features/Tenants/Get.cs`
-- `src/Backend/Features/Tenants/Delete.cs`
-- `src/Backend/Features/Tenants/SeedBasicData.cs`
-- `src/Backend/Features/Tenants/_Shared/DataSeedService.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/CreateOrUpdate.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/Get.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/_Shared/DataSeedService.cs`
 
 ---
 Last Updated: 2026-01-25

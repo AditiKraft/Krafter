@@ -58,10 +58,10 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - External provider (Google) flow changes.
 
 ## References (real code)
-- `src/UI/Krafter.UI.Web.Client/Features/Auth/Login.razor`
-- `src/UI/Krafter.UI.Web.Client/Features/Auth/Login.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Auth/_Shared/AuthenticationService.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/_Shared/AuthenticationService.cs`
 
 ---
 Last Updated: 2026-01-25

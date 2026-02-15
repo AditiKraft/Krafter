@@ -27,7 +27,7 @@
 ```csharp
 using FluentValidation;
 
-namespace Krafter.Shared.Contracts.Users;
+namespace AditiKraft.Krafter.Shared.Contracts.Users;
 
 public class CreateUserRequest
 {
@@ -49,9 +49,9 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
 
 ### DTO
 ```csharp
-using Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Shared.Common.Models;
 
-namespace Krafter.Shared.Contracts.Users;
+namespace AditiKraft.Krafter.Shared.Contracts.Users;
 
 public class UserDto : CommonDtoProperty
 {
@@ -68,10 +68,10 @@ return Response<UserDto>.Success(dto);
 ```
 
 ## 4. Checklist
-1. Add the contract file under `Contracts/<Feature>/` with `Krafter.Shared.Contracts.<Feature>` namespace.
+1. Add the contract file under `Contracts/<Feature>/` with `AditiKraft.Krafter.Shared.Contracts.<Feature>` namespace.
 2. Add a validator for request DTOs in the same file.
 3. Use `default!` for non-nullable properties.
-4. Build: `dotnet build src/Krafter.Shared/Krafter.Shared.csproj`.
+4. Build: `dotnet build src/AditiKraft.Krafter.Shared/AditiKraft.Krafter.Shared.csproj`.
 
 ## 5. Common Mistakes
 - Putting business logic in Shared.

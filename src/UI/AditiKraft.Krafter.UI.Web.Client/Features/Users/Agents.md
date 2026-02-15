@@ -55,11 +55,11 @@ if (confirmed == true)
 - Password flow UI changes.
 
 ## References (real code)
-- `src/UI/Krafter.UI.Web.Client/Features/Users/Users.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Users/RestPassword.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/RestPassword.razor.cs`
 
 ---
 Last Updated: 2026-01-25

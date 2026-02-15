@@ -4,7 +4,7 @@
 > **PARENT**: See also: ../../Agents.md
 
 ## Quick Start: New Backend Feature
-1. If `src/Backend/Features/<Feature>/Agents.md` exists, read it first.
+1. If `src/AditiKraft.Krafter.Backend/Features/<Feature>/Agents.md` exists, read it first.
 2. Add shared request/response DTOs in `src/Krafter.Shared/Contracts/<Feature>/` (see `src/Krafter.Shared/Agents.md`).
 3. Add operations in `src/Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
 4. Add entity in `src/Backend/Features/<Feature>/_Shared/<Entity>.cs` if needed.

@@ -55,13 +55,13 @@ foreach (KrafterUserRole role in rolesToRemove)
 - User role/permission query patterns change.
 
 ## References (real code)
-- `src/Backend/Features/Users/CreateOrUpdateUser.cs`
-- `src/Backend/Features/Users/DeleteUser.cs`
-- `src/Backend/Features/Users/ChangePassword.cs`
-- `src/Backend/Features/Users/ForgotPassword.cs`
-- `src/Backend/Features/Users/ResetPassword.cs`
-- `src/Backend/Features/Users/GetUserRoles.cs`
-- `src/Backend/Features/Users/GetUserPermissions.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/CreateOrUpdateUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/ResetPassword.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/GetUserRoles.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs`
 
 ---
 Last Updated: 2026-01-25

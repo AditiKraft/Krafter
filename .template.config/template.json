@@ -15,7 +15,7 @@
     "language": "C#",
     "type": "solution"
   },
-  "sourceName": "Krafter",
+  "sourceName": "AditiKraft.Krafter",
   "preferNameDirectory": true,
   "sources": [
     {
@@ -31,10 +31,20 @@
             "**/.DS_Store",
             ".nuke/temp/**",
             "AditiKraft.Krafter.Templates.csproj",
-            "pack-and-install.cmd"
+            "pack-and-install.cmd",
+            "README.md",
+            "LICENSE",
+            "docs/**",
+            "**/Agents.md"
           ]
         }
       ]
+    },
+    {
+      "source": "./",
+      "target": "./",
+      "include": ["README.md", "LICENSE", "docs/**", "**/Agents.md"],
+      "copyOnly": true
     }
   ],
   "postActions": [

@@ -4,9 +4,9 @@
 > **PARENT**: See also: ../../Agents.md
 
 ## Quick Start: New UI Feature
-1. If `src/UI/Krafter.UI.Web.Client/Features/<Feature>/Agents.md` exists, read it first.
-2. Ensure Shared DTOs + routes exist in `src/Krafter.Shared/`.
-3. Add a Refit interface in `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/` (see `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`).
+1. If `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/Agents.md` exists, read it first.
+2. Ensure Shared DTOs + routes exist in `src/AditiKraft.Krafter.Shared/`.
+3. Add a Refit interface in `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/` (see `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`).
 4. Register the Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`.
 5. Create `Features/<Feature>/<Feature>s.razor` and add `.razor.cs` if you need logic.
 6. Create `Features/<Feature>/CreateOrUpdate<Feature>.razor` and `.razor.cs` for form logic.
@@ -15,7 +15,7 @@
 9. Update `_Imports.razor` with the new contract namespace.
 
 ## Core Rules
-- Use DTOs from `Krafter.Shared.Contracts.*`.
+- Use DTOs from `AditiKraft.Krafter.Shared.Contracts.*`.
 - Use `ApiCallService` for every Refit call.
 - Use `KrafterRoute` from Shared for `RoutePath`.
 - Add `@attribute [MustHavePermission(...)]` to list pages.
@@ -88,19 +88,19 @@ public partial class Users(
 ```
 
 ## Related Agents
-- `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
-- `src/UI/Krafter.UI.Web.Client/Features/Auth/Agents.md`
-- `src/UI/Krafter.UI.Web.Client/Features/Users/Agents.md`
-- `src/UI/Krafter.UI.Web.Client/Features/Roles/Agents.md`
-- `src/UI/Krafter.UI.Web.Client/Features/Tenants/Agents.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md`
 
 ## References (real code)
-- `src/UI/Krafter.UI.Web.Client/Features/Users/Users.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs`
-- `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs`
-- `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs`
-- `src/UI/Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs`
 
 ## Common Mistakes
 - Calling Refit directly without `ApiCallService`.

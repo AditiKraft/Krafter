@@ -56,11 +56,11 @@ if (basic is null)
 - Refresh token storage schema changes.
 
 ## References (real code)
-- `src/Backend/Features/Auth/Login.cs`
-- `src/Backend/Features/Auth/RefreshToken.cs`
-- `src/Backend/Features/Auth/ExternalLogin.cs`
-- `src/Backend/Features/Auth/_Shared/TokenService.cs`
-- `src/Backend/Features/Auth/_Shared/UserRefreshToken.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/_Shared/TokenService.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/_Shared/UserRefreshToken.cs`
 
 ---
 Last Updated: 2026-01-25
