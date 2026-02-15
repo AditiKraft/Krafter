@@ -1,6 +1,4 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
-
-namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Brand;
+﻿namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Brand;
 
 public partial class Logo(ThemeManager themeManager) : IDisposable
 {

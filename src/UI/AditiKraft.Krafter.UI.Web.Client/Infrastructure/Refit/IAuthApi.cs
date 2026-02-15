@@ -1,4 +1,3 @@
-using AditiKraft.Krafter.Shared.Common.Models;
 using AditiKraft.Krafter.Shared.Contracts.Auth;
 using Refit;
 

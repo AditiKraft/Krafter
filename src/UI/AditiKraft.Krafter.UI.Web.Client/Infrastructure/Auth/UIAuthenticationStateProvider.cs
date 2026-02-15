@@ -2,13 +2,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 using AditiKraft.Krafter.Shared.Common.Auth;
-using AditiKraft.Krafter.Shared.Common.Models;
 using AditiKraft.Krafter.Shared.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
-using Microsoft.AspNetCore.Components.Authorization;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 

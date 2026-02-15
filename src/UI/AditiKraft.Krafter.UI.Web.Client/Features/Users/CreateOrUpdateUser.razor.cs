@@ -1,7 +1,4 @@
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using Mapster;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;

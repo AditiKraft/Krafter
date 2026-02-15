@@ -1,6 +1,4 @@
-﻿using Microsoft.JSInterop;
-
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
+﻿namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 
 public class ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
 {

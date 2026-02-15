@@ -1,6 +1,4 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
-
-namespace AditiKraft.Krafter.UI.Web.Client.Features.Appearance;
+﻿namespace AditiKraft.Krafter.UI.Web.Client.Features.Appearance;
 
 public partial class AppearancePage(
     ThemeService themeService,

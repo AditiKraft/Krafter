@@ -1,9 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using AditiKraft.Krafter.Shared.Common.Models;
 using AditiKraft.Krafter.Shared.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using Microsoft.AspNetCore.Http;
 

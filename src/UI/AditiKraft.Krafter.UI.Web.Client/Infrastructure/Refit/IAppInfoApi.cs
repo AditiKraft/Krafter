@@ -1,4 +1,3 @@
-using AditiKraft.Krafter.Shared.Common.Models;
 using Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;

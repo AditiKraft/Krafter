@@ -17,3 +17,26 @@
 @using AditiKraft.Krafter.Shared.Contracts.Users
 @using AditiKraft.Krafter.Shared.Contracts.Roles
 @using AditiKraft.Krafter.Shared.Contracts.Tenants
+
+
+
+@using System.Net.Http;
+@using System.Net.Http.Json;
+@using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
+@using AditiKraft.Krafter.Shared.Common.Models;
+@using AditiKraft.Krafter.Shared.Contracts.Roles;
+@using AditiKraft.Krafter.Shared.Contracts.Tenants;
+@using AditiKraft.Krafter.Shared.Contracts.Users;
+@using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
+@using Bit.BlazorUI;
+@using Blazored.FluentValidation;
+@using Radzen;
+@using Radzen.Blazor;
+@using Microsoft.AspNetCore.Components;
+@using Microsoft.AspNetCore.Components.Authorization;
+@using Microsoft.AspNetCore.Components.Forms;
+@using Microsoft.AspNetCore.Components.Routing;
+@using Microsoft.AspNetCore.Components.Web;
+@using Microsoft.AspNetCore.Components.Web.Virtualization;
+@using Microsoft.JSInterop;
+@using static Microsoft.AspNetCore.Components.Web.RenderMode;

@@ -1,10 +1,6 @@
 using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Tenants;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
 

@@ -1,5 +1,3 @@
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
 using Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;

@@ -1,9 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.SignalR;

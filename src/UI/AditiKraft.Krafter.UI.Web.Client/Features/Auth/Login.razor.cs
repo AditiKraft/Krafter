@@ -1,8 +1,6 @@
 ﻿using AditiKraft.Krafter.Shared.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
-using Microsoft.AspNetCore.Components.Authorization;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 

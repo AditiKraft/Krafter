@@ -1,26 +1,17 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text;
 using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Auth;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
-using AditiKraft.Krafter.Shared.Common.Auth;
 using AditiKraft.Krafter.UI.Web.Client;
-using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using AditiKraft.Krafter.UI.Web.Components;
 using AditiKraft.Krafter.UI.Web.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Radzen;
 
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);

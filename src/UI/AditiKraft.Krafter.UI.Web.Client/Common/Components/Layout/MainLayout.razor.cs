@@ -1,7 +1,5 @@
-﻿using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+﻿using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using AditiKraft.Krafter.UI.Web.Client.Models;
 using Microsoft.AspNetCore.Http;

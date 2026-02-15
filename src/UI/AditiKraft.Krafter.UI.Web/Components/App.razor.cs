@@ -1,7 +1,3 @@
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
-using Microsoft.AspNetCore.Components;
-using Radzen;
-
 namespace AditiKraft.Krafter.UI.Web.Components;
 
 public partial class App(ThemeService themeService, ThemeManager themeManager)

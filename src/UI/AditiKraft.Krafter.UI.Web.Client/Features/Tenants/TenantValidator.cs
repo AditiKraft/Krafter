@@ -1,4 +1,3 @@
-using AditiKraft.Krafter.Shared.Contracts.Tenants;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
