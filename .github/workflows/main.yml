@@ -25,3 +25,4 @@ jobs:
           # Ensure these are set as GitHub repository secrets
           PAT: ${{ secrets.GITHUB_TOKEN }}
           DeploymentWebhookUrl: ${{ secrets.DeploymentWebhookUrl }}
+          NuGetPAT : ${{ secrets.NuGetPAT }}
