@@ -1,0 +1,54 @@
+@using AditiKraft.Krafter.UI.Web.Client.Common.Models
+@using AditiKraft.Krafter.UI.Web.Client.Common.Permissions
+@attribute [Route(RoutePath)]
+@attribute [MustHavePermission(KrafterAction.View, KrafterResource.Roles)]
+
+<AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Create, KrafterResource.Roles))">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10px" JustifyContent="JustifyContent.End" class="mt-2 mb-4">
+        <RadzenButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Icon="add_circle_outline" Text="Role" Click="@AddRole"/>
+    </RadzenStack>
+</AuthorizeView>
+
+<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppSate.Density" AllowColumnResize="LocalAppSate.AllowColumnResize" IsLoading="@IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response.Data.Items" AllowFiltering="true" AllowPaging="true" PageSize="@RequestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
+    <Columns>
+
+        <RadzenDataGridColumn Property="Name" Title="Name"/>
+        <RadzenDataGridColumn Property="Description" Title="Description"/>
+        @*  <RadzenDataGridColumn Title="Created By" Frozen="true" Sortable="false" Filterable="false" TextAlign="TextAlign.Center">
+            <Template Context="data">
+                @if (data.CreatedBy is { })
+                {
+                    @(data.CreatedBy.FirstName + " " + @data.CreatedBy.LastName)
+                }
+            </Template>
+        </RadzenDataGridColumn> *@
+        <RadzenDataGridColumn Property="CreatedById" Title="UserId">
+            <Template Context="data">
+                @data.CreatedById
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Actions" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true" Width="9.28vw" FrozenPosition="FrozenColumnPosition.Right">
+            <Template Context="data">
+
+                <RadzenSplitButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Lighter" Variant="Variant.Flat" AlwaysOpenPopup="true" Click="@(args => ActionClicked(args, data))" Text="Actions" Icon="settings_applications" Style="margin-right: 4px">
+                    <ChildContent>
+
+
+                        @if (AditiKraft.Krafter.Shared.Contracts.Roles.KrafterRoleConstant.IsDefault(data.Name!) == false)
+                        {
+                            <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Update, KrafterResource.Roles))">
+                                <RadzenSplitButtonItem Text="Edit" Value="@KrafterAction.Update" Icon="edit"/>
+                            </AuthorizeView>
+
+                            <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Delete, KrafterResource.Roles))">
+                                <RadzenSplitButtonItem Text="Delete" Value="@KrafterAction.Delete" Icon="delete"/>
+                            </AuthorizeView>
+                        }
+
+                    </ChildContent>
+                </RadzenSplitButton>
+
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>

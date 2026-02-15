@@ -1,0 +1,39 @@
+@using AditiKraft.Krafter.Shared.Common.Extensions
+<AuthorizeView>
+    <Authorizing>
+        <text>Login...</text>
+    </Authorizing>
+    <Authorized>
+
+        <RadzenStack Orientation="Orientation.Vertical">
+
+
+            <RadzenSplitButton AlwaysOpenPopup="true" Click="@(args => SplitButtonClick(args))" Text="@context.User.GetFullName()" Icon="account_circle" Style="margin-right: 4px">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Logout" Value="Logout" Icon="logout"/>
+                    <RadzenSplitButtonItem Text="Change Password" Value="ChangePassword" Icon="account_balance_wallet"/>
+                    <RadzenSplitButtonItem Text="Appearance" Value="Appearance" Icon="contrast"/>
+                </ChildContent>
+            </RadzenSplitButton>
+            @* @if (ShowProfileCard)
+            {
+                <RadzenCard Variant="Variant.Filled" class="rz-my-12 rz-mx-auto" Style="max-width: 315px">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-4">
+                        <RadzenImage Path="default-profile.jpg" Style="width: 100px; height: 100px; border-radius: 50%;" />
+                        <RadzenStack Gap="0">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-2 rz-my-0">Employee</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@(context.User.GetFullName())</b></RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-display-flex rz-mt-4 rz-mb-0">Email</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body1"><b>@(context.User.GetEmail())</b></RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            } *@
+
+        </RadzenStack>
+
+    </Authorized>
+    <NotAuthorized>
+        <RadzenButton Click="@(() => NavigateToLogin())" Text="Login" Style="margin-right: 4px"></RadzenButton>
+    </NotAuthorized>
+</AuthorizeView>

@@ -29,7 +29,7 @@ Alternatively, log in with Google to create a new account.
 - Kiota CLI (optional for client regen): `dotnet tool install --global Microsoft.Kiota.Cli`
 
 2) Run Aspire orchestration (starts PostgreSQL, dynamic ports)
-- `dotnet run --project aspire/Krafter.Aspire.AppHost/Krafter.Aspire.AppHost.csproj`
+- `dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj`
 
 **Database migrations (first run or when schema changes):**
 
@@ -48,11 +48,11 @@ Alternatively, log in with Google to create a new account.
 4) Stop `krafter-api` service in Aspire (unlocks Backend assembly)
 
 5) Set migration connection string
-- EITHER update `src/Backend/appsettings.Local.json` → `ConnectionStrings:KrafterDbMigration`
+- EITHER update `src/AditiKraft.Krafter.Backend/appsettings.Local.json` → `ConnectionStrings:KrafterDbMigration`
 - OR set env var: `ConnectionStrings__KrafterDbMigration="Host=localhost;Port=XXXXX;Username=postgres;Password=postgres;Database=krafterDb"`
 
 6) Apply migrations (once)
-- `cd src/Backend`
+- `cd src/AditiKraft.Krafter.Backend`
 - `dotnet ef database update --context KrafterContext`
 - `dotnet ef database update --context TenantDbContext`
 - `dotnet ef database update --context BackgroundJobsContext`
@@ -213,16 +213,16 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 
 3. Run with Aspire (starts DB and services)
    ```bash
-   dotnet run --project aspire/Krafter.Aspire.AppHost/Krafter.Aspire.AppHost.csproj
+   dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
    ```
 
 4. Apply database migrations (quick path)
    - Open Aspire Dashboard → copy PostgreSQL connection string
    - Stop `krafter-api` service
-   - Set `ConnectionStrings__KrafterDbMigration` (or update `src/Backend/appsettings.Local.json`)
+   - Set `ConnectionStrings__KrafterDbMigration` (or update `src/AditiKraft.Krafter.Backend/appsettings.Local.json`)
    - Run:
      ```bash
-     cd src/Backend
+     cd src/AditiKraft.Krafter.Backend
      dotnet ef database update --context KrafterContext
      dotnet ef database update --context TenantDbContext
      dotnet ef database update --context BackgroundJobsContext
@@ -263,7 +263,7 @@ Before running the application for the first time, you need to set up the databa
 ##### 1. Start Aspire Orchestration
 
 ```bash
-dotnet run --project aspire/Krafter.Aspire.AppHost/Krafter.Aspire.AppHost.csproj
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 ```
 
 This starts PostgreSQL and generates a dynamic connection string.
@@ -327,7 +327,7 @@ Tip: You can also set the environment variable `ConnectionStrings__KrafterDbMigr
 Navigate to the Backend project directory and apply migrations:
 
 ```bash
-cd src/Backend
+cd src/AditiKraft.Krafter.Backend
 
 # Apply all migrations
 dotnet ef database update --context KrafterContext
@@ -359,7 +359,7 @@ Your database is now ready! 🎉
 When you add new features that require database changes:
 
 ```bash
-cd src/Backend
+cd src/AditiKraft.Krafter.Backend
 
 # Create a new migration
 dotnet ef migrations add <MigrationName> --context KrafterContext
@@ -375,7 +375,7 @@ dotnet ef database update --context KrafterContext
 |-------|-------|----------|
 | "Unable to create DbContext" | Backend API is running | Stop the Backend API in Aspire dashboard |
 | "Database connection failed" | Wrong port or Aspire not running | Verify Aspire is running and copy the correct connection string from dashboard |
-| "Could not find DbContext" | Wrong working directory | Ensure you're in `src/Backend` directory |
+| "Could not find DbContext" | Wrong working directory | Ensure you're in `src/AditiKraft.Krafter.Backend` directory |
 | "Migration already exists" | Duplicate migration name | Use `dotnet ef migrations remove --context <ContextName>` |
 | `dotnet-ef` not found | EF tools not installed | Run `dotnet tool install --global dotnet-ef` |
 
@@ -387,19 +387,19 @@ Before running the application, configure the following secrets and settings:
 
 #### Required Configuration
 
-**`aspire/Krafter.Aspire.AppHost/appsettings.json`**
+**`aspire/AditiKraft.Krafter.Aspire.AppHost/appsettings.json`**
 - `Parameters:postgresUsername` = `{YOUR_POSTGRES_USERNAME}`
 - `Parameters:postgresPassword` = `{YOUR_POSTGRES_PASSWORD}`
 
-**`src/Backend/appsettings.json`**
+**`src/AditiKraft.Krafter.Backend/appsettings.json`**
 - `TickerQBasicAuth:Username` = `{TICKERQ_BASIC_AUTH_USERNAME}`
 - `TickerQBasicAuth:Password` = `{TICKERQ_BASIC_AUTH_PASSWORD}`
 - `SecuritySettings:JwtSettings:Key` = `{JWT_SIGNING_KEY}`
 
-**`src/UI/Krafter.UI.Web/appsettings.Development.json`**
+**`src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json`**
 - `Jwt:Key` = `{JWT_SIGNING_KEY}` (MUST be identical to backend JWT key)
 
-**`src/UI/Krafter.UI.Web.Client/wwwroot/appsettings.json`**
+**`src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json`**
 - `RemoteHostUrl` = `{YOUR_BACKEND_HOST}`
 - `Authentication:Google:ClientId` = `{YOUR_GOOGLE_CLIENT_ID}` (optional, for Google OAuth)
 
@@ -407,7 +407,7 @@ Before running the application, configure the following secrets and settings:
 
 #### Quick commands via user-secrets (recommended for dev)
 
-From the Backend project (`src/Backend`):
+From the Backend project (`src/AditiKraft.Krafter.Backend`):
 
 ```bash
 # initialize once (if needed)
@@ -419,7 +419,7 @@ dotnet user-secrets set "TickerQBasicAuth:Username" "<username>"
 dotnet user-secrets set "TickerQBasicAuth:Password" "<password>"
 ```
 
-From the Blazor Server host (`src/UI/Krafter.UI.Web`):
+From the Blazor Server host (`src/UI/AditiKraft.Krafter.UI.Web`):
 
 ```bash
 # initialize once (if needed)
@@ -493,7 +493,7 @@ For detailed structure, see [Agents.md](Agents.md) and sub-project Agents.md fil
 7. Update permissions in `Common/Permissions/KrafterPermissions.cs`
 8. Update `Infrastructure/Services/MenuService.cs` for navigation
 
-For complete guidelines, see [Agents.md](Agents.md) and the sub-project Agents.md files in `src/Backend/`, `src/UI/`, and `src/Krafter.Shared/`.
+For complete guidelines, see [Agents.md](Agents.md) and the sub-project Agents.md files in `src/AditiKraft.Krafter.Backend/`, `src/UI/`, and `src/AditiKraft.Krafter.Shared/`.
 
 ### Key Commands
 
@@ -505,14 +505,14 @@ dotnet build
 dotnet test
 
 # Create migration
-dotnet ef migrations add <Name> --project src/Backend --context KrafterContext
-dotnet ef migrations add <Name> --project src/Backend --context BackgroundJobsContext
-dotnet ef migrations add <Name> --project src/Backend --context TenantDbContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context BackgroundJobsContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context TenantDbContext
 
 # Update database
-dotnet ef database update --project src/Backend --context KrafterContext
-dotnet ef database update --project src/Backend --context BackgroundJobsContext
-dotnet ef database update --project src/Backend --context TenantDbContext
+dotnet ef database update --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet ef database update --project src/AditiKraft.Krafter.Backend --context BackgroundJobsContext
+dotnet ef database update --project src/AditiKraft.Krafter.Backend --context TenantDbContext
 ```
 
 ## 🐳 Deployment
@@ -521,8 +521,8 @@ dotnet ef database update --project src/Backend --context TenantDbContext
 
 **Build images:**
 ```bash
-dotnet publish src/Backend/Backend.csproj -c Release -p:PublishProfile=DefaultContainer
-dotnet publish src/UI/Krafter.UI.Web/Krafter.UI.Web.csproj -c Release -p:PublishProfile=DefaultContainer
+dotnet publish src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj -c Release -p:PublishProfile=DefaultContainer
+dotnet publish src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj -c Release -p:PublishProfile=DefaultContainer
 ```
 
 ### CI/CD with GitHub Actions
@@ -584,6 +584,42 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Documentation**: [Agents.md](Agents.md) (AI instructions and project structure)
 - **Issues**: [GitHub Issues](https://github.com/AditiKraft/Krafter/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/AditiKraft/Krafter/discussions)
+
+---
+
+## 📦 .NET Template
+
+You can use Krafter as a template to quickly scaffold new projects with a single command.
+
+### Install the Template from NuGet
+
+```bash
+dotnet new install AditiKraft.Krafter.Templates
+```
+
+### Create a New Project
+
+```bash
+dotnet new krafter -n MyCompanyApp
+cd MyCompanyApp
+dotnet run --project aspire/MyCompanyApp.Aspire.AppHost/MyCompanyApp.Aspire.AppHost.csproj
+```
+
+> **Important:** Always use the `-n` parameter to specify your project name. This replaces "Krafter" with "MyCompanyApp" throughout the entire codebase (namespaces, project files, folder names, etc.).
+
+### Update the Template
+
+```bash
+dotnet new update
+```
+
+### Uninstall the Template
+
+```bash
+dotnet new uninstall AditiKraft.Krafter.Templates
+```
+
+---
 
 ---
 

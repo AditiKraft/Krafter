@@ -1,0 +1,142 @@
+@using AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout
+@using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit
+@inject IJSRuntime jsRuntime
+@inject ThemeManager themeManager
+@inject ITenantsApi tenantsApi
+@implements IDisposable
+<RadzenComponents/>
+
+@if (!string.IsNullOrEmpty(_themeCssFile))
+{
+    <link rel="stylesheet" href="@_themeCssFile"/>
+}
+
+
+<CascadingValue Value="@IsMobileDevice">
+
+    <InitializeSignalr></InitializeSignalr>
+    <Router AppAssembly="typeof(MainLayout).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (@context.User.Identity?.IsAuthenticated is true)
+                    {
+                        <p>You are not authorized to be here.</p>
+                    }
+                    else
+                    {
+                        <Login></Login>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="routeData" Selector="@("h1")"/>
+        </Found>
+        <NotFound>
+            <img width="100%:height:100%" src="404.svg" alt="404"/>
+        </NotFound>
+    </Router>
+</CascadingValue>
+
+
+@code {
+
+    // Don't use static property - use instance property
+    public bool IsMobileDevice { get; set; }
+
+    private DotNetObjectReference<Routes> objRef;
+    private string _themeCssFile;
+
+    protected override void OnInitialized()
+    {
+        Current = this;
+
+        themeManager.ThemeChangeRequested += OnThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                try
+                {
+                    await jsRuntime.InvokeVoidAsync("deleteElementById", "webassembly-loading-spinner");
+                }
+                catch
+                {
+                }
+
+                IsMobileDevice = await jsRuntime.InvokeAsync<bool>("isMobile");
+
+                // Create a reference to this component for JS interop
+                objRef = DotNetObjectReference.Create(this);
+
+                // Set up the system theme listener
+                await jsRuntime.InvokeVoidAsync("listenForSystemThemeChanges", objRef);
+
+                // Initialize theme based on stored preference
+                // await themeManager.InitializeThemeAsync();
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnAfterRenderAsync: {ex}");
+        }
+
+        await tenantsApi.SeedDataAsync(new SeedDataRequest(), CancellationToken.None);
+    }
+
+    [JSInvokable]
+    public async Task OnSystemThemeChanged(string systemTheme)
+    {
+        // Delegate to the theme manager
+        await themeManager.OnSystemThemeChanged(systemTheme);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public static void UpdateIsMobileDevice(bool isMobile)
+    {
+        if (Current is not null)
+        {
+            Current.UpdateMobileState(isMobile);
+        }
+    }
+
+    private static Routes Current { get; set; }
+
+    public void UpdateMobileState(bool isMobile)
+    {
+        IsMobileDevice = isMobile;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        if (Current == this)
+        {
+            Current = null;
+        }
+
+        objRef?.Dispose();
+        themeManager.ThemeChangeRequested -= OnThemeChanged;
+    }
+
+    private async Task OnThemeChanged(string preference)
+    {
+        // if (preference.Contains("dark", StringComparison.OrdinalIgnoreCase))
+        // {
+        //     _themeCssFile = "brand/css/krafter-theme-dark.css"; // Update as needed
+        // }
+        // else
+        // {
+        //     _themeCssFile = "brand/css/krafter-theme.css"; // Update as needed
+        // }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+}

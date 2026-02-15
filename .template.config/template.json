@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Aditi Kraft",
+  "classifications": [
+    "Web",
+    "ASP.NET",
+    "Blazor",
+    "Full-Stack",
+    "Vertical Slice Architecture"
+  ],
+  "identity": "AditiKraft.Krafter.FullStack.Template",
+  "name": "AditiKraft Krafter Full-Stack Application",
+  "shortName": "krafter",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "AditiKraft.Krafter",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            ".git/**",
+            ".vs/**",
+            ".idea/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/*.user",
+            "**/.DS_Store",
+            ".nuke/temp/**",
+            ".template.config/**",
+            "AditiKraft.Krafter.Templates.csproj",
+            "pack-and-install.cmd"
+          ]
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "description": "Restore NuGet packages",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

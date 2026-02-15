@@ -1,0 +1,36 @@
+using System.Reflection;
+using AditiKraft.Krafter.Backend.Features.Auth;
+using AditiKraft.Krafter.Backend.Api;
+
+namespace AditiKraft.Krafter.Backend.Api.Configuration;
+
+public static class RouteConfiguration
+{
+    public static IServiceCollection AddRouteDiscovery(this IServiceCollection services)
+    {
+        Assembly assembly = typeof(GetToken.TokenRoute).Assembly;
+
+        var routeRegistrars = assembly.GetTypes()
+            .Where(t => typeof(IRouteRegistrar).IsAssignableFrom(t) &&
+                        t is { IsInterface: false, IsAbstract: false } &&
+                        t != typeof(IRouteRegistrar))
+            .ToList();
+
+        foreach (Type routeType in routeRegistrars)
+        {
+            services.AddSingleton(typeof(IRouteRegistrar), routeType);
+        }
+
+        return services;
+    }
+
+    public static IApplicationBuilder MapDiscoveredRoutes(this IApplicationBuilder app)
+    {
+        foreach (IRouteRegistrar registrar in app.ApplicationServices.GetServices<IRouteRegistrar>())
+        {
+            registrar.MapRoute((IEndpointRouteBuilder)app);
+        }
+
+        return app;
+    }
+}

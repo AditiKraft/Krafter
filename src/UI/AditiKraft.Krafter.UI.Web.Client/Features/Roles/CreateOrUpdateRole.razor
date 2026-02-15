@@ -1,0 +1,46 @@
+<RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest __) => Submit(__))">
+    <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
+    <RadzenStack Gap="1rem" Orientation="Orientation.Vertical">
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenLabel Text="Name" Component="Name"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="8">
+                <RadzenTextBox Style="width: 100%" Disabled="!string.IsNullOrWhiteSpace(UserDetails.Id)" @bind-Value="@CreateUserRequest.Name" Name="Name"/>
+            </RadzenColumn>
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Name)"/>
+        </RadzenRow>
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenLabel Text="Description" Component="Description"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="8">
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.Description" Name="Description"/>
+            </RadzenColumn>
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Description)"/>
+        </RadzenRow>
+
+        @if (!string.IsNullOrWhiteSpace(UserDetails.Id))
+        {
+            <RadzenRow AlignItems="AlignItems.Center">
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenLabel Text="Permission" Component="FinalPermission"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenDropDown Style="width: 100%" @bind-Value=@CreateUserRequest.Permissions Multiple=true AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="FinalPermission"
+                                    Data=@(GroupedData != null ? GroupedData : Enumerable.Empty<GroupPermissionData>()) DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
+                        <Template Context="product">
+                            @(product.Resource ?? product.FinalPermission)
+                        </Template>
+                    </RadzenDropDown>
+                </RadzenColumn>
+            </RadzenRow>
+        }
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
+    </RadzenStack>
+</RadzenTemplateForm>

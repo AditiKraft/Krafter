@@ -1,0 +1,21 @@
+@using AditiKraft.Krafter.UI.Web.Client.Common.Models
+<RadzenDropDownDataGrid Name="UserDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="false" AllowClear="true" @bind-Value="@Value" Change="@((arg) => OnValueChanged(arg))"
+                        LoadData="@LoadProcesses" AllowFiltering="true"
+                        Data="@Data" Count="@TotalCount" TextProperty="FirstName" ValueProperty="Id" Placeholder="Select User" Chips="true">
+
+    <Columns>
+
+        <RadzenDropDownDataGridColumn Width="60px" Sortable="false">
+            <HeaderTemplate>
+                <RadzenCheckBox Disabled="true" TriState="false" TValue="bool" Value="@(Data != null && Data.Any(c => Value != null && Value.Contains(c.Id)))"/>
+            </HeaderTemplate>
+            <Template Context="data">
+                <RadzenCheckBox TriState="false" Value="@(Value != null && Value.Contains(((UserInfo)data).Id))"
+                                TValue="bool" Change="@(_ => dropDownGrid.SelectItem(data))"@onclick:stopPropagation/>
+            </Template>
+        </RadzenDropDownDataGridColumn>
+        <RadzenDropDownDataGridColumn Property="FirstName" Title="FirstName" Width="80px"/>
+        <RadzenDropDownDataGridColumn Property="LastName" Title="LastName" Width="200px"/>
+
+    </Columns>
+</RadzenDropDownDataGrid>

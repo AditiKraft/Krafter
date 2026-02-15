@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/aspire/">
+    <Project Path="aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj" />
+    <Project Path="aspire/AditiKraft.Krafter.Aspire.ServiceDefaults/AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Backend/">
+    <Project Path="src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj" />
+  </Folder>
+  <Folder Name="/src/Krafter.Shared/">
+    <Project Path="src/AditiKraft.Krafter.Shared/AditiKraft.Krafter.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/UI/">
+    <Project Path="src/UI/AditiKraft.Krafter.UI.Web.Client/AditiKraft.Krafter.UI.Web.Client.csproj" />
+    <Project Path="src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj" />
+  </Folder>
+  <Project Path="build/_build.csproj" />
+</Solution>

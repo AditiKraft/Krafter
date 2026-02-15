@@ -12,7 +12,7 @@ using Nuke.Common.Tools.DotNet;
 
 internal class Build : NukeBuild
 {
-    public static int Main() => Execute<Build>(x => x.PublishImageAndMakeCallToWebhook);
+    public static int Main() => Execute<Build>(x => x.PublishTemplate);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     private readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -21,9 +21,16 @@ internal class Build : NukeBuild
     private readonly string RepositoryUrl = "https://github.com/AditiKraft/Krafter";
     private AbsolutePath SourceDirectory => RootDirectory / "src";
 
-    private AbsolutePath BuildInfoPath => SourceDirectory / "Backend" / "Features" / "AppInfo" / "Get.cs";
-    private AbsolutePath KrafterAPIPath => SourceDirectory / "Backend" / "Backend.csproj";
-    private AbsolutePath KrafterUIPath => SourceDirectory / "UI" / "Krafter.UI.Web" / "Krafter.UI.Web.csproj";
+    private AbsolutePath BuildInfoPath =>
+        SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "Get.cs";
+
+    private AbsolutePath KrafterAPIPath =>
+        SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
+
+    private AbsolutePath KrafterUIPath =>
+        SourceDirectory / "UI" / "AditiKraft.Krafter.UI.Web" / "AditiKraft.Krafter.UI.Web.csproj";
+
+    private AbsolutePath TemplateProjectPath => RootDirectory / "AditiKraft.Krafter.Templates.csproj";
     private readonly int MajorVersion = DateTime.UtcNow.Year;
     private readonly int MinorVersion = DateTime.UtcNow.Month;
     private readonly int PatchVersion = DateTime.UtcNow.Day;
@@ -34,7 +41,9 @@ internal class Build : NukeBuild
     private bool IsMaster;
     [GitRepository] private readonly GitRepository Repository;
     [Parameter("Personal Access Token")] private readonly string PAT;
+    [Parameter("NuGet API Key for publishing templates")] private readonly string NuGetPAT;
     [Parameter("Deployment Webhook Url")] private readonly string DeploymentWebhookUrl;
+    [Parameter("Template version (default: 0.0.2)")] private readonly string TemplateVersion = "0.0.2";
     private GitHubActions GitHubActions => GitHubActions.Instance;
 
     private Target SetBuildInfo => _ => _
@@ -175,6 +184,47 @@ internal class Build : NukeBuild
 
                     DockerTag = $"{BranchName}-{buildNumber}";
                 }
+            }
+        });
+
+    // ============================================
+    // Template Targets
+    // ============================================
+
+    private Target PackTemplate => _ => _
+        .DependsOn(PublishImageAndMakeCallToWebhook)
+        .Description("Pack the Krafter template as a NuGet package")
+        .Executes(() =>
+        {
+            DotNetTasks.DotNetPack(s => s
+                .SetProject(TemplateProjectPath)
+                .SetConfiguration(Configuration.Release)
+                .SetOutputDirectory(RootDirectory / "bin" / "Release")
+                .SetProperty("PackageVersion", TemplateVersion));
+
+            Serilog.Log.Information($"✅ Template package v{TemplateVersion} created successfully!");
+        });
+
+    private Target PublishTemplate => _ => _
+        .DependsOn(PackTemplate)
+        .Description("Publish the template to NuGet.org")
+        .Requires(() => NuGetPAT)
+        .Executes(() =>
+        {
+            AbsolutePath packagePath = (RootDirectory / "bin" / "Release").GlobFiles("*.nupkg").FirstOrDefault();
+            if (packagePath != null)
+            {
+                DotNetTasks.DotNetNuGetPush(s => s
+                    .SetTargetPath(packagePath)
+                    .SetSource("https://api.nuget.org/v3/index.json")
+                    .SetApiKey(NuGetPAT));
+
+                Serilog.Log.Information("✅ Template published to NuGet successfully!");
+                Serilog.Log.Information("🌐 Package: https://www.nuget.org/packages/AditiKraft.Krafter.Templates");
+            }
+            else
+            {
+                throw new Exception("❌ Package file not found!");
             }
         });
 }
