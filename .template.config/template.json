@@ -31,20 +31,10 @@
             "**/.DS_Store",
             ".nuke/temp/**",
             "AditiKraft.Krafter.Templates.csproj",
-            "pack-and-install.cmd",
-            "README.md",
-            "LICENSE",
-            "docs/**",
-            "**/Agents.md"
+            "pack-and-install.cmd"
           ]
         }
       ]
-    },
-    {
-      "source": "./",
-      "target": "./",
-      "include": ["README.md", "LICENSE", "docs/**", "**/Agents.md"],
-      "copyOnly": true
     }
   ],
   "postActions": [
