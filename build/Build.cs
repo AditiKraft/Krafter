@@ -43,7 +43,7 @@ internal class Build : NukeBuild
     [Parameter("Personal Access Token")] private readonly string PAT;
     [Parameter("NuGet API Key for publishing templates")] private readonly string NuGetPAT;
     [Parameter("Deployment Webhook Url")] private readonly string DeploymentWebhookUrl;
-    [Parameter("Template version (default: 1.0.0)")] private readonly string TemplateVersion = "1.0.0";
+    [Parameter("Template version (default: 0.0.2)")] private readonly string TemplateVersion = "0.0.2";
     private GitHubActions GitHubActions => GitHubActions.Instance;
 
     private Target SetBuildInfo => _ => _
