@@ -1,0 +1,72 @@
+@using AditiKraft.Krafter.UI.Web.Client.Features.Roles._Shared
+@using Krafter.UI.Web.Client.Features.Roles._Shared
+@using Krafter.UI.Web.Client.Features.Users
+<RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateUserRequest __) => Submit(__))">
+    <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
+    <RadzenStack>
+
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="First Name" Component="FirstName"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="10">
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.FirstName" Name="FirstName"/>
+            </RadzenColumn>
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.FirstName)"/>
+        </RadzenRow>
+
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Last Name" Component="LastName"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="10">
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.LastName" Name="LastName"/>
+            </RadzenColumn>
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.LastName)"/>
+        </RadzenRow>
+
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Phone Number" Component="PhoneNumber"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="10">
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.PhoneNumber" Name="PhoneNumber"/>
+            </RadzenColumn>
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.PhoneNumber)"/>
+        </RadzenRow>
+
+        @if (!string.IsNullOrWhiteSpace(UserInput.Id))
+        {
+            <RadzenRow AlignItems="AlignItems.Center">
+                <RadzenColumn Size="12" SizeMD="2">
+                    <RadzenLabel Text="Roles" Component="Roles"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <MultiSelectRoleDropDownDataGrid @bind-Value="@CreateUserRequest.Roles"></MultiSelectRoleDropDownDataGrid>
+                </RadzenColumn>
+                <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Roles)"/>
+            </RadzenRow>
+        }
+
+
+        <RadzenRow AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="2">
+                <RadzenLabel Text="Email" Component="Email"/>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="10">
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.Email" Name="Email"/>
+            </RadzenColumn>
+            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Email)"/>
+        </RadzenRow>
+
+
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
+    </RadzenStack>
+</RadzenTemplateForm>

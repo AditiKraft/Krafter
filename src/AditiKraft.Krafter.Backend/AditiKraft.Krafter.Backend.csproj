@@ -1,0 +1,85 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Properties\launchSettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Background Jobs -->
+
+    <PackageReference Include="Scalar.AspNetCore.Microsoft" Version="2.10.3" />
+    <PackageReference Include="TickerQ" Version="2.5.3" />
+    <PackageReference Include="TickerQ.Dashboard" Version="2.5.3" />
+    <PackageReference Include="TickerQ.EntityFrameworkCore" Version="2.5.3" />
+
+    <!-- Authentication & Identity -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0" />
+
+    <!-- Database & EF Core -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0-rc.2" />
+    <PackageReference Include="LinqKit.Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.DynamicLinq" Version="10.7.0" />
+    <!--<PackageReference Include="EFCore.BulkExtensions" Version="9.0.1" />-->
+    <PackageReference Include="EFCore.BulkExtensions.Dotnet10" Version="10.0.0-rc.2.25502.107" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.0" />
+
+    <!-- API & Swagger -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+
+
+    <!-- Validation -->
+    <PackageReference Include="FluentValidation" Version="12.1.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+    <PackageReference Include="ForEvolve.FluentValidation.AspNetCore.Http" Version="1.0.26" />
+
+
+    <!-- External Integrations -->
+    <PackageReference Include="Refit" Version="8.0.0" />
+    <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
+
+    <!-- Utilities -->
+    <PackageReference Include="Mapster" Version="7.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\aspire\AditiKraft.Krafter.Aspire.ServiceDefaults\AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\AditiKraft.Krafter.Shared\AditiKraft.Krafter.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Properties\launchSettings.json" />
+  </ItemGroup>
+
+
+  <PropertyGroup>
+    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <!-- Docker Container Configuration -->
+  <PropertyGroup>
+    <ContainerFamily>noble</ContainerFamily>
+    <ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
+    <ContainerRepository>ghcr.io/aditikraft/krafter.api</ContainerRepository>
+    <ContainerRegistry>ghcr.io</ContainerRegistry>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ContainerLabel Include="org.opencontainers.image.source" Value="https://github.com/AditiKraft/Krafter" />
+  </ItemGroup>
+
+</Project>

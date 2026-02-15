@@ -21,9 +21,9 @@ internal class Build : NukeBuild
     private readonly string RepositoryUrl = "https://github.com/AditiKraft/Krafter";
     private AbsolutePath SourceDirectory => RootDirectory / "src";
 
-    private AbsolutePath BuildInfoPath => SourceDirectory / "Backend" / "Features" / "AppInfo" / "Get.cs";
-    private AbsolutePath KrafterAPIPath => SourceDirectory / "Backend" / "Backend.csproj";
-    private AbsolutePath KrafterUIPath => SourceDirectory / "UI" / "Krafter.UI.Web" / "Krafter.UI.Web.csproj";
+    private AbsolutePath BuildInfoPath => SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "Get.cs";
+    private AbsolutePath KrafterAPIPath => SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
+    private AbsolutePath KrafterUIPath => SourceDirectory / "UI" / "AditiKraft.Krafter.UI.Web" / "AditiKraft.Krafter.UI.Web.csproj";
     private AbsolutePath TemplateProjectPath => RootDirectory / "AditiKraft.Krafter.Templates.csproj";
     private readonly int MajorVersion = DateTime.UtcNow.Year;
     private readonly int MinorVersion = DateTime.UtcNow.Month;
@@ -194,7 +194,7 @@ internal class Build : NukeBuild
                 .SetConfiguration(Configuration.Release)
                 .SetOutputDirectory(RootDirectory / "bin" / "Release")
                 .SetProperty("PackageVersion", TemplateVersion));
-            
+
             Serilog.Log.Information($"✅ Template package v{TemplateVersion} created successfully!");
         });
 
@@ -211,7 +211,7 @@ internal class Build : NukeBuild
                     .SetTargetPath(packagePath)
                     .SetSource("https://api.nuget.org/v3/index.json")
                     .SetApiKey(NuGetPAT));
-                
+
                 Serilog.Log.Information("✅ Template published to NuGet successfully!");
                 Serilog.Log.Information("🌐 Package: https://www.nuget.org/packages/AditiKraft.Krafter.Templates");
             }
