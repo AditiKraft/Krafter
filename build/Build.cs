@@ -12,7 +12,7 @@ using Nuke.Common.Tools.DotNet;
 
 internal class Build : NukeBuild
 {
-    public static int Main() => Execute<Build>(x => x.PublishImageAndMakeCallToWebhook);
+    public static int Main() => Execute<Build>(x => x.PublishTemplate);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     private readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -21,9 +21,15 @@ internal class Build : NukeBuild
     private readonly string RepositoryUrl = "https://github.com/AditiKraft/Krafter";
     private AbsolutePath SourceDirectory => RootDirectory / "src";
 
-    private AbsolutePath BuildInfoPath => SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "Get.cs";
-    private AbsolutePath KrafterAPIPath => SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
-    private AbsolutePath KrafterUIPath => SourceDirectory / "UI" / "AditiKraft.Krafter.UI.Web" / "AditiKraft.Krafter.UI.Web.csproj";
+    private AbsolutePath BuildInfoPath =>
+        SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "Get.cs";
+
+    private AbsolutePath KrafterAPIPath =>
+        SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
+
+    private AbsolutePath KrafterUIPath =>
+        SourceDirectory / "UI" / "AditiKraft.Krafter.UI.Web" / "AditiKraft.Krafter.UI.Web.csproj";
+
     private AbsolutePath TemplateProjectPath => RootDirectory / "AditiKraft.Krafter.Templates.csproj";
     private readonly int MajorVersion = DateTime.UtcNow.Year;
     private readonly int MinorVersion = DateTime.UtcNow.Month;
@@ -186,6 +192,7 @@ internal class Build : NukeBuild
     // ============================================
 
     private Target PackTemplate => _ => _
+        .DependsOn(PublishImageAndMakeCallToWebhook)
         .Description("Pack the Krafter template as a NuGet package")
         .Executes(() =>
         {
@@ -204,7 +211,7 @@ internal class Build : NukeBuild
         .Requires(() => NuGetPAT)
         .Executes(() =>
         {
-            var packagePath = (RootDirectory / "bin" / "Release").GlobFiles("*.nupkg").FirstOrDefault();
+            AbsolutePath packagePath = (RootDirectory / "bin" / "Release").GlobFiles("*.nupkg").FirstOrDefault();
             if (packagePath != null)
             {
                 DotNetTasks.DotNetNuGetPush(s => s
