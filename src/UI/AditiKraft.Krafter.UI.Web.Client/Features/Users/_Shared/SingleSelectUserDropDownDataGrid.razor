@@ -1,5 +1,4 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Models
-@using Krafter.UI.Web.Client.Features.Users._Shared
 <RadzenDropDownDataGrid Name="UserDropDown" Style="width: 100%;" @ref="dropDownGrid" AllowSelectAll="false" IsLoading="IsLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="false" AllowClear="true" @bind-Value="@Value" Change="@((arg) => OnValueChanged(arg))"
                         LoadData="@LoadProcesses" AllowFiltering="true"
                         Data="@Data" Count="@TotalCount" TextProperty="FirstName" ValueProperty="Id" Placeholder="Select User" Chips="true">

@@ -1,6 +1,4 @@
 @using AditiKraft.Krafter.UI.Web.Client.Features.Roles._Shared
-@using Krafter.UI.Web.Client.Features.Roles._Shared
-@using Krafter.UI.Web.Client.Features.Users
 <RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateUserRequest __) => Submit(__))">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
     <RadzenStack>
