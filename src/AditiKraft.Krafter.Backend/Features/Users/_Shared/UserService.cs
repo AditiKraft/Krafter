@@ -2,15 +2,13 @@ using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
 using AditiKraft.Krafter.Backend.Application.Notifications;
 using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Roles._Shared;
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Backend.Application.Common;
-using AditiKraft.Krafter.Shared.Common.Auth;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Roles;
-using AditiKraft.Krafter.Shared.Contracts.Users;
+using AditiKraft.Krafter.Contracts.Common.Auth;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Roles;
+using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -62,8 +60,7 @@ public class UserService(
     ITenantGetterService tenantGetterService,
     TenantDbContext tenantDbContext,
     KrafterContext db,
-    IJobService jobService,
-    ICurrentUser currentUser)
+    IJobService jobService)
     : IUserService, IScopedService
 {
     public async Task<Response<List<string>>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
@@ -99,6 +96,7 @@ public class UserService(
         {
             return Response<bool>.NotFound(permissions.Message ?? "User Not Found.");
         }
+
         return Response<bool>.Success(permissions?.Data?.Contains(permission) ?? false);
     }
 
@@ -143,13 +141,16 @@ public class UserService(
                                $"Please <a href='{loginUrl}'>click here</a> to log in.<br/><br/>" +
                                $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
-            await jobService.EnqueueAsync(
-                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                "SendEmailJob", CancellationToken.None);
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await jobService.EnqueueAsync(
+                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                    "SendEmailJob", CancellationToken.None);
+            }
         }
         else
         {
-            user = await userManager.FindByIdAsync(request.Id);
+            user = await userManager.FindByIdAsync(request.Id!);
             if (user is null)
             {
                 return Response.NotFound("User Not Found.");

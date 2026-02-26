@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Shared.Common.Enums;
+﻿using AditiKraft.Krafter.Contracts.Common.Enums;
 
 namespace AditiKraft.Krafter.Backend.Entities;
 

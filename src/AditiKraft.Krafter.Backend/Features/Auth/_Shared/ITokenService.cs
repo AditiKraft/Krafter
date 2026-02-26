@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Auth;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
 
 namespace AditiKraft.Krafter.Backend.Features.Auth._Shared;
 

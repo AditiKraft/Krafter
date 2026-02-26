@@ -1,14 +1,12 @@
 using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Roles._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Auth;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Roles;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Auth;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,9 +17,7 @@ public sealed class DeleteRole
 {
     internal sealed class Handler(
         RoleManager<KrafterRole> roleManager,
-        UserManager<KrafterUser> userManager,
-        KrafterContext db,
-        ITenantGetterService tenantGetterService) : IScopedHandler
+        KrafterContext db) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(string id)
         {

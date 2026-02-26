@@ -1,7 +1,7 @@
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;

@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Shared.Common.Extensions;
+using AditiKraft.Krafter.Contracts.Common.Extensions;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 
@@ -15,7 +15,7 @@ public class PersistingServerAuthenticationStateProvider : ServerAuthenticationS
     {
         _state = persistentComponentState;
         AuthenticationStateChanged += OnAuthenticationStateChanged;
-        _subscription = _state.RegisterOnPersisting(OnPersistingAsync, RenderMode.InteractiveWebAssembly);
+        _subscription = _state.RegisterOnPersisting(OnPersistingAsync, InteractiveWebAssembly);
     }
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> task) => _authenticationStateTask = task;
@@ -42,8 +42,8 @@ public class PersistingServerAuthenticationStateProvider : ServerAuthenticationS
             _state.PersistAsJson(nameof(UserInfo),
                 new UserInfo
                 {
-                    Id = userId,
-                    Email = email,
+                    Id = userId ?? string.Empty,
+                    Email = email ?? string.Empty,
                     FirstName = firstName,
                     LastName = lastName,
                     Roles = roles,

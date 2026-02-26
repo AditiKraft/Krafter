@@ -9,7 +9,7 @@ public partial class CreateOrUpdateUser(
     IUsersApi usersApi
 ) : ComponentBase
 {
-    [Parameter] public UserDto? UserInput { get; set; } = new();
+    [Parameter] public UserDto UserInput { get; set; } = new();
 
     private CreateUserRequest CreateUserRequest = new();
     private CreateUserRequest OriginalCreateUserRequest = new();
@@ -30,7 +30,8 @@ public partial class CreateOrUpdateUser(
 
             if (!string.IsNullOrWhiteSpace(UserInput.Id))
             {
-                UserRoles = await api.CallAsync(() => usersApi.GetUserRolesAsync(UserInput.Id), showErrorNotification: true);
+                UserRoles = await api.CallAsync(() => usersApi.GetUserRolesAsync(UserInput.Id),
+                    showErrorNotification: true);
                 CreateUserRequest.Roles = UserRoles?
                     .Data?
                     .Where(c => !string.IsNullOrEmpty(c.RoleId))

@@ -2,11 +2,10 @@ using AditiKraft.Krafter.Backend.Api;
 using AditiKraft.Krafter.Backend.Features.Roles._Shared;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +29,7 @@ public sealed class GetUserRoles
 
             IList<string> userRoleNames = await userManager.GetRolesAsync(user);
             List<KrafterRole>? roles = await roleManager.Roles
-                .Where(c => userRoleNames.Contains(c.Name))
+                .Where(c => c.Name != null && userRoleNames.Contains(c.Name))
                 .ToListAsync(cancellationToken);
 
             if (roles is null || !roles.Any())

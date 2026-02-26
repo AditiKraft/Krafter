@@ -1,4 +1,4 @@
-﻿namespace AditiKraft.Krafter.UI.Web.Client.Models;
+namespace AditiKraft.Krafter.UI.Web.Client.Models;
 
 public class Menu
 {
@@ -10,11 +10,11 @@ public class Menu
 
     public bool New { get; set; }
     public bool Updated { get; set; }
-    public string Name { get; set; }
-    public string Icon { get; set; }
-    public string Path { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public bool Expanded { get; set; }
     public string Permission { get; set; } = string.Empty;
     public IEnumerable<Menu>? Children { get; set; }

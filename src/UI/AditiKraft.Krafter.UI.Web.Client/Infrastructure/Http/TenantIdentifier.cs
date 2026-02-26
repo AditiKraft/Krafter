@@ -4,7 +4,8 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 
 public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration configuration)
 {
-    public (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress, bool isServerSide) Get()
+    public (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress, bool isServerSide)
+        Get()
     {
         IFormFactor formFactor = serviceProvider.GetRequiredService<IFormFactor>();
         string navigationManagerBaseUri;
@@ -39,13 +40,15 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         bool isRunningLocally = host == "localhost" || host == "127.0.0.1";
         string clientBaseAddress;
 
-        string remoteHostUrl = configuration["RemoteHostUrl"] ?? throw new InvalidOperationException("RemoteHostUrl not configured");
+        string remoteHostUrl = configuration["RemoteHostUrl"] ??
+                               throw new InvalidOperationException("RemoteHostUrl not configured");
         bool isRemoteHostFullUrl = remoteHostUrl.StartsWith("http://") || remoteHostUrl.StartsWith("https://");
 
         if (isRunningLocally || isRemoteHostFullUrl)
         {
             // Local dev or server-side (Aspire provides full URL like https://localhost:5199)
-            tenantIdentifier = isRunningLocally ? "krafter" : (host.Split('.').Length > 2 ? host.Split('.')[0] : "krafter");
+            tenantIdentifier = isRunningLocally ? "krafter" :
+                host.Split('.').Length > 2 ? host.Split('.')[0] : "krafter";
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
             backendUrl = remoteHostUrl;
         }

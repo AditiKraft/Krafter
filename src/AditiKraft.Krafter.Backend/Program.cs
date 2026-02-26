@@ -11,10 +11,10 @@ using AditiKraft.Krafter.Backend.Application.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using FluentValidation;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
-using AditiKraft.Krafter.Shared.Contracts.Auth;
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
 
 namespace AditiKraft.Krafter.Backend;
 

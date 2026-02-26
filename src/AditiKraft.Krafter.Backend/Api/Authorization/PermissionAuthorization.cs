@@ -1,8 +1,7 @@
-﻿using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Backend.Common.Extensions;
-using AditiKraft.Krafter.Shared.Common.Auth;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
-using AditiKraft.Krafter.Shared.Common.Extensions;
+using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Contracts.Common.Auth;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 

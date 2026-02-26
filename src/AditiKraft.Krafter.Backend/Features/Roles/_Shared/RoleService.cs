@@ -1,19 +1,13 @@
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Roles;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using Mapster;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Roles._Shared;
 
 public class RoleService(
-    RoleManager<KrafterRole> roleManager,
-    UserManager<KrafterUser> userManager,
-    KrafterContext db,
-    ITenantGetterService tenantGetterService)
+    KrafterContext db)
     : IRoleService, IScopedService
 {
     public async Task<Response<RoleDto>> GetByIdAsync(string id)

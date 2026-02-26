@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Shared.Contracts.Auth;
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 using Microsoft.AspNetCore.WebUtilities;
@@ -20,7 +20,7 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                 string host = "";
                 if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("state", out StringValues encodedState))
                 {
-                    string decoded = Uri.UnescapeDataString(encodedState);
+                    string decoded = Uri.UnescapeDataString(encodedState!);
                     string[] parts = decoded.Split("|||");
                     host = parts[0];
                     returnUrl = parts.Length > 1 ? parts[1] : "";

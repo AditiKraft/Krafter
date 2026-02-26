@@ -39,8 +39,8 @@ public static class DependencyInjection
             })
             .AddGoogle(options =>
             {
-                options.ClientId = config["Authentication:Google:ClientId"];
-                options.ClientSecret = config["Authentication:Google:ClientSecret"];
+                options.ClientId = config["Authentication:Google:ClientId"] ?? "";
+                options.ClientSecret = config["Authentication:Google:ClientSecret"] ?? "";
                 options.CallbackPath = "/signin-google";
             })
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, null!)

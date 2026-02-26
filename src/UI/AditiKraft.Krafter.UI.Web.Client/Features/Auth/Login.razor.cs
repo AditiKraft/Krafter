@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Shared.Contracts.Auth;
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 
@@ -7,7 +7,6 @@ namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 public partial class Login(
     IAuthenticationService authenticationService,
     NavigationManager navigationManager,
-    NotificationService notificationService,
     ThemeManager themeManager,
     IConfiguration configuration
 ) : ComponentBase
@@ -15,7 +14,7 @@ public partial class Login(
     [CascadingParameter] public Task<AuthenticationState> AuthState { get; set; } = default!;
 
     [SupplyParameterFromQuery(Name = "ReturnUrl")]
-    public string ReturnUrl { get; set; }
+    public string? ReturnUrl { get; set; }
 
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
@@ -98,7 +97,7 @@ public partial class Login(
 
         string host = new Uri(navigationManager.BaseUri).Host;
 
-        string? clientId = configuration["Authentication:Google:ClientId"];
+        string clientId = configuration["Authentication:Google:ClientId"] ?? "";
         string redirectUri = $"{navigationManager.BaseUri}google-callback";
         if (!redirectUri.Contains("localhost"))
         {

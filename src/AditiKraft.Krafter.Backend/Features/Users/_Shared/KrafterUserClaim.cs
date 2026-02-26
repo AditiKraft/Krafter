@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace AditiKraft.Krafter.Backend.Features.Users._Shared;
@@ -14,5 +14,5 @@ public class KrafterUserClaim : IdentityUserClaim<string>, ICommonAuthEntityProp
     public bool IsDeleted { get; set; }
     public string? DeleteReason { get; set; }
 
-    public string TenantId { get; set; }
+    public string TenantId { get; set; } = null!;
 }

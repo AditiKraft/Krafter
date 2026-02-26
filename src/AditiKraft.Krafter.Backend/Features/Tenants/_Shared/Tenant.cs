@@ -3,7 +3,7 @@ namespace AditiKraft.Krafter.Backend.Features.Tenants._Shared;
 public class Tenant
 {
     public string? Id { get; set; }
-    public string? Identifier { get; set; }
+    public string Identifier { get; set; } = null!;
     public string? Name { get; set; }
 
     public string AdminEmail { get; set; } = default!;

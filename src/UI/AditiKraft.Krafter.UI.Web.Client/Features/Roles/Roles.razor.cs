@@ -1,21 +1,19 @@
-using AditiKraft.Krafter.Shared.Common;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Roles;
 
 public partial class Roles(
-    NavigationManager navigationManager,
     ApiCallService api,
     IRolesApi rolesApi,
-    LayoutService layoutService,
     DialogService dialogService) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Roles;
     private RadzenDataGrid<RoleDto> grid = default!;
     private bool IsLoading = true;
 
-    private AditiKraft.Krafter.Shared.Common.Models.GetRequestInput RequestInput = new();
+    private GetRequestInput _requestInput = new();
     public string IdentifierBasedOnPlacement = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -35,10 +33,10 @@ public partial class Roles(
         IsLoading = true;
         if (resetPaginationData)
         {
-            RequestInput.SkipCount = 0;
+            _requestInput.SkipCount = 0;
         }
 
-        response = await api.CallAsync(() => rolesApi.GetRolesAsync(RequestInput));
+        response = await api.CallAsync(() => rolesApi.GetRolesAsync(_requestInput));
 
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
@@ -92,10 +90,10 @@ public partial class Roles(
     {
         IsLoading = true;
         await Task.Yield();
-        RequestInput.SkipCount = args.Skip ?? 0;
-        RequestInput.MaxResultCount = args.Top ?? 10;
-        RequestInput.Filter = args.Filter;
-        RequestInput.OrderBy = args.OrderBy;
+        _requestInput.SkipCount = args.Skip ?? 0;
+        _requestInput.MaxResultCount = args.Top ?? 10;
+        _requestInput.Filter = args.Filter;
+        _requestInput.OrderBy = args.OrderBy;
         await GetListAsync();
     }
 

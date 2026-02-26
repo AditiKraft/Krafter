@@ -9,7 +9,7 @@
     </RadzenStack>
 </AuthorizeView>
 
-<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppSate.Density" AllowColumnResize="LocalAppSate.AllowColumnResize" IsLoading="@IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response.Data.Items" AllowFiltering="true" AllowPaging="true" PageSize="@RequestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
+<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppSate.Density" AllowColumnResize="LocalAppSate.AllowColumnResize" IsLoading="@IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response?.Data?.Items" AllowFiltering="true" AllowPaging="true" PageSize="@_requestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
     <Columns>
 
         <RadzenDataGridColumn Property="Name" Title="Name"/>
@@ -34,7 +34,7 @@
                     <ChildContent>
 
 
-                        @if (AditiKraft.Krafter.Shared.Contracts.Roles.KrafterRoleConstant.IsDefault(data.Name!) == false)
+                        @if (KrafterRoleConstant.IsDefault(data.Name!) == false)
                         {
                             <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Update, KrafterResource.Roles))">
                                 <RadzenSplitButtonItem Text="Edit" Value="@KrafterAction.Update" Icon="edit"/>

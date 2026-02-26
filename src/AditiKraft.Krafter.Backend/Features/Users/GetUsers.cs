@@ -1,5 +1,4 @@
 using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
@@ -8,10 +7,10 @@ using System.Linq.Dynamic.Core;
 using AditiKraft.Krafter.Backend.Api;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Users;
 
 namespace AditiKraft.Krafter.Backend.Features.Users;
 
@@ -19,7 +18,7 @@ public sealed class GetUsers
 {
     internal sealed class Handler(KrafterContext db) : IScopedHandler
     {
-        public async Task<Response<PaginationResponse<UserDto>>> Get(
+        public async Task<Response<PaginationResponse<UserDto>>> GetAsync(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
@@ -125,7 +124,7 @@ public sealed class GetUsers
                     CancellationToken cancellationToken) =>
                 {
                     Response<PaginationResponse<UserDto>> res =
-                        await handler.Get(requestInput, cancellationToken);
+                        await handler.GetAsync(requestInput, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserDto>>>()

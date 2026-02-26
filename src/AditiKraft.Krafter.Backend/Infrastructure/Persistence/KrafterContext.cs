@@ -4,9 +4,7 @@ using AditiKraft.Krafter.Backend.Entities;
 using AditiKraft.Krafter.Backend.Features.Auth._Shared;
 using AditiKraft.Krafter.Backend.Features.Roles._Shared;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Backend.Features.Auth;
-using AditiKraft.Krafter.Backend.Features.Tenants;
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -20,7 +18,9 @@ public class KrafterContext(
     : IdentityDbContext<KrafterUser, KrafterRole, string, KrafterUserClaim, KrafterUserRole,
         KrafterUserLogin, KrafterRoleClaim, KrafterUserToken>(options)
 {
+#pragma warning disable CS0108, CS0114
     public virtual DbSet<KrafterUser> Users { get; set; }
+#pragma warning restore CS0108, CS0114
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

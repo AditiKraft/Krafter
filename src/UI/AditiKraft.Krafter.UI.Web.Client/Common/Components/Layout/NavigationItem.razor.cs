@@ -1,19 +1,21 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Models;
+using AditiKraft.Krafter.UI.Web.Client.Models;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
-public partial class NavigationItem(NavigationManager navigationManager)
+public partial class NavigationItem()
 {
-    [Parameter] public Menu Example { get; set; }
+    [EditorRequired]
+    [Parameter]
+    public Menu Example { get; set; }
 
-    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public EventCallback<bool> ExpandedChanged { get; set; }
 
-    [Parameter]
-    public bool Expanded
+    [Parameter] public bool Expanded { get; set; }
+
+    protected override void OnParametersSet()
     {
-        get => Example.Expanded;
-        set => Example.Expanded = value;
+        Example?.Expanded = Expanded;
     }
 
     private string GetUrl()

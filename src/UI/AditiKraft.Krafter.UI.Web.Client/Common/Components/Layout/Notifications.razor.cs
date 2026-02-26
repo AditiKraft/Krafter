@@ -1,13 +1,13 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Infrastructure.SignalR;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.SignalR;
 using Radzen.Blazor.Rendering;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
 public partial class Notifications(SignalRService signalRService) : IDisposable
 {
-    private RadzenButton button;
-    private Popup popup;
-    private List<string> messages = new();
+    private RadzenButton button = null!;
+    private Popup popup = null!;
+    private readonly List<string> _messages = new();
 
     protected override async Task OnInitializedAsync() => signalRService.MessageReceived += OnMessageReceived;
 
@@ -19,7 +19,7 @@ public partial class Notifications(SignalRService signalRService) : IDisposable
     private void OnMessageReceived(string user, string message)
     {
         string encodedMsg = $"{user}: {message}";
-        messages.Add(encodedMsg);
+        _messages.Add(encodedMsg);
         InvokeAsync(StateHasChanged);
     }
 

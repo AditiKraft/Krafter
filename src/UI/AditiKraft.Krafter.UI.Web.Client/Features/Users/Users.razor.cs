@@ -1,12 +1,10 @@
-using AditiKraft.Krafter.Shared.Common;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
 public partial class Users(
-    NavigationManager navigationManager,
-    LayoutService layoutService,
     DialogService dialogService,
     ApiCallService api,
     IUsersApi usersApi
@@ -14,7 +12,7 @@ public partial class Users(
 {
     public const string RoutePath = KrafterRoute.Users;
     private RadzenDataGrid<UserDto> grid = default!;
-    private AditiKraft.Krafter.Shared.Common.Models.GetRequestInput requestInput = new();
+    private GetRequestInput requestInput = new();
 
     private Response<PaginationResponse<UserDto>>? response = new() { Data = new PaginationResponse<UserDto>() };
 
@@ -88,7 +86,7 @@ public partial class Users(
 
     private async void Close(dynamic result)
     {
-        if (result == null || !result.Equals(true))
+        if (result == null || !result!.Equals(true))
         {
             return;
         }

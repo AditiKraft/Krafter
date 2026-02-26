@@ -10,8 +10,9 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffCli
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress, bool isServerSide) tenantInfo =
-            tenantIdentifier.Get();
+        (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress, bool isServerSide)
+            tenantInfo =
+                tenantIdentifier.Get();
 
         // Set static TenantInfo for backward compatibility
         TenantInfo.Identifier = tenantInfo.tenantIdentifier;
@@ -31,15 +32,17 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffCli
         // WASM: BFF clients use clientBaseAddress (for cookie management), others use backendUrl
         if (request.RequestUri != null)
         {
-            string targetBaseUrl = tenantInfo.isServerSide 
-                ? tenantInfo.backendUrl 
-                : (isBffClient ? tenantInfo.clientBaseAddress : tenantInfo.backendUrl);
-            
+            string targetBaseUrl = tenantInfo.isServerSide
+                ? tenantInfo.backendUrl
+                : isBffClient
+                    ? tenantInfo.clientBaseAddress
+                    : tenantInfo.backendUrl;
+
             // Get the path and query from the original request
-            string pathAndQuery = request.RequestUri.IsAbsoluteUri 
-                ? request.RequestUri.PathAndQuery 
+            string pathAndQuery = request.RequestUri.IsAbsoluteUri
+                ? request.RequestUri.PathAndQuery
                 : request.RequestUri.ToString();
-            
+
             request.RequestUri = new Uri(new Uri(targetBaseUrl), pathAndQuery);
         }
 

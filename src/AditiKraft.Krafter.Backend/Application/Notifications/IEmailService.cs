@@ -1,8 +1,8 @@
-﻿namespace AditiKraft.Krafter.Backend.Application.Notifications;
+namespace AditiKraft.Krafter.Backend.Application.Notifications;
 
 public interface IEmailService
 {
-    public Task SendEmailAsync(string email, string subject, string htmlMessage);
+    public Task SendEmailAsync(string email, string subject, string htmlMessage, CancellationToken cancellationToken);
 }
 
 public class SendEmailRequestInput

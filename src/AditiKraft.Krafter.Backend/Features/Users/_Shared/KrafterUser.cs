@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace AditiKraft.Krafter.Backend.Features.Users._Shared;
@@ -23,10 +23,10 @@ public class KrafterUser : IdentityUser<string>, ICommonAuthEntityProperty
 
     #region Navigation Properties
 
-    public virtual ICollection<KrafterUserRole> UserRoles { get; set; }
+    public virtual ICollection<KrafterUserRole> UserRoles { get; set; } = new HashSet<KrafterUserRole>();
 
     #endregion Navigation Properties
 
-    public string TenantId { get; set; }
+    public string TenantId { get; set; } = null!;
     public bool IsOwner { get; set; }
 }

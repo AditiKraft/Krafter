@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,19 +24,17 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0" />
 
     <!-- Database & EF Core -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0-rc.2" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="LinqKit.Microsoft.EntityFrameworkCore" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.DynamicLinq" Version="10.7.0" />
     <!--<PackageReference Include="EFCore.BulkExtensions" Version="9.0.1" />-->
-    <PackageReference Include="EFCore.BulkExtensions.Dotnet10" Version="10.0.0-rc.2.25502.107" />
+    <PackageReference Include="EFCore.BulkExtensions.Dotnet10" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.0" />
 
     <!-- API & Swagger -->
@@ -57,8 +56,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\aspire\AditiKraft.Krafter.Aspire.ServiceDefaults\AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\AditiKraft.Krafter.Shared\AditiKraft.Krafter.Shared.csproj" />
+    <ProjectReference
+      Include="..\..\aspire\AditiKraft.Krafter.Aspire.ServiceDefaults\AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\AditiKraft.Krafter.Contracts\AditiKraft.Krafter.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

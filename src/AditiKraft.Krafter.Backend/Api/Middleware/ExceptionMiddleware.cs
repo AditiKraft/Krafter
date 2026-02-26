@@ -1,10 +1,9 @@
-﻿using System.Net;
+using System.Net;
 using System.Text.Json;
 using AditiKraft.Krafter.Backend.Application.Common;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-using AditiKraft.Krafter.Backend.Features.Auth;
 using FluentValidation.Results;
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.Data.SqlClient;
 
 namespace AditiKraft.Krafter.Backend.Api.Middleware;

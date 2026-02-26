@@ -1,4 +1,4 @@
-﻿namespace AditiKraft.Krafter.UI.Web.Client.Common.Models;
+namespace AditiKraft.Krafter.UI.Web.Client.Common.Models;
 
 public static class LocalAppSate
 {
@@ -14,7 +14,7 @@ public static class LocalAppSate
 
     public static string TimeFormat { get; set; } = "hh:mm tt";
 
-    public static string GoogleLoginReturnUrl { get; set; }
+    public static string GoogleLoginReturnUrl { get; set; } = string.Empty;
     //
 }
 

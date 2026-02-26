@@ -3,10 +3,9 @@ using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
 using AditiKraft.Krafter.Backend.Application.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -41,10 +40,13 @@ public sealed class ForgotPassword
                                "If you did not request a password reset, please ignore this email.<br/><br/>" +
                                $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
-            await jobService.EnqueueAsync(
-                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                "SendEmailJob",
-                CancellationToken.None);
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await jobService.EnqueueAsync(
+                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                    "SendEmailJob",
+                    CancellationToken.None);
+            }
 
             return new Response();
         }

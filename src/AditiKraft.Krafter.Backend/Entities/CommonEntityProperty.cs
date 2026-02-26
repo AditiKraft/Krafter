@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Users._Shared;
 
 namespace AditiKraft.Krafter.Backend.Entities;
 
@@ -15,19 +15,21 @@ public interface ISoftDelete
 
 public class CommonEntityProperty : ICommonEntityProperty
 {
-    public string Id { get; set; }
+    public string Id { get; set; } = null!;
     public string? DeleteReason { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime CreatedOn { get; set; }
     public KrafterUser? CreatedBy { get; set; }
-    public string CreatedById { get; set; }
+#pragma warning disable CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
+    public string CreatedById { get; set; } = null!;
+#pragma warning restore CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
 
     public DateTime? UpdatedOn { get; set; }
 
     public KrafterUser? UpdatedBy { get; set; }
 
     public string? UpdatedById { get; set; }
-    public string TenantId { get; set; }
+    public string TenantId { get; set; } = null!;
 }
 
 public interface ICommonEntityProperty : ICommonAuthEntityProperty

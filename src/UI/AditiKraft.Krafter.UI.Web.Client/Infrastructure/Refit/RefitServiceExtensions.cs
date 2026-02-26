@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AditiKraft.Krafter.Shared.Common.Enums;
+using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using Refit;
 

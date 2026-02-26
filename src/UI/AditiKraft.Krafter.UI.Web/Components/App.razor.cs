@@ -2,7 +2,7 @@ namespace AditiKraft.Krafter.UI.Web.Components;
 
 public partial class App(ThemeService themeService, ThemeManager themeManager)
 {
-    [CascadingParameter] private HttpContext HttpContext { get; set; }
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
 
     protected override void OnInitialized()
     {
@@ -15,7 +15,9 @@ public partial class App(ThemeService themeService, ThemeManager themeManager)
             if (!string.IsNullOrEmpty(theme))
             {
                 themeManager.CurrentActive =
-                    theme?.Contains("dark") == true ? ThemeManager.ThemePreference.Dark : ThemeManager.ThemePreference.Light;
+                    theme?.Contains("dark") == true
+                        ? ThemeManager.ThemePreference.Dark
+                        : ThemeManager.ThemePreference.Light;
                 themeService.SetTheme(theme, false);
             }
             else

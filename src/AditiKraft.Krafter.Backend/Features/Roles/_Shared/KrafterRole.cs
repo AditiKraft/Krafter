@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Entities;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using Microsoft.AspNetCore.Identity;
 
@@ -28,6 +28,6 @@ public class KrafterRole : IdentityRole<string>, ICommonAuthEntityProperty
         NormalizedName = name.ToUpperInvariant();
     }
 
-    public string TenantId { get; set; }
-    public virtual ICollection<KrafterUserRole> UserRoles { get; set; }
+    public string TenantId { get; set; } = null!;
+    public virtual ICollection<KrafterUserRole> UserRoles { get; set; } = new HashSet<KrafterUserRole>();
 }

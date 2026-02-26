@@ -11,7 +11,7 @@
 </AuthorizeView>
 
 
-<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppSate.Density" AllowColumnResize="LocalAppSate.AllowColumnResize" IsLoading="IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response.Data.Items" AllowFiltering="true" AllowPaging="true" PageSize="@requestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
+<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppSate.Density" AllowColumnResize="LocalAppSate.AllowColumnResize" IsLoading="IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response?.Data?.Items" AllowFiltering="true" AllowPaging="true" PageSize="@_requestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
     <Columns>
 
         <RadzenDataGridColumn Property="Name" Title="Name"/>

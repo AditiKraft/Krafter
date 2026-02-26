@@ -6,7 +6,7 @@
         <RadzenRow>
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Left">
-                    <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)"/>
+                    <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)"/>
                     @if (IsMobileDevice == false)
                     {
                         <Logo Orientation="LogoOrientation.Horizontal" Size="LogoSize.ExtraSmall"/>
@@ -31,19 +31,19 @@
                         <TopRight></TopRight>
                     }
                     <Notifications></Notifications>
-                    <RadzenSidebarToggle Icon="settings" Click="@(() => configSidebarExpanded = !configSidebarExpanded)" class="rz-m-0"/>
+                    <RadzenSidebarToggle Icon="settings" Click="@(() => _configSidebarExpanded = !_configSidebarExpanded)" class="rz-m-0"/>
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
     </RadzenHeader>
 
-    <RadzenBody @ref="@body0">
+    <RadzenBody @ref="@(body0)">
         <ChildContent>
             <PageTitle>@LocalAppSate.CurrentPageTitle</PageTitle>
             @Body
         </ChildContent>
     </RadzenBody>
-    <RadzenSidebar @ref="sidebar0" @bind-Expanded="@sidebarExpanded" class="demos-sidebar" style="display: flex; flex-direction: column">
+    <RadzenSidebar @ref="@(sidebar0)" @bind-Expanded="@_sidebarExpanded" class="demos-sidebar" style="display: flex; flex-direction: column">
         <AuthorizeView>
             <Authorized>
                 <div style="padding: 1rem">
@@ -95,11 +95,11 @@
             </Authorized>
         </AuthorizeView>
     </RadzenSidebar>
-    <RadzenSidebar Responsive="false" @bind-Expanded="@configSidebarExpanded" class="rz-sidebar-second" Style="--rz-sidebar-width: 370px; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);">
+    <RadzenSidebar Responsive="false" @bind-Expanded="@_configSidebarExpanded" class="rz-sidebar-second" Style="--rz-sidebar-width: 370px; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);">
         <RadzenStack class="rz-p-4" Gap="0">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Demos Configuration</RadzenText>
-                <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => configSidebarExpanded = false)"/>
+                <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => _configSidebarExpanded = false)"/>
             </RadzenStack>
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
@@ -110,14 +110,14 @@
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                     <RadzenLabel Text="Use WCAG compliant colors" Component="WCAG" Title="Use WCAG 2.2 AA compliant color swatches"/>
-                    <RadzenButton Icon="info" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" @ref="wcagColorsInfo" Click="@(args => WcagColorsTooltip(wcagColorsInfo.Element, new TooltipOptions() { Position = TooltipPosition.Left, Duration = null, Style = "background: var(--rz-base-900); color: var(--rz-base-100)" }))"/>
+                    <RadzenButton Icon="info" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" @ref="_wcagColorsInfo" Click="@(args => WcagColorsTooltip(_wcagColorsInfo.Element, new TooltipOptions() { Position = TooltipPosition.Left, Duration = null, Style = "background: var(--rz-base-900); color: var(--rz-base-100)" }))"/>
                 </RadzenStack>
                 <RadzenSwitch Value="@(themeService.Wcag == true)" Name="WCAG" Change="@(themeService.SetWcag)"/>
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-5">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                     <RadzenLabel Text="Enable RTL directionality" Component="RTL" Title="Use right to left direction for languages that are written from the right to the left (like Arabic)"/>
-                    <RadzenButton Icon="info" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" @ref="rtlInfo" Click="@(args => RtlTooltip(rtlInfo.Element, new TooltipOptions() { Position = TooltipPosition.Left, Duration = null, Style = "background: var(--rz-base-900); color: var(--rz-base-100)" }))"/>
+                    <RadzenButton Icon="info" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" @ref="_rtlInfo" Click="@(args => RtlTooltip(_rtlInfo.Element, new TooltipOptions() { Position = TooltipPosition.Left, Duration = null, Style = "background: var(--rz-base-900); color: var(--rz-base-100)" }))"/>
                 </RadzenStack>
                 <RadzenSwitch Value="@(themeService.RightToLeft == true)" Name="RTL" Change="@(themeService.SetRightToLeft)"/>
             </RadzenStack>
@@ -152,7 +152,7 @@
 </RadzenLayout>
 
 
-@if (!rendered)
+@if (!_rendered)
 {
     <div class="rz-app-loading">
         <div class="logo-loading"></div>
@@ -162,13 +162,13 @@
 @code {
 
 
-    void WcagColorsTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, ds =>
+    void WcagColorsTooltip(ElementReference elementReference, TooltipOptions? options = null) => tooltipService.Open(elementReference, ds =>
         @<div Style="width: 280px; white-space: normal; padding: 20px;">
             <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H4" Style="color: currentColor;">WCAG Compliant Colors</RadzenText>
             <RadzenText TextStyle="TextStyle.Body2" Style="color: currentColor;">Enable to preview themes with WCAG 2.2 AA compliant color swatches.</RadzenText>
         </div>, options);
 
-    void RtlTooltip(ElementReference elementReference, TooltipOptions options = null) => tooltipService.Open(elementReference, ds =>
+    void RtlTooltip(ElementReference elementReference, TooltipOptions? options = null) => tooltipService.Open(elementReference, ds =>
         @<div Style="width: 280px; white-space: normal; padding: 20px;">
             <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H4" Style="color: currentColor;">RTL directionality</RadzenText>
             <RadzenText TextStyle="TextStyle.Body2" Style="color: currentColor;">Use right to left direction for languages that are written from the right to the left (like Arabic).</RadzenText>

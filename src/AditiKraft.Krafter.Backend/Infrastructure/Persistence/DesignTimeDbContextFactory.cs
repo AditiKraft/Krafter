@@ -44,7 +44,7 @@ public class DesignTimeKrafterContextDbContextFactory : IDesignTimeDbContextFact
         var optionsBuilder = new DbContextOptionsBuilder<KrafterContext>();
         optionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure());
 
-        return new KrafterContext(optionsBuilder.Options, null, null);
+        return new KrafterContext(optionsBuilder.Options, null!, null!);
     }
 }
 

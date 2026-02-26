@@ -8,7 +8,7 @@
     <Project Path="src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj" />
   </Folder>
   <Folder Name="/src/Krafter.Shared/">
-    <Project Path="src/AditiKraft.Krafter.Shared/AditiKraft.Krafter.Shared.csproj" />
+    <Project Path="src/AditiKraft.Krafter.Contracts/AditiKraft.Krafter.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/UI/">
     <Project Path="src/UI/AditiKraft.Krafter.UI.Web.Client/AditiKraft.Krafter.UI.Web.Client.csproj" />
