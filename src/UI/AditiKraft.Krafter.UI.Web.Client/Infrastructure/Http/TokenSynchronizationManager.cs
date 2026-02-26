@@ -100,7 +100,8 @@ public static class TokenSynchronizationManager
             if (!acquired)
             {
                 // Another retry in progress, wait
-                logger.LogInformation("Another retry in progress, waiting (attempt {Attempt}/{MaxAttempts})", attempt, MaxRetryAttempts);
+                logger.LogInformation("Another retry in progress, waiting (attempt {Attempt}/{MaxAttempts})", attempt,
+                    MaxRetryAttempts);
                 await _synchronizationSemaphore.WaitAsync(cancellationToken);
                 _synchronizationSemaphore.Release();
 

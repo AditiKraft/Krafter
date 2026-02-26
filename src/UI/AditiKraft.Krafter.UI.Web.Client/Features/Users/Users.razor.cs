@@ -14,7 +14,7 @@ public partial class Users(
 {
     public const string RoutePath = KrafterRoute.Users;
     private RadzenDataGrid<UserDto> grid = default!;
-    private AditiKraft.Krafter.Contracts.Common.Models.GetRequestInput requestInput = new();
+    private GetRequestInput requestInput = new();
 
     private Response<PaginationResponse<UserDto>>? response = new() { Data = new PaginationResponse<UserDto>() };
 

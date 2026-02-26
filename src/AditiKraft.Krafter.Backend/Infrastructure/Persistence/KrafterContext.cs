@@ -4,8 +4,6 @@ using AditiKraft.Krafter.Backend.Entities;
 using AditiKraft.Krafter.Backend.Features.Auth._Shared;
 using AditiKraft.Krafter.Backend.Features.Roles._Shared;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Backend.Features.Auth;
-using AditiKraft.Krafter.Backend.Features.Tenants;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

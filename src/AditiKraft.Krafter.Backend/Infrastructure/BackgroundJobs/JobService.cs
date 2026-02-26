@@ -1,7 +1,5 @@
 using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
 using AditiKraft.Krafter.Backend.Application.Notifications;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Features.Tenants;
 using TickerQ.Utilities;
 using TickerQ.Utilities.Base;
 using TickerQ.Utilities.Interfaces.Managers;
@@ -12,14 +10,14 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
 
 public class Jobs(IEmailService emailService)
 {
-    [TickerFunction(nameof(SendEmailJob))]
-    public async Task SendEmailJob(TickerFunctionContext<SendEmailRequestInput> tickerContext,
+    [TickerFunction(nameof(SendEmailJobAsync))]
+    public async Task SendEmailJobAsync(TickerFunctionContext<SendEmailRequestInput> tickerContext,
         CancellationToken cancellationToken)
     {
         await emailService.SendEmailAsync(
             tickerContext.Request.Email,
             tickerContext.Request.Subject,
-            tickerContext.Request.HtmlMessage
+            tickerContext.Request.HtmlMessage, cancellationToken
         );
     }
 }

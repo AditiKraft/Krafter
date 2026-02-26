@@ -3,8 +3,6 @@ using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Common.Extensions;
-using AditiKraft.Krafter.Backend.Features.Auth;
-using AditiKraft.Krafter.Backend.Features.Tenants;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
 

@@ -1,6 +1,5 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Contracts.Common.Extensions;
 
 namespace AditiKraft.Krafter.Backend.Application.Auth;

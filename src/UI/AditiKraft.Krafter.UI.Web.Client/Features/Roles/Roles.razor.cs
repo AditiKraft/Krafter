@@ -15,7 +15,7 @@ public partial class Roles(
     private RadzenDataGrid<RoleDto> grid = default!;
     private bool IsLoading = true;
 
-    private AditiKraft.Krafter.Contracts.Common.Models.GetRequestInput RequestInput = new();
+    private GetRequestInput RequestInput = new();
     public string IdentifierBasedOnPlacement = string.Empty;
 
     protected override async Task OnInitializedAsync()

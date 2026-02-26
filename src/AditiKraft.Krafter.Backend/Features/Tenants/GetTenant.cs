@@ -1,6 +1,4 @@
-using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +18,7 @@ public sealed class GetTenant
 {
     internal sealed class Handler(TenantDbContext dbContext) : IScopedHandler
     {
-        public async Task<Response<PaginationResponse<TenantDto>>> Get(
+        public async Task<Response<PaginationResponse<TenantDto>>> GetAsync(
             GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
@@ -129,7 +127,7 @@ public sealed class GetTenant
                     CancellationToken cancellationToken) =>
                 {
                     Response<PaginationResponse<TenantDto>> res =
-                        await service.Get(requestInput, cancellationToken);
+                        await service.GetAsync(requestInput, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<TenantDto>>>()

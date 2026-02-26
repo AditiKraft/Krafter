@@ -74,7 +74,7 @@ public class KrafterLocalStorageServiceServer(IHttpContextAccessor httpContextAc
         string? token = httpContextAccessor.HttpContext.Request.Cookies[StorageConstants.Local.RefreshToken];
         if (string.IsNullOrEmpty(token))
         {
-            return await ValueTask.FromResult<string>(null);
+            return await ValueTask.FromResult<string?>(null);
         }
 
         return await ValueTask.FromResult(token);

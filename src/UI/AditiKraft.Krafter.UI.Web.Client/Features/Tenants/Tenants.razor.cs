@@ -13,7 +13,7 @@ public partial class Tenants(
     public const string RoutePath = KrafterRoute.Tenants;
     private RadzenDataGrid<TenantDto> grid = default!;
     private bool IsLoading = true;
-    private AditiKraft.Krafter.Contracts.Common.Models.GetRequestInput requestInput = new();
+    private GetRequestInput requestInput = new();
 
     private Response<PaginationResponse<TenantDto>>? response = new() { Data = new PaginationResponse<TenantDto>() };
 

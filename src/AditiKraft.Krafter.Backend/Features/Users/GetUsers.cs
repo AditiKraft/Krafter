@@ -1,5 +1,4 @@
 using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +18,7 @@ public sealed class GetUsers
 {
     internal sealed class Handler(KrafterContext db) : IScopedHandler
     {
-        public async Task<Response<PaginationResponse<UserDto>>> Get(
+        public async Task<Response<PaginationResponse<UserDto>>> GetAsync(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
@@ -125,7 +124,7 @@ public sealed class GetUsers
                     CancellationToken cancellationToken) =>
                 {
                     Response<PaginationResponse<UserDto>> res =
-                        await handler.Get(requestInput, cancellationToken);
+                        await handler.GetAsync(requestInput, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserDto>>>()

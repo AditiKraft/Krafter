@@ -1,6 +1,5 @@
 using System.Reflection;
 using AditiKraft.Krafter.Backend.Features.Auth;
-using AditiKraft.Krafter.Backend.Api;
 
 namespace AditiKraft.Krafter.Backend.Api.Configuration;
 

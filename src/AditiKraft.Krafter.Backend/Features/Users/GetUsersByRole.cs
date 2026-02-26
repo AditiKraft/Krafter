@@ -1,5 +1,4 @@
 using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;

@@ -85,9 +85,10 @@ public class ApiCallService(NotificationService notificationService)
         }
     }
 
-    private async Task<Response<T>> HandleApiExceptionAsync<T>(ApiException ex, string? errorTitle, string? errorMessage, bool showNotification)
+    private async Task<Response<T>> HandleApiExceptionAsync<T>(ApiException ex, string? errorTitle,
+        string? errorMessage, bool showNotification)
     {
-        var (message, errorResult) = await ParseApiErrorAsync(ex, errorMessage);
+        (string message, ErrorResult errorResult) = await ParseApiErrorAsync(ex, errorMessage);
 
         if (showNotification)
         {
@@ -96,33 +97,26 @@ public class ApiCallService(NotificationService notificationService)
 
         return new Response<T>
         {
-            IsError = true,
-            StatusCode = (int)ex.StatusCode,
-            Message = message,
-            Error = errorResult
+            IsError = true, StatusCode = (int)ex.StatusCode, Message = message, Error = errorResult
         };
     }
 
-    private async Task<Response> HandleApiExceptionAsync(ApiException ex, string? errorTitle, string? errorMessage, bool showNotification)
+    private async Task<Response> HandleApiExceptionAsync(ApiException ex, string? errorTitle, string? errorMessage,
+        bool showNotification)
     {
-        var (message, errorResult) = await ParseApiErrorAsync(ex, errorMessage);
+        (string message, ErrorResult errorResult) = await ParseApiErrorAsync(ex, errorMessage);
 
         if (showNotification)
         {
             notificationService.Notify(NotificationSeverity.Error, errorTitle ?? "Error", message);
         }
 
-        return new Response
-        {
-            IsError = true,
-            StatusCode = (int)ex.StatusCode,
-            Message = message,
-            Error = errorResult
-        };
+        return new Response { IsError = true, StatusCode = (int)ex.StatusCode, Message = message, Error = errorResult };
     }
 
 
-    private async Task<(string Message, ErrorResult Error)> ParseApiErrorAsync(ApiException ex, string? customErrorMessage)
+    private async Task<(string Message, ErrorResult Error)> ParseApiErrorAsync(ApiException ex,
+        string? customErrorMessage)
     {
         if (!string.IsNullOrEmpty(customErrorMessage))
         {
@@ -140,21 +134,24 @@ public class ApiCallService(NotificationService notificationService)
         {
             // Try to parse as Response (our standard error format)
             Response? errorResponse = JsonSerializer.Deserialize<Response>(content, JsonOptions);
-            if (errorResponse is { IsError: true } || (errorResponse?.StatusCode != 0 && errorResponse?.StatusCode != 200))
+            if (errorResponse is { IsError: true } ||
+                (errorResponse?.StatusCode != 0 && errorResponse?.StatusCode != 200))
             {
                 string message = GetErrorMessage(null, errorResponse?.Message, errorResponse?.Error);
                 return (message, errorResponse?.Error ?? new ErrorResult { Message = message });
             }
 
             // Try to parse as ValidationErrorResponse (FluentValidation format)
-            ValidationErrorResponse? validationError = JsonSerializer.Deserialize<ValidationErrorResponse>(content, JsonOptions);
+            ValidationErrorResponse? validationError =
+                JsonSerializer.Deserialize<ValidationErrorResponse>(content, JsonOptions);
             if (validationError?.Errors?.Count > 0)
             {
                 var messages = new List<string>();
-                foreach (var error in validationError.Errors)
+                foreach (KeyValuePair<string, List<string>> error in validationError.Errors)
                 {
                     messages.AddRange(error.Value.Select(v => $"{error.Key}: {v}"));
                 }
+
                 string validationMessage = string.Join("\n", messages);
                 return (validationMessage, new ErrorResult { Message = validationError.Title, Messages = messages });
             }
@@ -169,7 +166,8 @@ public class ApiCallService(NotificationService notificationService)
     }
 
 
-    private Response<T> HandleHttpException<T>(HttpRequestException ex, string? errorTitle, string? errorMessage, bool showNotification)
+    private Response<T> HandleHttpException<T>(HttpRequestException ex, string? errorTitle, string? errorMessage,
+        bool showNotification)
     {
         string message = errorMessage ?? "Unable to connect to the server. Please check your connection.";
 
@@ -187,7 +185,8 @@ public class ApiCallService(NotificationService notificationService)
         };
     }
 
-    private Response HandleHttpException(HttpRequestException ex, string? errorTitle, string? errorMessage, bool showNotification)
+    private Response HandleHttpException(HttpRequestException ex, string? errorTitle, string? errorMessage,
+        bool showNotification)
     {
         string message = errorMessage ?? "Unable to connect to the server. Please check your connection.";
 
@@ -205,7 +204,8 @@ public class ApiCallService(NotificationService notificationService)
         };
     }
 
-    private Response<T> HandleGenericException<T>(Exception ex, string? errorTitle, string? errorMessage, bool showNotification)
+    private Response<T> HandleGenericException<T>(Exception ex, string? errorTitle, string? errorMessage,
+        bool showNotification)
     {
         string message = errorMessage ?? "An unexpected error occurred. Please try again.";
 
@@ -223,7 +223,8 @@ public class ApiCallService(NotificationService notificationService)
         };
     }
 
-    private Response HandleGenericException(Exception ex, string? errorTitle, string? errorMessage, bool showNotification)
+    private Response HandleGenericException(Exception ex, string? errorTitle, string? errorMessage,
+        bool showNotification)
     {
         string message = errorMessage ?? "An unexpected error occurred. Please try again.";
 
@@ -259,16 +260,24 @@ public class ApiCallService(NotificationService notificationService)
     private static string GetErrorMessage(string? customMessage, string? responseMessage, ErrorResult? error)
     {
         if (!string.IsNullOrEmpty(customMessage))
+        {
             return customMessage;
+        }
 
         if (!string.IsNullOrEmpty(responseMessage))
+        {
             return responseMessage;
+        }
 
         if (!string.IsNullOrEmpty(error?.Message))
+        {
             return error.Message;
+        }
 
         if (error?.Messages.Count > 0)
+        {
             return string.Join(", ", error.Messages);
+        }
 
         return "An error occurred.";
     }

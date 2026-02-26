@@ -1,5 +1,4 @@
-﻿using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Backend.Common.Extensions;
+using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Extensions;

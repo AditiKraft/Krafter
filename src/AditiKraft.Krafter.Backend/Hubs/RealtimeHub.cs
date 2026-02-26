@@ -15,7 +15,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
 {
     private const string AuthenticationFailedMessage = "Authentication Failed.";
 
-    public async Task SendMessage(string user, string message) =>
+    public async Task SendMessageAsync(string user, string message) =>
         await Clients.All.SendAsync(nameof(SignalRMethods.ReceiveMessage), user, message);
 
     public override async Task OnConnectedAsync()
@@ -28,9 +28,9 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
             ITenantSetterService tenantSetterService =
                 httpContext.RequestServices.GetRequiredService<ITenantSetterService>();
             ICurrentUser currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-            CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, Context, tenantFinderService,
+            CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, tenantFinderService,
                 tenantSetterService, currentUser);
-            if (res is null)
+            if (res is not {})
             {
                 throw new HubException(AuthenticationFailedMessage);
             }
@@ -50,7 +50,6 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
 
     private async Task<CurrentTenantDetails?> SetTenantContextAsync(
         HttpContext httpContext,
-        HubCallerContext context,
         ITenantFinderService tenantFinderService,
         ITenantSetterService tenantSetterService,
         ICurrentUser currentUser)
@@ -107,7 +106,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
             ITenantSetterService tenantSetterService =
                 httpContext.RequestServices.GetRequiredService<ITenantSetterService>();
             ICurrentUser currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-            CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, Context, tenantFinderService,
+            CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, tenantFinderService,
                 tenantSetterService, currentUser);
             if (res is null)
             {

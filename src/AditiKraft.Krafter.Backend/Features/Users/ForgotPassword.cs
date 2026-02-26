@@ -3,7 +3,6 @@ using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
 using AditiKraft.Krafter.Backend.Application.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
