@@ -1,15 +1,16 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using AditiKraft.Krafter.UI.Web.Client.Models;
-using Microsoft.AspNetCore.Http;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
 public partial class MainLayout(
     ApiCallService api,
     IAppInfoApi appInfoApi,
-    CookieThemeService CookieThemeService,
+#pragma warning disable CS9113 // Parameter is unread.
+    CookieThemeService cookieThemeService,
+#pragma warning restore CS9113 // Parameter is unread.
     MenuService menuService,
     LayoutService layoutService,
     IAuthenticationService authenticationService,
@@ -21,17 +22,14 @@ public partial class MainLayout(
 {
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
     private RadzenSidebar sidebar0 = default!;
     private RadzenBody body0 = default!;
-    private RadzenButton wcagColorsInfo = default!;
-    private RadzenButton rtlInfo = default!;
-    private RadzenButton freeThemesInfo = default!;
-    private RadzenButton premiumThemesInfo = default!;
-    private bool sidebarExpanded = true;
-    private bool configSidebarExpanded = false;
-    private bool rendered;
+    private RadzenButton _wcagColorsInfo = default!;
+    private RadzenButton _rtlInfo = default!;
+    private bool _sidebarExpanded = true;
+    private bool _configSidebarExpanded = false;
+    private bool _rendered;
 
     private IEnumerable<Menu> menus = new List<Menu>();
 
@@ -42,7 +40,7 @@ public partial class MainLayout(
     {
         if (firstRender)
         {
-            rendered = true;
+            _rendered = true;
         }
     }
 
@@ -75,7 +73,6 @@ public partial class MainLayout(
         menus = string.IsNullOrEmpty(term) ? menuService.Menus : menuService.Filter(term);
     }
 
-    private void ChangeTheme(object value) => themeService.SetTheme($"{value}");
 
     private void HeadingChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
 

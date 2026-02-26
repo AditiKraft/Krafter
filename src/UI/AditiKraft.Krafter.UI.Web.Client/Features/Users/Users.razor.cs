@@ -5,8 +5,6 @@ using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
 public partial class Users(
-    NavigationManager navigationManager,
-    LayoutService layoutService,
     DialogService dialogService,
     ApiCallService api,
     IUsersApi usersApi
@@ -88,7 +86,7 @@ public partial class Users(
 
     private async void Close(dynamic result)
     {
-        if (result == null || !result.Equals(true))
+        if (result == null || !result!.Equals(true))
         {
             return;
         }

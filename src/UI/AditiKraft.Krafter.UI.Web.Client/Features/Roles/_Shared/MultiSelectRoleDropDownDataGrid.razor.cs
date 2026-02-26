@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Roles._Shared;
 
@@ -7,57 +7,51 @@ public partial class MultiSelectRoleDropDownDataGrid(
     IRolesApi rolesApi
 ) : ComponentBase
 {
-    private RadzenDropDownDataGrid<IEnumerable<string>> dropDownGrid;
+    private RadzenDropDownDataGrid<IEnumerable<string>> _dropDownGrid = null!;
 
-    private Response<PaginationResponse<RoleDto>>? response;
-    private bool IsLoading = true;
-    private IEnumerable<RoleDto>? Data;
+    private Response<PaginationResponse<RoleDto>>? _response;
+    private bool _isLoading = true;
+    private IEnumerable<RoleDto>? _data;
     [Parameter] public GetRequestInput GetRequestInput { get; set; } = new();
 
     private IEnumerable<string>? ValueEnumerable { get; set; }
 
-    private List<string> _value;
-
-    [Parameter]
-    public List<string> Value
-    {
-        get => _value;
-        set
-        {
-            if (_value != value)
-            {
-                _value = value;
-                ValueEnumerable = value;
-            }
-        }
-    }
+    [Parameter] public List<string> Value { get; set; } = new();
 
     [Parameter] public EventCallback<List<string>> ValueChanged { get; set; }
 
+    protected override void OnParametersSet()
+    {
+        if (Value != null)
+        {
+            ValueEnumerable = Value;
+        }
+    }
+
     [Parameter] public List<string> IdsToDisable { get; set; } = new();
 
-    private async Task LoadProcesses(LoadDataArgs args)
+    private async Task LoadProcessesAsync(LoadDataArgs args)
     {
-        IsLoading = true;
+        _isLoading = true;
         await Task.Yield();
         GetRequestInput.SkipCount = args.Skip ?? 0;
         GetRequestInput.MaxResultCount = args.Top ?? 10;
         GetRequestInput.Filter = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
-        IsLoading = true;
-        response = await api.CallAsync(() => rolesApi.GetRolesAsync(GetRequestInput), showErrorNotification: true);
-        if (response is { Data.Items: not null })
+        _isLoading = true;
+        _response = await api.CallAsync(() => rolesApi.GetRolesAsync(GetRequestInput), showErrorNotification: true);
+        if (_response is { Data.Items: not null })
         {
-            Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
+            _data = _response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id)).ToList();
         }
 
-        IsLoading = false;
+        _isLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 
     private int GetCount()
     {
-        if (response is { Data: { Items: not null, TotalCount: var totalCount } })
+        if (_response is { Data: { Items: not null, TotalCount: var totalCount } })
         {
             return totalCount;
         }
@@ -65,7 +59,7 @@ public partial class MultiSelectRoleDropDownDataGrid(
         return 0;
     }
 
-    private async Task OnValueChanged(object newValue)
+    private async Task OnValueChangedAsync(object newValue)
     {
         if (newValue is IEnumerable<string> newValueEnumerable)
         {

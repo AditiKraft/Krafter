@@ -66,11 +66,11 @@ public class MenuService
             return allMenus;
         }
 
-        bool contains(string value) => value != null && value.Contains(term, StringComparison.OrdinalIgnoreCase);
-        bool filter(Menu menu) => contains(menu.Name) || (menu.Tags != null && menu.Tags.Any(contains));
-        bool deepFilter(Menu menu) => filter(menu) || menu.Children?.Any(filter) == true;
+        bool Contains(string value) => value != null && value.Contains(term, StringComparison.OrdinalIgnoreCase);
+        bool Filter(Menu menu) => Contains(menu.Name) || (menu.Tags != null && menu.Tags.Any(Contains));
+        bool DeepFilter(Menu menu) => Filter(menu) || menu.Children?.Any(Filter) == true;
 
-        return Menus.Where(category => category.Children?.Any(deepFilter) == true || filter(category))
+        return Menus.Where(category => category.Children?.Any(DeepFilter) == true || Filter(category))
             .Select(category => new Menu
             {
                 Name = category.Name,
@@ -78,7 +78,7 @@ public class MenuService
                 Icon = category.Icon,
                 Permission = category.Permission,
                 Expanded = true,
-                Children = category.Children?.Where(deepFilter).Select(menu => new Menu
+                Children = category.Children?.Where(DeepFilter).Select(menu => new Menu
                 {
                     Name = menu.Name,
                     Path = menu.Path,
@@ -90,7 +90,7 @@ public class MenuService
             }).ToList();
     }
 
-    public Menu FindCurrent(Uri uri)
+    public Menu? FindCurrent(Uri uri)
     {
         IEnumerable<Menu> Flatten(IEnumerable<Menu> e) =>
             e.SelectMany(c => c.Children != null ? Flatten(c.Children) : new[] { c });

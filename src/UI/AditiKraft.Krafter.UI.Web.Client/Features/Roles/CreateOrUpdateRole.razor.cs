@@ -8,8 +8,6 @@ public partial class CreateOrUpdateRole(
     ApiCallService api,
     IRolesApi rolesApi) : ComponentBase
 {
-    private IEnumerable<string> selectedStandards = default!;
-
     public class GroupPermissionData
     {
         public string Description { get; set; } = default!;
@@ -22,7 +20,7 @@ public partial class CreateOrUpdateRole(
         public bool IsGroup => Resource != null;
     }
 
-    [Parameter] public RoleDto? UserDetails { get; set; } = new();
+    [Parameter] public RoleDto UserDetails { get; set; } = new();
     private CreateOrUpdateRoleRequest CreateUserRequest = new();
     private CreateOrUpdateRoleRequest OriginalCreateUserRequest = new();
 

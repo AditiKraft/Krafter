@@ -1,4 +1,5 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout
+@using AditiKraft.Krafter.UI.Web.Client.Features.Auth
 @using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit
 @inject IJSRuntime jsRuntime
 @inject ThemeManager themeManager
@@ -43,8 +44,8 @@
     // Don't use static property - use instance property
     public bool IsMobileDevice { get; set; }
 
-    private DotNetObjectReference<Routes> objRef;
-    private string _themeCssFile;
+    private DotNetObjectReference<Routes>? objRef;
+    private string _themeCssFile = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -106,7 +107,7 @@
         }
     }
 
-    private static Routes Current { get; set; }
+    private static Routes? Current { get; set; }
 
     public void UpdateMobileState(bool isMobile)
     {

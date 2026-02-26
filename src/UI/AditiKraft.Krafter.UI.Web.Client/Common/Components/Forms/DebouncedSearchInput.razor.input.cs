@@ -1,8 +1,8 @@
-﻿namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Forms;
+namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Forms;
 
 public class DebouncedSearchInputInput
 {
-    public string Value { get; set; }
+    public string Value { get; set; } = string.Empty;
     public EventCallback<string> ValueChanged { get; set; }
     public int DebounceTime { get; set; } = 2000;
     [Parameter] public bool IsAutoSearch { get; set; } = true;

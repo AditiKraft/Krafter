@@ -9,7 +9,7 @@ public partial class CreateOrUpdateUser(
     IUsersApi usersApi
 ) : ComponentBase
 {
-    [Parameter] public UserDto? UserInput { get; set; } = new();
+    [Parameter] public UserDto UserInput { get; set; } = new();
 
     private CreateUserRequest CreateUserRequest = new();
     private CreateUserRequest OriginalCreateUserRequest = new();

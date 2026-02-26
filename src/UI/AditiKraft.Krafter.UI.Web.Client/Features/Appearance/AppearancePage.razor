@@ -4,7 +4,7 @@
         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap">
             <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" class="rz-p-sm-2">
                 <RadzenLabel Text="Change the current theme"/>
-                <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@themeService.Theme" ValueChanged="@ChangeTheme" Data="@Themes.Free" TextProperty="@nameof(Theme.Text)" ValueProperty="@nameof(Theme.Value)">
+                <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@themeService.Theme" ValueChanged="@ChangeThemeAsync" Data="@Themes.Free" TextProperty="@nameof(Theme.Text)" ValueProperty="@nameof(Theme.Value)">
                 </RadzenDropDown>
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" class="rz-p-sm-2">

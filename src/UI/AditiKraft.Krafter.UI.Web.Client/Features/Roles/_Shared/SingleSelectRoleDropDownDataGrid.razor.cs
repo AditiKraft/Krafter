@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Roles._Shared;
 
@@ -7,7 +7,7 @@ public partial class SingleSelectRoleDropDownDataGrid(
     IRolesApi rolesApi
 ) : ComponentBase
 {
-    private RadzenDropDownDataGrid<string> dropDownGrid;
+    private RadzenDropDownDataGrid<string> dropDownGrid = null!;
     private Response<PaginationResponse<RoleDto>>? response;
     private bool IsLoading = true;
     private IEnumerable<RoleDto>? Data;

@@ -13,7 +13,7 @@ public partial class Tenants(
     public const string RoutePath = KrafterRoute.Tenants;
     private RadzenDataGrid<TenantDto> grid = default!;
     private bool IsLoading = true;
-    private GetRequestInput requestInput = new();
+    private GetRequestInput _requestInput = new();
 
     private Response<PaginationResponse<TenantDto>>? response = new() { Data = new PaginationResponse<TenantDto>() };
 
@@ -30,10 +30,10 @@ public partial class Tenants(
         IsLoading = true;
         if (resetPaginationData)
         {
-            requestInput.SkipCount = 0;
+            _requestInput.SkipCount = 0;
         }
 
-        response = await api.CallAsync(() => tenantsApi.GetTenantsAsync(requestInput));
+        response = await api.CallAsync(() => tenantsApi.GetTenantsAsync(_requestInput));
         IsLoading = false;
         await InvokeAsync(StateHasChanged);
     }
@@ -59,7 +59,7 @@ public partial class Tenants(
             "Delete Tenant",
             new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
 
-        if (confirmed == true)
+        if (confirmed == true && !string.IsNullOrWhiteSpace(input.Id))
         {
             Response result = await api.CallAsync(
                 () => tenantsApi.DeleteTenantAsync(input.Id),
@@ -86,10 +86,10 @@ public partial class Tenants(
     {
         IsLoading = true;
         await Task.Yield();
-        requestInput.SkipCount = args.Skip ?? 0;
-        requestInput.MaxResultCount = args.Top ?? 10;
-        requestInput.Filter = args.Filter;
-        requestInput.OrderBy = args.OrderBy;
+        _requestInput.SkipCount = args.Skip ?? 0;
+        _requestInput.MaxResultCount = args.Top ?? 10;
+        _requestInput.Filter = args.Filter;
+        _requestInput.OrderBy = args.OrderBy;
         await Get();
     }
 

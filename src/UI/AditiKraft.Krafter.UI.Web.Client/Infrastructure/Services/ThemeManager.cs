@@ -1,8 +1,8 @@
-﻿namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 
 public class ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
 {
-    public event Func<string, Task> ThemeChangeRequested;
+    public event Func<string, Task>? ThemeChangeRequested;
 
     public enum ThemePreference
     {
@@ -143,7 +143,7 @@ public class ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
     }
 
 
-    private string CurrentLightTheme => themeService.Theme?.ToLowerInvariant() switch
+    private string CurrentLightTheme => themeService.Theme.ToLowerInvariant() switch
     {
         "dark" => "default",
         "material-dark" => "material",
@@ -155,7 +155,7 @@ public class ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
         _ => themeService.Theme
     };
 
-    private string CurrentDarkTheme => themeService.Theme?.ToLowerInvariant() switch
+    private string CurrentDarkTheme => themeService.Theme.ToLowerInvariant() switch
     {
         "default" => "dark",
         "material" => "material-dark",
@@ -168,7 +168,7 @@ public class ThemeManager(ThemeService themeService, IJSRuntime jsRuntime)
     };
 
 
-    public async Task SetDifferentTheme(string apptheme)
+    public async Task SetDifferentThemeAsync(string apptheme)
     {
         string SystemTheme = "";
         if (apptheme.Contains("dark"))
