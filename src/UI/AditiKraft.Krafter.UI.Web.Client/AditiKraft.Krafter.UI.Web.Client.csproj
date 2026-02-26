@@ -39,7 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\AditiKraft.Krafter.Shared\AditiKraft.Krafter.Shared.csproj" />
+		<ProjectReference Include="..\..\AditiKraft.Krafter.Contracts\AditiKraft.Krafter.Contracts.csproj" />
 	</ItemGroup> 	
 
 </Project>

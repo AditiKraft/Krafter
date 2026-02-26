@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Shared.Common.Extensions;
+using AditiKraft.Krafter.Contracts.Common.Extensions;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 

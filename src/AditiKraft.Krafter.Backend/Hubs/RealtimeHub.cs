@@ -4,8 +4,8 @@ using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Common.Extensions;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Hubs;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Hubs;
 using Mapster;
 using Microsoft.AspNetCore.SignalR;
 

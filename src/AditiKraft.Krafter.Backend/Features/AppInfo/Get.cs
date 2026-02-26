@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.InteropServices;
 using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.AppInfo;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.AppInfo;
 
 namespace AditiKraft.Krafter.Backend.Features.AppInfo;
 

@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Shared.Common;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
@@ -15,7 +15,7 @@ public partial class Roles(
     private RadzenDataGrid<RoleDto> grid = default!;
     private bool IsLoading = true;
 
-    private AditiKraft.Krafter.Shared.Common.Models.GetRequestInput RequestInput = new();
+    private AditiKraft.Krafter.Contracts.Common.Models.GetRequestInput RequestInput = new();
     public string IdentifierBasedOnPlacement = string.Empty;
 
     protected override async Task OnInitializedAsync()

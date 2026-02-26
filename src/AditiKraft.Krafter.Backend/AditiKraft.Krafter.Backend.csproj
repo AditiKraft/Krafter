@@ -58,7 +58,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\aspire\AditiKraft.Krafter.Aspire.ServiceDefaults\AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\AditiKraft.Krafter.Shared\AditiKraft.Krafter.Shared.csproj" />
+    <ProjectReference Include="..\AditiKraft.Krafter.Contracts\AditiKraft.Krafter.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

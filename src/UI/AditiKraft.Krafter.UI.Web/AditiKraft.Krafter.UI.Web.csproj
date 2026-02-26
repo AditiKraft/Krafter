@@ -11,7 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.0" />
     <ProjectReference Include="..\..\..\aspire\AditiKraft.Krafter.Aspire.ServiceDefaults\AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\AditiKraft.Krafter.Shared\AditiKraft.Krafter.Shared.csproj" />
+    <ProjectReference Include="..\..\AditiKraft.Krafter.Contracts\AditiKraft.Krafter.Contracts.csproj" />
     <ProjectReference Include="..\AditiKraft.Krafter.UI.Web.Client\AditiKraft.Krafter.UI.Web.Client.csproj" />
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="13.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

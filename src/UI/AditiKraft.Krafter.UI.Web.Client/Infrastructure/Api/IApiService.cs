@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Shared.Contracts.Auth;
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
 

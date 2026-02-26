@@ -9,10 +9,10 @@ using AditiKraft.Krafter.Backend.Api;
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Auth.Permissions;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Tenants;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 
 namespace AditiKraft.Krafter.Backend.Features.Tenants;
 

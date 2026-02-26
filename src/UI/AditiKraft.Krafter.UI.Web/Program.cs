@@ -1,5 +1,5 @@
 using System.Text;
-using AditiKraft.Krafter.Shared.Common;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
 using AditiKraft.Krafter.UI.Web.Client;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;

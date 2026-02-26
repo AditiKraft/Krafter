@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Shared.Common;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Models;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;

@@ -4,9 +4,9 @@ using AditiKraft.Krafter.Backend.Application.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
-using AditiKraft.Krafter.Shared.Common;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 

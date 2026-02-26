@@ -5,7 +5,7 @@ using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Backend.Features.Auth;
 using AditiKraft.Krafter.Backend.Features.Tenants;
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
 
 namespace AditiKraft.Krafter.Backend.Api.Middleware;

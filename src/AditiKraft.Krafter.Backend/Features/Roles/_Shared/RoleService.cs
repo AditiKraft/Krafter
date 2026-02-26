@@ -1,8 +1,8 @@
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Users._Shared;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Roles;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

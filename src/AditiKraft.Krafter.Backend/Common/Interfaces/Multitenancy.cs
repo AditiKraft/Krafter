@@ -1,5 +1,5 @@
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 
 namespace AditiKraft.Krafter.Backend.Common.Interfaces;
 

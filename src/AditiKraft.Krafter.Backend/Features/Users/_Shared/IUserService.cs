@@ -1,5 +1,5 @@
-using AditiKraft.Krafter.Shared.Common.Models;
-using AditiKraft.Krafter.Shared.Contracts.Users;
+using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Contracts.Users;
 
 namespace AditiKraft.Krafter.Backend.Features.Users._Shared;
 

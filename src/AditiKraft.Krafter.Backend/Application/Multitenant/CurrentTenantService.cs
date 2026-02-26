@@ -1,6 +1,6 @@
 ﻿using AditiKraft.Krafter.Backend.Application.Common;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 
 namespace AditiKraft.Krafter.Backend.Application.Multitenant;
 

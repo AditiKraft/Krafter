@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Shared.Contracts.Auth;
+﻿using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
 

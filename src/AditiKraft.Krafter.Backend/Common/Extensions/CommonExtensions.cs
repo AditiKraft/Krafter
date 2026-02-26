@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Shared.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.Extensions.Primitives;
 
 namespace AditiKraft.Krafter.Backend.Common.Extensions;
