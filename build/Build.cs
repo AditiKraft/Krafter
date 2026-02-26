@@ -22,7 +22,7 @@ internal class Build : NukeBuild
     private AbsolutePath SourceDirectory => RootDirectory / "src";
 
     private AbsolutePath BuildInfoPath =>
-        SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "Get.cs";
+        SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "GetAppInfo.cs";
 
     private AbsolutePath KrafterAPIPath =>
         SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
