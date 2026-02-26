@@ -20,7 +20,9 @@ public class KrafterContext(
     : IdentityDbContext<KrafterUser, KrafterRole, string, KrafterUserClaim, KrafterUserRole,
         KrafterUserLogin, KrafterRoleClaim, KrafterUserToken>(options)
 {
+#pragma warning disable CS0108, CS0114
     public virtual DbSet<KrafterUser> Users { get; set; }
+#pragma warning restore CS0108, CS0114
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

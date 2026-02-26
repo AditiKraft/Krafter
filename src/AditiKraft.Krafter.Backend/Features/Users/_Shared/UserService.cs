@@ -62,8 +62,7 @@ public class UserService(
     ITenantGetterService tenantGetterService,
     TenantDbContext tenantDbContext,
     KrafterContext db,
-    IJobService jobService,
-    ICurrentUser currentUser)
+    IJobService jobService)
     : IUserService, IScopedService
 {
     public async Task<Response<List<string>>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
@@ -99,6 +98,7 @@ public class UserService(
         {
             return Response<bool>.NotFound(permissions.Message ?? "User Not Found.");
         }
+
         return Response<bool>.Success(permissions?.Data?.Contains(permission) ?? false);
     }
 
@@ -143,13 +143,16 @@ public class UserService(
                                $"Please <a href='{loginUrl}'>click here</a> to log in.<br/><br/>" +
                                $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
-            await jobService.EnqueueAsync(
-                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                "SendEmailJob", CancellationToken.None);
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await jobService.EnqueueAsync(
+                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                    "SendEmailJob", CancellationToken.None);
+            }
         }
         else
         {
-            user = await userManager.FindByIdAsync(request.Id);
+            user = await userManager.FindByIdAsync(request.Id!);
             if (user is null)
             {
                 return Response.NotFound("User Not Found.");

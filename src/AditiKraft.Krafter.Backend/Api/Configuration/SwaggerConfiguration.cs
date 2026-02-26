@@ -14,7 +14,8 @@ public static class SwaggerConfiguration
             {
                 document.Info.Title = "Krafter API";
                 document.Info.Version = "v1";
-                document.Info.Description = "Krafter AditiKraft.Krafter.Backend API with VSA (Vertical Slice Architecture)";
+                document.Info.Description =
+                    "Krafter AditiKraft.Krafter.Backend API with VSA (Vertical Slice Architecture)";
                 return Task.CompletedTask;
             });
         });

@@ -52,11 +52,13 @@ public sealed class ChangePassword
     <p>{tenantGetterService.Tenant.Name} Team</p>
 </body>
 </html>";
-
-            await jobService.EnqueueAsync(
-                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                "SendEmailJob",
-                CancellationToken.None);
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await jobService.EnqueueAsync(
+                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                    "SendEmailJob",
+                    CancellationToken.None);
+            }
 
             return new Response();
         }

@@ -18,7 +18,7 @@ public class MultiTenantServiceMiddleware(
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         string? tenantIdentifier = "";
-        string host = context.Request.Host.Value; // Get the host value from the HttpContext
+        string host = context.Request.Host.Value ?? ""; // Get the host value from the HttpContext
         string[] strings = host.Split('.');
         if (strings.Length > 2)
         {

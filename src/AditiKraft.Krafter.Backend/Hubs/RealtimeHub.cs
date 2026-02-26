@@ -75,7 +75,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
     private string GetTenantIdentifier(HttpContext httpContext)
     {
         string tenantIdentifier = "";
-        string host = httpContext.Request.Host.Value;
+        string host = httpContext.Request.Host.Value ?? "";
         string pattern = @"^(.+)\.api\..*$";
         Match match = Regex.Match(host, pattern);
 
@@ -85,7 +85,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
         }
         else
         {
-            tenantIdentifier = httpContext.Request.Headers["x-tenant-identifier"];
+            tenantIdentifier = httpContext?.Request?.Headers["x-tenant-identifier"].ToString() ?? "";
         }
 
         if (string.IsNullOrWhiteSpace(tenantIdentifier))

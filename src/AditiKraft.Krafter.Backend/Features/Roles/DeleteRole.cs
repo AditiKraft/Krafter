@@ -19,9 +19,7 @@ public sealed class DeleteRole
 {
     internal sealed class Handler(
         RoleManager<KrafterRole> roleManager,
-        UserManager<KrafterUser> userManager,
-        KrafterContext db,
-        ITenantGetterService tenantGetterService) : IScopedHandler
+        KrafterContext db) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(string id)
         {

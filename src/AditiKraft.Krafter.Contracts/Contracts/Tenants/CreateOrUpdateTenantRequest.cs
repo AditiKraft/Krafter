@@ -5,7 +5,7 @@ namespace AditiKraft.Krafter.Contracts.Contracts.Tenants;
 public class CreateOrUpdateTenantRequest
 {
     public string? Id { get; set; }
-    public string? Identifier { get; set; }
+    public string Identifier { get; set; } = string.Empty;
     public string? Name { get; set; }
     public string AdminEmail { get; set; } = default!;
     public bool? IsActive { get; set; }

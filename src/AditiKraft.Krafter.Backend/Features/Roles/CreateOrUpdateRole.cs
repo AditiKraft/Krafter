@@ -19,13 +19,12 @@ public sealed class CreateOrUpdateRole
 {
     public sealed class Handler(
         RoleManager<KrafterRole> roleManager,
-        UserManager<KrafterUser> userManager,
         KrafterContext db,
         ITenantGetterService tenantGetterService) : IScopedHandler
     {
         public async Task<Response> CreateOrUpdateAsync(CreateOrUpdateRoleRequest request)
         {
-            KrafterRole role;
+            KrafterRole? role;
             bool isNewRole = string.IsNullOrEmpty(request.Id);
             if (isNewRole)
             {
@@ -39,7 +38,7 @@ public sealed class CreateOrUpdateRole
             }
             else
             {
-                role = await roleManager.FindByIdAsync(request.Id);
+                role = await roleManager.FindByIdAsync(request.Id!);
                 if (role == null)
                 {
                     return Response.NotFound("Role Not Found");

@@ -41,10 +41,13 @@ public sealed class ForgotPassword
                                "If you did not request a password reset, please ignore this email.<br/><br/>" +
                                $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
 
-            await jobService.EnqueueAsync(
-                new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                "SendEmailJob",
-                CancellationToken.None);
+            if (!string.IsNullOrWhiteSpace(user.Email))
+            {
+                await jobService.EnqueueAsync(
+                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                    "SendEmailJob",
+                    CancellationToken.None);
+            }
 
             return new Response();
         }

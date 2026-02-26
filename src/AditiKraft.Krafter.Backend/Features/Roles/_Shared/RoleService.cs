@@ -10,10 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AditiKraft.Krafter.Backend.Features.Roles._Shared;
 
 public class RoleService(
-    RoleManager<KrafterRole> roleManager,
-    UserManager<KrafterUser> userManager,
-    KrafterContext db,
-    ITenantGetterService tenantGetterService)
+    KrafterContext db)
     : IRoleService, IScopedService
 {
     public async Task<Response<RoleDto>> GetByIdAsync(string id)

@@ -30,7 +30,7 @@ public sealed class GetUserRoles
 
             IList<string> userRoleNames = await userManager.GetRolesAsync(user);
             List<KrafterRole>? roles = await roleManager.Roles
-                .Where(c => userRoleNames.Contains(c.Name))
+                .Where(c => c.Name != null && userRoleNames.Contains(c.Name))
                 .ToListAsync(cancellationToken);
 
             if (roles is null || !roles.Any())

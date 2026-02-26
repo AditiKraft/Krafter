@@ -5,8 +5,8 @@ namespace AditiKraft.Krafter.Backend.Features.Auth._Shared;
 
 public class UserRefreshToken : ITenant
 {
-    public string UserId { get; set; }
-    public string TenantId { get; set; }
+    public string UserId { get; set; } = null!;
+    public string TenantId { get; set; } = null!;
     public string? RefreshToken { get; set; }
     public DateTime RefreshTokenExpiryTime { get; set; }
 

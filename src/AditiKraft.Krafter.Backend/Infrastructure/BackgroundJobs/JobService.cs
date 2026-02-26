@@ -1,4 +1,4 @@
-﻿using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
+using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
 using AditiKraft.Krafter.Backend.Application.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Tenants;
@@ -24,14 +24,14 @@ public class Jobs(IEmailService emailService)
     }
 }
 
-public class JobService(ITenantGetterService tenantGetterService, ITimeTickerManager<TimeTicker> timeTickerManager)
+public class JobService(ITimeTickerManager<TimeTicker> timeTickerManager)
     : IJobService
 {
     public async Task EnqueueAsync<T>(T requestInput, string methodName, CancellationToken cancellationToken)
     {
         TickerResult<TimeTicker>? res = await timeTickerManager.AddAsync(new TimeTicker
         {
-            Request = TickerHelper.CreateTickerRequest<T>(requestInput),
+            Request = TickerHelper.CreateTickerRequest(requestInput),
             ExecutionTime = DateTime.Now.AddSeconds(1),
             Function = methodName,
             Description = $"Short Description",

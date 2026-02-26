@@ -84,7 +84,7 @@ public sealed class CreateOrUpdateUser
             }
             else
             {
-                user = await userManager.FindByIdAsync(request.Id);
+                user = await userManager.FindByIdAsync(request.Id!);
                 if (user is null)
                 {
                     return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };

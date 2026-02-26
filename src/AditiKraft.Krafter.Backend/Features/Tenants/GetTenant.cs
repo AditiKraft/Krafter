@@ -16,7 +16,7 @@ using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 
 namespace AditiKraft.Krafter.Backend.Features.Tenants;
 
-public sealed class Get
+public sealed class GetTenant
 {
     internal sealed class Handler(TenantDbContext dbContext) : IScopedHandler
     {
@@ -30,7 +30,7 @@ public sealed class Get
                 predicate = predicate.And(c => c.Id == requestInput.Id);
             }
 
-            IQueryable<TenantDto> queryableProducts = null;
+            IQueryable<TenantDto> queryableProducts;
             if (requestInput.History)
             {
                 if (requestInput.Filter == "CreatedOn desc")
