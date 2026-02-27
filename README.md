@@ -434,38 +434,37 @@ dotnet user-secrets set "Jwt:Key" "<same-long-random-key-as-backend>"
 ## 📁 Project Structure
 
 ```
-Krafter/
-├── Agents.md                        # AI agent instructions (entry point)
-├── aspire/                          # Aspire orchestration
-│   ├── Krafter.Aspire.AppHost/     # Orchestration host
-│   └── Krafter.Aspire.ServiceDefaults/ # Shared configuration
+AditiKraft.Krafter/
+├── Agents.md                              # AI agent instructions (entry point)
+├── aspire/                                # Aspire orchestration
+│   ├── AditiKraft.Krafter.Aspire.AppHost/
+│   └── AditiKraft.Krafter.Aspire.ServiceDefaults/
 ├── src/
-│   ├── Krafter.Shared/              # Shared contracts library
-│   │   ├── Agents.md               # Shared-specific AI instructions
-│   │   ├── Contracts/              # API DTOs (Auth, Users, Roles, Tenants)
-│   │   ├── Common/                 # Shared utilities, permissions, models
-│   │   └── Hubs/                   # SignalR hub contracts
-│   ├── Backend/                     # ASP.NET Core API (VSA)
-│   │   ├── Agents.md               # Backend-specific AI instructions
-│   │   ├── Features/               # Vertical slices (Auth, Users, Roles, Tenants)
-│   │   ├── Infrastructure/         # Persistence, Background Jobs
-│   │   ├── Application/            # Auth, Multi-tenancy, Notifications
-│   │   ├── Api/                    # API configuration, middleware, authorization
-│   │   ├── Entities/               # Base entity classes
-│   │   ├── Hubs/                   # SignalR hubs
-│   │   └── Program.cs              # Entry point
+│   ├── AditiKraft.Krafter.Contracts/      # Shared contracts library
+│   │   ├── Agents.md
+│   │   ├── Contracts/                     # Auth, Users, Roles, Tenants DTOs
+│   │   ├── Common/                        # Routes, permissions, shared models
+│   │   └── Realtime/                      # SignalR method contracts
+│   ├── AditiKraft.Krafter.Backend/        # ASP.NET Core API (VSA)
+│   │   ├── Agents.md
+│   │   ├── Web/                           # HTTP pipeline, middleware, auth config
+│   │   ├── Features/                      # Vertical slices
+│   │   ├── Infrastructure/                # Jobs, notifications, persistence, realtime
+│   │   ├── Common/                        # Context, entities, interfaces, extensions
+│   │   ├── Errors/                        # Exception types
+│   │   ├── Migrations/                    # EF Core migrations
+│   │   └── Program.cs
 │   └── UI/
-│       ├── Agents.md               # UI-specific AI instructions
-│       ├── Krafter.UI.Web.Client/  # Blazor WebAssembly
-│       │   ├── Features/           # Feature-based UI components
-│       │   ├── Infrastructure/     # Refit clients, Auth, Services
-│       │   └── Common/             # Shared components, models
-│       └── Krafter.UI.Web/         # Blazor Server host
-├── tests/                           # Test projects
-├── build/                           # NUKE build automation
-├── docs/                            # Documentation assets
-├── .github/                         # GitHub Actions workflows
-└── README.md                        # This file
+│       ├── Agents.md
+│       ├── AditiKraft.Krafter.UI.Web.Client/  # Blazor WebAssembly
+│       │   ├── Features/
+│       │   ├── Infrastructure/                # AuthApi, Refit, SignalR, Storage, Http
+│       │   └── Common/                        # Shared components, models
+│       └── AditiKraft.Krafter.UI.Web/         # Blazor Server host
+├── build/                                  # NUKE build automation
+├── docs/                                   # Documentation assets
+├── .github/                                # GitHub Actions workflows
+└── README.md                               # This file
 ```
 
 For detailed structure, see [Agents.md](Agents.md) and sub-project Agents.md files.
@@ -477,23 +476,23 @@ For detailed structure, see [Agents.md](Agents.md) and sub-project Agents.md fil
 **Backend (VSA Pattern):**
 1. Create feature folder: `Features/<Feature>/`
 2. Add operation files (e.g., `Create<Feature>.cs`, `Get<Feature>s.cs`)
-3. Add entity to `Features/<Feature>/_Shared/<Entity>.cs`
+3. Add entity/service under `Features/<Feature>/Common/` if feature-specific
 4. Update `KrafterContext.cs` with new `DbSet`
-5. Create EF configuration in `Infrastructure/Persistence/Configurations/`
+5. Update mappings/query behavior in `Infrastructure/Persistence/ModelBuilderExtensions.cs` as needed
 6. Run migration: `dotnet ef migrations add Add<Feature>`
-7. Add permissions to `Common/Auth/Permissions/KrafterPermissions.cs`
+7. Add permissions and routes in `src/AditiKraft.Krafter.Contracts/Common/`
 
 **UI (Blazor):**
 1. Create feature folder: `Features/<Feature>/`
 2. Add list page: `<Feature>s.razor` + `<Feature>s.razor.cs`
 3. Add form dialog: `CreateOrUpdate<Feature>.razor` + `.razor.cs`
-4. Add route constant to `Common/Constants/KrafterRoute.cs`
+4. Use route constants from `src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs`
 5. Create Refit interface: `Infrastructure/Refit/I<Feature>sApi.cs`
 6. Register Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`
-7. Update permissions in `Common/Permissions/KrafterPermissions.cs`
+7. Use permissions from `src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/`
 8. Update `Infrastructure/Services/MenuService.cs` for navigation
 
-For complete guidelines, see [Agents.md](Agents.md) and the sub-project Agents.md files in `src/AditiKraft.Krafter.Backend/`, `src/UI/`, and `src/AditiKraft.Krafter.Shared/`.
+For complete guidelines, see [Agents.md](Agents.md) and the sub-project Agents.md files in `src/AditiKraft.Krafter.Backend/`, `src/UI/`, and `src/AditiKraft.Krafter.Contracts/`.
 
 ### Key Commands
 

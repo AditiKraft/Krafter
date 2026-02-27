@@ -1,6 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 
 public class AuthenticationService(
-    IApiService apiService,
+    IAuthApiService apiService,
     LayoutService layoutService,
     IKrafterLocalStorageService localStorage,
     NavigationManager navigationManager,
@@ -31,8 +31,8 @@ public class AuthenticationService(
         }
 
         // apiService.LogoutAsync handles:
-        // - WASM (ClientSideApiService): Calls BFF /tokens/logout to clear HttpOnly cookies, then clears local storage
-        // - Server (ServerSideApiService): Clears cookies and hybrid cache directly
+        // - WASM (ClientAuthApiService): Calls BFF /tokens/logout to clear HttpOnly cookies, then clears local storage
+        // - Server (ServerAuthApiService): Clears cookies and hybrid cache directly
         await apiService.LogoutAsync(CancellationToken.None);
 
         LoginChange?.Invoke("");
@@ -174,5 +174,6 @@ public class AuthenticationService(
         return true;
     }
 }
+
 
 

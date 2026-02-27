@@ -32,7 +32,7 @@
 
   <!-- Shared Library -->
   <rect x="50" y="230" width="250" height="140" rx="8" class="shared box"/>
-  <text x="175" y="255" class="subtitle" text-anchor="middle">Krafter.Shared</text>
+  <text x="175" y="255" class="subtitle" text-anchor="middle">Krafter.Contracts</text>
   
   <rect x="70" y="270" width="100" height="80" rx="5" class="box"/>
   <text x="120" y="290" class="subtitle" text-anchor="middle">Contracts</text>
@@ -43,7 +43,7 @@
   <rect x="190" y="270" width="90" height="80" rx="5" class="box"/>
   <text x="235" y="290" class="subtitle" text-anchor="middle">Common</text>
   <text x="200" y="310" class="text">Utilities</text>
-  <text x="200" y="325" class="text">Hubs</text>
+  <text x="200" y="325" class="text">Realtime</text>
   
   <!-- Backend -->
   <rect x="350" y="60" width="280" height="420" rx="8" class="backend box"/>
@@ -62,8 +62,8 @@
   <text x="380" y="270" class="text">Auth, Users, Roles, Tenants</text>
   
   <rect x="370" y="295" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="315" class="subtitle" text-anchor="middle">Entities</text>
-  <text x="380" y="335" class="text">Domain Models, EF Configurations</text>
+  <text x="490" y="315" class="subtitle" text-anchor="middle">Errors</text>
+  <text x="380" y="335" class="text">Exception Types, Error Contracts</text>
   
   <rect x="370" y="360" width="240" height="50" rx="5" class="box"/>
   <text x="490" y="380" class="subtitle" text-anchor="middle">Infrastructure</text>

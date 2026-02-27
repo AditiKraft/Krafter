@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.UI.Web.Client;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
@@ -15,7 +15,7 @@ builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddRadzenComponents();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IKrafterLocalStorageService, KrafterLocalStorageService>();
-builder.Services.AddScoped<IApiService, ClientSideApiService>();
+builder.Services.AddScoped<IAuthApiService, ClientAuthApiService>();
 
 builder.Services.AddUIServices();
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
@@ -30,5 +30,6 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddKrafterRefitClients();
 
 await builder.Build().RunAsync();
+
 
 

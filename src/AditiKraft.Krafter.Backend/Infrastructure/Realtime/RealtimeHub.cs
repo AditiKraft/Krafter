@@ -5,7 +5,7 @@ using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using AditiKraft.Krafter.Contracts.Hubs;
+using AditiKraft.Krafter.Contracts.Realtime;
 using Mapster;
 using Microsoft.AspNetCore.SignalR;
 
@@ -130,6 +130,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
         logger.LogInformation("A client disconnected from NotificationHub: {connectionId}", Context.ConnectionId);
     }
 }
+
 
 
 

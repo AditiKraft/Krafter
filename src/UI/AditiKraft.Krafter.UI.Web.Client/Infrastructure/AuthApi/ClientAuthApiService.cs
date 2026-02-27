@@ -4,12 +4,12 @@ using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using Refit;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 
-public class ClientSideApiService(
+public class ClientAuthApiService(
     IAuthApi authApi,
     IKrafterLocalStorageService localStorage,
-    ILogger<ClientSideApiService> logger) : IApiService
+    ILogger<ClientAuthApiService> logger) : IAuthApiService
 {
     public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request,
         CancellationToken cancellationToken)
@@ -147,3 +147,4 @@ public class ClientSideApiService(
         await localStorage.ClearCacheAsync();
     }
 }
+

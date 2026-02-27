@@ -1,8 +1,8 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 
-public interface IApiService
+public interface IAuthApiService
 {
     public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation);
 
@@ -14,3 +14,4 @@ public interface IApiService
 
     public Task LogoutAsync(CancellationToken cancellation);
 }
+

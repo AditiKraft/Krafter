@@ -1,4 +1,4 @@
-namespace AditiKraft.Krafter.Contracts.Hubs;
+namespace AditiKraft.Krafter.Contracts.Realtime;
 
 public static class SignalRMethods
 {
@@ -6,3 +6,4 @@ public static class SignalRMethods
     public const string SendMessage = nameof(SendMessage);
     public const string ComponentAddedOrRemovedOrRestored = nameof(ComponentAddedOrRemovedOrRestored);
 }
+
