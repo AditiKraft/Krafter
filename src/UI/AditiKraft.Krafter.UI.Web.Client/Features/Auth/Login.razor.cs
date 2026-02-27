@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
@@ -120,3 +120,5 @@ public partial class Login(
         navigationManager.NavigateTo(authUrl, true);
     }
 }
+
+

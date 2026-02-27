@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 
 namespace AditiKraft.Krafter.Backend.Entities;
 
@@ -50,3 +50,5 @@ public interface IHistory
     public DateTime? UpdatedOn { get; set; }
     public string? UpdatedById { get; set; }
 }
+
+

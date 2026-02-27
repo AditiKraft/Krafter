@@ -1,5 +1,5 @@
 using AditiKraft.Krafter.UI.Web.Client;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
@@ -30,3 +30,5 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddKrafterRefitClients();
 
 await builder.Build().RunAsync();
+
+

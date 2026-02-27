@@ -26,7 +26,7 @@
 ## File Placement
 - List page: `Features/<Feature>/<Feature>s.razor` (+ `.razor.cs` if needed)
 - Form dialog: `Features/<Feature>/CreateOrUpdate<Feature>.razor` (+ `.razor.cs` if needed)
-- Feature-shared UI pieces: `Features/<Feature>/_Shared/`
+- Feature-shared UI pieces: `Features/<Feature>/Common/`
 - Refit interfaces: `Infrastructure/Refit/`
 - Menu: `Infrastructure/Services/MenuService.cs`
 
@@ -118,4 +118,6 @@ public partial class Users(
 Last Updated: 2026-01-26
 Verified Against: Features/Auth/Login.razor.cs, Features/Auth/GoogleCallback.razor.cs, Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs, _Imports.razor
 ---
+
+
 

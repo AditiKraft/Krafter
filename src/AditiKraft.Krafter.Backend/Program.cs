@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Backend.Api.Middleware;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Hubs;
+using AditiKraft.Krafter.Backend.Realtime;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
 using AditiKraft.Krafter.Backend.Api;
 using AditiKraft.Krafter.Backend.Api.Authorization;

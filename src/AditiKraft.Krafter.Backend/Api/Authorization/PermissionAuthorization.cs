@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Extensions;
@@ -61,3 +61,5 @@ public static class MustHavePermissionExtension
         return builder.RequireAuthorization(policyName);
     }
 }
+
+

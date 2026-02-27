@@ -12,9 +12,9 @@ using AditiKraft.Krafter.Backend.Context.Auth;
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Auth;
-using AditiKraft.Krafter.Backend.Features.Auth._Shared;
-using AditiKraft.Krafter.Backend.Features.Roles._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
+using AditiKraft.Krafter.Backend.Features.Roles.Common;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.Extensions.Primitives;
 
@@ -153,4 +153,6 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
         };
     }
 }
+
+
 

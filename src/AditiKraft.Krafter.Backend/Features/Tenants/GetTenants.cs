@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Api.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
@@ -135,3 +135,5 @@ public sealed class GetTenants
         }
     }
 }
+
+

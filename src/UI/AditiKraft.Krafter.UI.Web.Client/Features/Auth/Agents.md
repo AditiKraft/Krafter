@@ -61,9 +61,11 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/_Shared/AuthenticationService.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Common/AuthenticationService.cs`
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Features/Auth/Login.razor.cs, Features/Auth/GoogleCallback.razor.cs, Features/Auth/_Shared/AuthenticationService.cs
+Verified Against: Features/Auth/Login.razor.cs, Features/Auth/GoogleCallback.razor.cs, Features/Auth/Common/AuthenticationService.cs
 ---
+
+

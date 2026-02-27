@@ -1,6 +1,6 @@
-﻿using AditiKraft.Krafter.Backend.Common;
+using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Entities;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -70,3 +70,5 @@ public static class ModelBuilderExtensions
         }
     }
 }
+
+

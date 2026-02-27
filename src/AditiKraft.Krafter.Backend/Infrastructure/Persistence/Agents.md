@@ -49,7 +49,7 @@ modelBuilder.Entity<Tenant>(entity =>
 ```
 
 ## 4. Checklist
-1. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Entity>.cs`.
+1. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Entity>.cs`.
 2. Add a `DbSet` in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs`.
 3. Configure model in `KrafterContext.OnModelCreating(...)`.
 4. Use `TenantDbContext` only for tenant admin data.
@@ -70,3 +70,5 @@ modelBuilder.Entity<Tenant>(entity =>
 Last Updated: 2026-01-25
 Verified Against: Infrastructure/Persistence/KrafterContext.cs, Infrastructure/Persistence/TenantDbContext.cs, Infrastructure/Persistence/ModelBuilderExtensions.cs
 ---
+
+

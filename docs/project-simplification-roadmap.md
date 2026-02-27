@@ -15,7 +15,7 @@ Make the project structure and naming easy to understand at a glance for both AI
 1. Feature folders remain plural: `Users`, `Roles`, `Tenants`, `Auth`.
 2. Operation files use explicit names: `CreateUser.cs`, `UpdateUser.cs`, `GetUsers.cs`, `DeleteUser.cs`.
 3. Replace ambiguous/shared folder names:
-   - `_Shared` -> `Shared`
+   - `_Shared` -> `Common`
    - `Application` -> split by concern (`Context`, `Jobs`, `Notifications`, `Errors`)
    - `Hubs` -> `Realtime`
 4. Keep route registrars inside operation files.
@@ -74,7 +74,17 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
     - `RestPassword.*` -> `ResetPassword.*`
   - Synced multiple `Agents.md` files with corrected project paths and renamed files.
 - Pending:
-  - Further folder simplification (`Api`/`Hubs`/`_Shared`) in a dedicated pass.
+  - Further folder simplification (`Api`) in a dedicated pass.
+
+## Progress (Current Pass)
+- Completed:
+  - Renamed feature support folders from `_Shared` to `Common`:
+    - Backend: `Features/Auth|Roles|Tenants|Users/Common`
+    - UI: `Features/Auth|Roles|Users/Common`
+  - Updated all related namespaces/usings and references.
+  - Renamed backend realtime folder:
+    - `Hubs` -> `Realtime`
+  - Updated backend wiring (`Program.cs`) and realtime hub namespace.
 
 ## Progress (Phase 3)
 - Completed:

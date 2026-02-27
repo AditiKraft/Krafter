@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Features.Roles._Shared;
+using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Api.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
@@ -93,3 +93,5 @@ public sealed class UpdateRolePermissions
         }
     }
 }
+
+

@@ -2,7 +2,7 @@ using AditiKraft.Krafter.Backend.Api;
 using AditiKraft.Krafter.Backend.Api.Authorization;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
@@ -88,3 +88,5 @@ public sealed class CreateTenant
         }
     }
 }
+
+

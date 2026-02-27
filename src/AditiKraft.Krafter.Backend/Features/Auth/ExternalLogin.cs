@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using System.Text.Json.Serialization;
 using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Features.Auth._Shared;
-using AditiKraft.Krafter.Backend.Features.Roles._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
+using AditiKraft.Krafter.Backend.Features.Roles.Common;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
@@ -179,3 +179,5 @@ public sealed class ExternalAuth
         }
     }
 }
+
+

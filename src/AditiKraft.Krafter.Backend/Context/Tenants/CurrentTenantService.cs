@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
 
@@ -21,4 +21,6 @@ public class CurrentTenantService : ITenantGetterService, ITenantSetterService
         Tenant = tenant;
     }
 }
+
+
 

@@ -1,7 +1,7 @@
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
@@ -51,3 +51,5 @@ public class MultiTenantServiceMiddleware(
         await next(context);
     }
 }
+
+

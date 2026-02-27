@@ -1,6 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -122,3 +122,5 @@ public class SignalRService : IAsyncDisposable
         }
     }
 }
+
+

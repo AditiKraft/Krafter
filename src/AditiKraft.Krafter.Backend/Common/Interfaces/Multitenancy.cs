@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 
 namespace AditiKraft.Krafter.Backend.Common.Interfaces;
@@ -17,3 +17,5 @@ public interface ITenantSetterService
 {
     public void SetTenant(CurrentTenantDetails tenant);
 }
+
+

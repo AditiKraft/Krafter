@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
@@ -194,3 +194,5 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
         return Convert.FromBase64String(base64);
     }
 }
+
+

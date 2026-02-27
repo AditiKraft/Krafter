@@ -3,8 +3,8 @@ using AditiKraft.Krafter.Backend.Api.Authorization;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Jobs;
 using AditiKraft.Krafter.Backend.Notifications;
-using AditiKraft.Krafter.Backend.Features.Roles._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Roles.Common;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
@@ -145,3 +145,5 @@ public sealed class CreateUser
         }
     }
 }
+
+

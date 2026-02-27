@@ -7,7 +7,7 @@
 1. If `src/AditiKraft.Krafter.Backend/Features/<Feature>/Agents.md` exists, read it first.
 2. Add shared request/response DTOs in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/` (see `src/AditiKraft.Krafter.Contracts/Agents.md`).
 3. Add operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
-4. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Entity>.cs` if needed.
+4. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Entity>.cs` if needed.
 5. Add DbSet + model configuration in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs`.
 6. Add permissions + routes in Shared (`src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/` and `src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs`).
 7. Map endpoints using `KrafterRoute` and `RouteSegment`.
@@ -23,8 +23,8 @@
 
 ## File Placement
 - Feature operation: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`
-- Feature entity: `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Entity>.cs`
-- Feature-only service: `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Service>.cs`
+- Feature entity: `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Entity>.cs`
+- Feature-only service: `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Service>.cs`
 - Cross-feature service: `src/AditiKraft.Krafter.Backend/Infrastructure/` or `src/AditiKraft.Krafter.Backend/Common/`
 
 ## Minimal Operation Skeleton
@@ -98,4 +98,6 @@ public sealed class GetUsers
 Last Updated: 2026-01-26
 Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateUser.cs, Features/Users/UpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateRole.cs, Features/Roles/UpdateRole.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateTenant.cs, Features/Tenants/UpdateTenant.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
 ---
+
+
 
