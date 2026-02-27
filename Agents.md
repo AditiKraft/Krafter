@@ -42,7 +42,7 @@ Krafter is a .NET 10 full-stack platform with:
 
 ## 2.2 Deep Dives
 - Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
-- Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/Agents.md`
+- Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md`
 - Backend auth: `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
 - Backend Users feature: `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
 - Backend tenants: `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
@@ -169,7 +169,7 @@ src/AditiKraft.Krafter.Backend/Agents.md (core patterns, ~200 lines)
 ├── Features/Auth/Agents.md (auth-specific patterns)
 ├── Features/Tenants/Agents.md (multi-tenant patterns)
 ├── Infrastructure/Persistence/Agents.md (EF Core patterns)
-└── Infrastructure/BackgroundJobs/Agents.md (TickerQ patterns)
+└── Infrastructure/Jobs/Agents.md (TickerQ patterns)
 ```
 
 ### 8.4 Hierarchy & Inheritance
@@ -242,6 +242,7 @@ Verified Against: [list key files checked]
 
 ---
 Last Updated: 2026-02-09
-Verified Against: Agents.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
+Verified Against: Agents.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
 ---
+
 

@@ -1,9 +1,9 @@
-﻿using AditiKraft.Krafter.Backend.Common;
+using AditiKraft.Krafter.Backend.Common;
 using Microsoft.EntityFrameworkCore;
 using TickerQ.EntityFrameworkCore.Configurations;
 using TickerQ.EntityFrameworkCore.Entities;
 
-namespace AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
+namespace AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 
 public class BackgroundJobsContext : DbContext
 {
@@ -60,3 +60,4 @@ public class BackgroundJobsContext : DbContext
         // builder.ApplyConfigurationsFromAssembly(typeof(TimeTickerConfigurations).Assembly);
     }
 }
+

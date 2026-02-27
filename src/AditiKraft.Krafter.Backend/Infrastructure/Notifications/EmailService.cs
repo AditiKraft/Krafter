@@ -1,8 +1,6 @@
 using System.Net.Mail;
-using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Configurations;
 
-namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence.Notifications;
+namespace AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 
 public class EmailService(SmtpClient smtpClient, SMTPEmailSettings smtpEmailSettings) : IEmailService
 {
@@ -18,5 +16,6 @@ public class EmailService(SmtpClient smtpClient, SMTPEmailSettings smtpEmailSett
         await smtpClient.SendMailAsync(message);
     }
 }
+
 
 

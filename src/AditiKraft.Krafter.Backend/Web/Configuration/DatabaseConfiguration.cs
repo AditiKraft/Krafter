@@ -1,5 +1,5 @@
 using AditiKraft.Krafter.Backend.Common;
-using AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,4 +40,5 @@ public static class DatabaseConfiguration
         }
     }
 }
+
 

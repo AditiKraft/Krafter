@@ -68,7 +68,7 @@ public sealed class GetUsers
 
 ## Related Agents
 - `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
-- `src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md`
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
 - `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
@@ -98,6 +98,7 @@ public sealed class GetUsers
 Last Updated: 2026-01-26
 Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateUser.cs, Features/Users/UpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateRole.cs, Features/Roles/UpdateRole.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateTenant.cs, Features/Tenants/UpdateTenant.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
 ---
+
 
 
 

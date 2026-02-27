@@ -6,7 +6,7 @@ using TickerQ.Utilities.Interfaces.Managers;
 using TickerQ.Utilities.Models;
 using TickerQ.Utilities.Models.Ticker;
 
-namespace AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
+namespace AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 
 public class Jobs(IEmailService emailService)
 {
@@ -38,5 +38,6 @@ public class JobService(ITimeTickerManager<TimeTicker> timeTickerManager)
         }, cancellationToken);
     }
 }
+
 
 

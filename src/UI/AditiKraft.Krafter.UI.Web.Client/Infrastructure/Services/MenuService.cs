@@ -1,5 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
-using AditiKraft.Krafter.UI.Web.Client.Models;
+using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 
@@ -112,3 +112,4 @@ public class MenuService
     public string DescriptionFor(Menu menu) => menu?.Description ??
                                                "The Radzen Blazor component library provides more than 70 UI controls for building rich ASP.NET Core web applications.";
 }
+

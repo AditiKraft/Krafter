@@ -1,4 +1,4 @@
-namespace AditiKraft.Krafter.UI.Web.Client.Models;
+namespace AditiKraft.Krafter.UI.Web.Client.Common.Models;
 
 public class Menu
 {
@@ -20,3 +20,4 @@ public class Menu
     public IEnumerable<Menu>? Children { get; set; }
     public IEnumerable<string> Tags { get; set; }
 }
+

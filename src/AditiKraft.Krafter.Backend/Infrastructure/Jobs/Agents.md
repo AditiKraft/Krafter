@@ -4,7 +4,7 @@
 > **PARENT**: See also: ../../Agents.md
 
 ## 1. Core Principles
-- Job methods live in `src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/JobService.cs`.
+- Job methods live in `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/JobService.cs`.
 - Use `[TickerFunction(nameof(JobName))]` for each job method.
 - Enqueue via `IJobService.EnqueueAsync(request, nameof(JobName), cancellationToken)`.
 
@@ -59,5 +59,6 @@ await jobService.EnqueueAsync(
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Infrastructure/BackgroundJobs/JobService.cs
+Verified Against: Infrastructure/Jobs/JobService.cs
 ---
+

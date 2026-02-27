@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
@@ -36,5 +36,6 @@ public static class JobsConfiguration
         return app;
     }
 }
+
 
 

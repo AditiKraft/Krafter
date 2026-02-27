@@ -1,4 +1,4 @@
-namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence.Configurations;
+namespace AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 
 public class SMTPEmailSettings
 {
@@ -9,3 +9,4 @@ public class SMTPEmailSettings
     public string SenderEmail { get; set; } = string.Empty;
     public string SenderName { get; set; } = string.Empty;
 }
+

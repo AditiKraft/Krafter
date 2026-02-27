@@ -28,7 +28,6 @@ src/AditiKraft.Krafter.Backend/
 |__ Features/               # Vertical slices (Auth, Users, Roles, Tenants, ...)
 |__ Infrastructure/         # Technical plumbing
 |   |__ Persistence/
-|   |__ BackgroundJobs/
 |   |__ Jobs/
 |   |__ Notifications/
 |   |__ Realtime/
