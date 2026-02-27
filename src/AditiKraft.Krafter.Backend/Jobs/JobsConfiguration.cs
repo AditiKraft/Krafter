@@ -3,9 +3,9 @@ using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
 
-namespace AditiKraft.Krafter.Backend.Application.BackgroundJobs;
+namespace AditiKraft.Krafter.Backend.Jobs;
 
-public static class BackgroundJobsConfiguration
+public static class JobsConfiguration
 {
     public static IServiceCollection AddBackgroundJobs(this IServiceCollection services)
     {
@@ -36,3 +36,4 @@ public static class BackgroundJobsConfiguration
         return app;
     }
 }
+

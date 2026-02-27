@@ -60,12 +60,13 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 
 ## References (real code)
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/CreateOrUpdate.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Tenants/Get.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/_Shared/DataSeedService.cs`
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Features/Tenants/CreateOrUpdate.cs, Features/Tenants/Get.cs, Features/Tenants/Delete.cs, Features/Tenants/SeedBasicData.cs, Features/Tenants/_Shared/DataSeedService.cs
+Verified Against: Features/Tenants/CreateOrUpdate.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/SeedBasicData.cs, Features/Tenants/_Shared/DataSeedService.cs
 ---
+

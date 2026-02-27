@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
-using AditiKraft.Krafter.Backend.Application.Notifications;
+using AditiKraft.Krafter.Backend.Jobs;
+using AditiKraft.Krafter.Backend.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Roles._Shared;
 using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
@@ -204,3 +204,4 @@ public sealed class CreateOrUpdateUser
         }
     }
 }
+

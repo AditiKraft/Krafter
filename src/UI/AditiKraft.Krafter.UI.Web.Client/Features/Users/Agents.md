@@ -12,7 +12,7 @@
 - List page? Use `Features/Users/Users.razor` + `.razor.cs`.
 - Create/update user? Use `CreateOrUpdateUser` dialog with `UserInput` parameter.
 - Change password? Use `ChangePassword` page.
-- Forgot/reset password? Use `ForgotPassword` and `RestPassword` pages.
+- Forgot/reset password? Use `ForgotPassword` and `ResetPassword` pages.
 
 ## 3. Code Templates
 
@@ -59,9 +59,9 @@ if (confirmed == true)
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/RestPassword.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs`
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Features/Users/Users.razor.cs, Features/Users/CreateOrUpdateUser.razor.cs, Features/Users/ChangePassword.razor.cs, Features/Users/ForgotPassword.razor.cs, Features/Users/RestPassword.razor.cs
+Verified Against: Features/Users/Users.razor.cs, Features/Users/CreateOrUpdateUser.razor.cs, Features/Users/ChangePassword.razor.cs, Features/Users/ForgotPassword.razor.cs, Features/Users/ResetPassword.razor.cs
 ---

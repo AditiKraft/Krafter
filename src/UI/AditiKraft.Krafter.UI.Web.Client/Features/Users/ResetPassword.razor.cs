@@ -2,7 +2,7 @@
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
-public partial class RestPassword(
+public partial class ResetPassword(
     NavigationManager navigationManager,
     ApiCallService api,
     IUsersApi usersApi
@@ -15,7 +15,7 @@ public partial class RestPassword(
 
     public bool IsBusy { get; set; }
 
-    private async Task ResetPassword(ResetPasswordRequest requestInput)
+    private async Task SubmitResetPassword(ResetPasswordRequest requestInput)
     {
         requestInput.Token = Token;
         IsBusy = true;

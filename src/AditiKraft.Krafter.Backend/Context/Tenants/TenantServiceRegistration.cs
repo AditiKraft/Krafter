@@ -1,6 +1,6 @@
-﻿using AditiKraft.Krafter.Backend.Common.Interfaces;
+using AditiKraft.Krafter.Backend.Common.Interfaces;
 
-namespace AditiKraft.Krafter.Backend.Application.Multitenant;
+namespace AditiKraft.Krafter.Backend.Context.Tenants;
 
 public static class TenantServiceRegistration
 {
@@ -32,3 +32,4 @@ public static class TenantServiceRegistration
         return services;
     }
 }
+

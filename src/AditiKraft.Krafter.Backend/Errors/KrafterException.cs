@@ -1,6 +1,6 @@
-﻿using System.Net;
+using System.Net;
 
-namespace AditiKraft.Krafter.Backend.Application.Common;
+namespace AditiKraft.Krafter.Backend.Errors;
 
 public class KrafterException(
     string message,
@@ -20,3 +20,4 @@ public class UnauthorizedException(string message) : KrafterException(message, n
 public class NotFoundException(string message) : KrafterException(message, null, HttpStatusCode.NotFound);
 
 public class ConflictException(string message) : KrafterException(message, null, HttpStatusCode.Conflict);
+

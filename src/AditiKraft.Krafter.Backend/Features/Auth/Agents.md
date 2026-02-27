@@ -11,7 +11,7 @@
 - Prefer `Response<T>` factory methods for errors.
 
 ## 2. Decision Tree
-- Standard login? Use `GetToken` with `TokenRequest`.
+- Standard login? Use `Login` with `TokenRequest`.
 - Refresh token? Use `RefreshToken` with `RefreshTokenRequest` and stored refresh token.
 - Google login? Use `ExternalAuth` with `GoogleAuthRequest` and `GoogleAuthClient`.
 

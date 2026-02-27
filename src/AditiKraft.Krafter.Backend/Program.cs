@@ -5,9 +5,9 @@ using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
 using AditiKraft.Krafter.Backend.Api;
 using AditiKraft.Krafter.Backend.Api.Authorization;
 using AditiKraft.Krafter.Backend.Api.Configuration;
-using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
-using AditiKraft.Krafter.Backend.Application.Multitenant;
-using AditiKraft.Krafter.Backend.Application.Notifications;
+using AditiKraft.Krafter.Backend.Jobs;
+using AditiKraft.Krafter.Backend.Context.Tenants;
+using AditiKraft.Krafter.Backend.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using FluentValidation;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
@@ -111,3 +111,4 @@ public static class Program
         app.Run();
     }
 }
+

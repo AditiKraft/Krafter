@@ -7,7 +7,7 @@ public static class RouteConfiguration
 {
     public static IServiceCollection AddRouteDiscovery(this IServiceCollection services)
     {
-        Assembly assembly = typeof(GetToken.TokenRoute).Assembly;
+        Assembly assembly = typeof(Login.Route).Assembly;
 
         var routeRegistrars = assembly.GetTypes()
             .Where(t => typeof(IRouteRegistrar).IsAssignableFrom(t) &&

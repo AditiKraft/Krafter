@@ -3,9 +3,9 @@ using System.Net.Mail;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Configurations;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Notifications;
 
-namespace AditiKraft.Krafter.Backend.Application.Notifications;
+namespace AditiKraft.Krafter.Backend.Notifications;
 
-public static class NotificationConfiguration
+public static class NotificationsConfiguration
 {
     public static IServiceCollection AddNotificationServices(
         this IServiceCollection services,
@@ -30,3 +30,4 @@ public static class NotificationConfiguration
         return services;
     }
 }
+

@@ -5,11 +5,11 @@
 
 ## Quick Start: New Backend Feature
 1. If `src/AditiKraft.Krafter.Backend/Features/<Feature>/Agents.md` exists, read it first.
-2. Add shared request/response DTOs in `src/Krafter.Shared/Contracts/<Feature>/` (see `src/Krafter.Shared/Agents.md`).
-3. Add operations in `src/Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
-4. Add entity in `src/Backend/Features/<Feature>/_Shared/<Entity>.cs` if needed.
-5. Add DbSet + model configuration in `src/Backend/Infrastructure/Persistence/KrafterContext.cs`.
-6. Add permissions + routes in Shared (`src/Krafter.Shared/Common/Auth/Permissions/` and `src/Krafter.Shared/Common/KrafterRoute.cs`).
+2. Add shared request/response DTOs in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/` (see `src/AditiKraft.Krafter.Contracts/Agents.md`).
+3. Add operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
+4. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Entity>.cs` if needed.
+5. Add DbSet + model configuration in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs`.
+6. Add permissions + routes in Shared (`src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/` and `src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs`).
 7. Map endpoints using `KrafterRoute` and `RouteSegment`.
 8. Run migrations if schema changed.
 
@@ -22,10 +22,10 @@
 - DELETE endpoints use `MapDelete($"/{RouteSegment.ById}", ...)` with route parameter name matching the placeholder.
 
 ## File Placement
-- Feature operation: `src/Backend/Features/<Feature>/<Operation>.cs`
-- Feature entity: `src/Backend/Features/<Feature>/_Shared/<Entity>.cs`
-- Feature-only service: `src/Backend/Features/<Feature>/_Shared/<Service>.cs`
-- Cross-feature service: `src/Backend/Infrastructure/` or `src/Backend/Common/`
+- Feature operation: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`
+- Feature entity: `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Entity>.cs`
+- Feature-only service: `src/AditiKraft.Krafter.Backend/Features/<Feature>/_Shared/<Service>.cs`
+- Cross-feature service: `src/AditiKraft.Krafter.Backend/Infrastructure/` or `src/AditiKraft.Krafter.Backend/Common/`
 
 ## Minimal Operation Skeleton
 ```csharp
@@ -67,25 +67,25 @@ public sealed class GetUsers
 ```
 
 ## Related Agents
-- `src/Backend/Infrastructure/Persistence/Agents.md`
-- `src/Backend/Infrastructure/BackgroundJobs/Agents.md`
-- `src/Backend/Features/Auth/Agents.md`
-- `src/Backend/Features/Users/Agents.md`
-- `src/Backend/Features/Tenants/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Infrastructure/BackgroundJobs/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
 
 ## References (real code)
-- `src/Backend/Features/Users/CreateOrUpdateUser.cs`
-- `src/Backend/Features/Users/GetUsers.cs`
-- `src/Backend/Features/Users/DeleteUser.cs`
-- `src/Backend/Features/Roles/CreateOrUpdateRole.cs`
-- `src/Backend/Features/Tenants/Get.cs`
-- `src/Backend/Features/Tenants/Delete.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/CreateOrUpdateUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Roles/CreateOrUpdateRole.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
 
 ## Common Mistakes
 - Returning raw types instead of `Response` / `Response<T>`.
 - Using `MapPost("/delete", ...)` instead of `MapDelete($"/{RouteSegment.ById}", ...)`.
 - Route parameter name mismatches (e.g., `{id}` requires parameter `id`).
-- Putting DTOs in Backend instead of `src/Krafter.Shared/Contracts/`.
+- Putting DTOs in Backend instead of `src/AditiKraft.Krafter.Contracts/Contracts/`.
 
 ## Evolution & Maintenance
 
@@ -94,5 +94,6 @@ public sealed class GetUsers
 
 ---
 Last Updated: 2026-01-26
-Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateOrUpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/Get.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateOrUpdate.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/Krafter.Shared/Common/KrafterRoute.cs
+Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateOrUpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateOrUpdate.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
 ---
+

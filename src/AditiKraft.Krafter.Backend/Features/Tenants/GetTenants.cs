@@ -14,7 +14,7 @@ using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 
 namespace AditiKraft.Krafter.Backend.Features.Tenants;
 
-public sealed class GetTenant
+public sealed class GetTenants
 {
     internal sealed class Handler(TenantDbContext dbContext) : IScopedHandler
     {
