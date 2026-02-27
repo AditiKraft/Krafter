@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Common.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace AditiKraft.Krafter.Backend.Features.Users.Common;
@@ -30,5 +30,6 @@ public class KrafterUser : IdentityUser<string>, ICommonAuthEntityProperty
     public string TenantId { get; set; } = null!;
     public bool IsOwner { get; set; }
 }
+
 
 

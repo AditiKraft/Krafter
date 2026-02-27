@@ -21,6 +21,27 @@ Make the project structure and naming easy to understand at a glance for both AI
    - `Hubs` -> `Realtime`
 4. Keep route registrars inside operation files.
 
+## Recommended VSA Starter Structure (Current)
+```text
+src/AditiKraft.Krafter.Backend/
+|__ Web/                    # HTTP pipeline (routes, middleware, auth config)
+|__ Features/               # Vertical slices (Auth, Users, Roles, Tenants, ...)
+|__ Infrastructure/         # Technical plumbing
+|   |__ Persistence/
+|   |__ BackgroundJobs/
+|   |__ Jobs/
+|   |__ Notifications/
+|   |__ Realtime/
+|__ Common/                 # Cross-cutting domain/app code
+|   |__ Context/
+|   |__ Entities/
+|   |__ Interfaces/
+|   |__ Extensions/
+|__ Errors/
+|__ Migrations/
+|__ Program.cs
+```
+
 ### UI
 1. Keep feature folders but use explicit page/dialog names where practical.
 2. Fix typos and inconsistent names (`RestPassword` -> `ResetPassword`).
@@ -89,6 +110,13 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
   - Renamed backend HTTP composition folder:
     - `Api` -> `Web`
   - Updated namespaces/usings from `AditiKraft.Krafter.Backend.Api.*` to `AditiKraft.Krafter.Backend.Web.*`.
+  - Consolidated backend top-level folders for simpler navigation:
+    - `Context` -> `Common/Context`
+    - `Entities` -> `Common/Entities`
+    - `Jobs` -> `Infrastructure/Jobs`
+    - `Notifications` -> `Infrastructure/Notifications`
+    - `Realtime` -> `Infrastructure/Realtime`
+  - Updated namespaces/usings for all moved folders and references.
 
 ## Progress (Phase 3)
 - Completed:

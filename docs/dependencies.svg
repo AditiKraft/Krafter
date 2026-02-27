@@ -50,12 +50,12 @@
   <text x="490" y="85" class="subtitle" text-anchor="middle">Backend API</text>
   
   <rect x="370" y="100" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="120" class="subtitle" text-anchor="middle">Api</text>
+  <text x="490" y="120" class="subtitle" text-anchor="middle">Web</text>
   <text x="380" y="140" class="text">Routes, Swagger, CORS, Auth Config</text>
   
   <rect x="370" y="165" width="240" height="50" rx="5" class="box"/>
-  <text x="490" y="185" class="subtitle" text-anchor="middle">Application</text>
-  <text x="380" y="205" class="text">Services, Interfaces, Behaviors</text>
+  <text x="490" y="185" class="subtitle" text-anchor="middle">Common</text>
+  <text x="380" y="205" class="text">Context, Entities, Interfaces</text>
   
   <rect x="370" y="230" width="240" height="50" rx="5" class="box"/>
   <text x="490" y="250" class="subtitle" text-anchor="middle">Features (VSA)</text>
@@ -70,7 +70,7 @@
   <text x="380" y="400" class="text">Persistence, Jobs, Multi-tenant</text>
   
   <rect x="370" y="425" width="115" height="40" rx="5" class="box"/>
-  <text x="427" y="450" class="subtitle" text-anchor="middle">Hubs</text>
+  <text x="427" y="450" class="subtitle" text-anchor="middle">Realtime</text>
   
   <rect x="495" y="425" width="115" height="40" rx="5" class="box"/>
   <text x="552" y="450" class="subtitle" text-anchor="middle">Common</text>

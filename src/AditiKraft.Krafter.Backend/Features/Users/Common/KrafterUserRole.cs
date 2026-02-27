@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Common.Entities;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using Microsoft.AspNetCore.Identity;
 
@@ -29,5 +29,6 @@ public class KrafterUserToken : IdentityUserToken<string>
 {
     // Add any custom properties or methods if needed
 }
+
 
 

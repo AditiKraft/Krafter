@@ -8,7 +8,7 @@ using System.Text;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Backend.Web.Configuration;
 using AditiKraft.Krafter.Backend.Web.Middleware;
-using AditiKraft.Krafter.Backend.Context.Auth;
+using AditiKraft.Krafter.Backend.Common.Context.Auth;
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Auth;
@@ -153,6 +153,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
         };
     }
 }
+
 
 
 

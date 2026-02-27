@@ -1,5 +1,5 @@
-using AditiKraft.Krafter.Backend.Jobs;
-using AditiKraft.Krafter.Backend.Notifications;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using TickerQ.Utilities;
 using TickerQ.Utilities.Base;
 using TickerQ.Utilities.Interfaces.Managers;
@@ -38,4 +38,5 @@ public class JobService(ITimeTickerManager<TimeTicker> timeTickerManager)
         }, cancellationToken);
     }
 }
+
 

@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Backend.Web;
-using AditiKraft.Krafter.Backend.Jobs;
-using AditiKraft.Krafter.Backend.Notifications;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common;
@@ -70,6 +70,7 @@ public sealed class ForgotPassword
         }
     }
 }
+
 
 
 

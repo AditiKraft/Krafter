@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Common.Entities;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using Microsoft.AspNetCore.Identity;
 
@@ -17,5 +17,6 @@ public class KrafterRoleClaim : IdentityRoleClaim<string>, ICommonAuthEntityProp
 
     public string TenantId { get; set; } = null!;
 }
+
 
 

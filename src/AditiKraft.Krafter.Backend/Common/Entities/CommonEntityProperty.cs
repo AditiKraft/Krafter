@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 
-namespace AditiKraft.Krafter.Backend.Entities;
+namespace AditiKraft.Krafter.Backend.Common.Entities;
 
 public interface ITenant
 {
@@ -50,5 +50,6 @@ public interface IHistory
     public DateTime? UpdatedOn { get; set; }
     public string? UpdatedById { get; set; }
 }
+
 
 

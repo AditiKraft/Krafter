@@ -3,7 +3,7 @@ using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
 
-namespace AditiKraft.Krafter.Backend.Jobs;
+namespace AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 
 public static class JobsConfiguration
 {
@@ -36,4 +36,5 @@ public static class JobsConfiguration
         return app;
     }
 }
+
 

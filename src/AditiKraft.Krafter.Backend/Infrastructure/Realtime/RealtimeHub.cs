@@ -9,7 +9,7 @@ using AditiKraft.Krafter.Contracts.Hubs;
 using Mapster;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AditiKraft.Krafter.Backend.Realtime;
+namespace AditiKraft.Krafter.Backend.Infrastructure.Realtime;
 
 public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
 {
@@ -130,5 +130,6 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
         logger.LogInformation("A client disconnected from NotificationHub: {connectionId}", Context.ConnectionId);
     }
 }
+
 
 

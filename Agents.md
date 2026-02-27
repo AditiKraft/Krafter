@@ -75,9 +75,12 @@ AditiKraft.Krafter/
 │   │   └── Common/              # Shared utilities, models
 │   ├── AditiKraft.Krafter.Backend/                 # API (See src/AditiKraft.Krafter.Backend/Agents.md)
 │   │   ├── Agents.md            ← Backend-specific rules
+│   │   ├── Web/                 # HTTP pipeline (routes, middleware, auth config)
 │   │   ├── Features/            # Vertical slices (business logic)
-│   │   ├── Infrastructure/      # Persistence, Jobs
-│   │   └── Common/              # Backend-specific utilities
+│   │   ├── Infrastructure/      # Persistence, jobs, notifications, realtime
+│   │   ├── Common/              # Context, entities, interfaces, extensions
+│   │   ├── Errors/              # Exception types
+│   │   └── Migrations/          # EF Core migrations
 │   └── UI/                      # Blazor (See src/UI/Agents.md)
 │       ├── Agents.md            ← UI-specific rules
 │       ├── AditiKraft.Krafter.UI.Web.Client/  # WASM client

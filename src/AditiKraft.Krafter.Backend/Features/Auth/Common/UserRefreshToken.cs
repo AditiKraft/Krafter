@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using AditiKraft.Krafter.Backend.Entities;
+using AditiKraft.Krafter.Backend.Common.Entities;
 
 namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 
@@ -12,5 +12,6 @@ public class UserRefreshToken : ITenant
 
     [NotMapped] public DateTime TokenExpiryTime { get; set; }
 }
+
 
 
