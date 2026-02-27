@@ -16,6 +16,7 @@ Make the project structure and naming easy to understand at a glance for both AI
 2. Operation files use explicit names: `CreateUser.cs`, `UpdateUser.cs`, `GetUsers.cs`, `DeleteUser.cs`.
 3. Replace ambiguous/shared folder names:
    - `_Shared` -> `Common`
+   - `Api` -> `Web`
    - `Application` -> split by concern (`Context`, `Jobs`, `Notifications`, `Errors`)
    - `Hubs` -> `Realtime`
 4. Keep route registrars inside operation files.
@@ -74,7 +75,7 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
     - `RestPassword.*` -> `ResetPassword.*`
   - Synced multiple `Agents.md` files with corrected project paths and renamed files.
 - Pending:
-  - Further folder simplification (`Api`) in a dedicated pass.
+  - None for the current naming passes.
 
 ## Progress (Current Pass)
 - Completed:
@@ -85,6 +86,9 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
   - Renamed backend realtime folder:
     - `Hubs` -> `Realtime`
   - Updated backend wiring (`Program.cs`) and realtime hub namespace.
+  - Renamed backend HTTP composition folder:
+    - `Api` -> `Web`
+  - Updated namespaces/usings from `AditiKraft.Krafter.Backend.Api.*` to `AditiKraft.Krafter.Backend.Web.*`.
 
 ## Progress (Phase 3)
 - Completed:

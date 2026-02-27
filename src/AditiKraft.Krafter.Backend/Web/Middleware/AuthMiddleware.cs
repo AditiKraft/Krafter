@@ -1,6 +1,6 @@
-﻿using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 
-namespace AditiKraft.Krafter.Backend.Api.Middleware;
+namespace AditiKraft.Krafter.Backend.Web.Middleware;
 
 public class CurrentUserMiddleware(ICurrentUserInitializer currentUserInitializer) : IMiddleware
 {
@@ -25,3 +25,4 @@ public static class MiddlewareExtensions
             .UseAuthorization();
     }
 }
+

@@ -1,5 +1,5 @@
-using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Api.Authorization;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
@@ -88,5 +88,6 @@ public sealed class CreateTenant
         }
     }
 }
+
 
 

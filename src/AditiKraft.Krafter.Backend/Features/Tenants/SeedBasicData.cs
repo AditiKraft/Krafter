@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Api;
+using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
@@ -25,5 +25,6 @@ public sealed class SeedBasicData
         }
     }
 }
+
 
 

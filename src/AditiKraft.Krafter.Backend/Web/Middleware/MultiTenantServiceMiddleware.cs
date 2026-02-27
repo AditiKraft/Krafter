@@ -6,7 +6,7 @@ using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
 
-namespace AditiKraft.Krafter.Backend.Api.Middleware;
+namespace AditiKraft.Krafter.Backend.Web.Middleware;
 
 public class MultiTenantServiceMiddleware(
     ITenantFinderService tenantFinderService,
@@ -51,5 +51,6 @@ public class MultiTenantServiceMiddleware(
         await next(context);
     }
 }
+
 
 

@@ -1,4 +1,4 @@
-namespace AditiKraft.Krafter.Backend.Api.Configuration;
+namespace AditiKraft.Krafter.Backend.Web.Configuration;
 
 public static class CorsConfiguration
 {
@@ -41,3 +41,4 @@ public static class CorsConfiguration
 
     public static IApplicationBuilder UseCorsConfiguration(this IApplicationBuilder app) => app.UseCors(PolicyName);
 }
+

@@ -1,10 +1,10 @@
-using AditiKraft.Krafter.Backend.Api.Middleware;
+using AditiKraft.Krafter.Backend.Web.Middleware;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Realtime;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
-using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Backend.Api.Configuration;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Web.Authorization;
+using AditiKraft.Krafter.Backend.Web.Configuration;
 using AditiKraft.Krafter.Backend.Jobs;
 using AditiKraft.Krafter.Backend.Context.Tenants;
 using AditiKraft.Krafter.Backend.Notifications;
@@ -111,4 +111,5 @@ public static class Program
         app.Run();
     }
 }
+
 

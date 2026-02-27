@@ -1,7 +1,7 @@
 using System.Reflection;
 using AditiKraft.Krafter.Backend.Features.Auth;
 
-namespace AditiKraft.Krafter.Backend.Api.Configuration;
+namespace AditiKraft.Krafter.Backend.Web.Configuration;
 
 public static class RouteConfiguration
 {
@@ -33,3 +33,4 @@ public static class RouteConfiguration
         return app;
     }
 }
+

@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace AditiKraft.Krafter.Backend.Api.Configuration;
+namespace AditiKraft.Krafter.Backend.Web.Configuration;
 
 public class JwtSettings : IValidatableObject
 {
@@ -18,3 +18,4 @@ public class JwtSettings : IValidatableObject
         }
     }
 }
+

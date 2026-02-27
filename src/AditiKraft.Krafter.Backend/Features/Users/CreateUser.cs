@@ -1,5 +1,5 @@
-using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Api.Authorization;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Jobs;
 using AditiKraft.Krafter.Backend.Notifications;
@@ -145,5 +145,6 @@ public sealed class CreateUser
         }
     }
 }
+
 
 

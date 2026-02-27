@@ -3,7 +3,7 @@ using AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace AditiKraft.Krafter.Backend.Api.Configuration;
+namespace AditiKraft.Krafter.Backend.Web.Configuration;
 
 public static class DatabaseConfiguration
 {
@@ -40,3 +40,4 @@ public static class DatabaseConfiguration
         }
     }
 }
+

@@ -5,9 +5,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
-using AditiKraft.Krafter.Backend.Api.Authorization;
-using AditiKraft.Krafter.Backend.Api.Configuration;
-using AditiKraft.Krafter.Backend.Api.Middleware;
+using AditiKraft.Krafter.Backend.Web.Authorization;
+using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Web.Middleware;
 using AditiKraft.Krafter.Backend.Context.Auth;
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
@@ -18,7 +18,7 @@ using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.Extensions.Primitives;
 
-namespace AditiKraft.Krafter.Backend.Api;
+namespace AditiKraft.Krafter.Backend.Web;
 
 public static class DependencyInjection
 {
@@ -153,6 +153,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
         };
     }
 }
+
 
 
 

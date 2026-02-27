@@ -6,7 +6,7 @@ using FluentValidation.Results;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.Data.SqlClient;
 
-namespace AditiKraft.Krafter.Backend.Api.Middleware;
+namespace AditiKraft.Krafter.Backend.Web.Middleware;
 
 public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMiddleware> logger) : IMiddleware
 {
@@ -105,4 +105,5 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
         }
     }
 }
+
 

@@ -1,6 +1,6 @@
 using Scalar.AspNetCore;
 
-namespace AditiKraft.Krafter.Backend.Api.Configuration;
+namespace AditiKraft.Krafter.Backend.Web.Configuration;
 
 public static class SwaggerConfiguration
 {
@@ -29,3 +29,4 @@ public static class SwaggerConfiguration
         return app;
     }
 }
+

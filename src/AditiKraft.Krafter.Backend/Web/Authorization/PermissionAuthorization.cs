@@ -5,7 +5,7 @@ using AditiKraft.Krafter.Contracts.Common.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace AditiKraft.Krafter.Backend.Api.Authorization;
+namespace AditiKraft.Krafter.Backend.Web.Authorization;
 
 internal class PermissionRequirement(string permission) : IAuthorizationRequirement
 {
@@ -61,5 +61,6 @@ public static class MustHavePermissionExtension
         return builder.RequireAuthorization(policyName);
     }
 }
+
 
 
