@@ -74,10 +74,12 @@ public sealed class GetUsers
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
 
 ## References (real code)
-- `src/AditiKraft.Krafter.Backend/Features/Users/CreateOrUpdateUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Roles/CreateOrUpdateRole.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
 
@@ -94,6 +96,6 @@ public sealed class GetUsers
 
 ---
 Last Updated: 2026-01-26
-Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateOrUpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateOrUpdateRole.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateOrUpdate.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
+Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateUser.cs, Features/Users/UpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateRole.cs, Features/Roles/UpdateRole.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateTenant.cs, Features/Tenants/UpdateTenant.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
 ---
 

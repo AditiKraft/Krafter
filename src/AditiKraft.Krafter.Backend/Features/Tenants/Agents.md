@@ -9,7 +9,8 @@
 - Root tenant cannot be deleted.
 
 ## 2. Decision Tree
-- Create/update tenant? Use `CreateOrUpdate` (checks identifier uniqueness).
+- Create tenant? Use `CreateTenant` (checks identifier uniqueness and seeds data).
+- Update tenant? Use `UpdateTenant` (handles tenant updates and admin sync).
 - Get tenants? Use `Get` with `GetRequestInput` (supports history and deleted).
 - Delete tenant? Use `Delete` with `RouteSegment.ById`.
 - Seed tenant data? Use `SeedBasicData` route with `RouteSegment.SeedData`.
@@ -59,7 +60,8 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - Tenant admin email sync changes.
 
 ## References (real code)
-- `src/AditiKraft.Krafter.Backend/Features/Tenants/CreateOrUpdate.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs`
@@ -67,6 +69,6 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Features/Tenants/CreateOrUpdate.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/SeedBasicData.cs, Features/Tenants/_Shared/DataSeedService.cs
+Verified Against: Features/Tenants/CreateTenant.cs, Features/Tenants/UpdateTenant.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/SeedBasicData.cs, Features/Tenants/_Shared/DataSeedService.cs
 ---
 

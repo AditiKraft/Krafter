@@ -46,9 +46,19 @@ public partial class CreateOrUpdateUser(
         if (UserInput is not null)
         {
             isBusy = true;
-            Response result = await api.CallAsync(
-                () => usersApi.CreateOrUpdateUserAsync(input),
-                successMessage: "User saved successfully");
+            Response result;
+            if (string.IsNullOrWhiteSpace(input.Id))
+            {
+                result = await api.CallAsync(
+                    () => usersApi.CreateUserAsync(input),
+                    successMessage: "User created successfully");
+            }
+            else
+            {
+                result = await api.CallAsync(
+                    () => usersApi.UpdateUserAsync(input.Id, input),
+                    successMessage: "User updated successfully");
+            }
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

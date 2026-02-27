@@ -10,7 +10,11 @@ public interface ITenantsApi
         CancellationToken cancellationToken = default);
 
     [Post("/tenants")]
-    public Task<Response> CreateOrUpdateTenantAsync([Body] CreateOrUpdateTenantRequest request,
+    public Task<Response> CreateTenantAsync([Body] CreateOrUpdateTenantRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Put("/tenants/{id}")]
+    public Task<Response> UpdateTenantAsync(string id, [Body] CreateOrUpdateTenantRequest request,
         CancellationToken cancellationToken = default);
 
     [Delete("/tenants/{id}")]

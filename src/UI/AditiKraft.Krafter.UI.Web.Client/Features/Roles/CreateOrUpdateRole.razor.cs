@@ -63,9 +63,19 @@ public partial class CreateOrUpdateRole(
         if (UserDetails is not null)
         {
             isBusy = true;
-            Response result = await api.CallAsync(
-                () => rolesApi.CreateOrUpdateRoleAsync(input),
-                successMessage: "Role saved successfully");
+            Response result;
+            if (string.IsNullOrWhiteSpace(input.Id))
+            {
+                result = await api.CallAsync(
+                    () => rolesApi.CreateRoleAsync(input),
+                    successMessage: "Role created successfully");
+            }
+            else
+            {
+                result = await api.CallAsync(
+                    () => rolesApi.UpdateRoleAsync(input.Id, input),
+                    successMessage: "Role updated successfully");
+            }
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

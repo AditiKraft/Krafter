@@ -74,8 +74,22 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
     - `RestPassword.*` -> `ResetPassword.*`
   - Synced multiple `Agents.md` files with corrected project paths and renamed files.
 - Pending:
-  - Phase 3 explicit split of `CreateOrUpdate*` operations into separate create/update operations.
   - Further folder simplification (`Api`/`Hubs`/`_Shared`) in a dedicated pass.
+
+## Progress (Phase 3)
+- Completed:
+  - Split combined backend upsert operations into explicit operation files:
+    - Users: `CreateUser.cs`, `UpdateUser.cs`
+    - Roles: `CreateRole.cs`, `UpdateRole.cs`
+    - Tenants: `CreateTenant.cs`, `UpdateTenant.cs`
+  - Removed old combined files:
+    - `CreateOrUpdateUser.cs`
+    - `CreateOrUpdateRole.cs`
+    - `CreateOrUpdate.cs` (Tenants)
+  - Updated UI Refit APIs for explicit create/update calls:
+    - `IUsersApi`, `IRolesApi`, `ITenantsApi`
+  - Updated UI dialog submit logic to call create vs update endpoint based on `Id`.
+  - Updated related `Agents.md` references to match the new operation files.
 
 ## Validation Checklist
 1. `dotnet build AditiKraft.Krafter.slnx` succeeds.
