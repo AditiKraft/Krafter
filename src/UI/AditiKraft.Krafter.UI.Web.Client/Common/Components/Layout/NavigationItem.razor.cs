@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.UI.Web.Client.Models;
+using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
@@ -24,3 +24,4 @@ public partial class NavigationItem()
         return Example.Path;
     }
 }
+

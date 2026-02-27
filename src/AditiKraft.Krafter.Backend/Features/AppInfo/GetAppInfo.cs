@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.InteropServices;
-using AditiKraft.Krafter.Backend.Api;
+using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.AppInfo;
@@ -35,3 +35,4 @@ public sealed class GetAppInfo
         }
     }
 }
+

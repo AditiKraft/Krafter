@@ -11,7 +11,7 @@
 - Prefer `Response<T>` factory methods for errors.
 
 ## 2. Decision Tree
-- Standard login? Use `GetToken` with `TokenRequest`.
+- Standard login? Use `Login` with `TokenRequest`.
 - Refresh token? Use `RefreshToken` with `RefreshTokenRequest` and stored refresh token.
 - Google login? Use `ExternalAuth` with `GoogleAuthRequest` and `GoogleAuthClient`.
 
@@ -59,10 +59,12 @@ if (basic is null)
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Auth/_Shared/TokenService.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Auth/_Shared/UserRefreshToken.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Auth/_Shared/TokenService.cs, Features/Auth/_Shared/UserRefreshToken.cs
+Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Auth/Common/TokenService.cs, Features/Auth/Common/UserRefreshToken.cs
 ---
+
+

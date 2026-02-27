@@ -27,7 +27,11 @@ public interface IUsersApi
         CancellationToken cancellationToken = default);
 
     [Post("/users")]
-    Task<Response> CreateOrUpdateUserAsync([Body] CreateUserRequest request,
+    Task<Response> CreateUserAsync([Body] CreateUserRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Put("/users/{id}")]
+    Task<Response> UpdateUserAsync(string id, [Body] CreateUserRequest request,
         CancellationToken cancellationToken = default);
 
     [Delete("/users/{id}")]

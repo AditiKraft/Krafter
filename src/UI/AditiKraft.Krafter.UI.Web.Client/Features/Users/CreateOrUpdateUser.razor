@@ -1,4 +1,4 @@
-@using AditiKraft.Krafter.UI.Web.Client.Features.Roles._Shared
+@using AditiKraft.Krafter.UI.Web.Client.Features.Roles.Common
 <RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateUserRequest __) => Submit(__))">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
     <RadzenStack>
@@ -68,3 +68,5 @@
         <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
     </RadzenStack>
 </RadzenTemplateForm>
+
+

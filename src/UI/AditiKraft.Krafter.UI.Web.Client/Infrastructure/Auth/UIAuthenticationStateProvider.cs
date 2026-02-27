@@ -3,8 +3,8 @@ using System.Security.Claims;
 using System.Text.Json;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 
@@ -16,10 +16,10 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
     private readonly PersistentComponentState _persistentState;
     private readonly IKrafterLocalStorageService _localStorage;
     private readonly ILogger<UIAuthenticationStateProvider> _logger;
-    private readonly IApiService _apiService;
+    private readonly IAuthApiService _apiService;
     private bool _isInitialLoad = true;
 
-    public UIAuthenticationStateProvider(IApiService apiService, IKrafterLocalStorageService localStorage,
+    public UIAuthenticationStateProvider(IAuthApiService apiService, IKrafterLocalStorageService localStorage,
         IAuthenticationService authenticationService,
         ILogger<UIAuthenticationStateProvider> logger,
         PersistentComponentState persistentState)
@@ -194,3 +194,6 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
         return Convert.FromBase64String(base64);
     }
 }
+
+
+

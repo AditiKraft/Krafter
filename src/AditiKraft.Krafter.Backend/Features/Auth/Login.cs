@@ -1,7 +1,7 @@
-using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Api.Configuration;
-using AditiKraft.Krafter.Backend.Features.Auth._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace AditiKraft.Krafter.Backend.Features.Auth;
 
-public sealed class GetToken
+public sealed class Login
 {
     internal sealed class Handler(
         UserManager<KrafterUser> userManager,
@@ -23,7 +23,7 @@ public sealed class GetToken
         private readonly SecuritySettings _securitySettings = securitySettings.Value;
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
-        public async Task<Response<TokenResponse>> GetTokenAsync(
+        public async Task<Response<TokenResponse>> LoginAsync(
             TokenRequest request, string ipAddress,
             CancellationToken cancellationToken)
         {
@@ -52,7 +52,7 @@ public sealed class GetToken
         }
     }
 
-    public sealed class TokenRoute : IRouteRegistrar
+    public sealed class Route : IRouteRegistrar
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
@@ -64,7 +64,7 @@ public sealed class GetToken
                 [FromServices] Handler handler) =>
             {
                 string? ipAddress = GetIpAddress(context);
-                Response<TokenResponse> res = await handler.GetTokenAsync(request, ipAddress!, CancellationToken.None);
+                Response<TokenResponse> res = await handler.LoginAsync(request, ipAddress!, CancellationToken.None);
                 return Results.Json(res, statusCode: res.StatusCode);
             }).Produces<Response<TokenResponse>>();
         }
@@ -77,3 +77,6 @@ public sealed class GetToken
         }
     }
 }
+
+
+

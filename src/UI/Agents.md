@@ -5,7 +5,7 @@
 
 ## Quick Start: New UI Feature
 1. If `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/Agents.md` exists, read it first.
-2. Ensure Shared DTOs + routes exist in `src/AditiKraft.Krafter.Shared/`.
+2. Ensure Shared DTOs + routes exist in `src/AditiKraft.Krafter.Contracts/`.
 3. Add a Refit interface in `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/` (see `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`).
 4. Register the Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`.
 5. Create `Features/<Feature>/<Feature>s.razor` and add `.razor.cs` if you need logic.
@@ -15,7 +15,7 @@
 9. Update `_Imports.razor` with the new contract namespace.
 
 ## Core Rules
-- Use DTOs from `AditiKraft.Krafter.Shared.Contracts.*`.
+- Use DTOs from `AditiKraft.Krafter.Contracts.Contracts.*`.
 - Use `ApiCallService` for every Refit call.
 - Use `KrafterRoute` from Shared for `RoutePath`.
 - Add `@attribute [MustHavePermission(...)]` to list pages.
@@ -26,7 +26,7 @@
 ## File Placement
 - List page: `Features/<Feature>/<Feature>s.razor` (+ `.razor.cs` if needed)
 - Form dialog: `Features/<Feature>/CreateOrUpdate<Feature>.razor` (+ `.razor.cs` if needed)
-- Feature-shared UI pieces: `Features/<Feature>/_Shared/`
+- Feature-shared UI pieces: `Features/<Feature>/Common/`
 - Refit interfaces: `Infrastructure/Refit/`
 - Menu: `Infrastructure/Services/MenuService.cs`
 
@@ -118,3 +118,6 @@ public partial class Users(
 Last Updated: 2026-01-26
 Verified Against: Features/Auth/Login.razor.cs, Features/Auth/GoogleCallback.razor.cs, Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs, _Imports.razor
 ---
+
+
+

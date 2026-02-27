@@ -26,9 +26,19 @@ public partial class CreateOrUpdateTenant(
         if (TenantInput is not null)
         {
             isBusy = true;
-            Response result = await api.CallAsync(
-                () => tenantsApi.CreateOrUpdateTenantAsync(input),
-                successMessage: "Tenant saved successfully");
+            Response result;
+            if (string.IsNullOrWhiteSpace(input.Id))
+            {
+                result = await api.CallAsync(
+                    () => tenantsApi.CreateTenantAsync(input),
+                    successMessage: "Tenant created successfully");
+            }
+            else
+            {
+                result = await api.CallAsync(
+                    () => tenantsApi.UpdateTenantAsync(input.Id, input),
+                    successMessage: "Tenant updated successfully");
+            }
             isBusy = false;
             StateHasChanged();
             if (result is { IsError: false })

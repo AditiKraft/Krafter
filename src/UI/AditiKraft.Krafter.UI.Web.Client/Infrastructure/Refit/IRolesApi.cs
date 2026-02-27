@@ -10,7 +10,11 @@ public interface IRolesApi
         CancellationToken cancellationToken = default);
 
     [Post("/roles")]
-    public Task<Response> CreateOrUpdateRoleAsync([Body] CreateOrUpdateRoleRequest request,
+    public Task<Response> CreateRoleAsync([Body] CreateOrUpdateRoleRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Put("/roles/{id}")]
+    public Task<Response> UpdateRoleAsync(string id, [Body] CreateOrUpdateRoleRequest request,
         CancellationToken cancellationToken = default);
 
     [Delete("/roles/{id}")]

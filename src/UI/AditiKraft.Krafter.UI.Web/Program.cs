@@ -2,8 +2,8 @@ using System.Text;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
 using AditiKraft.Krafter.UI.Web.Client;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Api;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Components;
@@ -26,7 +26,7 @@ builder.AddRedisOutputCache("cache");
 builder.Services.AddHybridCache();
 builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
-builder.Services.AddScoped<IApiService, ServerSideApiService>();
+builder.Services.AddScoped<IAuthApiService, ServerAuthApiService>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -71,7 +71,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     ILogger<Program> logger =
                         context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                    IApiService apiService = context.HttpContext.RequestServices.GetRequiredService<IApiService>();
+                    IAuthApiService apiService = context.HttpContext.RequestServices.GetRequiredService<IAuthApiService>();
 
                     logger.LogInformation("Token expired in OnMessageReceived, attempting refresh...");
 
@@ -248,20 +248,20 @@ static bool IsTokenExpired(string token)
 
 static void MapAuthTokenEndpoints(WebApplication app)
 {
-    app.MapGet($"/{KrafterRoute.Tokens}/{RouteSegment.Current}", async (IApiService apiService) =>
+    app.MapGet($"/{KrafterRoute.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
     {
         Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
-    app.MapPost($"/{KrafterRoute.Tokens}", async ([FromBody] TokenRequest request, IApiService apiService,
+    app.MapPost($"/{KrafterRoute.Tokens}", async ([FromBody] TokenRequest request, IAuthApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
         Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     });
     app.MapPost($"/{KrafterRoute.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request,
-        IApiService apiService,
+        IAuthApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
         Response<TokenResponse> tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
@@ -269,15 +269,18 @@ static void MapAuthTokenEndpoints(WebApplication app)
     });
 
     app.MapPost($"/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}",
-        async ([FromBody] TokenRequest request, IApiService apiService) =>
+        async ([FromBody] TokenRequest request, IAuthApiService apiService) =>
         {
             Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
             return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
         });
 
-    app.MapPost($"/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IApiService apiService) =>
+    app.MapPost($"/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();
     });
 }
+
+
+

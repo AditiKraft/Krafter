@@ -18,8 +18,8 @@
 ### Create/Update Dialog Submit
 ```csharp
 Response result = await api.CallAsync(
-    () => tenantsApi.CreateOrUpdateTenantAsync(input),
-    successMessage: "Tenant saved successfully");
+    () => tenantsApi.CreateTenantAsync(input),
+    successMessage: "Tenant created successfully");
 ```
 
 ## 4. Checklist

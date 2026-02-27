@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Infrastructure.BackgroundJobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -59,3 +59,4 @@ public class DesignTimeBackgroundJobsContextDbContextFactory : IDesignTimeDbCont
         return new BackgroundJobsContext(optionsBuilder.Options);
     }
 }
+

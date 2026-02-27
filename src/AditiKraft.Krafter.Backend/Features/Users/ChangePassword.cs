@@ -1,9 +1,9 @@
-using AditiKraft.Krafter.Backend.Api;
-using AditiKraft.Krafter.Backend.Application.BackgroundJobs;
-using AditiKraft.Krafter.Backend.Application.Notifications;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
@@ -83,3 +83,8 @@ public sealed class ChangePassword
         }
     }
 }
+
+
+
+
+

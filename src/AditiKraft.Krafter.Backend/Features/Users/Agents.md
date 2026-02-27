@@ -10,14 +10,15 @@
 - Soft-delete users and related roles; never hard-delete.
 
 ## 2. Decision Tree
-- Creating/updating a user? Follow `CreateOrUpdateUser` pattern.
+- Creating a user? Follow `CreateUser` pattern.
+- Updating a user? Follow `UpdateUser` pattern.
 - Deleting a user? Follow `DeleteUser` soft-delete pattern.
 - Password changes or reset flows? Use `ChangePassword`, `ForgotPassword`, `ResetPassword` patterns.
 - Need user roles or permissions? Use `GetUserRoles` and `GetUserPermissions` patterns.
 
 ## 3. Code Templates
 
-### Role Sync (CreateOrUpdateUser)
+### Role Sync (CreateUser / UpdateUser)
 ```csharp
 List<KrafterUserRole> existingRoles = await db.UserRoles
     .IgnoreQueryFilters()
@@ -55,7 +56,8 @@ foreach (KrafterUserRole role in rolesToRemove)
 - User role/permission query patterns change.
 
 ## References (real code)
-- `src/AditiKraft.Krafter.Backend/Features/Users/CreateOrUpdateUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs`
@@ -65,5 +67,5 @@ foreach (KrafterUserRole role in rolesToRemove)
 
 ---
 Last Updated: 2026-01-25
-Verified Against: Features/Users/CreateOrUpdateUser.cs, Features/Users/DeleteUser.cs, Features/Users/ChangePassword.cs, Features/Users/ForgotPassword.cs, Features/Users/ResetPassword.cs, Features/Users/GetUserRoles.cs
+Verified Against: Features/Users/CreateUser.cs, Features/Users/UpdateUser.cs, Features/Users/DeleteUser.cs, Features/Users/ChangePassword.cs, Features/Users/ForgotPassword.cs, Features/Users/ResetPassword.cs, Features/Users/GetUserRoles.cs
 ---

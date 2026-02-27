@@ -1,5 +1,5 @@
-using AditiKraft.Krafter.Backend.Features.Tenants._Shared;
-using AditiKraft.Krafter.Backend.Features.Users._Shared;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence;
@@ -79,3 +79,5 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options)
         }
     }
 }
+
+

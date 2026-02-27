@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using AditiKraft.Krafter.Contracts.Common;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth._Shared;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 
@@ -179,3 +179,5 @@ public class RefitAuthHandler(
         return clone;
     }
 }
+
+
