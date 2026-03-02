@@ -31,7 +31,8 @@
         "Key Promoter X",
         "me.rafaelldi.aspire",
         "com.intellij.ml.llm",
-        "org.jetbrains.plugins.github"
+        "org.jetbrains.plugins.github",
+        "com.iambipinpaul.gitworktreemanager"
       ]
     },
     "vscode": {
