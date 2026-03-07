@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+using System.Net;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Enums;
+using Microsoft.AspNetCore.Http;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 
@@ -37,33 +40,94 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         var uri = new Uri(navigationManagerBaseUri);
         string host = uri.Host;
         string backendUrl;
-        bool isRunningLocally = host == "localhost" || host == "127.0.0.1";
+        bool isRunningLocally = IsLocalHost(host);
         string clientBaseAddress;
 
         string remoteHostUrl = configuration["RemoteHostUrl"] ??
                                throw new InvalidOperationException("RemoteHostUrl not configured");
-        bool isRemoteHostFullUrl = remoteHostUrl.StartsWith("http://") || remoteHostUrl.StartsWith("https://");
+        bool isRemoteHostFullUrl = Uri.TryCreate(remoteHostUrl, UriKind.Absolute, out Uri? remoteHostUri);
 
-        if (isRunningLocally || isRemoteHostFullUrl)
+        if (TenantSettings.TenancyMode == TenancyMode.Single)
         {
-            // Local dev or server-side (Aspire provides full URL like https://localhost:5199)
-            tenantIdentifier = isRunningLocally ? "krafter" :
-                host.Split('.').Length > 2 ? host.Split('.')[0] : "krafter";
+            tenantIdentifier = KrafterTenantConstants.Identifier;
+            clientBaseAddress = navigationManagerBaseUri;
+            backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
+        }
+        else if (isRunningLocally)
+        {
+            tenantIdentifier = KrafterTenantConstants.Identifier;
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
-            backendUrl = remoteHostUrl;
+            backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
         }
         else
         {
-            // Production WASM: RemoteHostUrl is domain only (e.g., api.getkrafter.dev)
-            // AditiKraft.Krafter.Backend URL is built as: https://{tenant}.{RemoteHostUrl}
             string[] strings = host.Split('.');
             tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
-            backendUrl = $"https://{tenantIdentifier}.{remoteHostUrl}";
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
+
+            if (isRemoteHostFullUrl)
+            {
+                if (isServerSide || remoteHostUri is null || IsLocalHost(remoteHostUri.Host) || !CanAddTenantSubdomain(remoteHostUri.Host, tenantIdentifier))
+                {
+                    backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
+                }
+                else
+                {
+                    UriBuilder builder = new(remoteHostUri)
+                    {
+                        Host = $"{tenantIdentifier}.{remoteHostUri.Host}"
+                    };
+                    backendUrl = builder.Uri.AbsoluteUri.TrimEnd('/');
+                }
+            }
+            else
+            {
+                backendUrl = $"https://{tenantIdentifier}.{remoteHostUrl}";
+            }
         }
 
-        string prefix = tenantIdentifier + ".";
-        string rootDomain = host.StartsWith(prefix) ? host.Substring(prefix.Length) : host;
+        string rootDomain;
+        if (TenantSettings.TenancyMode == TenancyMode.Single)
+        {
+            rootDomain = host;
+        }
+        else
+        {
+            string prefix = tenantIdentifier + ".";
+            rootDomain = host.StartsWith(prefix) ? host.Substring(prefix.Length) : host;
+        }
+
         return (tenantIdentifier, backendUrl, rootDomain, clientBaseAddress, isServerSide);
+    }
+
+    private static bool IsLocalHost(string host)
+    {
+        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return IPAddress.TryParse(host, out IPAddress? address) && IPAddress.IsLoopback(address);
+    }
+
+    private static bool CanAddTenantSubdomain(string host, string tenantIdentifier)
+    {
+        UriHostNameType hostType = Uri.CheckHostName(host);
+        if (hostType != UriHostNameType.Dns)
+        {
+            return false;
+        }
+
+        return !host.StartsWith(tenantIdentifier + ".", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ToAbsoluteUrl(string remoteHostUrl, Uri? remoteHostUri)
+    {
+        if (remoteHostUri is not null)
+        {
+            return remoteHostUri.AbsoluteUri.TrimEnd('/');
+        }
+
+        return $"https://{remoteHostUrl.TrimEnd('/')}";
     }
 }

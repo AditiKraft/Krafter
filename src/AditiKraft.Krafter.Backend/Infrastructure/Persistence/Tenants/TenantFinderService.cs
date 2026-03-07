@@ -1,6 +1,8 @@
 using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +12,7 @@ public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinde
 {
     public async Task<Response<Tenant>> Find(string? identifier)
     {
-        if (string.IsNullOrWhiteSpace(identifier))
+        if (string.IsNullOrWhiteSpace(identifier) || TenantSettings.TenancyMode == TenancyMode.Single)
         {
             return Response<Tenant>.Success(KrafterInitialConstants.KrafterTenant);
         }
@@ -35,5 +37,3 @@ public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinde
         return Response<Tenant>.Success(tenant);
     }
 }
-
-

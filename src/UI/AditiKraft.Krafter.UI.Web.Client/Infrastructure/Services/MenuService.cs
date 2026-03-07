@@ -1,4 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
@@ -57,7 +58,10 @@ public class MenuService
         }
     };
 
-    public IEnumerable<Menu> Menus => allMenus;
+    public IEnumerable<Menu> Menus =>
+        TenantSettings.TenancyMode == TenancyMode.Single
+            ? allMenus.Where(menu => menu.Path != KrafterRoute.Tenants)
+            : allMenus;
 
     public IEnumerable<Menu> Filter(string term)
     {

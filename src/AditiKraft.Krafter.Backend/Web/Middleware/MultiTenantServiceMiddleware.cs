@@ -3,6 +3,8 @@ using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Common.Extensions;
+using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
 
@@ -15,8 +17,22 @@ public class MultiTenantServiceMiddleware(
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
+        if (TenantSettings.TenancyMode == TenancyMode.Single)
+        {
+            Tenant tenant = KrafterInitialConstants.KrafterTenant;
+            CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
+            currentTenantDetails.TenantLink = context.Request.GetOrigin();
+            currentTenantDetails.IpAddress = context.Connection?.RemoteIpAddress?.ToString();
+            currentTenantDetails.UserId = currentUser.GetUserId();
+            currentTenantDetails.Host = $"https://{context.Request.Host.Value}";
+            tenantSetterService.SetTenant(currentTenantDetails);
+
+            await next(context);
+            return;
+        }
+
         string? tenantIdentifier = "";
-        string host = context.Request.Host.Value ?? ""; // Get the host value from the HttpContext
+        string host = context.Request.Host.Value ?? "";
         string[] strings = host.Split('.');
         if (strings.Length > 2)
         {
@@ -41,16 +57,13 @@ public class MultiTenantServiceMiddleware(
             return;
         }
 
-        Tenant tenant = tenantResponse.Data;
-        CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
-        currentTenantDetails.TenantLink = context.Request.GetOrigin();
-        currentTenantDetails.IpAddress = context.Connection?.RemoteIpAddress?.ToString();
-        currentTenantDetails.UserId = currentUser.GetUserId();
-        currentTenantDetails.Host = $"https://{context.Request.Host.Value}";
-        tenantSetterService.SetTenant(currentTenantDetails);
+        Tenant tenantResult = tenantResponse.Data;
+        CurrentTenantDetails currentTenant = tenantResult.Adapt<CurrentTenantDetails>();
+        currentTenant.TenantLink = context.Request.GetOrigin();
+        currentTenant.IpAddress = context.Connection?.RemoteIpAddress?.ToString();
+        currentTenant.UserId = currentUser.GetUserId();
+        currentTenant.Host = $"https://{context.Request.Host.Value}";
+        tenantSetterService.SetTenant(currentTenant);
         await next(context);
     }
 }
-
-
-
