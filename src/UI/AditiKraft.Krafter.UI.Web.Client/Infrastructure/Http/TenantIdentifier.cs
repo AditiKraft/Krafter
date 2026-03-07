@@ -51,13 +51,13 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         {
             tenantIdentifier = KrafterTenantConstants.Identifier;
             clientBaseAddress = navigationManagerBaseUri;
-            backendUrl = remoteHostUrl;
+            backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
         }
         else if (isRunningLocally)
         {
             tenantIdentifier = KrafterTenantConstants.Identifier;
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
-            backendUrl = remoteHostUrl;
+            backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
         }
         else
         {
@@ -69,7 +69,7 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
             {
                 if (isServerSide || remoteHostUri is null || IsLocalHost(remoteHostUri.Host) || !CanAddTenantSubdomain(remoteHostUri.Host, tenantIdentifier))
                 {
-                    backendUrl = remoteHostUrl;
+                    backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
                 }
                 else
                 {
@@ -119,5 +119,15 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         }
 
         return !host.StartsWith(tenantIdentifier + ".", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ToAbsoluteUrl(string remoteHostUrl, Uri? remoteHostUri)
+    {
+        if (remoteHostUri is not null)
+        {
+            return remoteHostUri.AbsoluteUri.TrimEnd('/');
+        }
+
+        return $"https://{remoteHostUrl.TrimEnd('/')}";
     }
 }
