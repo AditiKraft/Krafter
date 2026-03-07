@@ -56,6 +56,6 @@ CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<s
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs`
 
 ---
-Last Updated: 2026-01-25
-Verified Against: Features/Roles/Roles.razor.cs, Features/Roles/CreateOrUpdateRole.razor.cs
+Last Updated: 2026-03-07
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs
 ---

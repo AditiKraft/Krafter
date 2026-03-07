@@ -7,12 +7,14 @@
 - Use literal route strings in Refit, especially when parameters are present.
 - Route parameter names must match method parameter names.
 - Use `[Query] GetRequestInput` for list endpoints.
-- Register internal APIs with `RefitTenantHandler` and `RefitAuthHandler`.
+- Register authenticated backend APIs with both `RefitTenantHandler` and `RefitAuthHandler`.
+- Register BFF/auth endpoints and tenant-resolved internal endpoints that do not need auth forwarding with `RefitTenantHandler` only.
 - External APIs should not use tenant/auth handlers.
 
 ## 2. Decision Tree
-- Internal API with auth/tenant context? Register with both handlers.
-- External API? Register without auth/tenant handlers.
+- Authenticated backend API? Register with both handlers.
+- BFF/auth endpoint or internal tenant-resolved endpoint without auth forwarding? Register with `RefitTenantHandler` only.
+- External API? Register without tenant/auth handlers.
 - Endpoint with `{id}` or `{roleId}`? Use a literal route string.
 
 ## 3. Code Templates
@@ -52,12 +54,13 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 1. Create the interface in `Infrastructure/Refit/`.
 2. Use literal routes in attributes (`[Get("/users/{id}")]`).
 3. Add `[Query] GetRequestInput` for list endpoints.
-4. Register the Refit client in `RefitServiceExtensions.cs` with handlers.
-5. Call through `ApiCallService` from UI components.
+4. Register the Refit client in `RefitServiceExtensions.cs` with the correct handler chain for that API.
+5. Call through `ApiCallService` from UI components, except auth flows that go through `IAuthenticationService` / `IAuthApiService`.
 
 ## 5. Common Mistakes
 - Using `KrafterRoute` or `RouteSegment` constants in Refit routes with parameters.
 - Parameter name mismatch (e.g., `{id}` requires `id`).
+- Adding `RefitAuthHandler` to tenant-resolved APIs that currently do not use auth forwarding (`IAuthApi`, `IAppInfoApi`).
 - Using raw `HttpClient` instead of Refit + `ApiCallService`.
 
 ## 6. Evolution Triggers
@@ -65,6 +68,6 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 - New API client conventions added (e.g., BFF vs direct).
 
 ---
-Last Updated: 2026-01-25
-Verified Against: Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs, Infrastructure/Refit/RefitServiceExtensions.cs
+Last Updated: 2026-03-07
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs
 ---

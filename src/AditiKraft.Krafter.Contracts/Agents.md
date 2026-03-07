@@ -85,7 +85,7 @@ return Response<UserDto>.Success(dto);
 - New permissions or routes added.
 
 ---
-Last Updated: 2026-01-26
-Verified Against: Contracts/Users/CreateUserRequest.cs, Common/Models/Response.cs, Common/Auth/Permissions/KrafterPermissions.cs, Common/KrafterRoute.cs
+Last Updated: 2026-03-07
+Verified Against: src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/KrafterPermissions.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
 ---
 

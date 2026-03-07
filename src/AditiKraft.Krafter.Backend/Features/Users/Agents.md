@@ -66,6 +66,6 @@ foreach (KrafterUserRole role in rolesToRemove)
 - `src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs`
 
 ---
-Last Updated: 2026-01-25
-Verified Against: Features/Users/CreateUser.cs, Features/Users/UpdateUser.cs, Features/Users/DeleteUser.cs, Features/Users/ChangePassword.cs, Features/Users/ForgotPassword.cs, Features/Users/ResetPassword.cs, Features/Users/GetUserRoles.cs
+Last Updated: 2026-03-07
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ResetPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserRoles.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs
 ---

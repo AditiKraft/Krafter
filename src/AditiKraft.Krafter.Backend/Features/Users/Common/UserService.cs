@@ -145,7 +145,7 @@ public class UserService(
             {
                 await jobService.EnqueueAsync(
                     new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                    "SendEmailJob", CancellationToken.None);
+                    nameof(Jobs.SendEmailJob), CancellationToken.None);
             }
         }
         else

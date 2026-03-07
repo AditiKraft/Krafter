@@ -10,13 +10,13 @@
 4. Register the Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`.
 5. Create `Features/<Feature>/<Feature>s.razor` and add `.razor.cs` if you need logic.
 6. Create `Features/<Feature>/CreateOrUpdate<Feature>.razor` and `.razor.cs` for form logic.
-7. Wrap ALL API calls with `ApiCallService.CallAsync(...)`.
+7. Wrap feature Refit calls with `ApiCallService.CallAsync(...)`; auth flows should go through `IAuthenticationService`.
 8. Add menu item in `Infrastructure/Services/MenuService.cs`.
 9. Update `_Imports.razor` with the new contract namespace.
 
 ## Core Rules
 - Use DTOs from `AditiKraft.Krafter.Contracts.Contracts.*`.
-- Use `ApiCallService` for every Refit call.
+- Use `ApiCallService` for Refit calls made directly from UI components; auth flows go through `IAuthenticationService`.
 - Use `KrafterRoute` from Shared for `RoutePath`.
 - Add `@attribute [MustHavePermission(...)]` to list pages.
 - List pages implement `IDisposable` and unsubscribe `dialogService.OnClose`.
@@ -115,8 +115,8 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-01-26
-Verified Against: Features/Auth/Login.razor.cs, Features/Auth/GoogleCallback.razor.cs, Features/Users/Users.razor.cs, Features/Roles/Roles.razor.cs, Features/Tenants/Tenants.razor.cs, Infrastructure/Refit/IUsersApi.cs, Infrastructure/Refit/IRolesApi.cs, Infrastructure/Refit/ITenantsApi.cs, Infrastructure/Refit/IAuthApi.cs, _Imports.razor
+Last Updated: 2026-03-07
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor
 ---
 
 

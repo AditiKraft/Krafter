@@ -173,7 +173,7 @@ public class DataSeedService(
                                       "We recommend changing your password after your first login for security reasons.<br><br>" +
                                       "Best Regards,<br>" +
                                       "The Krafter Team"
-                    }, "SendEmailJob", CancellationToken.None);
+                    }, nameof(Jobs.SendEmailJob), CancellationToken.None);
                 }
             }
         }

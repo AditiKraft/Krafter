@@ -6,6 +6,7 @@
   <Folder Name="/src/" />
   <Folder Name="/src/Backend/">
     <Project Path="src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj" />
+    <Project Path="src/AditiKraft.Krafter.Backend.Migrator/AditiKraft.Krafter.Backend.Migrator.csproj" />
   </Folder>
   <Folder Name="/src/Krafter.Shared/">
     <Project Path="src/AditiKraft.Krafter.Contracts/AditiKraft.Krafter.Contracts.csproj" />

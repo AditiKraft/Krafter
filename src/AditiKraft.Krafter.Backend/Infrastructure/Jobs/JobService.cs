@@ -10,8 +10,8 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 
 public class Jobs(IEmailService emailService)
 {
-    [TickerFunction(nameof(SendEmailJobAsync))]
-    public async Task SendEmailJobAsync(TickerFunctionContext<SendEmailRequestInput> tickerContext,
+    [TickerFunction(nameof(SendEmailJob))]
+    public async Task SendEmailJob(TickerFunctionContext<SendEmailRequestInput> tickerContext,
         CancellationToken cancellationToken)
     {
         await emailService.SendEmailAsync(

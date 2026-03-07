@@ -45,6 +45,7 @@ Krafter is a .NET 10 full-stack platform with:
 - Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md`
 - Backend auth: `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
 - Backend Users feature: `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
+- Backend roles: `src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md`
 - Backend tenants: `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
 - UI Refit: `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
 - UI auth: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md`
@@ -81,6 +82,7 @@ AditiKraft.Krafter/
 │   │   ├── Common/              # Context, entities, interfaces, extensions
 │   │   ├── Errors/              # Exception types
 │   │   └── Migrations/          # EF Core migrations
+│   ├── AditiKraft.Krafter.Backend.Migrator/        # Short-lived EF migration runner
 │   └── UI/                      # Blazor (See src/UI/Agents.md)
 │       ├── Agents.md            ← UI-specific rules
 │       ├── AditiKraft.Krafter.UI.Web.Client/  # WASM client
@@ -107,9 +109,9 @@ dotnet run --project src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.c
 # Run UI only
 dotnet run --project src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj
 
-# Database migrations
+# Database migrations (`src/AditiKraft.Krafter.Backend/appsettings.Local.json` is enough for `dotnet ef migrations add`)
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context KrafterContext
-dotnet ef database update --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 
 # Build solution
 dotnet build AditiKraft.Krafter.slnx
@@ -152,8 +154,8 @@ refactor(tenants): consolidate tenant operations
 |---------|--------|
 | A feature grows to 5+ operations with unique patterns | Create `Features/<Feature>/Agents.md` |
 | A new infrastructure area is added (e.g., messaging, caching) | Create `Infrastructure/<Area>/Agents.md` |
-| CI/CD or deployment rules become complex | Create `.github/Agents.md` |
-| Aspire orchestration has custom rules | Create `aspire/Agents.md` |
+| CI/CD or deployment rules become complex | Create `.github/Agents.md` if that area needs AI-specific rules |
+| Aspire orchestration has custom rules | Create `aspire/Agents.md` if orchestration patterns become project-specific |
 | A sub-area has 3+ unique patterns not in parent | Create sub-directory Agents.md |
 
 ### 8.3 When to SPLIT/BREAKDOWN Agents.md
@@ -186,7 +188,7 @@ src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md (auth-specific)
 - Child Agents.md inherits all rules from parent
 - Child can OVERRIDE parent rules (document why)
 - Child should only contain rules SPECIFIC to that area
-- Always reference parent: `> See also: ../Agents.md`
+- Always reference parent with the correct relative path (for example `> See also: ../../Agents.md`)
 
 ### 8.5 Template for New Agents.md
 
@@ -241,8 +243,8 @@ Verified Against: [list key files checked]
 ```
 
 ---
-Last Updated: 2026-02-09
-Verified Against: Agents.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
----
+Last Updated: 2026-03-07
+Verified Against: Agents.md, README.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
+--- 
 
 
