@@ -6,7 +6,7 @@
 ## 1. Core Principles
 - Job methods live in `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/JobService.cs`.
 - Use `[TickerFunction(nameof(JobName))]` for each job method.
-- Enqueue via `IJobService.EnqueueAsync(request, nameof(JobName), cancellationToken)`.
+- Enqueue via `IJobService.EnqueueAsync(request, nameof(Jobs.JobName), cancellationToken)` from callers.
 
 ## 2. Decision Tree
 - Adding a new job? Add a method to `Jobs` with `[TickerFunction]`.
@@ -25,7 +25,8 @@ public class Jobs(IEmailService emailService)
         await emailService.SendEmailAsync(
             tickerContext.Request.Email,
             tickerContext.Request.Subject,
-            tickerContext.Request.HtmlMessage);
+            tickerContext.Request.HtmlMessage,
+            cancellationToken);
     }
 }
 ```
@@ -45,7 +46,7 @@ await jobService.EnqueueAsync(
 
 ## 4. Checklist
 1. Add the job method with `[TickerFunction(nameof(MyJob))]`.
-2. Use `IJobService.EnqueueAsync(..., nameof(MyJob), ...)` from handlers.
+2. Use `IJobService.EnqueueAsync(..., nameof(Jobs.MyJob), ...)` from handlers.
 3. Keep payloads as simple request DTOs.
 
 ## 5. Common Mistakes
@@ -58,7 +59,7 @@ await jobService.EnqueueAsync(
 - New job types added that need documentation.
 
 ---
-Last Updated: 2026-01-25
-Verified Against: Infrastructure/Jobs/JobService.cs
+Last Updated: 2026-03-07
+Verified Against: src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/JobService.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs
 ---
 

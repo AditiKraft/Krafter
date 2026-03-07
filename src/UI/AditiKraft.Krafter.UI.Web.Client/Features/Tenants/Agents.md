@@ -40,6 +40,6 @@ Response result = await api.CallAsync(
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
 
 ---
-Last Updated: 2026-01-25
-Verified Against: Features/Tenants/Tenants.razor.cs, Features/Tenants/CreateOrUpdateTenant.razor.cs
+Last Updated: 2026-03-07
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs
 ---

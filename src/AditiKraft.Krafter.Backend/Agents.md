@@ -11,7 +11,7 @@
 5. Add DbSet + model configuration in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs`.
 6. Add permissions + routes in Shared (`src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/` and `src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs`).
 7. Map endpoints using `KrafterRoute` and `RouteSegment`.
-8. Run migrations if schema changed.
+8. Add a migration if the schema changed; AppHost will apply it through `src/AditiKraft.Krafter.Backend.Migrator/` on the next startup.
 
 ## Core Rules
 - One file per operation: Handler + Route (validator stays with request in Shared).
@@ -71,6 +71,7 @@ public sealed class GetUsers
 - `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md`
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
 - `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
 
 ## References (real code)
@@ -95,9 +96,9 @@ public sealed class GetUsers
 - Add feature-specific Agents when a feature grows beyond 5 operations.
 
 ---
-Last Updated: 2026-01-26
-Verified Against: Features/Auth/Login.cs, Features/Auth/RefreshToken.cs, Features/Auth/ExternalLogin.cs, Features/Users/CreateUser.cs, Features/Users/UpdateUser.cs, Features/Users/GetUsers.cs, Features/Users/DeleteUser.cs, Features/Roles/CreateRole.cs, Features/Roles/UpdateRole.cs, Features/Tenants/GetTenants.cs, Features/Tenants/Delete.cs, Features/Tenants/CreateTenant.cs, Features/Tenants/UpdateTenant.cs, Features/Tenants/SeedBasicData.cs, Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
----
+Last Updated: 2026-03-07
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
+--- 
 
 
 
