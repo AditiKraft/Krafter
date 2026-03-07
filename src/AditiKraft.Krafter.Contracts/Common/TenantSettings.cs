@@ -4,5 +4,5 @@ namespace AditiKraft.Krafter.Contracts.Common;
 
 public static class TenantSettings
 {
-    public static readonly TenancyMode TenancyMode = TenancyMode.Single;
+    public static readonly TenancyMode TenancyMode = TenancyMode.Multi;
 }
