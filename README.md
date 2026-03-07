@@ -22,12 +22,12 @@ Alternatively, log in with Google to create a new account.
 
 ## ⚡ TL;DR Quick Start
 
-**First-time setup:**
+**First local run:**
 
-1) Run Aspire orchestration (starts PostgreSQL, dynamic ports)
+1) Run Aspire orchestration
 - `dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj`
 
-2) AppHost runs the dedicated migrator automatically
+2) Wait for startup to finish
 - `krafter-migrator` applies checked-in migrations before `krafter-api` starts
 
 3) Open URLs
@@ -45,10 +45,9 @@ Alternatively, log in with Google to create a new account.
 - [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Install Tools](#install-tools)
   - [Quick Start](#quick-start)
   - [Database Migrations Workflow](#database-migrations-workflow)
-  - [Secrets and Configuration](#secrets-and-configuration)
+  - [Configuration Notes](#configuration-notes)
   - [Troubleshooting](#troubleshooting)
 - [Project Structure](#project-structure)
 - [Development Guide](#development-guide)
@@ -165,10 +164,6 @@ Alternatively, log in with Google to create a new account.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (for Aspire/PostgreSQL)
 - [Visual Studio 2022 17.11+](https://visualstudio.microsoft.com/) or [VS Code](https://code.visualstudio.com/)
 
-### Install Tools
-
-- EF Core tools (only needed when creating new migrations): `dotnet tool install --global dotnet-ef`
-
 ### Quick Start
 
 1. Clone the repository
@@ -182,24 +177,22 @@ Alternatively, log in with Google to create a new account.
    dotnet restore
    ```
 
-3. Run with Aspire (starts DB and services)
+3. Run AppHost
    ```bash
    dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
    ```
 
-4. Let `krafter-migrator` apply database migrations
+4. Wait for `krafter-migrator` to finish
    - AppHost starts the short-lived migrator before `krafter-api`
    - No manual `dotnet ef database update` step is required for normal startup
 
-5. Configure secrets (see [Secrets and Configuration](#secrets-and-configuration))
-
-6. Access the application
+5. Access the application
    - Aspire Dashboard: https://localhost:17285
    - Backend API: https://localhost:5199
    - Scalar API Reference: https://localhost:5199/scalar/v1
    - Blazor UI: https://localhost:7291
 
-7. Default Credentials
+6. Default Credentials
 
    On first run, the application seeds a default admin account:
    - Email: `admin@getkrafter.dev`
@@ -213,21 +206,13 @@ Alternatively, log in with Google to create a new account.
 
 ### Database Migrations Workflow
 
-AppHost applies checked-in migrations automatically through `krafter-migrator`.
-
-#### Apply Existing Migrations
-
-```bash
-dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
-```
-
-This starts PostgreSQL, runs `krafter-migrator`, applies migrations, and then starts `krafter-api`.
+AppHost applies checked-in migrations automatically through `krafter-migrator`. For normal local startup, run AppHost and let the migrator finish.
 
 #### Create a New Migration
 
 The existing `ConnectionStrings:KrafterDbMigration` value in `src/AditiKraft.Krafter.Backend/appsettings.Local.json` already works for `dotnet ef migrations add`. Do not change it.
 
-Install EF Core tools first if you have not already:
+Install EF Core tools once if you have not already:
 
 ```bash
 dotnet tool install --global dotnet-ef
@@ -244,9 +229,7 @@ dotnet ef migrations add <MigrationName> --context TenantDbContext
 dotnet ef migrations add <MigrationName> --context BackgroundJobsContext
 ```
 
-#### Apply the New Migration
-
-Restart AppHost so `krafter-migrator` applies the new migration:
+Restart AppHost to apply the new migration:
 
 ```bash
 dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
@@ -260,62 +243,25 @@ Your database is now ready.
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Unable to create DbContext" | Missing `ConnectionStrings:KrafterDbMigration` in `src/AditiKraft.Krafter.Backend/appsettings.Local.json` | Restore the `KrafterDbMigration` entry in `appsettings.Local.json` |
+| "Unable to create DbContext" | Missing `ConnectionStrings:KrafterDbMigration` or wrong working directory | Restore the `KrafterDbMigration` entry in `appsettings.Local.json` and run the command from `src/AditiKraft.Krafter.Backend` |
 | "`krafter-api` does not start" | `krafter-migrator` failed first | Check the `krafter-migrator` logs and fix the migration error |
-| "Could not find DbContext" | Wrong working directory | Ensure you're in `src/AditiKraft.Krafter.Backend` directory |
 | "Migration already exists" | Duplicate migration name | Use `dotnet ef migrations remove --context <ContextName>` |
 | "Pending model changes" | The model changed but no migration exists yet | Add a new migration for the affected context before restarting AppHost |
 | `dotnet-ef` not found | EF tools not installed | Run `dotnet tool install --global dotnet-ef` |
 
 ---
 
-### Secrets and Configuration
+### Configuration Notes
 
-Before running the application, configure the following secrets and settings:
+Local development works with the checked-in dev settings.
 
-#### Required Configuration
+Change configuration only if you need custom values for:
 
-**`aspire/AditiKraft.Krafter.Aspire.AppHost/appsettings.json`**
-- `Parameters:postgresUsername` = `{YOUR_POSTGRES_USERNAME}`
-- `Parameters:postgresPassword` = `{YOUR_POSTGRES_PASSWORD}`
+- PostgreSQL container credentials in `aspire/AditiKraft.Krafter.Aspire.AppHost/appsettings.json`
+- JWT, TickerQ, or Google auth settings in `src/AditiKraft.Krafter.Backend/appsettings.json`
+- UI backend URL or Google client settings in `src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json` and `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json`
 
-**`src/AditiKraft.Krafter.Backend/appsettings.json`**
-- `TickerQBasicAuth:Username` = `{TICKERQ_BASIC_AUTH_USERNAME}`
-- `TickerQBasicAuth:Password` = `{TICKERQ_BASIC_AUTH_PASSWORD}`
-- `SecuritySettings:JwtSettings:Key` = `{JWT_SIGNING_KEY}`
-
-**`src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json`**
-- `Jwt:Key` = `{JWT_SIGNING_KEY}` (MUST be identical to backend JWT key)
-
-**`src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json`**
-- `RemoteHostUrl` = `{YOUR_BACKEND_HOST}`
-- `Authentication:Google:ClientId` = `{YOUR_GOOGLE_CLIENT_ID}` (optional, for Google OAuth)
-
-> ⚠️ Important: The JWT signing key must be exactly the same for the Backend and the UI server host. This ensures tokens issued by the backend validate correctly during server-side rendering and prerendered Blazor scenarios.
-
-#### Quick commands via user-secrets (recommended for dev)
-
-From the Backend project (`src/AditiKraft.Krafter.Backend`):
-
-```bash
-# initialize once (if needed)
-dotnet user-secrets init
-
-# set JWT and TickerQ basic auth
-dotnet user-secrets set "SecuritySettings:JwtSettings:Key" "<long-random-32+ chars>"
-dotnet user-secrets set "TickerQBasicAuth:Username" "<username>"
-dotnet user-secrets set "TickerQBasicAuth:Password" "<password>"
-```
-
-From the Blazor Server host (`src/UI/AditiKraft.Krafter.UI.Web`):
-
-```bash
-# initialize once (if needed)
-dotnet user-secrets init
-
-# JWT key must match Backend
-dotnet user-secrets set "Jwt:Key" "<same-long-random-key-as-backend>"
-```
+For anything outside local development, prefer user-secrets or environment variables instead of committed values.
 
 ---
 
@@ -368,7 +314,7 @@ For detailed structure, see [Agents.md](Agents.md) and sub-project Agents.md fil
 3. Add entity/service under `Features/<Feature>/Common/` if feature-specific
 4. Update `KrafterContext.cs` with new `DbSet`
 5. Update mappings/query behavior in `Infrastructure/Persistence/ModelBuilderExtensions.cs` as needed
-6. Run migration: `dotnet ef migrations add Add<Feature>`
+6. Run migration for the context you changed, for example: `dotnet ef migrations add Add<Feature> --context KrafterContext`
 7. Restart AppHost so `krafter-migrator` applies the new migration
 8. Add permissions and routes in `src/AditiKraft.Krafter.Contracts/Common/`
 
@@ -388,7 +334,7 @@ For complete guidelines, see [Agents.md](Agents.md) and the sub-project Agents.m
 
 ```bash
 # Build solution
-dotnet build
+dotnet build AditiKraft.Krafter.slnx
 
 # Run tests
 dotnet test
