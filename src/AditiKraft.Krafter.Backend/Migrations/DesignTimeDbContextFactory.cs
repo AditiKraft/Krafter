@@ -1,8 +1,9 @@
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence;
+namespace AditiKraft.Krafter.Backend.Migrations;
 
 internal static class DesignTimeConnectionStringHelper
 {
