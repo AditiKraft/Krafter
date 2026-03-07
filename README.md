@@ -24,46 +24,17 @@ Alternatively, log in with Google to create a new account.
 
 **First-time setup:**
 
-1) Install tools (once)
-- dotnet-ef: `dotnet tool install --global dotnet-ef`
-- Kiota CLI (optional for client regen): `dotnet tool install --global Microsoft.Kiota.Cli`
-
-2) Run Aspire orchestration (starts PostgreSQL, dynamic ports)
+1) Run Aspire orchestration (starts PostgreSQL, dynamic ports)
 - `dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj`
 
-**Database migrations (first run or when schema changes):**
+2) AppHost runs the dedicated migrator automatically
+- `krafter-migrator` applies checked-in migrations before `krafter-api` starts
 
-3) Copy DB connection string from Aspire Dashboard
-- Open Aspire Dashboard (usually https://localhost:17285)
-- In the **Resources** tab, expand the **postgres** resource (click the arrow > if collapsed)
-- Find the **krafterDb** row (nested/indented under postgres)
-- Click the **three-dot menu (⋮)** in the Actions column of the krafterDb row
-- Select **"View details"** from the dropdown menu
-- The details panel opens on the right showing "PostgresDatabaseResource: krafterDb"
-- Scroll down in the details panel to find the **Connection string** field
-- Click the **eye icon** (👁️) next to the connection string value to copy it
-- Format: `Host=localhost;Port=56178;Username=postgres;Password=postgres;Database=krafterDb`
-- **Note:** The port number changes with each Aspire run (e.g., 56178 in one run, 52961 in another)
-
-4) Stop `krafter-api` service in Aspire (unlocks Backend assembly)
-
-5) Set migration connection string
-- EITHER update `src/AditiKraft.Krafter.Backend/appsettings.Local.json` → `ConnectionStrings:KrafterDbMigration`
-- OR set env var: `ConnectionStrings__KrafterDbMigration="Host=localhost;Port=XXXXX;Username=postgres;Password=postgres;Database=krafterDb"`
-
-6) Apply migrations (once)
-- `cd src/AditiKraft.Krafter.Backend`
-- `dotnet ef database update --context KrafterContext`
-- `dotnet ef database update --context TenantDbContext`
-- `dotnet ef database update --context BackgroundJobsContext`
-
-7) Restart `krafter-api` in Aspire and open URLs
+3) Open URLs
 - Aspire Dashboard: https://localhost:17285
 - Backend API: https://localhost:5199
-- Swagger UI: https://localhost:5199/swagger
+- Scalar API Reference: https://localhost:5199/scalar/v1
 - Blazor UI: https://localhost:7291
-
-Note: Ports are dynamic per run; use the Aspire Dashboard values.
 
 ## 📋 Table of Contents
 
@@ -131,7 +102,7 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 - **Theme Support** - Light/Dark/Auto modes with WCAG compliance
 - **Responsive Design** - Mobile and desktop optimized
 - **Code-Behind Pattern** - Clean separation of markup and logic
-- **Kiota Client** - Type-safe, auto-generated API client
+- **Refit** - Type-safe REST API client
 
 ### 📊 **Data & Storage**
 - **EF Core** - PostgreSQL & MySQL support
@@ -196,7 +167,7 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 
 ### Install Tools
 
-- EF Core tools: `dotnet tool install --global dotnet-ef`
+- EF Core tools (only needed when creating new migrations): `dotnet tool install --global dotnet-ef`
 
 ### Quick Start
 
@@ -216,25 +187,16 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
    dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
    ```
 
-4. Apply database migrations (quick path)
-   - Open Aspire Dashboard → copy PostgreSQL connection string
-   - Stop `krafter-api` service
-   - Set `ConnectionStrings__KrafterDbMigration` (or update `src/AditiKraft.Krafter.Backend/appsettings.Local.json`)
-   - Run:
-     ```bash
-     cd src/AditiKraft.Krafter.Backend
-     dotnet ef database update --context KrafterContext
-     dotnet ef database update --context TenantDbContext
-     dotnet ef database update --context BackgroundJobsContext
-     ```
-   - Restart `krafter-api`
+4. Let `krafter-migrator` apply database migrations
+   - AppHost starts the short-lived migrator before `krafter-api`
+   - No manual `dotnet ef database update` step is required for normal startup
 
 5. Configure secrets (see [Secrets and Configuration](#secrets-and-configuration))
 
 6. Access the application
    - Aspire Dashboard: https://localhost:17285
    - Backend API: https://localhost:5199
-   - Swagger UI: https://localhost:5199/swagger
+   - Scalar API Reference: https://localhost:5199/scalar/v1
    - Blazor UI: https://localhost:7291
 
 7. Default Credentials
@@ -251,132 +213,58 @@ Note: Ports are dynamic per run; use the Aspire Dashboard values.
 
 ### Database Migrations Workflow
 
-Before running the application for the first time, you need to set up the database and apply migrations.
+AppHost applies checked-in migrations automatically through `krafter-migrator`.
 
-#### Prerequisites for Migrations
-- ✅ Aspire orchestration must be running (provides PostgreSQL database)
-- ✅ Backend API must be stopped before running migration commands
-- ✅ Connection string configured in `appsettings.Local.json` or via environment variable
-
-#### Step-by-Step Migration Process
-
-##### 1. Start Aspire Orchestration
+#### Apply Existing Migrations
 
 ```bash
 dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 ```
 
-This starts PostgreSQL and generates a dynamic connection string.
+This starts PostgreSQL, runs `krafter-migrator`, applies migrations, and then starts `krafter-api`.
 
-##### 2. Copy Database Connection String
+#### Create a New Migration
 
-**Step-by-Step Visual Guide:**
+The existing `ConnectionStrings:KrafterDbMigration` value in `src/AditiKraft.Krafter.Backend/appsettings.Local.json` already works for `dotnet ef migrations add`. Do not change it.
 
-1. **Open the Aspire Dashboard**
-   - After starting Aspire orchestration, the console will display the dashboard URL (typically `https://localhost:17285`)
-   - Open this URL in your browser
+Install EF Core tools first if you have not already:
 
-2. **Navigate to Resources**
-   - The dashboard opens to the **Resources** view by default
-   - You'll see a table listing all running resources with columns: Name, State, Start time, Source, URLs, and Actions
-
-3. **Locate the PostgreSQL Resource**
-   - Look for the resource named **postgres** in the resources list (it has a database icon)
-   - The State should show a green dot with "Running"
-   - Notice that **postgres** has a collapse/expand arrow (>) next to it
-
-4. **Expand the postgres Resource**
-   - If not already expanded, click the arrow (>) next to **postgres** to expand it
-   - You'll see nested/indented child items appear: **krafterDb**, **postgresPassword**, and **postgresUsername**
-
-5. **Open krafterDb Details**
-   - Locate the **krafterDb** row (the indented database resource under postgres)
-   - In the **Actions** column (far right) of the krafterDb row, click the **three-dot menu button (⋮)**
-   - A dropdown menu will appear with options: "View details", "Console logs", "Ask GitHub Copilot"
-   - Click on **"View details"**
-
-6. **View the Details Panel**
-   - A details panel opens on the right side of the screen
-   - The panel header will display "**PostgresDatabaseResource: krafterDb**"
-   - This confirms you've opened the correct resource details
-
-7. **Find the Connection String**
-   - In the right details panel, you'll see sections like: Name, State, Health state, Start time, etc.
-   - Scroll down to find the **Connection string** field (under the "Resource" section)
-   - The connection string value will be displayed (it may be partially masked)
-
-8. **Copy the Connection String**
-   - Next to the connection string value, you'll see two icons:
-     - 📋 **Copy icon** - Click this to copy the connection string to your clipboard
-     - 👁️ **Visibility toggle** - Shows/hides the full connection string
-   - Click the **copy icon** to copy the complete connection string
-
-
-- In the Aspire dashboard, **stop** the `krafter-api` service
-- Why? The Backend assembly is locked when the API is running, preventing EF Core migration tools from accessing it
-
-After:
+```bash
+dotnet tool install --global dotnet-ef
 ```
 
-Important: Replace `Port=52961` with the port from your Aspire dashboard (it changes on each run).
-
-Tip: You can also set the environment variable `ConnectionStrings__KrafterDbMigration` instead of modifying the file.
-
-##### 5. Apply Migrations
-
-Navigate to the Backend project directory and apply migrations:
+Create the migration from the Backend project:
 
 ```bash
 cd src/AditiKraft.Krafter.Backend
 
-# Apply all migrations
-dotnet ef database update --context KrafterContext
-dotnet ef database update --context TenantDbContext
-dotnet ef database update --context BackgroundJobsContext
-```
-
-##### 6. Restart Backend API
-
-- In the Aspire dashboard, **restart** the `krafter-api` service
-- Or restart the entire Aspire orchestration
-
-Your database is now ready! 🎉
-
----
-
-#### Why This Workflow?
-
-| Requirement | Reason |
-|-------------|--------|
-| **Aspire Running** | Database connection strings are dynamically assigned by Aspire (ports change on each run) |
-| **Backend Stopped** | EF Core migration tools compile and load the Backend assembly. If the API is running, the assembly is locked |
-| **appsettings.Local.json** | With Backend stopped, we configure the connection string in appsettings or environment variables |
-
----
-
-#### Creating New Migrations (For Development)
-
-When you add new features that require database changes:
-
-```bash
-cd src/AditiKraft.Krafter.Backend
-
-# Create a new migration
+# Examples
 dotnet ef migrations add <MigrationName> --context KrafterContext
-
-# Apply the migration
-dotnet ef database update --context KrafterContext
+dotnet ef migrations add <MigrationName> --context TenantDbContext
+dotnet ef migrations add <MigrationName> --context BackgroundJobsContext
 ```
+
+#### Apply the New Migration
+
+Restart AppHost so `krafter-migrator` applies the new migration:
+
+```bash
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
+```
+
+Your database is now ready.
+
 ---
 
 ### Troubleshooting
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Unable to create DbContext" | Backend API is running | Stop the Backend API in Aspire dashboard |
-| "Database connection failed" | Wrong port or Aspire not running | Verify Aspire is running and copy the correct connection string from dashboard |
+| "Unable to create DbContext" | Missing `ConnectionStrings:KrafterDbMigration` in `src/AditiKraft.Krafter.Backend/appsettings.Local.json` | Restore the `KrafterDbMigration` entry in `appsettings.Local.json` |
+| "`krafter-api` does not start" | `krafter-migrator` failed first | Check the `krafter-migrator` logs and fix the migration error |
 | "Could not find DbContext" | Wrong working directory | Ensure you're in `src/AditiKraft.Krafter.Backend` directory |
 | "Migration already exists" | Duplicate migration name | Use `dotnet ef migrations remove --context <ContextName>` |
+| "Pending model changes" | The model changed but no migration exists yet | Add a new migration for the affected context before restarting AppHost |
 | `dotnet-ef` not found | EF tools not installed | Run `dotnet tool install --global dotnet-ef` |
 
 ---
@@ -454,6 +342,7 @@ AditiKraft.Krafter/
 │   │   ├── Errors/                        # Exception types
 │   │   ├── Migrations/                    # EF Core migrations
 │   │   └── Program.cs
+│   ├── AditiKraft.Krafter.Backend.Migrator/ # Short-lived EF migration runner
 │   └── UI/
 │       ├── Agents.md
 │       ├── AditiKraft.Krafter.UI.Web.Client/  # Blazor WebAssembly
@@ -480,7 +369,8 @@ For detailed structure, see [Agents.md](Agents.md) and sub-project Agents.md fil
 4. Update `KrafterContext.cs` with new `DbSet`
 5. Update mappings/query behavior in `Infrastructure/Persistence/ModelBuilderExtensions.cs` as needed
 6. Run migration: `dotnet ef migrations add Add<Feature>`
-7. Add permissions and routes in `src/AditiKraft.Krafter.Contracts/Common/`
+7. Restart AppHost so `krafter-migrator` applies the new migration
+8. Add permissions and routes in `src/AditiKraft.Krafter.Contracts/Common/`
 
 **UI (Blazor):**
 1. Create feature folder: `Features/<Feature>/`
@@ -508,10 +398,8 @@ dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --conte
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context BackgroundJobsContext
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context TenantDbContext
 
-# Update database
-dotnet ef database update --project src/AditiKraft.Krafter.Backend --context KrafterContext
-dotnet ef database update --project src/AditiKraft.Krafter.Backend --context BackgroundJobsContext
-dotnet ef database update --project src/AditiKraft.Krafter.Backend --context TenantDbContext
+# Apply migrations through the dedicated migrator
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 ```
 
 ## 🐳 Deployment
@@ -532,17 +420,6 @@ The project includes automated CI/CD pipelines that:
 - Push images to GitHub Container Registry
 - Trigger deployment webhooks
 
-**Troubleshooting: Can't Find the Connection String?**
-
-- ✅ Make sure you expanded the **postgres** resource (click the arrow >)
-- ✅ Locate the **krafterDb** row indented under postgres
-- ✅ Click the **three-dot menu (⋮)** in the Actions column of the krafterDb row (far right)
-- ✅ Select **"View details"** from the dropdown menu (NOT "Console logs")
-- ✅ The details panel should show "**PostgresDatabaseResource: krafterDb**" at the top
-- ✅ If the connection string field is empty or shows a dash (-), wait a few seconds for the database to fully initialize
-- ✅ Try refreshing the Aspire Dashboard page if the postgres resource doesn't appear
-- ✅ Ensure Docker Desktop is running (Aspire uses Docker to host PostgreSQL)
-
 See [.github/workflows](.github/workflows) for configuration.
 
 ## 🤝 Contributing
@@ -551,7 +428,7 @@ Contributions are welcome! Please follow these guidelines:
 
 1. **Fork** the repository
 2. Create a **feature branch** (`git checkout -b feature/amazing-feature`)
-3. Follow the **coding conventions** in [copilot-instructions.md](.github/copilot-instructions.md)
+3. Follow the **coding conventions** in [Agents.md](Agents.md) and the relevant sub-project `Agents.md` files
 4. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
 5. **Push** to the branch (`git push origin feature/amazing-feature`)
 6. Open a **Pull Request**
