@@ -6,6 +6,7 @@ using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
+using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 using Mapster;
@@ -25,6 +26,11 @@ public sealed class CreateTenant
     {
         public async Task<Response> CreateAsync(CreateOrUpdateTenantRequest request, CancellationToken cancellationToken)
         {
+            if (TenantSettings.TenancyMode == TenancyMode.Single)
+            {
+                return Response.BadRequest("Tenant creation is not allowed in single-tenant mode.");
+            }
+
             request.Id = null;
             if (!string.IsNullOrWhiteSpace(request.Identifier))
             {

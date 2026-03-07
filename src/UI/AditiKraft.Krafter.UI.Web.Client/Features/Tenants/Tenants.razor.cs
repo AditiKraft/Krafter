@@ -1,4 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
@@ -7,7 +8,8 @@ namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
 public partial class Tenants(
     ApiCallService api,
     ITenantsApi tenantsApi,
-    DialogService dialogService
+    DialogService dialogService,
+    NavigationManager navigationManager
 ) : ComponentBase, IDisposable
 {
     public const string RoutePath = KrafterRoute.Tenants;
@@ -19,6 +21,12 @@ public partial class Tenants(
 
     protected override async Task OnInitializedAsync()
     {
+        if (TenantSettings.TenancyMode == TenancyMode.Single)
+        {
+            navigationManager.NavigateTo("/not-found");
+            return;
+        }
+
         LocalAppSate.CurrentPageTitle = $"Tenants";
 
         dialogService.OnClose += Close;
