@@ -5,6 +5,7 @@ using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
@@ -35,8 +36,8 @@ public static class KrafterInitialConstants
     {
         public const string Id = "root";
 
-        public const string Identifier = "krafter";
-        public const string Name = "krafter";
+        public const string Identifier = KrafterTenantConstants.Identifier;
+        public const string Name = KrafterTenantConstants.Name;
     }
 
     public const string DefaultPassword = "123Pa$$word!";
