@@ -1,4 +1,4 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
 
 
 
@@ -12,9 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.0" />
-    <PackageReference Include="Aspire.Hosting.Garnet" Version="13.0.0" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.Garnet" Version="13.2.0" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
   </ItemGroup>
 
   <ItemGroup>
