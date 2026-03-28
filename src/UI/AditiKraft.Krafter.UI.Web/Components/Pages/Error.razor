@@ -3,29 +3,35 @@
 
 <PageTitle>Error</PageTitle>
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<div style="display: flex; align-items: center; justify-content: center; min-height: 80vh; padding: 2rem;">
+    <div style="text-align: center; max-width: 500px;">
+        <RadzenIcon Icon="error_outline" Style="font-size: 5rem; color: var(--rz-danger);" />
+        <RadzenText TextStyle="TextStyle.DisplayH4" TagName="TagName.H1" class="rz-mt-4" Style="color: var(--rz-danger);">
+            Something went wrong
+        </RadzenText>
+        <RadzenText TextStyle="TextStyle.Body1" class="rz-mt-2" Style="color: var(--rz-text-secondary-color);">
+            An unexpected error occurred while processing your request. Please try again.
+        </RadzenText>
 
-@if (ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@RequestId</code>
-    </p>
-}
+        @if (ShowRequestId)
+        {
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-mt-4" Style="color: var(--rz-text-disabled-color);">
+                Request ID: @RequestId
+            </RadzenText>
+        }
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-mt-6">
+            <RadzenButton Text="Go Home" Icon="home" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => NavigationManager.NavigateTo("/"))" />
+            <RadzenButton Text="Try Again" Icon="refresh" ButtonStyle="ButtonStyle.Light"
+                          Click="@(() => NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true))" />
+        </RadzenStack>
+    </div>
+</div>
 
-@code{
+@code {
     [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
 
     private string? RequestId { get; set; }
     private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
@@ -34,5 +40,4 @@
     {
         RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
     }
-
 }
