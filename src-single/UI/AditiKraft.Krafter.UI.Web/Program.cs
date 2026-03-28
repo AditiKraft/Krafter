@@ -63,11 +63,11 @@ builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.Authenticatio
     options.Events.OnMessageReceived = async context =>
     {
         // Skip refresh logic for auth API endpoints
-        if (context.Request.Path.StartsWithSegments($"/{KrafterRoute.Tokens}/{RouteSegment.Refresh}") ||
-            context.Request.Path.StartsWithSegments($"/{KrafterRoute.Tokens}") ||
-            context.Request.Path.StartsWithSegments($"/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}") ||
-            context.Request.Path.StartsWithSegments($"/{KrafterRoute.Tokens}/{RouteSegment.Current}") ||
-            context.Request.Path.StartsWithSegments($"/{KrafterRoute.Tokens}/{RouteSegment.Logout}"))
+        if (context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Refresh}") ||
+            context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}") ||
+            context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}") ||
+            context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Current}") ||
+            context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}"))
         {
             string? currentToken = context.Request.Cookies[StorageConstants.Local.AuthToken];
             context.Token = currentToken;
@@ -186,12 +186,7 @@ builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.Authenticatio
         if (!context.Response.HasStarted)
         {
             // For API requests, return 401 JSON; for browser requests, redirect to login
-            bool isApiRequest = context.Request.Path.StartsWithSegments("/tokens") ||
-                                context.Request.Path.StartsWithSegments("/users") ||
-                                context.Request.Path.StartsWithSegments("/roles") ||
-                                context.Request.Path.StartsWithSegments("/tenants") ||
-                                context.Request.Path.StartsWithSegments("/external-auth") ||
-                                context.Request.Path.StartsWithSegments($"/{nameof(AditiKraft.Krafter.Backend.Infrastructure.Realtime.RealtimeHub)}") ||
+            bool isApiRequest = context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}") ||
                                 context.Request.Headers.Accept.Any(a => a != null && a.Contains("application/json"));
 
             if (isApiRequest)
@@ -301,14 +296,14 @@ static bool IsTokenExpired(string token)
 static void MapBffOnlyEndpoints(WebApplication app)
 {
     // Current token — reads from server-side cookie/cache, not from backend
-    app.MapGet($"/{KrafterRoute.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
+    app.MapGet($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
     {
         Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
     // Logout — clears server-side cookie/cache
-    app.MapPost($"/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
+    app.MapPost($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();

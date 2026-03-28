@@ -21,6 +21,15 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
   </ItemGroup>
 
+  <!-- Link shared files from split-host UI.Web (source repo only; template output has them directly) -->
+  <ItemGroup Condition="Exists('..\..\..\src-single')">
+    <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Services\**\*.cs" Link="Services\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\GlobalUsings.cs" Link="GlobalUsings.cs" />
+    <Content Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.razor" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.cs" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
+    <None Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Properties\launchSettings.json" Link="Properties\launchSettings.json" />
+  </ItemGroup>
+
   <PropertyGroup>
     <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
   </PropertyGroup>

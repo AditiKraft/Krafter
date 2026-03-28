@@ -5,21 +5,21 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public interface IAuthApi
 {
-    [Post("/tokens")]
+    [Post("/api/tokens")]
     public Task<Response<TokenResponse>> CreateTokenAsync([Body] TokenRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/tokens/refresh")]
+    [Post("/api/tokens/refresh")]
     public Task<Response<TokenResponse>> RefreshTokenAsync([Body] RefreshTokenRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/external-auth/google")]
+    [Post("/api/external-auth/google")]
     public Task<Response<TokenResponse>> GoogleAuthAsync([Body] GoogleAuthRequest request,
         CancellationToken cancellationToken = default);
 
-    [Post("/tokens/logout")]
+    [Post("/api/tokens/logout")]
     public Task LogoutAsync(CancellationToken cancellationToken = default);
 
-    [Get("/tokens/current")]
+    [Get("/api/tokens/current")]
     public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellationToken = default);
 }

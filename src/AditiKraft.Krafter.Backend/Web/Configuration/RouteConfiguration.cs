@@ -1,5 +1,6 @@
 using System.Reflection;
 using AditiKraft.Krafter.Backend.Features.Auth;
+using AditiKraft.Krafter.Contracts.Common;
 
 namespace AditiKraft.Krafter.Backend.Web.Configuration;
 
@@ -25,9 +26,11 @@ public static class RouteConfiguration
 
     public static IApplicationBuilder MapDiscoveredRoutes(this IApplicationBuilder app)
     {
+        RouteGroupBuilder apiGroup = ((IEndpointRouteBuilder)app).MapGroup(KrafterRoute.ApiPrefix);
+
         foreach (IRouteRegistrar registrar in app.ApplicationServices.GetServices<IRouteRegistrar>())
         {
-            registrar.MapRoute((IEndpointRouteBuilder)app);
+            registrar.MapRoute(apiGroup);
         }
 
         return app;

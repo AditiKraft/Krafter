@@ -8,6 +8,7 @@ using AditiKraft.Krafter.Backend.Common.Context.Tenants;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using FluentValidation;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.Backend.Common.Interfaces;
@@ -83,7 +84,7 @@ public static class HostingExtensions
     {
         app.MapDiscoveredRoutes();
 
-        app.MapHub<RealtimeHub>($"/{nameof(RealtimeHub)}")
+        app.MapHub<RealtimeHub>($"/{KrafterRoute.ApiPrefix}/{nameof(RealtimeHub)}")
             .MustHavePermission(KrafterAction.View, KrafterResource.Notifications);
 
         app.UseBackgroundJobs();

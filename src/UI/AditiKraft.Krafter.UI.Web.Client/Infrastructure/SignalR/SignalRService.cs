@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Realtime;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
@@ -40,7 +41,7 @@ public class SignalRService : IAsyncDisposable
         if (isAuthenticated)
         {
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(TenantInfo.HostUrl + "/RealtimeHub", options =>
+                .WithUrl(TenantInfo.HostUrl + $"/{KrafterRoute.ApiPrefix}/RealtimeHub", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

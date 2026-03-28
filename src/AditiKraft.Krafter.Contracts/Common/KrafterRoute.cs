@@ -2,6 +2,8 @@ namespace AditiKraft.Krafter.Contracts.Common;
 
 public static class KrafterRoute
 {
+    public const string ApiPrefix = "api";
+
     public const string Roles = "roles";
     public const string Tenants = "tenants";
     public const string Tokens = "tokens";
