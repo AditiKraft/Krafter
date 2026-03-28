@@ -42,6 +42,8 @@
             "src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj",
             "src/UI/AditiKraft.Krafter.UI.Web/appsettings.json",
             "src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json",
+            "src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json",
+            "src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.Development.json",
             "aspire/AditiKraft.Krafter.Aspire.AppHost/Program.cs",
             "aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj",
             "AditiKraft.Krafter.slnx",
@@ -62,6 +64,18 @@
           "exclude": [
             "**/bin/**",
             "**/obj/**"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/",
+      "target": "src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/",
+      "modifiers": [
+        {
+          "include": [
+            "appsettings.json",
+            "appsettings.Development.json"
           ]
         }
       ]
