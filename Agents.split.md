@@ -14,11 +14,11 @@ This project uses a **split-host** topology — Backend and UI run as independen
 | Component | Role |
 |-----------|------|
 | **Backend API** (`AditiKraft.Krafter.Backend`) | Standalone API host. Runs on its own port. All routes are prefixed with `/api`. |
-| **UI.Web** (`AditiKraft.Krafter.UI.Web`) | Blazor server host + BFF proxy endpoints for auth. Serves the Blazor app and proxies API calls to Backend. |
-| **UI.Web.Client** (`AditiKraft.Krafter.UI.Web.Client`) | WASM client. Makes API calls via Refit interfaces — requests go through the BFF on UI.Web, which forwards to Backend. |
+| **UI.Web** (`AditiKraft.Krafter.UI.Web`) | Blazor server host + BFF auth proxy. Serves the Blazor app and proxies **only auth/token cookie-management endpoints** to Backend. |
+| **UI.Web.Client** (`AditiKraft.Krafter.UI.Web.Client`) | WASM client. Auth calls (`IAuthApi`) go through the BFF on UI.Web; feature APIs (`IUsersApi`, `IRolesApi`, `ITenantsApi`, etc.) call Backend directly. |
 | **Aspire AppHost** | Orchestrates Backend + UI.Web as separate resources. Provides service discovery so UI.Web can locate Backend by name. |
 
-**Request flow**: Browser → UI.Web (Blazor Server / BFF) → Backend API (`/api/...`)
+**Request flow**: Feature APIs: Browser (WASM) → Backend API (`/api/...`) directly. Auth APIs: Browser → UI.Web BFF → Backend API.
 **Service discovery**: UI.Web uses Aspire service discovery to resolve the Backend URL at runtime. Server-side Refit on UI.Web calls Backend directly via the discovered endpoint.
 
 ## 2. Which Instructions to Read?
