@@ -94,6 +94,9 @@ else
 // Backend middleware (exception handling, multi-tenancy, auth)
 app.UseBackendMiddleware(builder.Configuration);
 
+// Intercept auth responses (login, refresh, external-auth) to set HttpOnly cookies
+app.UseMiddleware<AuthCookieMiddleware>();
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.MapStaticAssets();
 app.UseAntiforgery();
