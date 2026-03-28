@@ -76,6 +76,9 @@ app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Intercept auth responses (login, refresh, external-auth) to set HttpOnly cookies
+app.UseMiddleware<AuthCookieMiddleware>();
+
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddInteractiveServerRenderMode()

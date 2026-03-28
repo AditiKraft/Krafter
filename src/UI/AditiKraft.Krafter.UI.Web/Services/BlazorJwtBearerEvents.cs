@@ -106,6 +106,11 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
                     context.HttpContext.Items[StorageConstants.Local.RefreshTokenExpiryDate] =
                         refreshResponse.Data.RefreshTokenExpiryTime;
 
+                    // Persist refreshed tokens as cookies so the browser picks up the new values
+                    IKrafterLocalStorageService localStorage = context.HttpContext.RequestServices
+                        .GetRequiredService<IKrafterLocalStorageService>();
+                    await localStorage.CacheAuthTokens(refreshResponse.Data);
+
                     logger.LogInformation("Token refreshed successfully in OnMessageReceived");
                 }
                 else
