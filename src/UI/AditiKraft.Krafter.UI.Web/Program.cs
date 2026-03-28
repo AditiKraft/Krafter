@@ -1,4 +1,3 @@
-using System.Text;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
 using AditiKraft.Krafter.UI.Web.Client;
@@ -11,7 +10,7 @@ using AditiKraft.Krafter.UI.Web.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
 
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -28,27 +27,13 @@ builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
 builder.Services.AddScoped<IAuthApiService, ServerAuthApiService>();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddOptions<JwtSettings>()
+    .BindConfiguration($"SecuritySettings:{nameof(JwtSettings)}")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlazorJwtBearerOptions>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        string jwtKey = builder.Configuration["SecuritySettings:JwtSettings:Key"] ??
-                        throw new InvalidOperationException("JWT Key not configured (SecuritySettings:JwtSettings:Key)");
-        byte[] key = Encoding.ASCII.GetBytes(jwtKey);
-
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.Zero
-        };
-        options.Events = new BlazorJwtBearerEvents(BlazorHostingMode.SplitHost);
-    });
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, null!);
 
 string? apiUrl = builder.Configuration.GetValue<string>("services:krafter-api:https:0");
 if (string.IsNullOrWhiteSpace(apiUrl))

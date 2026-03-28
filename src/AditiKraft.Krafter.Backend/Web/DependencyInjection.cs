@@ -9,6 +9,7 @@ using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Backend.Web.Configuration;
 using AditiKraft.Krafter.Backend.Web.Middleware;
 using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Context.Auth;
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
