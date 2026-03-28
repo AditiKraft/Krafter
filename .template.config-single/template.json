@@ -21,6 +21,8 @@
   "preferNameDirectory": true,
   "sources": [
     {
+      "source": "./",
+      "target": "./",
       "modifiers": [
         {
           "exclude": [
@@ -34,19 +36,46 @@
             ".nuke/temp/**",
             ".template.config/**",
             ".template.config-single/**",
-            "src/UI/AditiKraft.Krafter.UI.Web/**",
+            "AditiKraft.Krafter.Templates.csproj",
+            "pack-and-install.cmd",
+            "src/UI/AditiKraft.Krafter.UI.Web/Program.cs",
+            "src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj",
+            "src/UI/AditiKraft.Krafter.UI.Web/appsettings.json",
+            "src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json",
             "aspire/AditiKraft.Krafter.Aspire.AppHost/**",
             "AditiKraft.Krafter.slnx",
-            "AditiKraft.Krafter.Templates.csproj",
-            "pack-and-install.cmd"
+            "src-single/**",
+            "aspire-single/**"
           ]
         }
       ],
       "rename": {
-        "src-single/": "src/",
-        "aspire-single/": "aspire/",
         "AditiKraft.Krafter.Single.slnx": "AditiKraft.Krafter.slnx"
       }
+    },
+    {
+      "source": "src-single/UI/AditiKraft.Krafter.UI.Web/",
+      "target": "src/UI/AditiKraft.Krafter.UI.Web/",
+      "modifiers": [
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "aspire-single/AditiKraft.Krafter.Aspire.AppHost/",
+      "target": "aspire/AditiKraft.Krafter.Aspire.AppHost/",
+      "modifiers": [
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ]
+        }
+      ]
     }
   ],
   "postActions": [
