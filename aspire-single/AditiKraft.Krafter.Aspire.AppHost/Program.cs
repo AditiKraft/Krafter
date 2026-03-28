@@ -39,10 +39,14 @@ IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
     .WaitFor(database);
 
 // Single combined host (API + Blazor UI in one process)
-builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-app")
+IResourceBuilder<ProjectResource> app = builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-app")
     .WithExternalHttpEndpoints()
     .WithReference(database)
     .WithReference(cache)
     .WaitForCompletion(migrator);
+
+// In single-host mode, RemoteHostUrl points to self (API is in-process).
+// Inject the app's own HTTPS endpoint so Refit calls loop back correctly.
+app.WithEnvironment("RemoteHostUrl", app.GetEndpoint("https"));
 
 builder.Build().Run();

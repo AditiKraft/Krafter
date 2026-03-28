@@ -64,12 +64,9 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
 // In single-host mode, RemoteHostUrl points to self since API routes are in the same process.
-// WASM client still needs HTTP access to the API endpoints.
-if (string.IsNullOrEmpty(builder.Configuration["RemoteHostUrl"]))
-{
-    // Fallback for standalone (non-Aspire) development
-    builder.Configuration["RemoteHostUrl"] = "https://localhost:7291";
-}
+// Value comes from: Aspire (env var injection) or appsettings.Development.json (standalone dev).
+_ = builder.Configuration["RemoteHostUrl"]
+    ?? throw new InvalidOperationException("RemoteHostUrl not configured. Set it in appsettings or via Aspire.");
 
 builder.Services.AddKrafterRefitClients();
 
