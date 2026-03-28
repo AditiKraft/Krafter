@@ -37,10 +37,15 @@
             "aspire-single/**",
             "AditiKraft.Krafter.Single.slnx",
             "AditiKraft.Krafter.Templates.csproj",
-            "pack-and-install.cmd"
+            "pack-and-install.cmd",
+            "Agents.md",
+            "Agents.single.md"
           ]
         }
-      ]
+      ],
+      "rename": {
+        "Agents.split.md": "Agents.md"
+      }
     }
   ],
   "postActions": [

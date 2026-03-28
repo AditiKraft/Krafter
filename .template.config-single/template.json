@@ -38,6 +38,8 @@
             ".template.config-single/**",
             "AditiKraft.Krafter.Templates.csproj",
             "pack-and-install.cmd",
+            "Agents.md",
+            "Agents.split.md",
             "src/UI/AditiKraft.Krafter.UI.Web/Program.cs",
             "src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj",
             "src/UI/AditiKraft.Krafter.UI.Web/appsettings.json",
@@ -53,7 +55,8 @@
         }
       ],
       "rename": {
-        "AditiKraft.Krafter.Single.slnx": "AditiKraft.Krafter.slnx"
+        "AditiKraft.Krafter.Single.slnx": "AditiKraft.Krafter.slnx",
+        "Agents.single.md": "Agents.md"
       }
     },
     {
