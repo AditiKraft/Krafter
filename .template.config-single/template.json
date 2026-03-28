@@ -6,12 +6,13 @@
     "ASP.NET",
     "Blazor",
     "Full-Stack",
-    "Vertical Slice Architecture"
+    "Vertical Slice Architecture",
+    "Single Host"
   ],
-  "identity": "AditiKraft.Krafter.FullStack.Template",
-  "name": "AditiKraft Krafter Full-Stack Application (Split Host)",
-  "shortName": "krafter",
-  "description": "A full-stack .NET 10 template with separate Backend API and Blazor UI hosts. Uses ASP.NET Core Minimal APIs (VSA), Blazor Hybrid, .NET Aspire, and PostgreSQL.",
+  "identity": "AditiKraft.Krafter.FullStack.Single.Template",
+  "name": "AditiKraft Krafter Full-Stack Application (Single Host)",
+  "shortName": "krafter-single",
+  "description": "A full-stack .NET 10 template with a combined API + Blazor UI host in a single process. Uses ASP.NET Core Minimal APIs (VSA), Blazor Hybrid, .NET Aspire, and PostgreSQL.",
   "tags": {
     "language": "C#",
     "type": "solution"
@@ -33,14 +34,19 @@
             ".nuke/temp/**",
             ".template.config/**",
             ".template.config-single/**",
-            "src-single/**",
-            "aspire-single/**",
-            "AditiKraft.Krafter.Single.slnx",
+            "src/UI/AditiKraft.Krafter.UI.Web/**",
+            "aspire/AditiKraft.Krafter.Aspire.AppHost/**",
+            "AditiKraft.Krafter.slnx",
             "AditiKraft.Krafter.Templates.csproj",
             "pack-and-install.cmd"
           ]
         }
-      ]
+      ],
+      "rename": {
+        "src-single/": "src/",
+        "aspire-single/": "aspire/",
+        "AditiKraft.Krafter.Single.slnx": "AditiKraft.Krafter.slnx"
+      }
     }
   ],
   "postActions": [

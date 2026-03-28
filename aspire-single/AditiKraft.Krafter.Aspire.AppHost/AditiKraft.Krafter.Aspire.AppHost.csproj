@@ -1,0 +1,22 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>4d01f363-c990-4a2f-8c3f-63f87ad35616</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Garnet" Version="13.2.0" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Single-host: only references the combined UI.Web project -->
+    <ProjectReference Include="..\..\src\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj" />
+  </ItemGroup>
+
+</Project>

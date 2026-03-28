@@ -411,7 +411,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📦 .NET Template
 
-You can use Krafter as a template to quickly scaffold new projects with a single command.
+Krafter ships as a template package with **two hosting variants** you choose at project creation time.
 
 ### Install the Template from NuGet
 
@@ -419,15 +419,44 @@ You can use Krafter as a template to quickly scaffold new projects with a single
 dotnet new install AditiKraft.Krafter.Templates
 ```
 
+### Template Variants
+
+| Template | Short Name | Description |
+|----------|-----------|-------------|
+| **Split Host** | `krafter` | Separate Backend API and Blazor UI hosts (two processes). Best for independent scaling, team separation, or microservice evolution. |
+| **Single Host** | `krafter-single` | Combined API + Blazor UI in one process. Simpler deployment, lower latency, single Aspire resource. |
+
 ### Create a New Project
 
+**Split Host** (separate API + UI):
 ```bash
 dotnet new krafter -n MyCompanyApp
 cd MyCompanyApp
 dotnet run --project aspire/MyCompanyApp.Aspire.AppHost/MyCompanyApp.Aspire.AppHost.csproj
 ```
 
+**Single Host** (combined):
+```bash
+dotnet new krafter-single -n MyCompanyApp
+cd MyCompanyApp
+dotnet run --project aspire/MyCompanyApp.Aspire.AppHost/MyCompanyApp.Aspire.AppHost.csproj
+```
+
 > **Important:** Always use the `-n` parameter to specify your project name. This replaces "Krafter" with "MyCompanyApp" throughout the entire codebase (namespaces, project files, folder names, etc.).
+
+### When to Choose Each Variant
+
+**Choose Split Host (`krafter`) when:**
+- You want to scale API and UI independently
+- Different teams own backend vs frontend
+- You plan to add additional API consumers (mobile, CLI)
+- You prefer explicit service boundaries
+
+**Choose Single Host (`krafter-single`) when:**
+- You want the simplest possible deployment
+- Lower latency for server-side rendering
+- Single container or App Service deployment
+- Smaller teams managing the full stack
 
 ### Update the Template
 
