@@ -18,10 +18,9 @@ public partial class NavigationItem()
         Example?.Expanded = Expanded;
     }
 
-    private string GetUrl()
+    private string? GetUrl()
     {
-        //  return Example.Path == null ? Example.Path : $"{Example.Path}{new Uri(navigationManager.Uri).Query}";
-        return Example.Path;
+        return string.IsNullOrEmpty(Example.Path) ? null : Example.Path;
     }
 }
 
