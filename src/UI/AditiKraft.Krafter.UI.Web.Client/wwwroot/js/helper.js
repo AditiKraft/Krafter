@@ -1,8 +1,8 @@
-﻿window.isMobile = function () {
+window.isMobile = function () {
     return window.innerWidth <= 768;
 };
 window.addEventListener('resize', function () {
-    DotNet.invokeMethodAsync('Krafter.UI.Web.Client', 'UpdateIsMobileDevice', window.isMobile());
+    DotNet.invokeMethodAsync('AditiKraft.Krafter.UI.Web.Client', 'UpdateIsMobileDevice', window.isMobile());
 });
 
 window.deleteElementById = function (id) {
