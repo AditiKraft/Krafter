@@ -23,7 +23,7 @@
   <text x="155" y="120" class="subtitle" text-anchor="middle">Blazor WASM</text>
   <text x="80" y="140" class="text">- Feature-based UI</text>
   <text x="80" y="155" class="text">- Radzen Components</text>
-  <text x="80" y="170" class="text">- Kiota API Client</text>
+  <text x="80" y="170" class="text">- Refit API Client</text>
   <text x="80" y="185" class="text">- Permission-based</text>
   <text x="80" y="200" class="text">- SignalR Hub</text>
   
@@ -68,7 +68,7 @@
   
   <rect x="200" y="540" width="110" height="90" rx="5" class="box"/>
   <text x="255" y="560" class="subtitle" text-anchor="middle">Cache/Jobs</text>
-  <text x="210" y="580" class="text">- Redis Cache</text>
+  <text x="210" y="580" class="text">- PG Cache</text>
   <text x="210" y="595" class="text">- TickerQ Jobs</text>
   <text x="210" y="610" class="text">- LocalStorage</text>
   

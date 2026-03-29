@@ -85,7 +85,7 @@
   <text x="710" y="155" class="text">- Infrastructure</text>
   <text x="710" y="170" class="text">- Common Components</text>
   <text x="710" y="185" class="text">- Models</text>
-  <text x="710" y="200" class="text">- Kiota API Client</text>
+  <text x="710" y="200" class="text">- Refit API Client</text>
   <text x="710" y="215" class="text">- SignalR Integration</text>
   <text x="710" y="230" class="text">- Radzen Components</text>
   <text x="710" y="245" class="text">- Permission System</text>
