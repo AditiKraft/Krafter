@@ -8,6 +8,7 @@ using System.Text;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Backend.Web.Configuration;
 using AditiKraft.Krafter.Backend.Web.Middleware;
+using AditiKraft.Krafter.Backend.Infrastructure.Realtime;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Context.Auth;
@@ -144,7 +145,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
                 StringValues accessToken = context.Request.Query["access_token"];
 
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    context.HttpContext.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/RealtimeHub"))
+                    context.HttpContext.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{nameof(RealtimeHub)}"))
                 {
                     // Read the token out of the query string
                     context.Token = accessToken;

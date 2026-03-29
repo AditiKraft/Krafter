@@ -33,7 +33,7 @@ builder.Services.AddOptions<JwtSettings>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlazorJwtBearerOptions>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, null!);
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ => { });
 
 string? apiUrl = builder.Configuration.GetValue<string>("services:krafter-api:https:0");
 if (string.IsNullOrWhiteSpace(apiUrl))

@@ -15,7 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Single-host: only references the combined UI.Web project -->
+    <!-- In generated single-host output, src-single/ is overlaid into src/, so this path is correct.
+         In the template repo this points at the split-host UI.Web; use generated output to test single-host. -->
     <ProjectReference Include="..\..\src\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj" />
   </ItemGroup>
 

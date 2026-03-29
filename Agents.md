@@ -171,10 +171,12 @@ All **14 sub-level Agents.md files** (inside `src/`) are mode-agnostic and ship 
 
 ## 7. Development Commands
 ```bash
-# Split-host (run via Aspire)
+# Split-host (run via Aspire — starts Backend + UI + infrastructure)
 dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 
-# Single-host (run via Aspire)
+# Single-host (run via Aspire — starts combined app + infrastructure)
+# NOTE: In the template repo, aspire-single/ uses a conditional reference to src-single/UI.Web.
+# In generated output from `dotnet new krafter-single`, aspire/ points to the overlaid src/UI.Web.
 dotnet run --project aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 
 # Build split-host
