@@ -99,7 +99,7 @@
             </RadzenStack>
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
-                <TopRight ShowProfileCard="true"></TopRight>
+                <TopRight ShowProfileCard="true" OnNavigating="@(() => _configSidebarExpanded = false)"></TopRight>
             </RadzenStack>
 
 
