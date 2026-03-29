@@ -11,12 +11,14 @@ public partial class TopRight(
 
     [Parameter] public bool ShowProfileCard { get; set; }
 
+    [Parameter] public EventCallback OnNavigating { get; set; }
+
     private async Task SplitButtonClick(RadzenSplitButtonItem? item)
     {
         if (item is { Value: "Logout" })
         {
             await authenticationService.LogoutAsync("SplitButtonClick 20");
-            NavigateToLogin();
+            await NavigateToLogin();
         }
         else if (item is { Value: "ChangePassword" })
         {
@@ -30,7 +32,11 @@ public partial class TopRight(
         }
     }
 
-    private void NavigateToLogin() => navigationManager.NavigateTo("/login");
+    private async Task NavigateToLogin()
+    {
+        await OnNavigating.InvokeAsync();
+        navigationManager.NavigateTo("/login");
+    }
 }
 
 

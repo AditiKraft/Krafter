@@ -46,6 +46,16 @@ main {
     }
 }
 
+::deep .header-desktop-only {
+    display: inline;
+}
+
+@media (max-width: 768px) {
+    .header-desktop-only {
+        display: none !important;
+    }
+}
+
 @media (min-width: 641px) {
     .page {
         flex-direction: row;

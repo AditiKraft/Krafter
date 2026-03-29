@@ -1,35 +1,29 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Components.Brand
 @using AditiKraft.Krafter.UI.Web.Client.Common.Models
 @inherits LayoutComponentBase
-<RadzenLayout Style="grid-template-columns: auto 1fr auto; grid-template-areas: 'rz-header rz-header rz-header' 'rz-sidebar rz-body rz-config-sidebar'">
+<RadzenLayout Style="grid-template-columns: auto 1fr auto; grid-template-rows: auto 1fr auto; grid-template-areas: 'rz-header rz-header rz-header' 'rz-sidebar rz-body rz-config-sidebar' 'rz-footer rz-footer rz-footer'">
     <RadzenHeader>
-        <RadzenRow>
+        <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Left">
                     <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)"/>
-                    @if (IsMobileDevice == false)
-                    {
+                    <span class="header-desktop-only">
                         <Logo Orientation="LogoOrientation.Horizontal" Size="LogoSize.ExtraSmall"/>
-                    }
+                    </span>
                 </RadzenStack>
             </RadzenColumn>
-            <RadzenColumn Style="margin-top:10px">
-                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Center">
+            <RadzenColumn>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Center">
                     <RadzenLabel>
                         <strong> @LocalAppSate.CurrentPageTitle</strong>
                     </RadzenLabel>
-                    @if (IsMobileDevice == true)
-                    {
-                        <Logo Orientation="LogoOrientation.Horizontal" Size="LogoSize.ExtraSmall"/>
-                    }
                 </RadzenStack>
             </RadzenColumn>
-            <RadzenColumn Style="margin-top:10px">
+            <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Right">
-                    @if (IsMobileDevice == false)
-                    {
+                    <span class="header-desktop-only">
                         <TopRight></TopRight>
-                    }
+                    </span>
                     <Notifications></Notifications>
                     <RadzenSidebarToggle Icon="settings" Click="@(() => _configSidebarExpanded = !_configSidebarExpanded)" class="rz-m-0"/>
                 </RadzenStack>
@@ -95,7 +89,7 @@
             </Authorized>
         </AuthorizeView>
     </RadzenSidebar>
-    <RadzenSidebar Responsive="false" @bind-Expanded="@_configSidebarExpanded" class="rz-sidebar-second" Style="--rz-sidebar-width: 370px; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);">
+    <RadzenSidebar Responsive="false" @bind-Expanded="@_configSidebarExpanded" class="rz-sidebar-second" Style="@($"--rz-sidebar-width: {(IsMobileDevice ? "100vw" : "370px")}; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);")">
         <RadzenStack class="rz-p-4" Gap="0">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Demos Configuration</RadzenText>
@@ -103,7 +97,7 @@
             </RadzenStack>
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
-                <TopRight ShowProfileCard="true"></TopRight>
+                <TopRight ShowProfileCard="true" OnNavigating="@(() => _configSidebarExpanded = false)"></TopRight>
             </RadzenStack>
 
 
@@ -141,13 +135,11 @@
         </RadzenStack>
     </RadzenSidebar>
 
-    @*  <RadzenFooter>
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="0px" AlignItems="AlignItems.Center">
-            <RadzenLabel Text="@(AppInfo?.Data??"--")" />
-            <RadzenLabel Text="@($"Aditi Kraft© {DateTime.Now.Year}")"></RadzenLabel>
-            <RadzenLabel Text="@($"UI version {BuildInfo.Build}, built on {BuildInfo.DateTimeUtc}, running on {RuntimeInformation.FrameworkDescription}")"></RadzenLabel>
+    <RadzenFooter>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" class="rz-px-4">
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">Aditi Kraft© @DateTime.Now.Year</RadzenText>
         </RadzenStack>
-    </RadzenFooter> *@
+    </RadzenFooter>
 
 </RadzenLayout>
 
