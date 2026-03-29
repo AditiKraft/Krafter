@@ -131,7 +131,7 @@ public sealed class ExternalAuth
                 {
                     IsActive = true,
                     FirstName = userInfo.GivenName,
-                    LastName = userInfo.Email,
+                    LastName = userInfo.FamilyName,
                     Email = userInfo.Email,
                     EmailConfirmed = userInfo.VerifiedEmail,
                     PhoneNumber = userInfo.Email,
