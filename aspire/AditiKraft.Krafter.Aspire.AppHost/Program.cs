@@ -15,13 +15,6 @@ string migratorProject = Path.Combine(solutionRoot, "src", "AditiKraft.Krafter.B
 
 IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
 
-IResourceBuilder<GarnetResource> cache = builder.AddGarnet("cache")
-        .WithDataVolume(isReadOnly: false)
-        .WithPersistence(
-            TimeSpan.FromMinutes(5),
-            100)
-        .WithArgs("--lua", "true")
-    ;
 IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
         "krafter-migrator",
         "dotnet",
@@ -41,7 +34,7 @@ IResourceBuilder<ProjectResource> backend = builder.AddProject<Projects.AditiKra
 builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-ui-web")
     .WithExternalHttpEndpoints()
     .WithReference(backend)
-    .WithReference(cache)
+    .WithReference(database)
     ;
 
 

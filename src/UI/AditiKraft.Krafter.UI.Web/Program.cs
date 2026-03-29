@@ -20,8 +20,14 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddHttpContextAccessor();
-builder.AddRedisDistributedCache("cache");
-builder.AddRedisOutputCache("cache");
+builder.Services.AddDistributedPostgresCache(options =>
+{
+    options.ConnectionString = builder.Configuration.GetConnectionString("krafterDb")
+                               ?? throw new InvalidOperationException("Connection string 'krafterDb' not found");
+    options.SchemaName = "public";
+    options.TableName = "cache";
+    options.CreateIfNotExists = true;
+});
 builder.Services.AddHybridCache();
 builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
@@ -55,7 +61,6 @@ builder.Services.AddScoped<TenantIdentifier>();
 // Server uses apiUrl for both AditiKraft.Krafter.Backend and BFF since it manages cookies directly
 builder.Services.AddKrafterRefitClients();
 WebApplication app = builder.Build();
-app.UseOutputCache();
 
 app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
@@ -84,8 +89,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(
         typeof(AditiKraft.Krafter.UI.Web.Client._Imports).Assembly);
-app.MapGet("/cached", () => "Hello world!")
-    .CacheOutput();
+
 MapAuthTokenEndpoints(app);
 
 app.Run();

@@ -38,8 +38,14 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpContextAccessor();
 
 // ── Cache ──────────────────────────────────────────────────────────────────────
-builder.AddRedisDistributedCache("cache");
-builder.AddRedisOutputCache("cache");
+builder.Services.AddDistributedPostgresCache(options =>
+{
+    options.ConnectionString = builder.Configuration.GetConnectionString("krafterDb")
+                               ?? throw new InvalidOperationException("Connection string 'krafterDb' not found");
+    options.SchemaName = "public";
+    options.TableName = "cache";
+    options.CreateIfNotExists = true;
+});
 builder.Services.AddHybridCache();
 
 // ── Single-host JWT event overrides ────────────────────────────────────────────
@@ -79,7 +85,6 @@ app.UseResponseCompression();
 app.MapDefaultEndpoints();
 app.UseSwaggerConfiguration();
 app.UseHttpsRedirection();
-app.UseOutputCache();
 
 if (app.Environment.IsDevelopment())
 {
@@ -111,10 +116,7 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(
         typeof(AditiKraft.Krafter.UI.Web.Client._Imports).Assembly);
 
-app.MapGet("/cached", () => "Hello world!")
-    .CacheOutput();
-
-// BFF-only endpoints (cookie/token management for prerendered components)
+// BFF-only endpoints(cookie/token management for prerendered components)
 // Login, refresh, and external auth are handled by backend routes (MapDiscoveredRoutes).
 // Only cookie-specific endpoints (get current token, logout) need BFF mapping.
 MapBffOnlyEndpoints(app);

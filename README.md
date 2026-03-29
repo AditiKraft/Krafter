@@ -112,7 +112,7 @@ Alternatively, log in with Google to create a new account.
 ### ⚡ **Performance & Scalability**
 - **Background Jobs** - TickerQ for async processing
 - **SignalR** - Real-time bi-directional communication
-- **Redis Cache** - Distributed caching support
+- **PostgreSQL Cache** - Distributed caching support
 - **Pagination** - Efficient data loading
 - **Debouncing** - Optimized search and filtering
 
@@ -151,8 +151,7 @@ Alternatively, log in with Google to create a new account.
 ### Infrastructure
 - **.NET Aspire** - Cloud-native orchestration
 - **OpenTelemetry** - Observability
-- **Redis** - Caching (optional)
-- **PostgreSQL / MySQL** - Database
+- **PostgreSQL / MySQL** - Database + distributed caching
 - **Docker** - Containerization
 - **NUKE** - Build automation
 

@@ -12,15 +12,6 @@ IResourceBuilder<PostgresServerResource> databaseServer = builder.AddPostgres("p
 
 IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
 
-// Cache
-IResourceBuilder<GarnetResource> cache = builder.AddGarnet("cache")
-        .WithDataVolume(isReadOnly: false)
-        .WithPersistence(
-            TimeSpan.FromMinutes(5),
-            100)
-        .WithArgs("--lua", "true")
-    ;
-
 // Migrator
 string solutionRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".."));
 string migratorProject = Path.Combine(solutionRoot, "src", "AditiKraft.Krafter.Backend.Migrator",
@@ -42,7 +33,6 @@ IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
 IResourceBuilder<ProjectResource> app = builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-app")
     .WithExternalHttpEndpoints()
     .WithReference(database)
-    .WithReference(cache)
     .WaitForCompletion(migrator);
 
 // In single-host mode, RemoteHostUrl points to self (API is in-process).

@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Garnet" Version="13.2.0" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
   </ItemGroup>
 
