@@ -36,6 +36,7 @@
             "src-single/**",
             "aspire-single/**",
             "AditiKraft.Krafter.Single.slnx",
+            "AditiKraft.Krafter.Dev.slnx",
             "AditiKraft.Krafter.Templates.csproj",
             "pack-and-install.cmd",
             "Agents.md",

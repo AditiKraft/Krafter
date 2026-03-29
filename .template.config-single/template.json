@@ -37,6 +37,7 @@
             ".template.config/**",
             ".template.config-single/**",
             "AditiKraft.Krafter.Templates.csproj",
+            "AditiKraft.Krafter.Dev.slnx",
             "pack-and-install.cmd",
             "Agents.md",
             "Agents.split.md",

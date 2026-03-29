@@ -270,8 +270,8 @@ For detailed feature-by-feature instructions, naming conventions, and backend/UI
 ### Key Commands
 
 ```bash
-# Build solution
-dotnet build AditiKraft.Krafter.slnx
+# Build all projects (template development)
+dotnet build AditiKraft.Krafter.Dev.slnx
 
 # Run tests
 dotnet test
@@ -336,8 +336,9 @@ AditiKraft.Krafter/                         # Template repo root
 ├── Agents.md                               # Template developer instructions
 ├── Agents.split.md                         # Renamed to Agents.md in split-host output
 ├── Agents.single.md                        # Renamed to Agents.md in single-host output
-├── AditiKraft.Krafter.slnx                 # Split-host solution
-├── AditiKraft.Krafter.Single.slnx          # Single-host solution
+├── AditiKraft.Krafter.Dev.slnx             # All projects (template development)
+├── AditiKraft.Krafter.slnx                 # Split-host solution (template output)
+├── AditiKraft.Krafter.Single.slnx          # Single-host solution (template output)
 ├── AditiKraft.Krafter.Templates.csproj     # NuGet template packaging
 └── pack-and-install.cmd                    # Local pack + install helper
 ```
