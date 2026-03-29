@@ -39,6 +39,29 @@ public sealed class UpdateTenant
                 return Response.BadRequest("Unable to find tenant, please try again later or contact support.");
             }
 
+            if (tenant.Id == KrafterInitialConstants.RootTenant.Id)
+            {
+                if (request.Identifier != tenant.Identifier)
+                {
+                    return Response.Forbidden("Root tenant identifier cannot be modified.");
+                }
+
+                if (request.AdminEmail != tenant.AdminEmail)
+                {
+                    return Response.Forbidden("Root tenant admin email cannot be modified.");
+                }
+
+                if (request.IsActive.HasValue && request.IsActive.Value != tenant.IsActive)
+                {
+                    return Response.Forbidden("Root tenant cannot be deactivated.");
+                }
+
+                if (request.ValidUpto.HasValue && request.ValidUpto.Value != tenant.ValidUpto)
+                {
+                    return Response.Forbidden("Root tenant validity date cannot be modified.");
+                }
+            }
+
             if (request.Name != tenant.Name)
             {
                 tenant.Name = request.Name;
