@@ -1,7 +1,7 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Components.Brand
 @using AditiKraft.Krafter.UI.Web.Client.Common.Models
 @inherits LayoutComponentBase
-<RadzenLayout Style="grid-template-columns: auto 1fr auto; grid-template-areas: 'rz-header rz-header rz-header' 'rz-sidebar rz-body rz-config-sidebar'">
+<RadzenLayout Style="grid-template-columns: auto 1fr auto; grid-template-rows: auto 1fr auto; grid-template-areas: 'rz-header rz-header rz-header' 'rz-sidebar rz-body rz-config-sidebar' 'rz-footer rz-footer rz-footer'">
     <RadzenHeader>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn>
@@ -135,13 +135,11 @@
         </RadzenStack>
     </RadzenSidebar>
 
-    @*  <RadzenFooter>
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" Gap="0px" AlignItems="AlignItems.Center">
-            <RadzenLabel Text="@(AppInfo?.Data??"--")" />
-            <RadzenLabel Text="@($"Aditi Kraft© {DateTime.Now.Year}")"></RadzenLabel>
-            <RadzenLabel Text="@($"UI version {BuildInfo.Build}, built on {BuildInfo.DateTimeUtc}, running on {RuntimeInformation.FrameworkDescription}")"></RadzenLabel>
+    <RadzenFooter>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" class="rz-px-4">
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">Aditi Kraft© @DateTime.Now.Year</RadzenText>
         </RadzenStack>
-    </RadzenFooter> *@
+    </RadzenFooter>
 
 </RadzenLayout>
 
