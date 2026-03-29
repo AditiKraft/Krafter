@@ -10,6 +10,80 @@
 [![Blazor](https://img.shields.io/badge/Blazor-WebAssembly-512BD4?logo=blazor)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+## ⚡ TL;DR — Create Your App in 30 Seconds
+
+```bash
+# 1. Install the template (one-time)
+dotnet new install AditiKraft.Krafter.Templates
+
+# 2. Create your project (choose one)
+dotnet new krafter -n MyApp            # Split Host (separate API + UI)
+dotnet new krafter-single -n MyApp     # Single Host (combined)
+
+# 3. Run it
+cd MyApp
+dotnet run --project aspire/MyApp.Aspire.AppHost/MyApp.Aspire.AppHost.csproj
+```
+
+> **📦 This is a .NET project template.** The primary way to use Krafter is `dotnet new`, not cloning this repo.
+> Cloning is only needed if you want to [contribute to the template itself](#-contributing--template-development).
+
+## 📋 Table of Contents
+
+- [Quick Start](#-tldr--create-your-app-in-30-seconds)
+- [Template Variants](#-template-variants)
+- [Demo](#-demo)
+- [Overview](#-overview)
+- [Architecture](#-architecture)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [First Run](#first-run)
+  - [Database Migrations Workflow](#database-migrations-workflow)
+  - [Configuration Notes](#configuration-notes)
+  - [Troubleshooting](#troubleshooting)
+- [Project Structure](#-project-structure)
+- [Development Guide](#-development-guide)
+- [Deployment](#-deployment)
+- [Contributing & Template Development](#-contributing--template-development)
+- [License](#-license)
+
+## 📦 Template Variants
+
+Krafter ships as a `dotnet new` template pack with **two hosting models**:
+
+| Template | Command | Description |
+|----------|---------|-------------|
+| **Split Host** | `dotnet new krafter -n MyApp` | Separate Backend API + Blazor UI (two processes). Best for independent scaling, team separation, or microservice evolution. |
+| **Single Host** | `dotnet new krafter-single -n MyApp` | Combined API + Blazor UI in one process. Simpler deployment, lower latency, single Aspire resource. |
+
+> Always use `-n` to set your project name — it replaces namespaces, folders, and project files throughout the entire codebase.
+
+<details>
+<summary><strong>When to choose which?</strong></summary>
+
+**Choose Split Host (`krafter`) when:**
+- You want to scale API and UI independently
+- Different teams own backend vs frontend
+- You plan to add additional API consumers (mobile, CLI)
+- You prefer explicit service boundaries
+
+**Choose Single Host (`krafter-single`) when:**
+- You want the simplest possible deployment
+- Lower latency for server-side rendering
+- Single container or App Service deployment
+- Smaller teams managing the full stack
+</details>
+
+### Manage the Template
+
+```bash
+dotnet new install AditiKraft.Krafter.Templates   # Install
+dotnet new update                                  # Update to latest
+dotnet new uninstall AditiKraft.Krafter.Templates  # Uninstall
+```
+
 ## 🚀 Demo
 
 Try the live demo at [https://krafter.getkrafter.dev/](https://krafter.getkrafter.dev/)
@@ -19,41 +93,6 @@ Try the live demo at [https://krafter.getkrafter.dev/](https://krafter.getkrafte
 - Password: `123Pa$$word!`
 
 Alternatively, log in with Google to create a new account.
-
-## ⚡ TL;DR Quick Start
-
-**First local run:**
-
-1) Run Aspire orchestration
-- `dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj`
-
-2) Wait for startup to finish
-- `krafter-migrator` applies checked-in migrations before `krafter-api` starts
-
-3) Open URLs
-- Aspire Dashboard: https://localhost:17285
-- Backend API: https://localhost:5199
-- Scalar API Reference: https://localhost:5199/scalar/v1
-- Blazor UI: https://localhost:7291
-
-## 📋 Table of Contents
-
-- [TL;DR Quick Start](#tldr-quick-start)
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Key Features](#key-features)
-- [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Quick Start](#quick-start)
-  - [Database Migrations Workflow](#database-migrations-workflow)
-  - [Configuration Notes](#configuration-notes)
-  - [Troubleshooting](#troubleshooting)
-- [Project Structure](#project-structure)
-- [Development Guide](#development-guide)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## 🎯 Overview
 
@@ -157,41 +196,39 @@ Alternatively, log in with Google to create a new account.
 
 ## 🚀 Getting Started
 
+> These instructions apply to a **generated project** (created via `dotnet new krafter` or `dotnet new krafter-single`).
+> If you want to work on the template itself, see [Contributing & Template Development](#-contributing--template-development).
+
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (for Aspire/PostgreSQL)
 - [Visual Studio 2022 17.11+](https://visualstudio.microsoft.com/) or [VS Code](https://code.visualstudio.com/)
 
-### Quick Start
+### First Run
 
-1. Clone the repository
+1. Create your project (if you haven't already)
    ```bash
-   git clone https://github.com/AditiKraft/Krafter.git
-   cd Krafter
+   dotnet new krafter -n MyApp
+   cd MyApp
    ```
 
-2. Restore packages
+2. Run AppHost
    ```bash
-   dotnet restore
+   dotnet run --project aspire/MyApp.Aspire.AppHost/MyApp.Aspire.AppHost.csproj
    ```
 
-3. Run AppHost
-   ```bash
-   dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
-   ```
-
-4. Wait for `krafter-migrator` to finish
-   - AppHost starts the short-lived migrator before `krafter-api`
+3. Wait for `myapp-migrator` to finish
+   - AppHost starts the short-lived migrator before the API starts
    - No manual `dotnet ef database update` step is required for normal startup
 
-5. Access the application
-   - Aspire Dashboard: https://localhost:17285
-   - Backend API: https://localhost:5199
-   - Scalar API Reference: https://localhost:5199/scalar/v1
-   - Blazor UI: https://localhost:7291
+4. Access the application
+   - **Aspire Dashboard**: https://localhost:17285
+   - **Backend API** (split host only): https://localhost:5199
+   - **Scalar API Reference** (split host only): https://localhost:5199/scalar/v1
+   - **Blazor UI**: https://localhost:7291
 
-6. Default Credentials
+5. Default Credentials
 
    On first run, the application seeds a default admin account:
    - Email: `admin@getkrafter.dev`
@@ -367,9 +404,44 @@ The project includes automated CI/CD pipelines that:
 
 See [.github/workflows](.github/workflows) for configuration.
 
-## 🤝 Contributing
+## 🤝 Contributing & Template Development
 
-Contributions are welcome! Please follow these guidelines:
+> **Cloning this repo is only needed for contributing to the template itself.**
+> To build an app, use `dotnet new krafter` or `dotnet new krafter-single` instead.
+
+### Clone the Template Repo
+
+```bash
+git clone https://github.com/AditiKraft/Krafter.git
+cd Krafter
+dotnet restore
+```
+
+### Run the Template Locally (Development)
+
+```bash
+# Split-host solution (default)
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
+
+# Single-host solution
+dotnet run --project aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
+```
+
+### Test Template Output Locally
+
+```bash
+# Pack the template
+dotnet pack AditiKraft.Krafter.Templates.csproj -o ./nupkg
+
+# Install from local pack
+dotnet new install ./nupkg/AditiKraft.Krafter.Templates.*.nupkg
+
+# Create a test project
+dotnet new krafter -n TestApp -o ../TestApp
+dotnet new krafter-single -n TestSingle -o ../TestSingle
+```
+
+### Contribution Guidelines
 
 1. **Fork** the repository
 2. Create a **feature branch** (`git checkout -b feature/amazing-feature`)
@@ -405,71 +477,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Documentation**: [Agents.md](Agents.md) (AI instructions and project structure)
 - **Issues**: [GitHub Issues](https://github.com/AditiKraft/Krafter/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/AditiKraft/Krafter/discussions)
-
----
-
-## 📦 .NET Template
-
-Krafter ships as a template package with **two hosting variants** you choose at project creation time.
-
-### Install the Template from NuGet
-
-```bash
-dotnet new install AditiKraft.Krafter.Templates
-```
-
-### Template Variants
-
-| Template | Short Name | Description |
-|----------|-----------|-------------|
-| **Split Host** | `krafter` | Separate Backend API and Blazor UI hosts (two processes). Best for independent scaling, team separation, or microservice evolution. |
-| **Single Host** | `krafter-single` | Combined API + Blazor UI in one process. Simpler deployment, lower latency, single Aspire resource. |
-
-### Create a New Project
-
-**Split Host** (separate API + UI):
-```bash
-dotnet new krafter -n MyCompanyApp
-cd MyCompanyApp
-dotnet run --project aspire/MyCompanyApp.Aspire.AppHost/MyCompanyApp.Aspire.AppHost.csproj
-```
-
-**Single Host** (combined):
-```bash
-dotnet new krafter-single -n MyCompanyApp
-cd MyCompanyApp
-dotnet run --project aspire/MyCompanyApp.Aspire.AppHost/MyCompanyApp.Aspire.AppHost.csproj
-```
-
-> **Important:** Always use the `-n` parameter to specify your project name. This replaces "Krafter" with "MyCompanyApp" throughout the entire codebase (namespaces, project files, folder names, etc.).
-
-### When to Choose Each Variant
-
-**Choose Split Host (`krafter`) when:**
-- You want to scale API and UI independently
-- Different teams own backend vs frontend
-- You plan to add additional API consumers (mobile, CLI)
-- You prefer explicit service boundaries
-
-**Choose Single Host (`krafter-single`) when:**
-- You want the simplest possible deployment
-- Lower latency for server-side rendering
-- Single container or App Service deployment
-- Smaller teams managing the full stack
-
-### Update the Template
-
-```bash
-dotnet new update
-```
-
-### Uninstall the Template
-
-```bash
-dotnet new uninstall AditiKraft.Krafter.Templates
-```
-
----
 
 ---
 
