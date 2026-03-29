@@ -8,14 +8,14 @@ Krafter is a .NET 10 full-stack application with combined Backend API and Blazor
 - **UI**: Hybrid Blazor (WebAssembly + Server) + Radzen Components — hosts the combined app
 - **Infrastructure**: .NET Aspire, OpenTelemetry, PostgreSQL/MySQL
 
-> **Single-Host Mode**: Backend and UI run in ONE process. The UI.Web project references the Backend project and serves as the primary entry point. Backend retains its own `Program.cs` for standalone use, but Aspire orchestrates a single combined app resource via UI.Web.
+> **Single-Host Mode**: Backend and UI run in ONE process. The UI.Web project references the Backend project and is the only executable entry point. Aspire orchestrates a single combined app resource.
 
 ## 1.1 Hosting Architecture
 
 This project uses a **single-host topology** — everything runs in ONE process.
 
 - **UI.Web is the ONLY entry point** — it hosts both the Blazor UI and all Backend API endpoints
-- **Backend is a class library** that exposes features and infrastructure via `HostingExtensions`. It still ships with its own `Program.cs` (usable for standalone testing), but in normal single-host operation **UI.Web is the primary entry point**.
+- **Backend is a class library** that exposes features and infrastructure via `HostingExtensions`. It has no `Program.cs` in single-host mode — **UI.Web is the only entry point**.
 - **UI.Web's `Program.cs`** wires up the backend by calling:
   - `builder.AddBackendServices()` — registers all backend DI services (persistence, auth, jobs, etc.)
   - `app.UseBackendMiddleware()` — adds backend middleware (error handling, auth, etc.)
@@ -103,7 +103,7 @@ AditiKraft.Krafter/
 │       └── AditiKraft.Krafter.UI.Web/         # Combined host (API + Blazor)
 ```
 
-> **Key difference from split-host**: `UI.Web` is the primary entry point, hosting both the Blazor UI and all backend API endpoints in a single process. Backend still ships with its own `Program.cs` (for standalone use or testing), but in normal operation everything runs through `UI.Web`.
+> **Key difference from split-host**: Backend has no `Program.cs` — it is a class library. `UI.Web` is the only entry point, hosting both the Blazor UI and all backend API endpoints in a single process.
 
 ## 4. Global Coding Conventions
 | Rule | Requirement |

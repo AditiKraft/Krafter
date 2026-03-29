@@ -40,6 +40,7 @@
             "pack-and-install.cmd",
             "Agents.md",
             "Agents.split.md",
+            "src/AditiKraft.Krafter.Backend/Program.cs",
             "src/UI/AditiKraft.Krafter.UI.Web/Program.cs",
             "src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj",
             "src/UI/AditiKraft.Krafter.UI.Web/appsettings.json",
