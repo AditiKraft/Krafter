@@ -7,10 +7,9 @@
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Left">
                     <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)"/>
-                    @if (IsMobileDevice == false)
-                    {
+                    <span class="header-desktop-only">
                         <Logo Orientation="LogoOrientation.Horizontal" Size="LogoSize.ExtraSmall"/>
-                    }
+                    </span>
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn>
@@ -22,10 +21,9 @@
             </RadzenColumn>
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Right">
-                    @if (IsMobileDevice == false)
-                    {
+                    <span class="header-desktop-only">
                         <TopRight></TopRight>
-                    }
+                    </span>
                     <Notifications></Notifications>
                     <RadzenSidebarToggle Icon="settings" Click="@(() => _configSidebarExpanded = !_configSidebarExpanded)" class="rz-m-0"/>
                 </RadzenStack>
