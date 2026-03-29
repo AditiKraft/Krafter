@@ -9,8 +9,9 @@
     "Vertical Slice Architecture"
   ],
   "identity": "AditiKraft.Krafter.FullStack.Template",
-  "name": "AditiKraft Krafter Full-Stack Application",
+  "name": "AditiKraft Krafter Full-Stack Application (Split Host)",
   "shortName": "krafter",
+  "description": "A full-stack .NET 10 template with separate Backend API and Blazor UI hosts. Uses ASP.NET Core Minimal APIs (VSA), Blazor Hybrid, .NET Aspire, and PostgreSQL.",
   "tags": {
     "language": "C#",
     "type": "solution"
@@ -31,11 +32,21 @@
             "**/.DS_Store",
             ".nuke/temp/**",
             ".template.config/**",
+            ".template.config-single/**",
+            "src-single/**",
+            "aspire-single/**",
+            "AditiKraft.Krafter.Single.slnx",
+            "AditiKraft.Krafter.Dev.slnx",
             "AditiKraft.Krafter.Templates.csproj",
-            "pack-and-install.cmd"
+            "pack-and-install.cmd",
+            "Agents.md",
+            "Agents.single.md"
           ]
         }
-      ]
+      ],
+      "rename": {
+        "Agents.split.md": "Agents.md"
+      }
     }
   ],
   "postActions": [

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+using AditiKraft.Krafter.Contracts.Common;
 using FluentValidation.Results;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.Data.SqlClient;
@@ -18,6 +19,14 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
         }
         catch (Exception exception)
         {
+            // For non-API requests (Blazor pages, static files), re-throw so the standard
+            // ASP.NET Core error handling (UseExceptionHandler("/Error")) shows a proper error page
+            // instead of raw JSON.
+            if (!context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}"))
+            {
+                throw;
+            }
+
             logger.LogError(exception, exception.Message);
             var res = new Response { IsError = true };
             string email = currentUser.GetUserEmail() is string userEmail ? userEmail : "Anonymous";

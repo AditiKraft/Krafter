@@ -2,5 +2,24 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout
 @layout MainLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>Page Not Found</PageTitle>
+
+<div style="display: flex; align-items: center; justify-content: center; min-height: 60vh; padding: 2rem;">
+    <div style="text-align: center; max-width: 500px;">
+        <RadzenIcon Icon="search_off" Style="font-size: 5rem; color: var(--rz-text-disabled-color);" />
+        <RadzenText TextStyle="TextStyle.DisplayH4" TagName="TagName.H1" class="rz-mt-4">
+            Page Not Found
+        </RadzenText>
+        <RadzenText TextStyle="TextStyle.Body1" class="rz-mt-2" Style="color: var(--rz-text-secondary-color);">
+            Sorry, the page you are looking for does not exist or has been moved.
+        </RadzenText>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-mt-6">
+            <RadzenButton Text="Go Home" Icon="home" ButtonStyle="ButtonStyle.Primary"
+                          Click="@(() => NavigationManager.NavigateTo("/"))" />
+        </RadzenStack>
+    </div>
+</div>
+
+@code {
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+}

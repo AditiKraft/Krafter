@@ -16,13 +16,13 @@ public class RefitAuthHandler(
     // Public endpoints that must NOT trigger a refresh or require an auth token
     private static readonly string[] PublicPaths =
     [
-        $"/{KrafterRoute.Tokens}",
-        $"/{KrafterRoute.ExternalAuth}",
-        $"/{KrafterRoute.AppInfo}",
-        $"/{KrafterRoute.Tokens}/{RouteSegment.Refresh}",
-        $"/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}",
-        $"/{KrafterRoute.Tokens}/{RouteSegment.Logout}",
-        $"/{KrafterRoute.Tenants}/{RouteSegment.SeedData}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.AppInfo}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Refresh}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}",
+        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tenants}/{RouteSegment.SeedData}",
         "/login"
     ];
 

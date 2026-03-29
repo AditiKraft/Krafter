@@ -15,14 +15,7 @@ public class ServerAuthApiService(
     {
         try
         {
-            Response<TokenResponse> tokenResponse = await authApi.CreateTokenAsync(request, cancellation);
-
-            if (tokenResponse.Data != null && !tokenResponse.IsError)
-            {
-                await localStorage.CacheAuthTokens(tokenResponse.Data);
-            }
-
-            return tokenResponse;
+            return await authApi.CreateTokenAsync(request, cancellation);
         }
         catch (ApiException ex)
         {
@@ -51,14 +44,7 @@ public class ServerAuthApiService(
     {
         try
         {
-            Response<TokenResponse> tokenResponse = await authApi.RefreshTokenAsync(request, cancellation);
-
-            if (tokenResponse.Data != null && !tokenResponse.IsError)
-            {
-                await localStorage.CacheAuthTokens(tokenResponse.Data);
-            }
-
-            return tokenResponse;
+            return await authApi.RefreshTokenAsync(request, cancellation);
         }
         catch (ApiException ex)
         {
@@ -88,14 +74,7 @@ public class ServerAuthApiService(
         try
         {
             var googleRequest = new GoogleAuthRequest { Code = request.Code ?? string.Empty };
-            Response<TokenResponse> tokenResponse = await authApi.GoogleAuthAsync(googleRequest, cancellation);
-
-            if (tokenResponse.Data != null && !tokenResponse.IsError)
-            {
-                await localStorage.CacheAuthTokens(tokenResponse.Data);
-            }
-
-            return tokenResponse;
+            return await authApi.GoogleAuthAsync(googleRequest, cancellation);
         }
         catch (ApiException ex)
         {

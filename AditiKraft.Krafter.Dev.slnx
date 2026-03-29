@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/aspire/">
+    <Project Path="aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj" />
+    <Project Path="aspire/AditiKraft.Krafter.Aspire.ServiceDefaults/AditiKraft.Krafter.Aspire.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/aspire-single/">
+    <Project Path="aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Backend/">
+    <Project Path="src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj" />
+    <Project Path="src/AditiKraft.Krafter.Backend.Migrator/AditiKraft.Krafter.Backend.Migrator.csproj" />
+  </Folder>
+  <Folder Name="/src/Krafter.Shared/">
+    <Project Path="src/AditiKraft.Krafter.Contracts/AditiKraft.Krafter.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/UI/">
+    <Project Path="src/UI/AditiKraft.Krafter.UI.Web.Client/AditiKraft.Krafter.UI.Web.Client.csproj" />
+    <Project Path="src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj" />
+  </Folder>
+  <Folder Name="/src-single/UI/">
+    <Project Path="src-single/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj" />
+  </Folder>
+  <Project Path="build/_build.csproj" />
+</Solution>

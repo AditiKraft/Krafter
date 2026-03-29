@@ -1,7 +1,5 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.2.0">
 
-
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -16,7 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AditiKraft.Krafter.Backend\AditiKraft.Krafter.Backend.csproj" />
+    <!-- In generated single-host output, src-single/ is overlaid into src/, so this path is correct.
+         In the template repo this points at the split-host UI.Web; use generated output to test single-host. -->
     <ProjectReference Include="..\..\src\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj" />
   </ItemGroup>
 

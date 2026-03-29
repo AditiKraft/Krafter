@@ -1,5 +1,6 @@
 IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
-// The postgres username and password are provided via parameters (marked secret)
+
+// Database
 IResourceBuilder<ParameterResource> username = builder.AddParameter("postgresUsername", true);
 IResourceBuilder<ParameterResource> password = builder.AddParameter("postgresPassword", true);
 
@@ -9,11 +10,12 @@ IResourceBuilder<PostgresServerResource> databaseServer = builder.AddPostgres("p
     .WithContainerName("KrafterPostgres")
     .WithPgAdmin();
 
+IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
+
+// Migrator
 string solutionRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".."));
 string migratorProject = Path.Combine(solutionRoot, "src", "AditiKraft.Krafter.Backend.Migrator",
     "AditiKraft.Krafter.Backend.Migrator.csproj");
-
-IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
 
 IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
         "krafter-migrator",
@@ -27,15 +29,14 @@ IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
     .WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName)
     .WaitFor(database);
 
-IResourceBuilder<ProjectResource> backend = builder.AddProject<Projects.AditiKraft_Krafter_Backend>("krafter-api")
+// Single combined host (API + Blazor UI in one process)
+IResourceBuilder<ProjectResource> app = builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-app")
+    .WithExternalHttpEndpoints()
     .WithReference(database)
     .WaitForCompletion(migrator);
 
-builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-ui-web")
-    .WithExternalHttpEndpoints()
-    .WithReference(backend)
-    .WithReference(database)
-    ;
-
+// In single-host mode, RemoteHostUrl points to self (API is in-process).
+// Inject the app's own HTTPS endpoint so Refit calls loop back correctly.
+app.WithEnvironment("RemoteHostUrl", app.GetEndpoint("https"));
 
 builder.Build().Run();

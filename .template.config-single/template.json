@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Aditi Kraft",
+  "classifications": [
+    "Web",
+    "ASP.NET",
+    "Blazor",
+    "Full-Stack",
+    "Vertical Slice Architecture",
+    "Single Host"
+  ],
+  "identity": "AditiKraft.Krafter.FullStack.Single.Template",
+  "name": "AditiKraft Krafter Full-Stack Application (Single Host)",
+  "shortName": "krafter-single",
+  "description": "A full-stack .NET 10 template with a combined API + Blazor UI host in a single process. Uses ASP.NET Core Minimal APIs (VSA), Blazor Hybrid, .NET Aspire, and PostgreSQL.",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "AditiKraft.Krafter",
+  "preferNameDirectory": true,
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "modifiers": [
+        {
+          "exclude": [
+            ".git/**",
+            ".vs/**",
+            ".idea/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/*.user",
+            "**/.DS_Store",
+            ".nuke/temp/**",
+            ".template.config/**",
+            ".template.config-single/**",
+            "AditiKraft.Krafter.Templates.csproj",
+            "AditiKraft.Krafter.Dev.slnx",
+            "pack-and-install.cmd",
+            "Agents.md",
+            "Agents.split.md",
+            "src/AditiKraft.Krafter.Backend/Program.cs",
+            "src/UI/AditiKraft.Krafter.UI.Web/Program.cs",
+            "src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj",
+            "src/UI/AditiKraft.Krafter.UI.Web/appsettings.json",
+            "src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json",
+            "src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json",
+            "src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.Development.json",
+            "aspire/AditiKraft.Krafter.Aspire.AppHost/Program.cs",
+            "aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj",
+            "AditiKraft.Krafter.slnx",
+            "src-single/**",
+            "aspire-single/**"
+          ]
+        }
+      ],
+      "rename": {
+        "AditiKraft.Krafter.Single.slnx": "AditiKraft.Krafter.slnx",
+        "Agents.single.md": "Agents.md"
+      }
+    },
+    {
+      "source": "src-single/UI/AditiKraft.Krafter.UI.Web/",
+      "target": "src/UI/AditiKraft.Krafter.UI.Web/",
+      "modifiers": [
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/",
+      "target": "src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/",
+      "modifiers": [
+        {
+          "include": [
+            "appsettings.json",
+            "appsettings.Development.json"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "aspire-single/AditiKraft.Krafter.Aspire.AppHost/",
+      "target": "aspire/AditiKraft.Krafter.Aspire.AppHost/",
+      "modifiers": [
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "description": "Restore NuGet packages",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

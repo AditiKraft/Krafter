@@ -12,13 +12,29 @@ internal class PermissionRequirement(string permission) : IAuthorizationRequirem
     public string Permission { get; private set; } = permission;
 }
 
-internal class PermissionAuthorizationHandler(IUserService userService) : AuthorizationHandler<PermissionRequirement>
+internal class PermissionAuthorizationHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<PermissionRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        if (context.User?.GetUserId() is { } userId &&
-            (await userService.HasPermissionAsync(userId, requirement.Permission)).Data)
+        string? userId = context.User?.GetUserId();
+        if (userId is null)
+        {
+            return;
+        }
+
+        // Fast path: check permission claims enriched by BlazorJwtBearerEvents.TokenValidated (SSR)
+        if (context.User!.HasClaim(KrafterClaims.Permission, requirement.Permission))
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
+        // Slow path: query DB in a new scope to avoid DbContext concurrency issues
+        // during Blazor SSR where multiple AuthorizeView components trigger concurrent checks
+        await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+        IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        if ((await userService.HasPermissionAsync(userId, requirement.Permission)).Data)
         {
             context.Succeed(requirement);
         }
