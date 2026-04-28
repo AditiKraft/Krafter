@@ -41,7 +41,7 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlaz
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ => { });
 
-string? apiUrl = builder.Configuration.GetValue<string>("services:krafter-api:https:0");
+string? apiUrl = builder.Configuration.GetValue<string>("services:api:https:0");
 if (string.IsNullOrWhiteSpace(apiUrl))
 {
     throw new Exception("API URL not found");
