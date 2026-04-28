@@ -99,14 +99,12 @@ public class ApplicationDbContext(
             // Configure primary keys for custom user login and token classes
             entity
                 .HasKey(l => new { l.LoginProvider, l.ProviderKey });
-            entity.ToTable("KrafterUserLogins", b => b.IsTemporal());
         });
 
         modelBuilder.Entity<ApplicationUserToken>(entity =>
         {
             entity
                 .HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
-            entity.ToTable("KrafterUserTokens", b => b.IsTemporal());
         });
 
         modelBuilder.ApplyCommonConfigureAcrossEntity();

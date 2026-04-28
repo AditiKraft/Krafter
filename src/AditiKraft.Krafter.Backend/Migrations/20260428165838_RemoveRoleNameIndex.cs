@@ -12,7 +12,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
         {
             migrationBuilder.DropIndex(
                 "RoleNameIndex",
-                "BrightLightRole");
+                "ApplicationRole");
 
         }
 
@@ -21,7 +21,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
         {
             migrationBuilder.CreateIndex(
                 "RoleNameIndex",
-                "BrightLightRole",
+                "ApplicationRole",
                 "NormalizedName",
                 unique: true,
                 filter: "[NormalizedName] IS NOT NULL");
