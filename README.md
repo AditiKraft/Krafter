@@ -71,7 +71,7 @@ dotnet new uninstall AditiKraft.Krafter.Templates  # Uninstall
 Try the live demo at [https://krafter.getkrafter.dev/](https://krafter.getkrafter.dev/)
 
 **Default Credentials:**
-- Email: `admin@getkrafter.dev`
+- Email: `admin@example.com`
 - Password: `123Pa$$word!`
 
 Alternatively, log in with Google to create a new account.
@@ -150,7 +150,7 @@ The diagrams below reflect the template structure and are useful before you gene
    - **Blazor UI**: https://localhost:7291
 
 5. Sign in with the seeded admin account
-   - Email: `admin@getkrafter.dev`
+   - Email: `admin@example.com`
    - Password: `123Pa$$word!`
 
    Alternatively, log in with Google, which will create a new account.
