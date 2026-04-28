@@ -49,13 +49,13 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
 
         if (TenantSettings.TenancyMode == TenancyMode.Single)
         {
-            tenantIdentifier = KrafterTenantConstants.Identifier;
+            tenantIdentifier = DefaultTenantConstants.Identifier;
             clientBaseAddress = navigationManagerBaseUri;
             backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
         }
         else if (isRunningLocally)
         {
-            tenantIdentifier = KrafterTenantConstants.Identifier;
+            tenantIdentifier = DefaultTenantConstants.Identifier;
             clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
             backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
         }

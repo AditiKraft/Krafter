@@ -4,7 +4,7 @@ using Blazored.LocalStorage;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 
-public class KrafterLocalStorageService(ILocalStorageService localStorageService) : IKrafterLocalStorageService
+public class AuthStorageService(ILocalStorageService localStorageService) : IAuthStorageService
 {
     public async Task ClearCacheAsync()
     {

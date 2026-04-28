@@ -37,7 +37,7 @@ public class PersistingServerAuthenticationStateProvider : ServerAuthenticationS
             string? firstName = principal.GetFirstName();
             string? lastName = principal.GetSurname();
             List<string> roles = principal.GetRoles();
-            var permissions = principal.FindAll(KrafterClaims.Permission).Select(c => c.Value).ToList();
+            var permissions = principal.FindAll(AppClaimTypes.Permission).Select(c => c.Value).ToList();
 
             _state.PersistAsJson(nameof(UserInfo),
                 new UserInfo

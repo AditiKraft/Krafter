@@ -10,7 +10,7 @@ public static class RegisterUIServices
     {
         service.AddRadzenCookieThemeService(options =>
         {
-            options.Name = "KrafterTheme"; // The name of the cookie
+            options.Name = "AppTheme"; // The name of the cookie
             options.Duration = TimeSpan.FromDays(365); // The duration of the cookie
         });
 

@@ -1,9 +1,9 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Models
 @using AditiKraft.Krafter.UI.Web.Client.Common.Permissions
 @attribute [Route(RoutePath)]
-@attribute [MustHavePermission(KrafterAction.View, KrafterResource.Roles)]
+@attribute [MustHavePermission(PermissionAction.View, PermissionResource.Roles)]
 
-<AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Create, KrafterResource.Roles))">
+<AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Create, PermissionResource.Roles))">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10px" JustifyContent="JustifyContent.End" class="mt-2 mb-4">
         <RadzenButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Icon="add_circle_outline" Text="Role" Click="@AddRole"/>
     </RadzenStack>
@@ -34,14 +34,14 @@
                     <ChildContent>
 
 
-                        @if (KrafterRoleConstant.IsDefault(data.Name!) == false)
+                        @if (RoleConstants.IsDefault(data.Name!) == false)
                         {
-                            <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Update, KrafterResource.Roles))">
-                                <RadzenSplitButtonItem Text="Edit" Value="@KrafterAction.Update" Icon="edit"/>
+                            <AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Update, PermissionResource.Roles))">
+                                <RadzenSplitButtonItem Text="Edit" Value="@PermissionAction.Update" Icon="edit"/>
                             </AuthorizeView>
 
-                            <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Delete, KrafterResource.Roles))">
-                                <RadzenSplitButtonItem Text="Delete" Value="@KrafterAction.Delete" Icon="delete"/>
+                            <AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Delete, PermissionResource.Roles))">
+                                <RadzenSplitButtonItem Text="Delete" Value="@PermissionAction.Delete" Icon="delete"/>
                             </AuthorizeView>
                         }
 

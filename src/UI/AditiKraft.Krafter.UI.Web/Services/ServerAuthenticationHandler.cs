@@ -4,7 +4,7 @@ using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 namespace AditiKraft.Krafter.UI.Web.Services;
 
 public class ServerAuthenticationHandler(
-    IKrafterLocalStorageService localStorage,
+    IAuthStorageService localStorage,
     ILogger<ServerAuthenticationHandler> logger)
     : DelegatingHandler
 {

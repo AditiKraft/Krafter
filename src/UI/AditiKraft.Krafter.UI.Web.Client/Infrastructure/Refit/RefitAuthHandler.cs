@@ -9,20 +9,20 @@ using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public class RefitAuthHandler(
-    IKrafterLocalStorageService localStorage,
+    IAuthStorageService localStorage,
     IAuthenticationService authenticationService,
     ILogger<RefitAuthHandler> logger) : DelegatingHandler
 {
     // Public endpoints that must NOT trigger a refresh or require an auth token
     private static readonly string[] PublicPaths =
     [
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.AppInfo}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Refresh}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tenants}/{RouteSegment.SeedData}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.AppInfo}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tenants}/{RouteSegment.SeedData}",
         "/login"
     ];
 

@@ -10,7 +10,7 @@ namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 public class AuthenticationService(
     IAuthApiService apiService,
     LayoutService layoutService,
-    IKrafterLocalStorageService localStorage,
+    IAuthStorageService localStorage,
     NavigationManager navigationManager,
     IHttpContextAccessor httpContextAccessor,
     IFormFactor formFactor,

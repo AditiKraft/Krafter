@@ -13,12 +13,12 @@ public class SignalRService : IAsyncDisposable
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly IAuthenticationService _authenticationService;
     private readonly IFormFactor _formatProvider;
-    private readonly IKrafterLocalStorageService _localStorageService;
+    private readonly IAuthStorageService _localStorageService;
     private HubConnection? _hubConnection;
 
     public event Action<string, string>? MessageReceived;
 
-    public SignalRService(IAuthenticationService authenticationService, IKrafterLocalStorageService localStorageService,
+    public SignalRService(IAuthenticationService authenticationService, IAuthStorageService localStorageService,
         IFormFactor formatProvider, AuthenticationStateProvider authenticationStateProvider)
     {
         _authenticationStateProvider = authenticationStateProvider;
@@ -41,7 +41,7 @@ public class SignalRService : IAsyncDisposable
         if (isAuthenticated)
         {
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(TenantInfo.HostUrl + $"/{KrafterRoute.ApiPrefix}/RealtimeHub", options =>
+                .WithUrl(TenantInfo.HostUrl + $"/{ApiRoutes.ApiPrefix}/RealtimeHub", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

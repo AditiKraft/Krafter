@@ -7,10 +7,10 @@ public static class RegisterPermissionClaimsClass
 {
     public static void RegisterPermissionClaims(AuthorizationOptions options)
     {
-        foreach (KrafterPermission permission in KrafterPermissions.All)
+        foreach (PermissionDefinition permission in PermissionCatalog.All)
         {
             options.AddPolicy(permission.Name,
-                policy => policy.RequireClaim(KrafterClaims.Permission, permission.Name));
+                policy => policy.RequireClaim(AppClaimTypes.Permission, permission.Name));
         }
     }
 }

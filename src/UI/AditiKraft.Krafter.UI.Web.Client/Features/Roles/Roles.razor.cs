@@ -9,7 +9,7 @@ public partial class Roles(
     IRolesApi rolesApi,
     DialogService dialogService) : ComponentBase, IDisposable
 {
-    public const string RoutePath = KrafterRoute.Roles;
+    public const string RoutePath = ApiRoutes.Roles;
     private RadzenDataGrid<RoleDto> grid = default!;
     private bool IsLoading = true;
 
@@ -99,15 +99,15 @@ public partial class Roles(
 
     private async Task ActionClicked(RadzenSplitButtonItem? item, RoleDto data)
     {
-        if (item is { Value: KrafterAction.Update })
+        if (item is { Value: PermissionAction.Update })
         {
             await UpdateRole(data);
         }
-        else if (item is { Value: KrafterAction.Create })
+        else if (item is { Value: PermissionAction.Create })
         {
             await AddRole();
         }
-        else if (item is { Value: KrafterAction.Delete })
+        else if (item is { Value: PermissionAction.Delete })
         {
             await DeleteRole(data);
         }

@@ -17,7 +17,7 @@ public partial class MainLayout(
     ThemeService themeService,
     TooltipService tooltipService,
     ThemeManager themeManager,
-    IKrafterLocalStorageService krafterLocalStorageService
+    IAuthStorageService authStorageService
 ) : IDisposable
 {
     [CascadingParameter] public bool IsMobileDevice { get; set; }
@@ -47,7 +47,7 @@ public partial class MainLayout(
     protected override async Task OnInitializedAsync()
     {
         AppInfo = await api.CallAsync(() => appInfoApi.GetAppInfoAsync(), showErrorNotification: false);
-        cachedPermissionsAsync = await krafterLocalStorageService.GetCachedPermissionsAsync();
+        cachedPermissionsAsync = await authStorageService.GetCachedPermissionsAsync();
         if (cachedPermissionsAsync is null)
         {
             cachedPermissionsAsync = new List<string>();
@@ -57,7 +57,7 @@ public partial class MainLayout(
         layoutService.HeadingChanged += HeadingChanged;
         authenticationService.LoginChange += async name =>
         {
-            cachedPermissionsAsync = await krafterLocalStorageService.GetCachedPermissionsAsync();
+            cachedPermissionsAsync = await authStorageService.GetCachedPermissionsAsync();
             if (cachedPermissionsAsync is null)
             {
                 cachedPermissionsAsync = new List<string>();
