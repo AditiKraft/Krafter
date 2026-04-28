@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace AditiKraft.Krafter.Backend.Migrations
+namespace AditiKraft.Krafter.Backend.Migrations.TenantDb
 {
     /// <inheritdoc />
-    public partial class FirstK : Migration
+    public partial class FirstMigTenant : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,7 +16,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    Identifier = table.Column<string>(type: "text", nullable: true),
+                    Identifier = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: true),
                     AdminEmail = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
@@ -35,7 +35,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
             migrationBuilder.InsertData(
                 table: "Tenant",
                 columns: new[] { "Id", "AdminEmail", "CreatedById", "CreatedOn", "DeleteReason", "Identifier", "IsActive", "IsDeleted", "Name", "TablesToCopy", "ValidUpto" },
-                values: new object[] { "root", "admin@getkrafter.dev", null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "krafter", true, false, "krafter", null, new DateTime(9999, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999) });
+                values: new object[] { "root", "admin@example.com", null, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "root", true, false, "Default", null, new DateTime(9999, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999) });
         }
 
         /// <inheritdoc />

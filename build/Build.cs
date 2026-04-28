@@ -24,10 +24,10 @@ internal class Build : NukeBuild
     private AbsolutePath BuildInfoPath =>
         SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "GetAppInfo.cs";
 
-    private AbsolutePath KrafterAPIPath =>
+    private AbsolutePath BackendProjectPath =>
         SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
 
-    private AbsolutePath KrafterUIPath =>
+    private AbsolutePath UiProjectPath =>
         SourceDirectory / "UI" / "AditiKraft.Krafter.UI.Web" / "AditiKraft.Krafter.UI.Web.csproj";
 
     private AbsolutePath TemplateProjectPath => RootDirectory / "AditiKraft.Krafter.Templates.csproj";
@@ -81,12 +81,12 @@ internal class Build : NukeBuild
         .Executes(() =>
         {
             DotNetTasks.DotNetBuild(s => s
-                .SetProjectFile(KrafterAPIPath)
+                .SetProjectFile(BackendProjectPath)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore());
 
             DotNetTasks.DotNetBuild(s => s
-                .SetProjectFile(KrafterUIPath)
+                .SetProjectFile(UiProjectPath)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore());
         });
@@ -114,13 +114,13 @@ internal class Build : NukeBuild
             if (BranchName == "main" || BranchName == "dev")
             {
                 DotNetTasks.DotNetPublish(s => s
-                    .SetProject(KrafterAPIPath)
+                    .SetProject(BackendProjectPath)
                     .SetConfiguration(Configuration)
                     .SetProperty("PublishProfile", "DefaultContainer")
                     .SetProperty("ContainerImageTag", DockerTag));
 
                 DotNetTasks.DotNetPublish(s => s
-                    .SetProject(KrafterUIPath)
+                    .SetProject(UiProjectPath)
                     .SetConfiguration(Configuration)
                     .SetProperty("PublishProfile", "DefaultContainer")
                     .SetProperty("ContainerImageTag", DockerTag));

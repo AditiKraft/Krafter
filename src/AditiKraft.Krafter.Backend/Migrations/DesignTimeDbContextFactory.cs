@@ -14,7 +14,7 @@ internal static class DesignTimeConnectionStringHelper
             .AddJsonFile("appsettings.Local.json", false, false)
             .AddEnvironmentVariables()
             .Build();
-        string? connectionString = configuration.GetConnectionString("KrafterDbMigration");
+        string? connectionString = configuration.GetConnectionString("AppDbMigration");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
@@ -37,15 +37,15 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TenantDbCo
     }
 }
 
-public class DesignTimeKrafterContextDbContextFactory : IDesignTimeDbContextFactory<KrafterContext>
+public class DesignTimeKrafterContextDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {
-    public KrafterContext CreateDbContext(string[] args)
+    public ApplicationDbContext CreateDbContext(string[] args)
     {
         string connectionString = DesignTimeConnectionStringHelper.GetConnectionString();
-        var optionsBuilder = new DbContextOptionsBuilder<KrafterContext>();
+        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure());
 
-        return new KrafterContext(optionsBuilder.Options, null!, null!);
+        return new ApplicationDbContext(optionsBuilder.Options, null!, null!);
     }
 }
 

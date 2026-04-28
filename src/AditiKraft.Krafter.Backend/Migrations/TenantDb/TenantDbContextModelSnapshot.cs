@@ -3,20 +3,17 @@ using System;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AditiKraft.Krafter.Backend.Migrations
+namespace AditiKraft.Krafter.Backend.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20260307090214_MakeTenantIdentifierRequired")]
-    partial class MakeTenantIdentifierRequired
+    partial class TenantDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,12 +67,12 @@ namespace AditiKraft.Krafter.Backend.Migrations
                         new
                         {
                             Id = "root",
-                            AdminEmail = "admin@getkrafter.dev",
+                            AdminEmail = "admin@example.com",
                             CreatedOn = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Identifier = "krafter",
+                            Identifier = "root",
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "krafter",
+                            Name = "Default",
                             ValidUpto = new DateTime(9999, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999)
                         });
                 });

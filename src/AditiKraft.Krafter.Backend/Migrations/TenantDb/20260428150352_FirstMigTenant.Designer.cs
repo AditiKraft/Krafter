@@ -9,23 +9,23 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AditiKraft.Krafter.Backend.Migrations
+namespace AditiKraft.Krafter.Backend.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20251004201851_FirstK")]
-    partial class FirstK
+    [Migration("20260428150352_FirstMigTenant")]
+    partial class FirstMigTenant
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Tenants.Tenant", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Tenants.Common.Tenant", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -44,6 +44,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Identifier")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
@@ -69,12 +70,12 @@ namespace AditiKraft.Krafter.Backend.Migrations
                         new
                         {
                             Id = "root",
-                            AdminEmail = "admin@getkrafter.dev",
+                            AdminEmail = "admin@example.com",
                             CreatedOn = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Identifier = "krafter",
+                            Identifier = "root",
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "krafter",
+                            Name = "Default",
                             ValidUpto = new DateTime(9999, 12, 31, 23, 59, 59, 999, DateTimeKind.Unspecified).AddTicks(9999)
                         });
                 });

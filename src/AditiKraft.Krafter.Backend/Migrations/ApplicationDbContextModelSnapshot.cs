@@ -3,29 +3,26 @@ using System;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace AditiKraft.Krafter.Backend.Migrations.Krafter
+namespace AditiKraft.Krafter.Backend.Migrations
 {
-    [DbContext(typeof(KrafterContext))]
-    [Migration("20251102044223_RemoveRoleNameIndex")]
-    partial class RemoveRoleNameIndex
+    [DbContext(typeof(ApplicationDbContext))]
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Token.UserRefreshToken", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.UserRefreshToken", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("text");
@@ -46,7 +43,7 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.ToTable("UserRefreshTokens");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRole", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -106,12 +103,12 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.HasIndex("NormalizedName", "TenantId")
                         .IsUnique();
 
-                    b.ToTable("KrafterRole", (string)null);
+                    b.ToTable("ApplicationRole", (string)null);
 
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRoleClaim", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRoleClaim", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -164,12 +161,12 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
 
                     b.HasIndex("UpdatedById");
 
-                    b.ToTable("KrafterRoleClaim", (string)null);
+                    b.ToTable("ApplicationRoleClaim", (string)null);
 
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
@@ -281,12 +278,12 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.HasIndex("NormalizedUserName", "TenantId")
                         .IsUnique();
 
-                    b.ToTable("KrafterUser", (string)null);
+                    b.ToTable("ApplicationUser", (string)null);
 
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserClaim", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserClaim", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -339,12 +336,12 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KrafterUserClaim", (string)null);
+                    b.ToTable("ApplicationUserClaim", (string)null);
 
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserLogin", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserLogin", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("text");
@@ -368,7 +365,7 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserRole", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserRole", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("character varying(36)");
@@ -410,12 +407,12 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
 
                     b.HasIndex("UpdatedById");
 
-                    b.ToTable("KrafterUserRole", (string)null);
+                    b.ToTable("ApplicationUserRole", (string)null);
 
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserToken", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserToken", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("character varying(36)");
@@ -436,14 +433,14 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRole", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "CreatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "UpdatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -453,20 +450,20 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRoleClaim", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRoleClaim", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "CreatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRole", null)
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "UpdatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -476,14 +473,14 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "CreatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "UpdatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -493,19 +490,19 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserClaim", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserClaim", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "CreatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "UpdatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", null)
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -516,34 +513,34 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserLogin", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserLogin", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", null)
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserRole", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserRole", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "CreatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRole", "Role")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "UpdatedBy")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", "User")
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -558,21 +555,21 @@ namespace AditiKraft.Krafter.Backend.Migrations.Krafter
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUserToken", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserToken", b =>
                 {
-                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", null)
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles._Shared.KrafterRole", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users._Shared.KrafterUser", b =>
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", b =>
                 {
                     b.Navigation("UserRoles");
                 });
