@@ -34,7 +34,7 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         }
         else
         {
-            navigationManagerBaseUri = "https://krafter.getkrafter.dev";
+            navigationManagerBaseUri = GetRootUiUrl();
         }
 
         var uri = new Uri(navigationManagerBaseUri);
@@ -129,5 +129,18 @@ public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration c
         }
 
         return $"https://{remoteHostUrl.TrimEnd('/')}";
+    }
+
+    private string GetRootUiUrl()
+    {
+        string rootUiUrl = configuration["RootUiUrl"]
+                           ?? throw new InvalidOperationException("RootUiUrl not configured");
+
+        if (!Uri.TryCreate(rootUiUrl, UriKind.Absolute, out Uri? rootUiUri))
+        {
+            throw new InvalidOperationException("RootUiUrl must be an absolute URL");
+        }
+
+        return rootUiUri.AbsoluteUri.TrimEnd('/');
     }
 }
