@@ -7,6 +7,7 @@
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
 - Preserve `ReturnUrl` during login and Google callback.
 - Store Google return URL in `LocalAppSate.GoogleLoginReturnUrl`.
+- Use `RootUiUrl` from configuration for non-local Google callback redirects; do not hard-code production domains.
 
 ## 2. Decision Tree
 - Standard login? Use `AuthenticationService.LoginAsync(TokenRequest)`.
@@ -19,6 +20,18 @@
 ```csharp
 string? clientId = configuration["Authentication:Google:ClientId"];
 string redirectUri = $"{navigationManager.BaseUri}google-callback";
+if (!redirectUri.Contains("localhost"))
+{
+    string rootUiUrl = configuration["RootUiUrl"]
+                       ?? throw new InvalidOperationException("RootUiUrl not configured");
+
+    if (!Uri.TryCreate(rootUiUrl, UriKind.Absolute, out Uri? rootUiUri))
+    {
+        throw new InvalidOperationException("RootUiUrl must be an absolute URL");
+    }
+
+    redirectUri = $"{rootUiUri.AbsoluteUri.TrimEnd('/')}/google-callback";
+}
 string scope = "email profile";
 string responseType = "code";
 string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(returnUrl)}";
@@ -47,11 +60,13 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 ## 4. Checklist
 1. Use `@page "/login"` and `@page "/Account/Login"` routes.
 2. Respect `ReturnUrl` query parameter.
-3. After external login, navigate to the stored return URL or `/`.
+3. Configure `RootUiUrl` in both split-host and single-host UI appsettings.
+4. After external login, navigate to the stored return URL or `/`.
 
 ## 5. Common Mistakes
 - Calling `IAuthApi` directly instead of `IAuthenticationService`.
 - Dropping `ReturnUrl` during Google login round-trip.
+- Hard-coding an external Google callback domain instead of using `RootUiUrl`.
 
 ## 6. Evolution Triggers
 - Auth service or token storage logic changes.
@@ -64,8 +79,8 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Common/AuthenticationService.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Common/AuthenticationService.cs
+Last Updated: 2026-04-28
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Common/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json
 ---
 
 
