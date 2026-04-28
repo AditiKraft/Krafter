@@ -15,20 +15,20 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class GetUserRoles
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
-        RoleManager<KrafterRole> roleManager) : IScopedHandler
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager) : IScopedHandler
     {
         public async Task<Response<List<UserRoleDto>>> GetRolesAsync(
             string userId, CancellationToken cancellationToken)
         {
-            KrafterUser? user = await userManager.FindByIdAsync(userId);
+            ApplicationUser? user = await userManager.FindByIdAsync(userId);
             if (user is null)
             {
                 return new Response<List<UserRoleDto>> { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
             IList<string> userRoleNames = await userManager.GetRolesAsync(user);
-            List<KrafterRole>? roles = await roleManager.Roles
+            List<ApplicationRole>? roles = await roleManager.Roles
                 .Where(c => c.Name != null && userRoleNames.Contains(c.Name))
                 .ToListAsync(cancellationToken);
 
@@ -38,7 +38,7 @@ public sealed class GetUserRoles
             }
 
             var userRoles = new List<UserRoleDto>();
-            foreach (KrafterRole role in roles)
+            foreach (ApplicationRole role in roles)
             {
                 userRoles.Add(new UserRoleDto
                 {
@@ -57,7 +57,7 @@ public sealed class GetUserRoles
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet($"/{RouteSegment.UserRoles}", async (
@@ -70,7 +70,7 @@ public sealed class GetUserRoles
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<List<UserRoleDto>>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.UserRoles);
+                .MustHavePermission(PermissionAction.View, PermissionResource.UserRoles);
         }
     }
 }

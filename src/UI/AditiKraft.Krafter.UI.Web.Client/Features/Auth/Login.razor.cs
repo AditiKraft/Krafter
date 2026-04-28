@@ -101,7 +101,15 @@ public partial class Login(
         string redirectUri = $"{navigationManager.BaseUri}google-callback";
         if (!redirectUri.Contains("localhost"))
         {
-            redirectUri = $"https://krafter.getkrafter.dev/google-callback";
+            string rootUiUrl = configuration["RootUiUrl"]
+                               ?? throw new InvalidOperationException("RootUiUrl not configured");
+
+            if (!Uri.TryCreate(rootUiUrl, UriKind.Absolute, out Uri? rootUiUri))
+            {
+                throw new InvalidOperationException("RootUiUrl must be an absolute URL");
+            }
+
+            redirectUri = $"{rootUiUri.AbsoluteUri.TrimEnd('/')}/google-callback";
         }
 
         string scope = "email profile";

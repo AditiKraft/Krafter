@@ -14,7 +14,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddRadzenComponents();
 builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddScoped<IKrafterLocalStorageService, KrafterLocalStorageService>();
+builder.Services.AddScoped<IAuthStorageService, AuthStorageService>();
 builder.Services.AddScoped<IAuthApiService, ClientAuthApiService>();
 
 builder.Services.AddUIServices();
@@ -27,7 +27,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStatePro
 builder.Services.AddCascadingAuthenticationState();
 
 // URLs are rewritten dynamically by RefitTenantHandler based on tenant
-builder.Services.AddKrafterRefitClients();
+builder.Services.AddApiRefitClients();
 
 await builder.Build().RunAsync();
 

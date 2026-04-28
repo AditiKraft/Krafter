@@ -17,14 +17,14 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 public sealed class GetRoleByIdWithPermissions
 {
     internal sealed class Handler(
-        RoleManager<KrafterRole> roleManager,
-        KrafterContext db) : IScopedHandler
+        RoleManager<ApplicationRole> roleManager,
+        ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response<RoleDto>> GetByIdWithPermissionsAsync(
             string roleId,
             CancellationToken cancellationToken)
         {
-            KrafterRole? role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == roleId, cancellationToken);
+            ApplicationRole? role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == roleId, cancellationToken);
 
             if (role is null)
             {
@@ -35,7 +35,7 @@ public sealed class GetRoleByIdWithPermissions
 
             roleDto.Permissions = await db.RoleClaims
                 .Where(c => c.RoleId == roleId &&
-                            c.ClaimType == KrafterClaims.Permission &&
+                            c.ClaimType == AppClaimTypes.Permission &&
                             c.IsDeleted == false)
                 .Select(c => c.ClaimValue!)
                 .ToListAsync(cancellationToken);
@@ -48,7 +48,7 @@ public sealed class GetRoleByIdWithPermissions
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapGet($"/{RouteSegment.RolePermissions}", async (
@@ -60,7 +60,7 @@ public sealed class GetRoleByIdWithPermissions
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<RoleDto>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Roles);
         }
     }
 }

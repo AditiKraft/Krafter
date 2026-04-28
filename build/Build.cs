@@ -24,10 +24,10 @@ internal class Build : NukeBuild
     private AbsolutePath BuildInfoPath =>
         SourceDirectory / "AditiKraft.Krafter.Backend" / "Features" / "AppInfo" / "GetAppInfo.cs";
 
-    private AbsolutePath KrafterAPIPath =>
+    private AbsolutePath BackendProjectPath =>
         SourceDirectory / "AditiKraft.Krafter.Backend" / "AditiKraft.Krafter.Backend.csproj";
 
-    private AbsolutePath KrafterUIPath =>
+    private AbsolutePath UiProjectPath =>
         SourceDirectory / "UI" / "AditiKraft.Krafter.UI.Web" / "AditiKraft.Krafter.UI.Web.csproj";
 
     private AbsolutePath TemplateProjectPath => RootDirectory / "AditiKraft.Krafter.Templates.csproj";
@@ -43,7 +43,7 @@ internal class Build : NukeBuild
     [Parameter("Personal Access Token")] private readonly string PAT;
     [Parameter("NuGet API Key for publishing templates")] private readonly string NuGetPAT;
     [Parameter("Deployment Webhook Url")] private readonly string DeploymentWebhookUrl;
-    [Parameter("Template version (default: 0.0.2)")] private readonly string TemplateVersion = "0.0.8";
+    [Parameter("Template version (default: 0.0.2)")] private readonly string TemplateVersion = "0.0.9";
     private GitHubActions GitHubActions => GitHubActions.Instance;
 
     private Target SetBuildInfo => _ => _
@@ -81,12 +81,12 @@ internal class Build : NukeBuild
         .Executes(() =>
         {
             DotNetTasks.DotNetBuild(s => s
-                .SetProjectFile(KrafterAPIPath)
+                .SetProjectFile(BackendProjectPath)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore());
 
             DotNetTasks.DotNetBuild(s => s
-                .SetProjectFile(KrafterUIPath)
+                .SetProjectFile(UiProjectPath)
                 .SetConfiguration(Configuration)
                 .EnableNoRestore());
         });
@@ -114,13 +114,13 @@ internal class Build : NukeBuild
             if (BranchName == "main" || BranchName == "dev")
             {
                 DotNetTasks.DotNetPublish(s => s
-                    .SetProject(KrafterAPIPath)
+                    .SetProject(BackendProjectPath)
                     .SetConfiguration(Configuration)
                     .SetProperty("PublishProfile", "DefaultContainer")
                     .SetProperty("ContainerImageTag", DockerTag));
 
                 DotNetTasks.DotNetPublish(s => s
-                    .SetProject(KrafterUIPath)
+                    .SetProject(UiProjectPath)
                     .SetConfiguration(Configuration)
                     .SetProperty("PublishProfile", "DefaultContainer")
                     .SetProperty("ContainerImageTag", DockerTag));

@@ -7,10 +7,10 @@ IResourceBuilder<ParameterResource> password = builder.AddParameter("postgresPas
 IResourceBuilder<PostgresServerResource> databaseServer = builder.AddPostgres("postgres", username, password)
     .WithDataVolume(isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithContainerName("KrafterPostgres")
+    .WithContainerName("postgres")
     .WithPgAdmin();
 
-IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
+IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("appDb");
 
 // Migrator
 string solutionRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".."));
@@ -18,7 +18,7 @@ string migratorProject = Path.Combine(solutionRoot, "src", "AditiKraft.Krafter.B
     "AditiKraft.Krafter.Backend.Migrator.csproj");
 
 IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
-        "krafter-migrator",
+        "app-migrator",
         "dotnet",
         solutionRoot,
         "run",

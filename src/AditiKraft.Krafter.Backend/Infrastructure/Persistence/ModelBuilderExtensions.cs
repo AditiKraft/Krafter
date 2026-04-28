@@ -57,12 +57,12 @@ public static class ModelBuilderExtensions
         {
             if (commonEntityType.IsAssignableFrom(entityType.ClrType) && entityType.ClrType != commonEntityType)
             {
-                builder.Entity(entityType.ClrType).HasOne(typeof(KrafterUser), "CreatedBy")
+                builder.Entity(entityType.ClrType).HasOne(typeof(ApplicationUser), "CreatedBy")
                     .WithMany()
                     .HasForeignKey("CreatedById")
                     .OnDelete(DeleteBehavior.Restrict);
 
-                builder.Entity(entityType.ClrType).HasOne(typeof(KrafterUser), "UpdatedBy")
+                builder.Entity(entityType.ClrType).HasOne(typeof(ApplicationUser), "UpdatedBy")
                     .WithMany()
                     .HasForeignKey("UpdatedById")
                     .OnDelete(DeleteBehavior.Restrict);

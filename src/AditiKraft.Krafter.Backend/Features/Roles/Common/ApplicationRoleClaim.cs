@@ -1,12 +1,13 @@
 using AditiKraft.Krafter.Backend.Common.Entities;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
 using Microsoft.AspNetCore.Identity;
 
-namespace AditiKraft.Krafter.Backend.Features.Users.Common;
+namespace AditiKraft.Krafter.Backend.Features.Roles.Common;
 
-public class KrafterUserClaim : IdentityUserClaim<string>, ICommonAuthEntityProperty
+public class ApplicationRoleClaim : IdentityRoleClaim<string>, ICommonAuthEntityProperty
 {
-    public KrafterUser? CreatedBy { get; set; }
-    public KrafterUser? UpdatedBy { get; set; }
+    public ApplicationUser? CreatedBy { get; set; }
+    public ApplicationUser? UpdatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public string? CreatedById { get; set; }
     public DateTime? UpdatedOn { get; set; }

@@ -58,7 +58,7 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 5. Call through `ApiCallService` from UI components, except auth flows that go through `IAuthenticationService` / `IAuthApiService`.
 
 ## 5. Common Mistakes
-- Using `KrafterRoute` or `RouteSegment` constants in Refit routes with parameters.
+- Using `ApiRoutes` or `RouteSegment` constants in Refit routes with parameters.
 - Parameter name mismatch (e.g., `{id}` requires `id`).
 - Adding `RefitAuthHandler` to tenant-resolved APIs that currently do not use auth forwarding (`IAuthApi`, `IAppInfoApi`).
 - Using raw `HttpClient` instead of Refit + `ApiCallService`.
@@ -68,6 +68,6 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 - New API client conventions added (e.g., BFF vs direct).
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs
+Last Updated: 2026-04-28
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

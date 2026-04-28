@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AditiKraft.Krafter.Backend.Features.Users.Common;
 
-public class KrafterUser : IdentityUser<string>, ICommonAuthEntityProperty
+public class ApplicationUser : IdentityUser<string>, ICommonAuthEntityProperty
 {
     public bool IsDeleted { get; set; }
-    public KrafterUser? CreatedBy { get; set; }
-    public KrafterUser? UpdatedBy { get; set; }
+    public ApplicationUser? CreatedBy { get; set; }
+    public ApplicationUser? UpdatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public string? CreatedById { get; set; }
     public DateTime? UpdatedOn { get; set; }
@@ -23,7 +23,7 @@ public class KrafterUser : IdentityUser<string>, ICommonAuthEntityProperty
 
     #region Navigation Properties
 
-    public virtual ICollection<KrafterUserRole> UserRoles { get; set; } = new HashSet<KrafterUserRole>();
+    public virtual ICollection<ApplicationUserRole> UserRoles { get; set; } = new HashSet<ApplicationUserRole>();
 
     #endregion Navigation Properties
 

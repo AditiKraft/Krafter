@@ -16,13 +16,13 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 
 public sealed class GetRoles
 {
-    internal sealed class Handler(KrafterContext db) : IScopedHandler
+    internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response<PaginationResponse<RoleDto>>> GetListAsync(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            ExpressionStarter<KrafterRole>? predicate = PredicateBuilder.New<KrafterRole>(true);
+            ExpressionStarter<ApplicationRole>? predicate = PredicateBuilder.New<ApplicationRole>(true);
 
             if (!string.IsNullOrWhiteSpace(requestInput.Id))
             {
@@ -109,7 +109,7 @@ public sealed class GetRoles
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapGet("/", async (
@@ -122,7 +122,7 @@ public sealed class GetRoles
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<RoleDto>>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Roles);
         }
     }
 }

@@ -6,7 +6,7 @@
 ## 1. Core Principles
 - Use `ApiCallService` for all role API calls.
 - Role list uses `Close(object? result)`; keep this signature if editing the page.
-- Build grouped permissions from `KrafterPermissions.All` in the dialog.
+- Build grouped permissions from `PermissionCatalog.All` in the dialog.
 
 ## 2. Decision Tree
 - List page? Use `Features/Roles/Roles.razor` + `.razor.cs`.
@@ -17,7 +17,7 @@
 
 ### Group Permissions
 ```csharp
-GroupedData = KrafterPermissions.All.GroupBy(c => c.Resource)
+GroupedData = PermissionCatalog.All.GroupBy(c => c.Resource)
     .SelectMany(i => new GroupPermissionData[] { new() { Resource = i.Key } }
         .Concat(i.Select(o => new GroupPermissionData
         {
@@ -25,7 +25,7 @@ GroupedData = KrafterPermissions.All.GroupBy(c => c.Resource)
             Action = o.Action,
             IsBasic = o.IsBasic,
             IsRoot = o.IsRoot,
-            FinalPermission = KrafterPermission.NameFor(o.Action, o.Resource)
+            FinalPermission = PermissionDefinition.NameFor(o.Action, o.Resource)
         }))).ToList();
 ```
 
@@ -38,7 +38,7 @@ CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<s
 ```
 
 ## 4. Checklist
-1. Use `KrafterRoute.Roles` as `RoutePath`.
+1. Use `ApiRoutes.Roles` as `RoutePath`.
 2. Use `ApiCallService` for list and delete.
 3. Keep `Close(object? result)` on the Roles list page.
 4. Use grouped permissions + `GetRolePermissionsAsync` in dialog.
@@ -56,6 +56,6 @@ CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<s
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs
+Last Updated: 2026-04-28
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

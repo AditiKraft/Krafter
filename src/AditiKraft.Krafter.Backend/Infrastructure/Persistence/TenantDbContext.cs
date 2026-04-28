@@ -27,13 +27,13 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options)
             {
                 new()
                 {
-                    Id = KrafterInitialConstants.RootTenant.Id,
-                    Identifier = KrafterInitialConstants.RootTenant.Identifier,
+                    Id = SeedDataConstants.RootTenant.Id,
+                    Identifier = SeedDataConstants.RootTenant.Identifier,
                     IsActive = true,
-                    Name = KrafterInitialConstants.RootTenant.Name,
+                    Name = SeedDataConstants.RootTenant.Name,
                     CreatedOn = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), // ✅ FIXED
                     ValidUpto = DateTime.MaxValue,
-                    AdminEmail = KrafterInitialConstants.RootUser.EmailAddress
+                    AdminEmail = SeedDataConstants.RootUser.EmailAddress
                 }
             });
         });

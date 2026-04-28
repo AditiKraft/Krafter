@@ -16,19 +16,19 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 public sealed class DeleteRole
 {
     internal sealed class Handler(
-        RoleManager<KrafterRole> roleManager,
-        KrafterContext db) : IScopedHandler
+        RoleManager<ApplicationRole> roleManager,
+        ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(string id)
         {
-            KrafterRole? role = await roleManager.FindByIdAsync(id);
+            ApplicationRole? role = await roleManager.FindByIdAsync(id);
 
             if (role is null)
             {
                 return Response.NotFound("Role Not Found");
             }
 
-            if (KrafterRoleConstant.IsDefault(role.Name!))
+            if (RoleConstants.IsDefault(role.Name!))
             {
                 return Response.Forbidden($"Not allowed to delete {role.Name} Role.");
             }
@@ -36,16 +36,16 @@ public sealed class DeleteRole
             role.IsDeleted = true;
             db.Roles.Update(role);
 
-            List<KrafterRoleClaim> krafterRoleClaims = await db.RoleClaims
+            List<ApplicationRoleClaim> krafterRoleClaims = await db.RoleClaims
                 .Where(c => c.RoleId == id &&
-                            c.ClaimType == KrafterClaims.Permission)
+                            c.ClaimType == AppClaimTypes.Permission)
                 .ToListAsync();
-            foreach (KrafterRoleClaim krafterRoleClaim in krafterRoleClaims)
+            foreach (ApplicationRoleClaim krafterRoleClaim in krafterRoleClaims)
             {
                 krafterRoleClaim.IsDeleted = true;
             }
 
-            await db.SaveChangesAsync([nameof(KrafterRole)]);
+            await db.SaveChangesAsync([nameof(ApplicationRole)]);
             return new Response();
         }
     }
@@ -54,7 +54,7 @@ public sealed class DeleteRole
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapDelete($"/{RouteSegment.ById}", async
@@ -65,7 +65,7 @@ public sealed class DeleteRole
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Delete, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.Delete, PermissionResource.Roles);
         }
     }
 }

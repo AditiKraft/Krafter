@@ -17,7 +17,7 @@
 ## Core Rules
 - Use DTOs from `AditiKraft.Krafter.Contracts.Contracts.*`.
 - Use `ApiCallService` for Refit calls made directly from UI components; auth flows go through `IAuthenticationService`.
-- Use `KrafterRoute` from Shared for `RoutePath`.
+- Use `ApiRoutes` from Shared for `RoutePath`.
 - Add `@attribute [MustHavePermission(...)]` to list pages.
 - List pages implement `IDisposable` and unsubscribe `dialogService.OnClose`.
 - Keep `Close(...)` signature consistent with the feature (Users uses `dynamic`, Roles/Tenants use `object?`).
@@ -37,7 +37,7 @@ public partial class Users(
     ApiCallService api,
     IUsersApi usersApi) : ComponentBase, IDisposable
 {
-    public const string RoutePath = KrafterRoute.Users;
+    public const string RoutePath = ApiRoutes.Users;
     private GetRequestInput requestInput = new();
     private Response<PaginationResponse<UserDto>>? response = new() { Data = new PaginationResponse<UserDto>() };
 
@@ -115,8 +115,8 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor
+Last Updated: 2026-04-28
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---
 
 

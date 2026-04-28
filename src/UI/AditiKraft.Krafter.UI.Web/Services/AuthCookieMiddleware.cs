@@ -19,9 +19,9 @@ public class AuthCookieMiddleware(RequestDelegate next)
 {
     private static readonly HashSet<string> AuthPaths = new(StringComparer.OrdinalIgnoreCase)
     {
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Refresh}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}"
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}"
     };
 
     private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new()
@@ -58,8 +58,8 @@ public class AuthCookieMiddleware(RequestDelegate next)
 
                     if (tokenResponse is { Data: not null, IsError: false })
                     {
-                        IKrafterLocalStorageService localStorage =
-                            context.RequestServices.GetRequiredService<IKrafterLocalStorageService>();
+                        IAuthStorageService localStorage =
+                            context.RequestServices.GetRequiredService<IAuthStorageService>();
                         await localStorage.CacheAuthTokens(tokenResponse.Data);
                     }
                 }

@@ -1,6 +1,6 @@
 namespace AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 
-public static class KrafterAction
+public static class PermissionAction
 {
     public const string View = nameof(View);
     public const string Search = nameof(Search);

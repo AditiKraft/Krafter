@@ -21,8 +21,8 @@ namespace AditiKraft.Krafter.Backend.Features.Auth;
 public sealed class RefreshToken
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
-        KrafterContext krafterContext,
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext applicationDbContext,
         ITokenService tokenService,
         IOptions<JwtSettings> jwtSettings
     ) : IScopedHandler
@@ -47,13 +47,13 @@ public sealed class RefreshToken
                 return Response<TokenResponse>.Unauthorized("Invalid token.");
             }
 
-            KrafterUser? user = await userManager.FindByEmailAsync(userEmail);
+            ApplicationUser? user = await userManager.FindByEmailAsync(userEmail);
             if (user is null)
             {
                 return Response<TokenResponse>.Unauthorized("Authentication failed.");
             }
 
-            UserRefreshToken? refreshToken = await krafterContext.UserRefreshTokens
+            UserRefreshToken? refreshToken = await applicationDbContext.UserRefreshTokens
                 .FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
 
             if (refreshToken is null ||
@@ -98,7 +98,7 @@ public sealed class RefreshToken
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
             RouteGroupBuilder tokenGroup = endpointRouteBuilder
-                .MapGroup(KrafterRoute.Tokens)
+                .MapGroup(ApiRoutes.Tokens)
                 .AddFluentValidationFilter();
 
             tokenGroup.MapPost($"/{RouteSegment.Refresh}", async (

@@ -10,7 +10,7 @@ public partial class Users(
     IUsersApi usersApi
 ) : ComponentBase, IDisposable
 {
-    public const string RoutePath = KrafterRoute.Users;
+    public const string RoutePath = ApiRoutes.Users;
     private RadzenDataGrid<UserDto> grid = default!;
     private GetRequestInput requestInput = new();
 
@@ -96,15 +96,15 @@ public partial class Users(
 
     private async Task ActionClicked(RadzenSplitButtonItem? item, UserDto data)
     {
-        if (item is { Value: KrafterAction.Update })
+        if (item is { Value: PermissionAction.Update })
         {
             await UpdateUser(data);
         }
-        else if (item is { Value: KrafterAction.Create })
+        else if (item is { Value: PermissionAction.Create })
         {
             await AddUser();
         }
-        else if (item is { Value: KrafterAction.Delete })
+        else if (item is { Value: PermissionAction.Delete })
         {
             await DeleteUser(data);
         }

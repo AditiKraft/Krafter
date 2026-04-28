@@ -15,14 +15,14 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class GetUserPermissions
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
-        RoleManager<KrafterRole> roleManager,
-        KrafterContext db) : IScopedHandler
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager,
+        ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response<List<string>>> GetPermissionsAsync(string userId,
             CancellationToken cancellationToken)
         {
-            KrafterUser? user = await db.Users.AsNoTracking()
+            ApplicationUser? user = await db.Users.AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
 
             if (user is null)
@@ -33,14 +33,14 @@ public sealed class GetUserPermissions
             IList<string> userRoles = await userManager.GetRolesAsync(user);
             var permissions = new List<string>();
 
-            foreach (KrafterRole role in await roleManager.Roles.AsNoTracking()
+            foreach (ApplicationRole role in await roleManager.Roles.AsNoTracking()
                          .Where(r => userRoles.Contains(r.Name!) && r.IsDeleted == false)
                          .ToListAsync(cancellationToken))
             {
                 permissions.AddRange(await db.RoleClaims.AsNoTracking()
                     .Where(rc =>
                         rc.RoleId == role.Id &&
-                        rc.ClaimType == KrafterClaims.Permission &&
+                        rc.ClaimType == AppClaimTypes.Permission &&
                         rc.IsDeleted == false)
                     .Select(rc => rc.ClaimValue!)
                     .ToListAsync(cancellationToken));
@@ -54,7 +54,7 @@ public sealed class GetUserPermissions
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet($"/{RouteSegment.Permissions}", async (

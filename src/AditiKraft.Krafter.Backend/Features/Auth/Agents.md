@@ -5,7 +5,7 @@
 
 ## 1. Core Principles
 - Use `ITokenService` for all token issuance.
-- Validate credentials with `UserManager<KrafterUser>`.
+- Validate credentials with `UserManager<ApplicationUser>`.
 - Refresh flow validates the stored `UserRefreshToken` and expiry.
 - External login creates a user if missing and assigns the Basic role.
 - Prefer `Response<T>` factory methods for errors.
@@ -32,7 +32,7 @@ if (refreshToken is null ||
 
 ### External Auth: Ensure Basic Role
 ```csharp
-KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
 if (basic is null)
 {
     return Response<TokenResponse>.NotFound("Basic Role Not Found.");
@@ -40,9 +40,9 @@ if (basic is null)
 ```
 
 ## 4. Checklist
-1. Use `KrafterRoute.Tokens` for token endpoints.
+1. Use `ApiRoutes.Tokens` for token endpoints.
 2. Use `RouteSegment.Refresh` for refresh.
-3. Use `KrafterRoute.ExternalAuth` + `RouteSegment.Google` for Google login.
+3. Use `ApiRoutes.ExternalAuth` + `RouteSegment.Google` for Google login.
 4. Pull IP from `X-Forwarded-For` when available.
 
 ## 5. Common Mistakes
@@ -63,8 +63,8 @@ if (basic is null)
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs
+Last Updated: 2026-04-28
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
 ---
 
 

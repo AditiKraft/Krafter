@@ -19,14 +19,14 @@ public class CommonEntityProperty : ICommonEntityProperty
     public string? DeleteReason { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime CreatedOn { get; set; }
-    public KrafterUser? CreatedBy { get; set; }
+    public ApplicationUser? CreatedBy { get; set; }
 #pragma warning disable CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
     public string CreatedById { get; set; } = null!;
 #pragma warning restore CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
 
     public DateTime? UpdatedOn { get; set; }
 
-    public KrafterUser? UpdatedBy { get; set; }
+    public ApplicationUser? UpdatedBy { get; set; }
 
     public string? UpdatedById { get; set; }
     public string TenantId { get; set; } = null!;
@@ -43,8 +43,8 @@ public interface ICommonAuthEntityProperty : ITenant, ISoftDelete, IHistory
 
 public interface IHistory
 {
-    public KrafterUser? CreatedBy { get; set; }
-    public KrafterUser? UpdatedBy { get; set; }
+    public ApplicationUser? CreatedBy { get; set; }
+    public ApplicationUser? UpdatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public string? CreatedById { get; set; }
     public DateTime? UpdatedOn { get; set; }

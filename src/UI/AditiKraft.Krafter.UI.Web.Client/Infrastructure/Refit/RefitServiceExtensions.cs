@@ -8,7 +8,7 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 public static class RefitServiceExtensions
 {
-    public static IServiceCollection AddKrafterRefitClients(this IServiceCollection services)
+    public static IServiceCollection AddApiRefitClients(this IServiceCollection services)
     {
         // Register auth handler
         services.AddTransient<RefitAuthHandler>();

@@ -6,17 +6,17 @@ IResourceBuilder<ParameterResource> password = builder.AddParameter("postgresPas
 IResourceBuilder<PostgresServerResource> databaseServer = builder.AddPostgres("postgres", username, password)
     .WithDataVolume(isReadOnly: false)
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithContainerName("KrafterPostgres")
+    .WithContainerName("postgres")
     .WithPgAdmin();
 
 string solutionRoot = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", ".."));
 string migratorProject = Path.Combine(solutionRoot, "src", "AditiKraft.Krafter.Backend.Migrator",
     "AditiKraft.Krafter.Backend.Migrator.csproj");
 
-IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("krafterDb");
+IResourceBuilder<PostgresDatabaseResource> database = databaseServer.AddDatabase("appDb");
 
 IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
-        "krafter-migrator",
+        "app-migrator",
         "dotnet",
         solutionRoot,
         "run",
@@ -27,11 +27,11 @@ IResourceBuilder<ExecutableResource> migrator = builder.AddExecutable(
     .WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName)
     .WaitFor(database);
 
-IResourceBuilder<ProjectResource> backend = builder.AddProject<Projects.AditiKraft_Krafter_Backend>("krafter-api")
+IResourceBuilder<ProjectResource> backend = builder.AddProject<Projects.AditiKraft_Krafter_Backend>("api")
     .WithReference(database)
     .WaitForCompletion(migrator);
 
-builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("krafter-ui-web")
+builder.AddProject<Projects.AditiKraft_Krafter_UI_Web>("web")
     .WithExternalHttpEndpoints()
     .WithReference(backend)
     .WithReference(database)

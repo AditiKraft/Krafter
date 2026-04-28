@@ -22,7 +22,7 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
             // For non-API requests (Blazor pages, static files), re-throw so the standard
             // ASP.NET Core error handling (UseExceptionHandler("/Error")) shows a proper error page
             // instead of raw JSON.
-            if (!context.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}"))
+            if (!context.Request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}"))
             {
                 throw;
             }
@@ -33,7 +33,7 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
             string userId = currentUser.GetUserId();
             string errorId = Guid.NewGuid().ToString();
             var errorResult = new ErrorResult { };
-            if (exception is not KrafterException && exception.InnerException != null)
+            if (exception is not AppException && exception.InnerException != null)
             {
                 while (exception.InnerException != null)
                 {
@@ -52,7 +52,7 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
 
             switch (exception)
             {
-                case KrafterException e:
+                case AppException e:
                     res.StatusCode = (int)e.StatusCode;
                     if (e.ErrorMessages is not null)
                     {

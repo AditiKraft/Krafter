@@ -84,8 +84,8 @@ public static class HostingExtensions
     {
         app.MapDiscoveredRoutes();
 
-        app.MapHub<RealtimeHub>($"/{KrafterRoute.ApiPrefix}/{nameof(RealtimeHub)}")
-            .MustHavePermission(KrafterAction.View, KrafterResource.Notifications);
+        app.MapHub<RealtimeHub>($"/{ApiRoutes.ApiPrefix}/{nameof(RealtimeHub)}")
+            .MustHavePermission(PermissionAction.View, PermissionResource.Notifications);
 
         app.UseBackgroundJobs();
 

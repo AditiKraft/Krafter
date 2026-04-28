@@ -10,7 +10,7 @@ public partial class App(ThemeService themeService, ThemeManager themeManager)
 
         if (HttpContext != null)
         {
-            string? theme = HttpContext.Request.Cookies["KrafterTheme"];
+            string? theme = HttpContext.Request.Cookies["AppTheme"];
 
             if (!string.IsNullOrEmpty(theme))
             {

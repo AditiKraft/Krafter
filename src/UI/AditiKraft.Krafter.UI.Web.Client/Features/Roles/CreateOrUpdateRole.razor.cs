@@ -24,7 +24,7 @@ public partial class CreateOrUpdateRole(
     private CreateOrUpdateRoleRequest CreateUserRequest = new();
     private CreateOrUpdateRoleRequest OriginalCreateUserRequest = new();
 
-    public List<KrafterPermission> AllRoles { get; set; } = default!;
+    public List<PermissionDefinition> AllRoles { get; set; } = default!;
 
     private IEnumerable<GroupPermissionData> GroupedData = new List<GroupPermissionData>();
 
@@ -38,7 +38,7 @@ public partial class CreateOrUpdateRole(
             OriginalCreateUserRequest = UserDetails.Adapt<CreateOrUpdateRoleRequest>();
             if (!string.IsNullOrWhiteSpace(UserDetails.Id))
             {
-                GroupedData = KrafterPermissions.All.GroupBy(c => c.Resource)
+                GroupedData = PermissionCatalog.All.GroupBy(c => c.Resource)
                     .SelectMany(i => new GroupPermissionData[] { new() { Resource = i.Key } }
                         .Concat(i.Select(o =>
                             new GroupPermissionData
@@ -47,7 +47,7 @@ public partial class CreateOrUpdateRole(
                                 Action = o.Action,
                                 IsBasic = o.IsBasic,
                                 IsRoot = o.IsRoot,
-                                FinalPermission = KrafterPermission.NameFor(o.Action, o.Resource)
+                                FinalPermission = PermissionDefinition.NameFor(o.Action, o.Resource)
                             }))).ToList();
                 Response<RoleDto> rolePermissions = await api.CallAsync(
                     () => rolesApi.GetRolePermissionsAsync(UserDetails.Id),

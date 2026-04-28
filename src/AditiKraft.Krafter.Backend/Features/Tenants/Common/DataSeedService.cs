@@ -19,109 +19,109 @@ namespace AditiKraft.Krafter.Backend.Features.Tenants.Common;
 public class DataSeedService(
     ITenantGetterService tenantGetterService,
     IJobService jobService,
-    KrafterContext krafterContext,
+    ApplicationDbContext applicationDbContext,
     TenantDbContext dbContext,
-    RoleManager<KrafterRole> roleManager,
-    UserManager<KrafterUser> userManager) : IScopedHandler
+    RoleManager<ApplicationRole> roleManager,
+    UserManager<ApplicationUser> userManager) : IScopedHandler
 {
     public async Task<Response> SeedBasicData(SeedDataRequest request)
     {
         CurrentTenantDetails currentTenantResponse = tenantGetterService.Tenant;
 
-        int roleCount = await krafterContext.Roles.CountAsync();
+        int roleCount = await applicationDbContext.Roles.CountAsync();
         if (roleCount == 0)
         {
-            var role = new KrafterRole(KrafterRoleConstant.Basic, KrafterRoleConstant.Basic)
+            var role = new ApplicationRole(RoleConstants.Basic, RoleConstants.Basic)
             {
                 Id = Guid.NewGuid().ToString()
             };
             IdentityResult result = await roleManager.CreateAsync(role);
-            var role1 = new KrafterRole(KrafterRoleConstant.Admin, KrafterRoleConstant.Admin)
+            var role1 = new ApplicationRole(RoleConstants.Admin, RoleConstants.Admin)
             {
                 Id = Guid.NewGuid().ToString()
             };
             IdentityResult result1 = await roleManager.CreateAsync(role1);
         }
 
-        KrafterRole? adminRole = await roleManager.FindByNameAsync(KrafterRoleConstant.Admin);
+        ApplicationRole? adminRole = await roleManager.FindByNameAsync(RoleConstants.Admin);
         if (adminRole != null)
         {
             IList<Claim> adminClaims = await roleManager.GetClaimsAsync(adminRole);
             var adMinRolePermissions = adminClaims
-                .Where(c => c.Type == KrafterClaims.Permission).Select(p => p.Value).ToList();
+                .Where(c => c.Type == AppClaimTypes.Permission).Select(p => p.Value).ToList();
 
-            IReadOnlyList<KrafterPermission> allPermissions =
-                currentTenantResponse.Id == KrafterInitialConstants.RootTenant.Id
-                    ? KrafterPermissions.All
-                    : KrafterPermissions.Admin;
+            IReadOnlyList<PermissionDefinition> allPermissions =
+                currentTenantResponse.Id == SeedDataConstants.RootTenant.Id
+                    ? PermissionCatalog.All
+                    : PermissionCatalog.Admin;
 
             var allPermissionsString = allPermissions.Select(krafterPermission =>
-                    KrafterPermission.NameFor(krafterPermission.Action, krafterPermission.Resource))
+                    PermissionDefinition.NameFor(krafterPermission.Action, krafterPermission.Resource))
                 .ToList();
             var permissionNotWithAdmin = allPermissionsString.Except(adMinRolePermissions).ToList();
             if (permissionNotWithAdmin.Count > 0)
             {
                 foreach (string permission in permissionNotWithAdmin)
                 {
-                    krafterContext.RoleClaims.Add(new KrafterRoleClaim
+                    applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
                     {
-                        RoleId = adminRole.Id, ClaimType = KrafterClaims.Permission, ClaimValue = permission
+                        RoleId = adminRole.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = permission
                     });
                 }
 
-                await krafterContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync();
             }
         }
 
-        KrafterRole? basicRole = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+        ApplicationRole? basicRole = await roleManager.FindByNameAsync(RoleConstants.Basic);
         if (basicRole != null)
         {
             IList<Claim> basicClaims = await roleManager.GetClaimsAsync(basicRole);
             var basicRolePermissions = basicClaims
-                .Where(c => c.Type == KrafterClaims.Permission).Select(p => p.Value).ToList();
+                .Where(c => c.Type == AppClaimTypes.Permission).Select(p => p.Value).ToList();
 
-            IReadOnlyList<KrafterPermission> allBasicPermissions =
-                KrafterPermissions.Basic;
+            IReadOnlyList<PermissionDefinition> allBasicPermissions =
+                PermissionCatalog.Basic;
 
             var allPermissionsString = allBasicPermissions.Select(krafterPermission =>
-                    KrafterPermission.NameFor(krafterPermission.Action, krafterPermission.Resource))
+                    PermissionDefinition.NameFor(krafterPermission.Action, krafterPermission.Resource))
                 .ToList();
             var permissionNotWithBasic = allPermissionsString.Except(basicRolePermissions).ToList();
             if (permissionNotWithBasic.Count > 0)
             {
                 foreach (string permission in permissionNotWithBasic)
                 {
-                    krafterContext.RoleClaims.Add(new KrafterRoleClaim
+                    applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
                     {
-                        RoleId = basicRole.Id, ClaimType = KrafterClaims.Permission, ClaimValue = permission
+                        RoleId = basicRole.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = permission
                     });
                 }
 
-                await krafterContext.SaveChangesAsync();
+                await applicationDbContext.SaveChangesAsync();
             }
         }
 
-        int userCount = await krafterContext.Users.CountAsync();
+        int userCount = await applicationDbContext.Users.CountAsync();
         if (userCount == 0)
         {
-            string password = KrafterInitialConstants.DefaultPassword;
-            KrafterUser rootUser;
-            if (tenantGetterService.Tenant.Id == KrafterInitialConstants.RootTenant.Id)
+            string password = SeedDataConstants.DefaultPassword;
+            ApplicationUser rootUser;
+            if (tenantGetterService.Tenant.Id == SeedDataConstants.RootTenant.Id)
             {
-                rootUser = new KrafterUser
+                rootUser = new ApplicationUser
                 {
-                    Id = KrafterInitialConstants.RootUser.Id,
-                    FirstName = KrafterInitialConstants.RootUser.FirstName,
-                    LastName = KrafterInitialConstants.RootUser.LastName,
-                    Email = KrafterInitialConstants.RootUser.EmailAddress,
-                    UserName = KrafterInitialConstants.RootUser.EmailAddress,
+                    Id = SeedDataConstants.RootUser.Id,
+                    FirstName = SeedDataConstants.RootUser.FirstName,
+                    LastName = SeedDataConstants.RootUser.LastName,
+                    Email = SeedDataConstants.RootUser.EmailAddress,
+                    UserName = SeedDataConstants.RootUser.EmailAddress,
                     IsActive = true,
                     IsOwner = true
                 };
             }
             else
             {
-                rootUser = new KrafterUser
+                rootUser = new ApplicationUser
                 {
                     Id = Guid.NewGuid().ToString(),
                     FirstName = "Admin",
@@ -138,26 +138,26 @@ public class DataSeedService(
             Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == tenantGetterService.Tenant.Id);
             if (adminRole is not null)
             {
-                krafterContext.UserRoles.Add(new KrafterUserRole
+                applicationDbContext.UserRoles.Add(new ApplicationUserRole
                 {
                     RoleId = adminRole.Id, UserId = rootUser.Id, CreatedById = rootUser.Id
                 });
             }
 
-            KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+            ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
             if (basic is not null)
             {
-                krafterContext.UserRoles.Add(new KrafterUserRole
+                applicationDbContext.UserRoles.Add(new ApplicationUserRole
                 {
                     RoleId = basic.Id, UserId = rootUser.Id, CreatedById = rootUser.Id
                 });
             }
 
-            await krafterContext.SaveChangesAsync();
+            await applicationDbContext.SaveChangesAsync();
 
             if (tenant is not null)
             {
-                if (tenantGetterService.Tenant.Id != KrafterInitialConstants.RootTenant.Id)
+                if (tenantGetterService.Tenant.Id != SeedDataConstants.RootTenant.Id)
                 {
                     string loginUrl = $"{tenantGetterService.Tenant.TenantLink}/login";
 

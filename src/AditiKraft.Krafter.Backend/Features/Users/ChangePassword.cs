@@ -15,14 +15,14 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class ChangePassword
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
+        UserManager<ApplicationUser> userManager,
         ICurrentUser currentUser,
         ITenantGetterService tenantGetterService,
         IJobService jobService) : IScopedHandler
     {
         public async Task<Response> ChangePasswordAsync(ChangePasswordRequest request)
         {
-            KrafterUser? user = await userManager.FindByIdAsync(currentUser.GetUserId());
+            ApplicationUser? user = await userManager.FindByIdAsync(currentUser.GetUserId());
             if (user is null)
             {
                 return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
@@ -68,7 +68,7 @@ public sealed class ChangePassword
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost($"/{RouteSegment.ChangePassword}", async (

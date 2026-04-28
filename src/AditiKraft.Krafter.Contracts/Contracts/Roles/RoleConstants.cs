@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Roles;
 
-public static class KrafterRoleConstant
+public static class RoleConstants
 {
     public const string Admin = nameof(Admin);
     public const string Basic = nameof(Basic);

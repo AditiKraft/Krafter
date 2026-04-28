@@ -12,7 +12,7 @@ public partial class Tenants(
     NavigationManager navigationManager
 ) : ComponentBase, IDisposable
 {
-    public const string RoutePath = KrafterRoute.Tenants;
+    public const string RoutePath = ApiRoutes.Tenants;
     private RadzenDataGrid<TenantDto> grid = default!;
     private bool IsLoading = true;
     private GetRequestInput _requestInput = new();
@@ -103,15 +103,15 @@ public partial class Tenants(
 
     private async Task ActionClicked(RadzenSplitButtonItem? item, TenantDto data)
     {
-        if (item is { Value: KrafterAction.Update })
+        if (item is { Value: PermissionAction.Update })
         {
             await Update(data);
         }
-        else if (item is { Value: KrafterAction.Create })
+        else if (item is { Value: PermissionAction.Create })
         {
             await Add();
         }
-        else if (item is { Value: KrafterAction.Delete })
+        else if (item is { Value: PermissionAction.Delete })
         {
             await Delete(data);
         }

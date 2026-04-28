@@ -1,6 +1,6 @@
 namespace AditiKraft.Krafter.Contracts.Common.Auth;
 
-public class KrafterClaims
+public class AppClaimTypes
 {
     public const string Fullname = "fullName";
     public const string Permission = "permission";

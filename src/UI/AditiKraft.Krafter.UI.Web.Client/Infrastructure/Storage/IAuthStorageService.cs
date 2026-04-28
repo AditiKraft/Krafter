@@ -2,7 +2,7 @@
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 
-public interface IKrafterLocalStorageService
+public interface IAuthStorageService
 {
     public Task ClearCacheAsync();
 

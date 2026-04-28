@@ -14,12 +14,12 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly IAuthenticationService _authenticationService;
     private readonly PersistentComponentState _persistentState;
-    private readonly IKrafterLocalStorageService _localStorage;
+    private readonly IAuthStorageService _localStorage;
     private readonly ILogger<UIAuthenticationStateProvider> _logger;
     private readonly IAuthApiService _apiService;
     private bool _isInitialLoad = true;
 
-    public UIAuthenticationStateProvider(IAuthApiService apiService, IKrafterLocalStorageService localStorage,
+    public UIAuthenticationStateProvider(IAuthApiService apiService, IAuthStorageService localStorage,
         IAuthenticationService authenticationService,
         ILogger<UIAuthenticationStateProvider> logger,
         PersistentComponentState persistentState)
@@ -79,7 +79,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
 
         if (await _localStorage.GetCachedPermissionsAsync() is List<string> cachedPermissions)
         {
-            claimsIdentity.AddClaims(cachedPermissions.Select(p => new Claim(KrafterClaims.Permission, p)));
+            claimsIdentity.AddClaims(cachedPermissions.Select(p => new Claim(AppClaimTypes.Permission, p)));
         }
 
         return new AuthenticationState(new ClaimsPrincipal(claimsIdentity));
@@ -138,11 +138,11 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             new(ClaimTypes.Email, userInfo.Email ?? string.Empty),
             new(ClaimTypes.GivenName, userInfo.FirstName ?? string.Empty),
             new(ClaimTypes.Surname, userInfo.LastName ?? string.Empty),
-            new(KrafterClaims.Fullname, $"{userInfo.FirstName} {userInfo.LastName}")
+            new(AppClaimTypes.Fullname, $"{userInfo.FirstName} {userInfo.LastName}")
         };
 
         claims.AddRange(userInfo.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
-        claims.AddRange(userInfo.Permissions.Select(p => new Claim(KrafterClaims.Permission, p)));
+        claims.AddRange(userInfo.Permissions.Select(p => new Claim(AppClaimTypes.Permission, p)));
 
         return new ClaimsIdentity(claims, "PersistentAuth");
     }

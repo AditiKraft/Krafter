@@ -14,12 +14,12 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class DeleteUser
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
-        KrafterContext db) : IScopedHandler
+        UserManager<ApplicationUser> userManager,
+        ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(string id)
         {
-            KrafterUser? user = await userManager.FindByIdAsync(id);
+            ApplicationUser? user = await userManager.FindByIdAsync(id);
             if (user is null)
             {
                 return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
@@ -33,16 +33,16 @@ public sealed class DeleteUser
             user.IsDeleted = true;
             db.Users.Update(user);
 
-            List<KrafterUserRole> userRoles = await db.UserRoles
+            List<ApplicationUserRole> userRoles = await db.UserRoles
                 .Where(c => c.UserId == id)
                 .ToListAsync();
 
-            foreach (KrafterUserRole userRole in userRoles)
+            foreach (ApplicationUserRole userRole in userRoles)
             {
                 userRole.IsDeleted = true;
             }
 
-            await db.SaveChangesAsync([nameof(KrafterUser)]);
+            await db.SaveChangesAsync([nameof(ApplicationUser)]);
 
             return new Response();
         }
@@ -52,7 +52,7 @@ public sealed class DeleteUser
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapDelete($"/{RouteSegment.ById}", async (
@@ -63,7 +63,7 @@ public sealed class DeleteUser
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Delete, KrafterResource.Users);
+                .MustHavePermission(PermissionAction.Delete, PermissionResource.Users);
         }
     }
 }

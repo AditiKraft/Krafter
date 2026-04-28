@@ -8,7 +8,7 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 
 public class ClientAuthApiService(
     IAuthApi authApi,
-    IKrafterLocalStorageService localStorage,
+    IAuthStorageService localStorage,
     ILogger<ClientAuthApiService> logger) : IAuthApiService
 {
     public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request,

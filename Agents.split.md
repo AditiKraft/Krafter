@@ -119,7 +119,7 @@ dotnet run --project src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.c
 dotnet run --project src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj
 
 # Database migrations
-dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context ApplicationDbContext
 dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 
 # Build solution
@@ -252,6 +252,6 @@ Verified Against: [list key files checked]
 ```
 
 ---
-Last Updated: 2025-07-25
-Verified Against: Agents.md (root, single-host variant)
+Last Updated: 2026-04-28
+Verified Against: Agents.split.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md
 ---

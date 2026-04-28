@@ -37,11 +37,11 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
 {
     private static readonly string[] AuthEndpointSegments =
     [
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Refresh}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Current}",
-        $"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}"
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}",
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}"
     ];
 
     /// <summary>
@@ -53,7 +53,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
         // SignalR query string token (needed for single-host; harmless for split-host)
         string? accessToken = context.Request.Query["access_token"];
         if (!string.IsNullOrEmpty(accessToken) &&
-            context.HttpContext.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/RealtimeHub"))
+            context.HttpContext.Request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}/RealtimeHub"))
         {
             context.Token = accessToken;
             return;
@@ -107,8 +107,8 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
                         refreshResponse.Data.RefreshTokenExpiryTime;
 
                     // Persist refreshed tokens as cookies so the browser picks up the new values
-                    IKrafterLocalStorageService localStorage = context.HttpContext.RequestServices
-                        .GetRequiredService<IKrafterLocalStorageService>();
+                    IAuthStorageService localStorage = context.HttpContext.RequestServices
+                        .GetRequiredService<IAuthStorageService>();
                     await localStorage.CacheAuthTokens(refreshResponse.Data);
 
                     logger.LogInformation("Token refreshed successfully in OnMessageReceived");
@@ -148,8 +148,8 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
         }
 
         // Fall back to cached permissions
-        IKrafterLocalStorageService localStorage = context.HttpContext.RequestServices
-            .GetRequiredService<IKrafterLocalStorageService>();
+        IAuthStorageService localStorage = context.HttpContext.RequestServices
+            .GetRequiredService<IAuthStorageService>();
         ICollection<string>? cachedPermissions = await localStorage.GetCachedPermissionsAsync();
         if (cachedPermissions is { Count: > 0 })
         {
@@ -207,7 +207,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
         AuthEndpointSegments.Any(segment => path.StartsWithSegments(segment));
 
     private static bool IsApiRequest(HttpRequest request) =>
-        request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}") ||
+        request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}") ||
         request.Headers.Accept.Any(a => a != null && a.Contains("application/json"));
 
     private static bool IsTokenExpired(string token)
@@ -233,9 +233,9 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
         foreach (string permission in permissions)
         {
             if (!string.IsNullOrWhiteSpace(permission) &&
-                !identity.HasClaim(KrafterClaims.Permission, permission))
+                !identity.HasClaim(AppClaimTypes.Permission, permission))
             {
-                identity.AddClaim(new Claim(KrafterClaims.Permission, permission));
+                identity.AddClaim(new Claim(AppClaimTypes.Permission, permission));
             }
         }
     }

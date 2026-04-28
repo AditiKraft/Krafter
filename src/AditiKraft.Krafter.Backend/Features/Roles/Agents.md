@@ -4,9 +4,9 @@
 > **PARENT**: See also: ../../Agents.md
 
 ## 1. Core Principles
-- Use `RoleManager<KrafterRole>` for role lifecycle operations.
-- Treat permission claims as `KrafterClaims.Permission` entries on `KrafterRoleClaim`.
-- Admin role permissions are protected; do not allow edits for `KrafterRoleConstant.Admin`.
+- Use `RoleManager<ApplicationRole>` for role lifecycle operations.
+- Treat permission claims as `AppClaimTypes.Permission` entries on `ApplicationRoleClaim`.
+- Admin role permissions are protected; do not allow edits for `RoleConstants.Admin`.
 - Keep route parameter names aligned with the placeholders used by the endpoint.
 
 ## 2. Decision Tree
@@ -20,18 +20,18 @@
 
 ### Permission Claim Sync During Create / Update
 ```csharp
-List<KrafterRoleClaim> permissions = await db.RoleClaims
+List<ApplicationRoleClaim> permissions = await db.RoleClaims
     .IgnoreQueryFilters()
     .Where(c => c.TenantId == tenantId &&
                 c.RoleId == roleId &&
-                c.ClaimType == KrafterClaims.Permission)
+                c.ClaimType == AppClaimTypes.Permission)
     .ToListAsync(cancellationToken);
 
 var permissionsToRemove = permissions
     .Where(c => c.ClaimValue is not null && !requestedPermissions.Contains(c.ClaimValue))
     .ToList();
 
-foreach (KrafterRoleClaim permission in permissionsToRemove)
+foreach (ApplicationRoleClaim permission in permissionsToRemove)
 {
     permission.IsDeleted = true;
 }
@@ -39,16 +39,16 @@ foreach (KrafterRoleClaim permission in permissionsToRemove)
 
 ### Protect Admin Role Permissions
 ```csharp
-if (role.Name == KrafterRoleConstant.Admin)
+if (role.Name == RoleConstants.Admin)
 {
     return Response.BadRequest("Not allowed to modify Permissions for this Role.");
 }
 ```
 
 ## 4. Checklist
-1. Use `KrafterRoute.Roles` for all role endpoints.
-2. Use `RoleManager<KrafterRole>` for role lookup and creation.
-3. Store permission claims with `ClaimType = KrafterClaims.Permission`.
+1. Use `ApiRoutes.Roles` for all role endpoints.
+2. Use `RoleManager<ApplicationRole>` for role lookup and creation.
+3. Store permission claims with `ClaimType = AppClaimTypes.Permission`.
 4. Keep admin-role permission protection intact.
 5. If editing permission-sync code, match the existing file's pattern and response shape.
 
@@ -74,6 +74,6 @@ if (role.Name == KrafterRoleConstant.Admin)
 - `src/AditiKraft.Krafter.Backend/Features/Roles/Common/RoleService.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoles.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleById.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleByIdWithPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRolePermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/Common/RoleService.cs
+Last Updated: 2026-04-28
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoles.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleById.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleByIdWithPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRolePermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/Common/RoleService.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/AppClaimTypes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

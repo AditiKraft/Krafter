@@ -40,7 +40,7 @@ builder.Services.AddHttpContextAccessor();
 // ── Cache ──────────────────────────────────────────────────────────────────────
 builder.Services.AddDistributedPostgresCache(options =>
 {
-    options.ConnectionString = builder.Configuration.GetConnectionString("krafterDb")
+    options.ConnectionString = builder.Configuration.GetConnectionString("appDb")
                                ?? throw new InvalidOperationException("Connection string 'krafterDb' not found");
     options.SchemaName = "public";
     options.TableName = "cache";
@@ -62,7 +62,7 @@ builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
 builder.Services.AddScoped<IAuthApiService, ServerAuthApiService>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IKrafterLocalStorageService, KrafterLocalStorageServiceServer>();
+builder.Services.AddSingleton<IAuthStorageService, AuthStorageServiceServer>();
 builder.Services.AddUIServices();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
@@ -74,7 +74,7 @@ builder.Services.AddScoped<TenantIdentifier>();
 _ = builder.Configuration["RemoteHostUrl"]
     ?? throw new InvalidOperationException("RemoteHostUrl not configured. Set it in appsettings or via Aspire.");
 
-builder.Services.AddKrafterRefitClients();
+builder.Services.AddApiRefitClients();
 
 // ── Build ──────────────────────────────────────────────────────────────────────
 WebApplication app = builder.Build();
@@ -126,14 +126,14 @@ app.Run();
 static void MapBffOnlyEndpoints(WebApplication app)
 {
     // Current token — reads from server-side cookie/cache, not from backend
-    app.MapGet($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
+    app.MapGet($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
     {
         Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
     // Logout — clears server-side cookie/cache
-    app.MapPost($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
+    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();

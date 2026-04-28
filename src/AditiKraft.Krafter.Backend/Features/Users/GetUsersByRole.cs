@@ -15,14 +15,14 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class GetUsersByRole
 {
-    internal sealed class Handler(KrafterContext db) : IScopedHandler
+    internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response<PaginationResponse<UserInfo>>> GetByRoleAsync(
             string roleId,
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            ExpressionStarter<KrafterUserRole>? predicate = PredicateBuilder.New<KrafterUserRole>(true);
+            ExpressionStarter<ApplicationUserRole>? predicate = PredicateBuilder.New<ApplicationUserRole>(true);
             predicate = predicate.And(c => c.RoleId == roleId);
 
             IQueryable<UserInfo> query = db.UserRoles
@@ -84,7 +84,7 @@ public sealed class GetUsersByRole
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet($"/{RouteSegment.ByRole}", async (
@@ -98,7 +98,7 @@ public sealed class GetUsersByRole
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserInfo>>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Users);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Users);
         }
     }
 }

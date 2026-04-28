@@ -65,7 +65,7 @@ public static class DependencyInjection
         services
             .AddCurrentUserServices()
             .AddPermissions()
-            .AddIdentity<KrafterUser, KrafterRole>(options =>
+            .AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
                 options.Password.RequiredLength = 6;
                 options.Password.RequireDigit = false;
@@ -74,7 +74,7 @@ public static class DependencyInjection
                 options.Password.RequireUppercase = false;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddEntityFrameworkStores<KrafterContext>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
         services.Configure<SecuritySettings>(config.GetSection(nameof(SecuritySettings)));
         services.AddScoped<IUserService, UserService>();
@@ -145,7 +145,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
                 StringValues accessToken = context.Request.Query["access_token"];
 
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    context.HttpContext.Request.Path.StartsWithSegments($"/{KrafterRoute.ApiPrefix}/{nameof(RealtimeHub)}"))
+                    context.HttpContext.Request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}/{nameof(RealtimeHub)}"))
                 {
                     // Read the token out of the query string
                     context.Token = accessToken;

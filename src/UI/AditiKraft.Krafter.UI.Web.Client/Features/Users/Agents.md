@@ -41,7 +41,7 @@ if (confirmed == true)
 ```
 
 ## 4. Checklist
-1. Use `KrafterRoute.Users` as `RoutePath`.
+1. Use `ApiRoutes.Users` as `RoutePath`.
 2. Use `ApiCallService` for list and delete.
 3. Use `CreateOrUpdateUser` dialog for create/edit.
 4. Keep `Close(dynamic result)` on the Users list page.
@@ -62,6 +62,6 @@ if (confirmed == true)
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs
+Last Updated: 2026-04-28
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

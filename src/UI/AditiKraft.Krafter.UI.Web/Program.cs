@@ -22,8 +22,8 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedPostgresCache(options =>
 {
-    options.ConnectionString = builder.Configuration.GetConnectionString("krafterDb")
-                               ?? throw new InvalidOperationException("Connection string 'krafterDb' not found");
+    options.ConnectionString = builder.Configuration.GetConnectionString("appDb")
+                               ?? throw new InvalidOperationException("Connection string 'appDb' not found");
     options.SchemaName = "public";
     options.TableName = "cache";
     options.CreateIfNotExists = true;
@@ -41,7 +41,7 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlaz
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ => { });
 
-string? apiUrl = builder.Configuration.GetValue<string>("services:krafter-api:https:0");
+string? apiUrl = builder.Configuration.GetValue<string>("services:api:https:0");
 if (string.IsNullOrWhiteSpace(apiUrl))
 {
     throw new Exception("API URL not found");
@@ -51,7 +51,7 @@ if (string.IsNullOrWhiteSpace(apiUrl))
 builder.Configuration["RemoteHostUrl"] = apiUrl;
 
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IKrafterLocalStorageService, KrafterLocalStorageServiceServer>();
+builder.Services.AddSingleton<IAuthStorageService, AuthStorageServiceServer>();
 builder.Services.AddUIServices();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
     .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
@@ -59,7 +59,7 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
 // Server uses apiUrl for both AditiKraft.Krafter.Backend and BFF since it manages cookies directly
-builder.Services.AddKrafterRefitClients();
+builder.Services.AddApiRefitClients();
 WebApplication app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -96,19 +96,19 @@ app.Run();
 
 static void MapAuthTokenEndpoints(WebApplication app)
 {
-    app.MapGet($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
+    app.MapGet($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
     {
         Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     }).RequireAuthorization();
 
-    app.MapPost($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}", async ([FromBody] TokenRequest request, IAuthApiService apiService,
+    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}", async ([FromBody] TokenRequest request, IAuthApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
         Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     });
-    app.MapPost($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request,
+    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request,
         IAuthApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
@@ -116,14 +116,14 @@ static void MapAuthTokenEndpoints(WebApplication app)
         return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
     });
 
-    app.MapPost($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.ExternalAuth}/{RouteSegment.Google}",
+    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
         async ([FromBody] TokenRequest request, IAuthApiService apiService) =>
         {
             Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
             return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
         });
 
-    app.MapPost($"/{KrafterRoute.ApiPrefix}/{KrafterRoute.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
+    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
     {
         await apiService.LogoutAsync(CancellationToken.None);
         return Results.Ok();

@@ -19,7 +19,7 @@ public class MultiTenantServiceMiddleware(
     {
         if (TenantSettings.TenancyMode == TenancyMode.Single)
         {
-            Tenant tenant = KrafterInitialConstants.KrafterTenant;
+            Tenant tenant = SeedDataConstants.DefaultTenant;
             CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
             currentTenantDetails.TenantLink = context.Request.GetOrigin();
             currentTenantDetails.IpAddress = context.Connection?.RemoteIpAddress?.ToString();
@@ -45,7 +45,7 @@ public class MultiTenantServiceMiddleware(
 
         if (string.IsNullOrWhiteSpace(tenantIdentifier))
         {
-            tenantIdentifier = KrafterInitialConstants.RootTenant.Identifier;
+            tenantIdentifier = SeedDataConstants.RootTenant.Identifier;
         }
 
         Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier);

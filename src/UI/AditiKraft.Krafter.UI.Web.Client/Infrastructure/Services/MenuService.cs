@@ -27,31 +27,31 @@ public class MenuService
                 new Menu
                 {
                     Name = "Users",
-                    Path = KrafterRoute.Users,
+                    Path = ApiRoutes.Users,
                     Title = "User Management",
                     Description = "Manage user accounts, including creation, updates, and access control.",
                     Icon = "people",
                     Tags = new[] { "users", "accounts", "profiles", "authentication" },
-                    Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Users)
+                    Permission = PermissionDefinition.NameFor(PermissionAction.View, PermissionResource.Users)
                 },
                 new Menu
                 {
                     Name = "Roles",
-                    Path = KrafterRoute.Roles,
+                    Path = ApiRoutes.Roles,
                     Title = "Role Management",
                     Description = "Manage user roles and associated permissions within the system.",
                     Icon = "admin_panel_settings",
                     Tags = new[] { "roles", "permissions", "access control", "user groups" },
-                    Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Roles)
+                    Permission = PermissionDefinition.NameFor(PermissionAction.View, PermissionResource.Roles)
                 }
             }
         },
         new Menu
         {
             Name = "Tenants",
-            Path = KrafterRoute.Tenants,
+            Path = ApiRoutes.Tenants,
             Icon = "business",
-            Permission = KrafterPermission.NameFor(KrafterAction.View, KrafterResource.Tenants),
+            Permission = PermissionDefinition.NameFor(PermissionAction.View, PermissionResource.Tenants),
             Title = "Tenant Management",
             Description = "Manage multiple tenants within the system, including creation and updates.",
             Tags = new[] { "tenants", "multi-tenancy", "organizations", "clients" }
@@ -60,7 +60,7 @@ public class MenuService
 
     public IEnumerable<Menu> Menus =>
         TenantSettings.TenancyMode == TenancyMode.Single
-            ? allMenus.Where(menu => menu.Path != KrafterRoute.Tenants)
+            ? allMenus.Where(menu => menu.Path != ApiRoutes.Tenants)
             : allMenus;
 
     public IEnumerable<Menu> Filter(string term)

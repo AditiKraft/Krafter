@@ -13,7 +13,7 @@ public sealed class GetAppInfo
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder routeGroupBuilder = endpointRouteBuilder.MapGroup(KrafterRoute.AppInfo);
+            RouteGroupBuilder routeGroupBuilder = endpointRouteBuilder.MapGroup(ApiRoutes.AppInfo);
             routeGroupBuilder.MapGet("/", ([FromServices] Handler handler, CancellationToken cancellationToken) =>
             {
                 Task<Response<string>> res = handler.GetAppInfoAsync();
