@@ -16,7 +16,7 @@
 - Response DTO: `Contracts/<Feature>/<Name>Dto.cs` or `<Name>Response.cs`
 - Constants: `Contracts/<Feature>/<Name>Constant.cs`
 - Permissions: `Common/Auth/Permissions/`
-- Routes: `Common/KrafterRoute.cs`
+- Routes: `Common/ApiRoutes.cs`
 - Common models: `Common/Models/`
 - Enums: `Common/Enums/`
 - Auth helpers: `Common/Auth/`
@@ -85,7 +85,7 @@ return Response<UserDto>.Success(dto);
 - New permissions or routes added.
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/KrafterPermissions.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
+Last Updated: 2026-04-28
+Verified Against: src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionDefinition.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---
 

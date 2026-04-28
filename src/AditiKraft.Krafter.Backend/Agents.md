@@ -8,9 +8,9 @@
 2. Add shared request/response DTOs in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/` (see `src/AditiKraft.Krafter.Contracts/Agents.md`).
 3. Add operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
 4. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Entity>.cs` if needed.
-5. Add DbSet + model configuration in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs`.
-6. Add permissions + routes in Shared (`src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/` and `src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs`).
-7. Map endpoints using `KrafterRoute` and `RouteSegment`.
+5. Add DbSet + model configuration in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs`.
+6. Add permissions + routes in Shared (`src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/` and `src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs`).
+7. Map endpoints using `ApiRoutes`, `RouteSegment`, and Shared permission constants.
 8. Add a migration if the schema changed; AppHost will apply it through `src/AditiKraft.Krafter.Backend.Migrator/` on the next startup.
 
 ## Core Rules
@@ -29,13 +29,13 @@
 
 ## Minimal Operation Skeleton
 ```csharp
-namespace Backend.Features.Users;
+namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class GetUsers
 {
-    internal sealed class Handler(KrafterContext db) : IScopedHandler
+    internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
-        public async Task<Response<PaginationResponse<UserDto>>> Get(
+        public async Task<Response<PaginationResponse<UserDto>>> GetAsync(
             GetRequestInput request,
             CancellationToken cancellationToken)
         {
@@ -48,7 +48,7 @@ public sealed class GetUsers
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
             RouteGroupBuilder group = endpointRouteBuilder
-                .MapGroup(KrafterRoute.Users)
+                .MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             group.MapGet("/", async (
@@ -56,11 +56,11 @@ public sealed class GetUsers
                     [AsParameters] GetRequestInput request,
                     CancellationToken cancellationToken) =>
                 {
-                    Response<PaginationResponse<UserDto>> res = await handler.Get(request, cancellationToken);
+                    Response<PaginationResponse<UserDto>> res = await handler.GetAsync(request, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserDto>>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Users);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Users);
         }
     }
 }
@@ -96,9 +96,9 @@ public sealed class GetUsers
 - Add feature-specific Agents when a feature grows beyond 5 operations.
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/KrafterContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/KrafterRoute.cs
---- 
+Last Updated: 2026-04-28
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs
+---
 
 
 

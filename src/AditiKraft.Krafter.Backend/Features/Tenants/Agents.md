@@ -4,7 +4,7 @@
 > **PARENT**: See also: ../../Agents.md
 
 ## 1. Core Principles
-- Use `TenantDbContext` for tenant data; use `KrafterContext` for identity-side updates.
+- Use `TenantDbContext` for tenant data; use `ApplicationDbContext` for identity-side updates.
 - Creating a tenant triggers data seeding in a scoped tenant context.
 - Root tenant cannot be deleted.
 
@@ -45,8 +45,8 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 
 ## 4. Checklist
 1. Use `TenantDbContext` for tenant queries and writes.
-2. Persist related updates in `KrafterContext` when needed.
-3. Prevent root tenant deletion (`KrafterInitialConstants.RootTenant.Id`).
+2. Persist related updates in `ApplicationDbContext` when needed.
+3. Prevent root tenant deletion (`SeedDataConstants.RootTenant.Id`).
 4. Seed new tenant data after creation.
 
 ## 5. Common Mistakes
@@ -68,8 +68,8 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs
+Last Updated: 2026-04-28
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
 ---
 
 

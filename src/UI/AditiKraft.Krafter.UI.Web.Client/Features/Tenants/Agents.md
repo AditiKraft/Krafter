@@ -23,7 +23,7 @@ Response result = await api.CallAsync(
 ```
 
 ## 4. Checklist
-1. Use `KrafterRoute.Tenants` as `RoutePath`.
+1. Use `ApiRoutes.Tenants` as `RoutePath`.
 2. Use `ApiCallService` for list and delete.
 3. Keep `Close(object? result)` on the Tenants list page.
 
@@ -40,6 +40,6 @@ Response result = await api.CallAsync(
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
 
 ---
-Last Updated: 2026-03-07
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs
+Last Updated: 2026-04-28
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---
