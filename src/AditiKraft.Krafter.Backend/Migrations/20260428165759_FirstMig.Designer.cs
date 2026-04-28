@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AditiKraft.Krafter.Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260428150138_FirstMig")]
+    [Migration("20260428165759_FirstMig")]
     partial class FirstMig
     {
         /// <inheritdoc />
@@ -363,9 +363,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KrafterUserLogins", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
+                    b.ToTable("AspNetUserLogins", (string)null);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserRole", b =>
@@ -431,9 +429,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("KrafterUserTokens", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", b =>

@@ -150,7 +150,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "KrafterUserLogins",
+                name: "AspNetUserLogins",
                 columns: table => new
                 {
                     LoginProvider = table.Column<string>(type: "text", nullable: false),
@@ -160,9 +160,9 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_KrafterUserLogins", x => new { x.LoginProvider, x.ProviderKey });
+                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
                     table.ForeignKey(
-                        name: "FK_KrafterUserLogins_ApplicationUser_UserId",
+                        name: "FK_AspNetUserLogins_ApplicationUser_UserId",
                         column: x => x.UserId,
                         principalTable: "ApplicationUser",
                         principalColumn: "Id",
@@ -170,7 +170,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "KrafterUserTokens",
+                name: "AspNetUserTokens",
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "character varying(36)", nullable: false),
@@ -180,9 +180,9 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_KrafterUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
+                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
                     table.ForeignKey(
-                        name: "FK_KrafterUserTokens_ApplicationUser_UserId",
+                        name: "FK_AspNetUserTokens_ApplicationUser_UserId",
                         column: x => x.UserId,
                         principalTable: "ApplicationUser",
                         principalColumn: "Id",
@@ -372,8 +372,8 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 column: "UpdatedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_KrafterUserLogins_UserId",
-                table: "KrafterUserLogins",
+                name: "IX_AspNetUserLogins_UserId",
+                table: "AspNetUserLogins",
                 column: "UserId");
         }
 
@@ -390,10 +390,10 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 name: "ApplicationUserRole");
 
             migrationBuilder.DropTable(
-                name: "KrafterUserLogins");
+                name: "AspNetUserLogins");
 
             migrationBuilder.DropTable(
-                name: "KrafterUserTokens");
+                name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
                 name: "UserRefreshTokens");
