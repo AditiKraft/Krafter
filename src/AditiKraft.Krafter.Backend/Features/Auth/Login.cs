@@ -15,7 +15,7 @@ namespace AditiKraft.Krafter.Backend.Features.Auth;
 public sealed class Login
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
+        UserManager<ApplicationUser> userManager,
         ITokenService tokenService,
         IOptions<JwtSettings> jwtSettings,
         IOptions<SecuritySettings> securitySettings
@@ -28,7 +28,7 @@ public sealed class Login
             TokenRequest request, string ipAddress,
             CancellationToken cancellationToken)
         {
-            KrafterUser? user = await userManager.FindByEmailAsync(request.Email.Trim().Normalize());
+            ApplicationUser? user = await userManager.FindByEmailAsync(request.Email.Trim().Normalize());
             if (user is null)
             {
                 return Response<TokenResponse>.Unauthorized("Invalid Email or Password");
@@ -57,7 +57,7 @@ public sealed class Login
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder productGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Tokens)
+            RouteGroupBuilder productGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Tokens)
                 .AddFluentValidationFilter();
 
             productGroup.MapPost("/", async

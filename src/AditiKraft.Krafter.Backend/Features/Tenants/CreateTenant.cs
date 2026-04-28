@@ -19,7 +19,7 @@ public sealed class CreateTenant
 {
     internal sealed class Handler(
         TenantDbContext dbContext,
-        KrafterContext krafterContext,
+        ApplicationDbContext applicationDbContext,
         ITenantGetterService tenantGetterService,
         IServiceProvider serviceProvider,
         ICurrentUser currentUser) : IScopedHandler
@@ -57,7 +57,7 @@ public sealed class CreateTenant
 
             dbContext.Tenants.Add(entity);
             await dbContext.SaveChangesAsync(cancellationToken);
-            await krafterContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
+            await applicationDbContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
 
             string rootTenantLink = tenantGetterService.Tenant.TenantLink;
             using IServiceScope scope = serviceProvider.CreateScope();
@@ -78,7 +78,7 @@ public sealed class CreateTenant
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder tenantGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants)
+            RouteGroupBuilder tenantGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Tenants)
                 .AddFluentValidationFilter();
 
             tenantGroup.MapPost("/", async (
@@ -90,7 +90,7 @@ public sealed class CreateTenant
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Create, KrafterResource.Tenants);
+                .MustHavePermission(PermissionAction.Create, PermissionResource.Tenants);
         }
     }
 }

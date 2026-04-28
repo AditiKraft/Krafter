@@ -4,14 +4,14 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AditiKraft.Krafter.Backend.Features.Roles.Common;
 
-public class KrafterRole : IdentityRole<string>, ICommonAuthEntityProperty
+public class ApplicationRole : IdentityRole<string>, ICommonAuthEntityProperty
 {
-    public KrafterRole()
+    public ApplicationRole()
     {
     }
 
-    public KrafterUser? CreatedBy { get; set; }
-    public KrafterUser? UpdatedBy { get; set; }
+    public ApplicationUser? CreatedBy { get; set; }
+    public ApplicationUser? UpdatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public string? CreatedById { get; set; }
     public DateTime? UpdatedOn { get; set; }
@@ -20,7 +20,7 @@ public class KrafterRole : IdentityRole<string>, ICommonAuthEntityProperty
     public bool IsDeleted { get; set; }
     public string? DeleteReason { get; set; }
 
-    public KrafterRole(string name, string? description = null, string? createdById = null)
+    public ApplicationRole(string name, string? description = null, string? createdById = null)
         : base(name)
     {
         Description = description;
@@ -29,7 +29,7 @@ public class KrafterRole : IdentityRole<string>, ICommonAuthEntityProperty
     }
 
     public string TenantId { get; set; } = null!;
-    public virtual ICollection<KrafterUserRole> UserRoles { get; set; } = new HashSet<KrafterUserRole>();
+    public virtual ICollection<ApplicationUserRole> UserRoles { get; set; } = new HashSet<ApplicationUserRole>();
 }
 
 

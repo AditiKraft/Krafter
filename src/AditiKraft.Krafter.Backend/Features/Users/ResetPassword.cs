@@ -10,11 +10,11 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class ResetPassword
 {
-    internal sealed class Handler(UserManager<KrafterUser> userManager) : IScopedHandler
+    internal sealed class Handler(UserManager<ApplicationUser> userManager) : IScopedHandler
     {
         public async Task<Response> ResetPasswordAsync(ResetPasswordRequest request)
         {
-            KrafterUser? user = await userManager.FindByEmailAsync(request.Email?.Normalize()!);
+            ApplicationUser? user = await userManager.FindByEmailAsync(request.Email?.Normalize()!);
             if (user is null)
             {
                 return new Response
@@ -42,7 +42,7 @@ public sealed class ResetPassword
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost($"/{RouteSegment.ResetPassword}", async (

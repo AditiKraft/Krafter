@@ -1,6 +1,6 @@
 namespace AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 
-public static class KrafterResource
+public static class PermissionResource
 {
     public const string Users = nameof(Users);
     public const string UserRoles = nameof(UserRoles);

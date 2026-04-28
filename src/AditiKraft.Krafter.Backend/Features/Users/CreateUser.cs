@@ -21,15 +21,15 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class CreateUser
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
-        RoleManager<KrafterRole> roleManager,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager,
         ITenantGetterService tenantGetterService,
-        KrafterContext db,
+        ApplicationDbContext db,
         IJobService jobService) : IScopedHandler
     {
         public async Task<Response> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken)
         {
-            KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+            ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
             if (basic is null)
             {
                 return Response.NotFound("Basic Role Not Found.");
@@ -42,7 +42,7 @@ public sealed class CreateUser
                 request.Roles.Add(basic.Id);
             }
 
-            var user = new KrafterUser
+            var user = new ApplicationUser
             {
                 Id = Guid.NewGuid().ToString(),
                 FirstName = request.FirstName,
@@ -86,7 +86,7 @@ public sealed class CreateUser
         private async Task SyncRolesAsync(string userId, IReadOnlyCollection<string> requestedRoles,
             CancellationToken cancellationToken)
         {
-            List<KrafterUserRole> existingRoles = await db.UserRoles
+            List<ApplicationUserRole> existingRoles = await db.UserRoles
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == userId)
                 .ToListAsync(cancellationToken);
@@ -95,15 +95,15 @@ public sealed class CreateUser
             var rolesToUpdate = existingRoles.Where(r => requestedRoles.Contains(r.RoleId)).ToList();
             var rolesToAdd = requestedRoles
                 .Where(roleId => !existingRoles.Any(er => er.RoleId == roleId))
-                .Select(roleId => new KrafterUserRole { RoleId = roleId, UserId = userId })
+                .Select(roleId => new ApplicationUserRole { RoleId = roleId, UserId = userId })
                 .ToList();
 
-            foreach (KrafterUserRole role in rolesToRemove)
+            foreach (ApplicationUserRole role in rolesToRemove)
             {
                 role.IsDeleted = true;
             }
 
-            foreach (KrafterUserRole role in rolesToUpdate)
+            foreach (ApplicationUserRole role in rolesToUpdate)
             {
                 role.IsDeleted = false;
             }
@@ -129,7 +129,7 @@ public sealed class CreateUser
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost("/", async (
@@ -141,7 +141,7 @@ public sealed class CreateUser
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Create, KrafterResource.Users);
+                .MustHavePermission(PermissionAction.Create, PermissionResource.Users);
         }
     }
 }

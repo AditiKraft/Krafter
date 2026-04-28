@@ -11,9 +11,9 @@ public static class DatabaseConfiguration
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        string connectionString = configuration.GetConnectionString("krafterDb")
+        string connectionString = configuration.GetConnectionString("appDb")
                                   ?? throw new InvalidOperationException(
-                                      "Database connection string 'krafterDb' not found");
+                                      "Database connection string 'appDb' not found");
 
         // TenantDbContext (root tenant registry)
         services.AddDbContext<TenantDbContext>(opts => ConfigureDbContext(opts, connectionString));
@@ -22,7 +22,7 @@ public static class DatabaseConfiguration
         services.AddDbContext<BackgroundJobsContext>(opts => ConfigureDbContext(opts, connectionString));
 
         // KrafterContext (main multi-tenant context)
-        services.AddDbContext<KrafterContext>(opts => ConfigureDbContext(opts, connectionString));
+        services.AddDbContext<ApplicationDbContext>(opts => ConfigureDbContext(opts, connectionString));
 
         return services;
     }

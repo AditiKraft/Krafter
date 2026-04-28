@@ -26,7 +26,7 @@ public static class RouteConfiguration
 
     public static IApplicationBuilder MapDiscoveredRoutes(this IApplicationBuilder app)
     {
-        RouteGroupBuilder apiGroup = ((IEndpointRouteBuilder)app).MapGroup(KrafterRoute.ApiPrefix);
+        RouteGroupBuilder apiGroup = ((IEndpointRouteBuilder)app).MapGroup(ApiRoutes.ApiPrefix);
 
         foreach (IRouteRegistrar registrar in app.ApplicationServices.GetServices<IRouteRegistrar>())
         {

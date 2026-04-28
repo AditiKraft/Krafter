@@ -20,7 +20,7 @@ public sealed class UpdateTenant
 {
     internal sealed class Handler(
         TenantDbContext dbContext,
-        KrafterContext krafterContext,
+        ApplicationDbContext applicationDbContext,
         ITenantGetterService tenantGetterService,
         IServiceProvider serviceProvider) : IScopedHandler
     {
@@ -39,7 +39,7 @@ public sealed class UpdateTenant
                 return Response.BadRequest("Unable to find tenant, please try again later or contact support.");
             }
 
-            if (tenant.Id == KrafterInitialConstants.RootTenant.Id)
+            if (tenant.Id == SeedDataConstants.RootTenant.Id)
             {
                 if (request.Identifier != tenant.Identifier)
                 {
@@ -83,10 +83,10 @@ public sealed class UpdateTenant
                     TenantLinkBuilder.GetSubTenantLinkBasedOnRootTenant(rootTenantLink, request.Identifier);
                 tenantSetter.SetTenant(currentTenantDetails);
 
-                UserManager<KrafterUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<KrafterUser>>();
+                UserManager<ApplicationUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                 IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-                KrafterUser? user = await userManager.Users.AsNoTracking()
+                ApplicationUser? user = await userManager.Users.AsNoTracking()
                     .FirstOrDefaultAsync(c => c.NormalizedEmail == tenant.AdminEmail.ToUpper(), cancellationToken);
                 if (user is not null)
                 {
@@ -110,7 +110,7 @@ public sealed class UpdateTenant
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            await krafterContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
+            await applicationDbContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
             return new Response();
         }
     }
@@ -119,7 +119,7 @@ public sealed class UpdateTenant
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder tenantGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants)
+            RouteGroupBuilder tenantGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Tenants)
                 .AddFluentValidationFilter();
 
             tenantGroup.MapPut($"/{RouteSegment.ById}", async (
@@ -132,7 +132,7 @@ public sealed class UpdateTenant
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Update, KrafterResource.Tenants);
+                .MustHavePermission(PermissionAction.Update, PermissionResource.Tenants);
         }
     }
 }

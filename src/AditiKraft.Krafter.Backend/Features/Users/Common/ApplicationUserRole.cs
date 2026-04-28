@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AditiKraft.Krafter.Backend.Features.Users.Common;
 
-public class KrafterUserRole : IdentityUserRole<string>, ICommonAuthEntityProperty
+public class ApplicationUserRole : IdentityUserRole<string>, ICommonAuthEntityProperty
 {
-    public KrafterUser? CreatedBy { get; set; }
-    public KrafterUser? UpdatedBy { get; set; }
+    public ApplicationUser? CreatedBy { get; set; }
+    public ApplicationUser? UpdatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public string? CreatedById { get; set; }
     public DateTime? UpdatedOn { get; set; }
@@ -16,16 +16,16 @@ public class KrafterUserRole : IdentityUserRole<string>, ICommonAuthEntityProper
     public string? DeleteReason { get; set; }
 
     public string TenantId { get; set; } = null!;
-    public virtual KrafterUser User { get; set; } = null!;
-    public virtual KrafterRole Role { get; set; } = null!;
+    public virtual ApplicationUser User { get; set; } = null!;
+    public virtual ApplicationRole Role { get; set; } = null!;
 }
 
-public class KrafterUserLogin : IdentityUserLogin<string>
+public class ApplicationUserLogin : IdentityUserLogin<string>
 {
     // Add any custom properties or methods if needed
 }
 
-public class KrafterUserToken : IdentityUserToken<string>
+public class ApplicationUserToken : IdentityUserToken<string>
 {
     // Add any custom properties or methods if needed
 }

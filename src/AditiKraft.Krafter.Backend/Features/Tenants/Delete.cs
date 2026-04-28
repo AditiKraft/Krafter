@@ -13,7 +13,7 @@ namespace AditiKraft.Krafter.Backend.Features.Tenants;
 
 public sealed class Delete
 {
-    internal sealed class Handler(TenantDbContext dbContext, KrafterContext krafterContext) : IScopedHandler
+    internal sealed class Handler(TenantDbContext dbContext, ApplicationDbContext applicationDbContext) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(string id)
         {
@@ -24,7 +24,7 @@ public sealed class Delete
                     "Unable to find tenant, please try again later or contact support.");
             }
 
-            if (tenant.Id == KrafterInitialConstants.RootTenant.Id)
+            if (tenant.Id == SeedDataConstants.RootTenant.Id)
             {
                 return Response.Forbidden(
                     "You cannot delete the root tenant.");
@@ -33,7 +33,7 @@ public sealed class Delete
             tenant.IsDeleted = true;
             dbContext.Tenants.Update(tenant);
             await dbContext.SaveChangesAsync();
-            await krafterContext.SaveChangesAsync([nameof(Tenant)]);
+            await applicationDbContext.SaveChangesAsync([nameof(Tenant)]);
             return new Response();
         }
     }
@@ -42,7 +42,7 @@ public sealed class Delete
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
+            RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(ApiRoutes.Tenants).AddFluentValidationFilter();
 
             tenant.MapDelete($"/{RouteSegment.ById}", async
                 ([FromRoute] string id,
@@ -52,7 +52,7 @@ public sealed class Delete
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Delete, KrafterResource.Tenants);
+                .MustHavePermission(PermissionAction.Delete, PermissionResource.Tenants);
         }
     }
 }

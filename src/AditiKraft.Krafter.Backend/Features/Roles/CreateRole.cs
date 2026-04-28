@@ -17,14 +17,14 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 public sealed class CreateRole
 {
     internal sealed class Handler(
-        RoleManager<KrafterRole> roleManager,
-        KrafterContext db,
+        RoleManager<ApplicationRole> roleManager,
+        ApplicationDbContext db,
         ITenantGetterService tenantGetterService) : IScopedHandler
     {
         public async Task<Response> CreateAsync(CreateOrUpdateRoleRequest request, CancellationToken cancellationToken)
         {
             request.Id = null;
-            var role = new KrafterRole(request.Name, request.Description) { Id = Guid.NewGuid().ToString() };
+            var role = new ApplicationRole(request.Name, request.Description) { Id = Guid.NewGuid().ToString() };
 
             IdentityResult result = await roleManager.CreateAsync(role);
             if (!result.Succeeded)
@@ -34,7 +34,7 @@ public sealed class CreateRole
 
             if (request.Permissions is { Count: > 0 })
             {
-                if (role.Name == KrafterRoleConstant.Admin)
+                if (role.Name == RoleConstants.Admin)
                 {
                     return Response.BadRequest("Not allowed to modify Permissions for this Role.");
                 }
@@ -53,18 +53,18 @@ public sealed class CreateRole
             string tenantId,
             CancellationToken cancellationToken)
         {
-            List<KrafterRoleClaim> permissions = await db.RoleClaims
+            List<ApplicationRoleClaim> permissions = await db.RoleClaims
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantId &&
                             c.RoleId == roleId &&
-                            c.ClaimType == KrafterClaims.Permission)
+                            c.ClaimType == AppClaimTypes.Permission)
                 .ToListAsync(cancellationToken);
 
-            var permissionsToRemove = new List<KrafterRoleClaim>();
-            var permissionsToUpdate = new List<KrafterRoleClaim>();
-            var permissionsToAdd = new List<KrafterRoleClaim>();
+            var permissionsToRemove = new List<ApplicationRoleClaim>();
+            var permissionsToUpdate = new List<ApplicationRoleClaim>();
+            var permissionsToAdd = new List<ApplicationRoleClaim>();
 
-            foreach (KrafterRoleClaim krafterRoleClaim in permissions)
+            foreach (ApplicationRoleClaim krafterRoleClaim in permissions)
             {
                 if (krafterRoleClaim.ClaimValue is not null &&
                     !requestedPermissions.Contains(krafterRoleClaim.ClaimValue))
@@ -74,7 +74,7 @@ public sealed class CreateRole
                 }
             }
 
-            foreach (KrafterRoleClaim krafterRoleClaim in permissions)
+            foreach (ApplicationRoleClaim krafterRoleClaim in permissions)
             {
                 if (krafterRoleClaim.ClaimValue is not null &&
                     requestedPermissions.Contains(krafterRoleClaim.ClaimValue))
@@ -86,12 +86,12 @@ public sealed class CreateRole
 
             foreach (string claim in requestedPermissions)
             {
-                KrafterRoleClaim? firstOrDefault = permissions.FirstOrDefault(c => c.ClaimValue == claim);
+                ApplicationRoleClaim? firstOrDefault = permissions.FirstOrDefault(c => c.ClaimValue == claim);
                 if (firstOrDefault is null)
                 {
-                    permissionsToAdd.Add(new KrafterRoleClaim
+                    permissionsToAdd.Add(new ApplicationRoleClaim
                     {
-                        RoleId = roleId, ClaimType = KrafterClaims.Permission, ClaimValue = claim
+                        RoleId = roleId, ClaimType = AppClaimTypes.Permission, ClaimValue = claim
                     });
                 }
             }
@@ -117,7 +117,7 @@ public sealed class CreateRole
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapPost("/", async (
@@ -129,7 +129,7 @@ public sealed class CreateRole
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Create, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.Create, PermissionResource.Roles);
         }
     }
 }

@@ -93,9 +93,9 @@ public sealed class ExternalAuth
 
     internal sealed class Handler(
         ITokenService tokenService,
-        KrafterContext db,
-        UserManager<KrafterUser> userManager,
-        RoleManager<KrafterRole> roleManager,
+        ApplicationDbContext db,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager,
         GoogleAuthClient googleAuthClient) : IScopedHandler
     {
         public async Task<Response<TokenResponse>> GetTokenAsync(
@@ -118,16 +118,16 @@ public sealed class ExternalAuth
             }
 
             // Find or create user based on email
-            KrafterUser? user = await userManager.FindByEmailAsync(userInfo.Email);
+            ApplicationUser? user = await userManager.FindByEmailAsync(userInfo.Email);
             if (user == null)
             {
-                KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+                ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
                 if (basic is null)
                 {
                     return Response<TokenResponse>.NotFound("Basic Role Not Found.");
                 }
 
-                user = new KrafterUser
+                user = new ApplicationUser
                 {
                     IsActive = true,
                     FirstName = userInfo.GivenName,
@@ -149,7 +149,7 @@ public sealed class ExternalAuth
                     return Response<TokenResponse>.BadRequest("An error occurred while creating user.");
                 }
 
-                db.UserRoles.Add(new KrafterUserRole { RoleId = basic.Id, UserId = user.Id });
+                db.UserRoles.Add(new ApplicationUserRole { RoleId = basic.Id, UserId = user.Id });
                 await db.SaveChangesAsync(new List<string>(), true, cancellationToken);
             }
 
@@ -162,16 +162,16 @@ public sealed class ExternalAuth
     {
         public void MapRoute(IEndpointRouteBuilder app)
         {
-            RouteGroupBuilder productGroup = app.MapGroup(KrafterRoute.ExternalAuth)
+            RouteGroupBuilder productGroup = app.MapGroup(ApiRoutes.ExternalAuth)
                 .AddFluentValidationFilter();
 
             productGroup.MapPost($"/{RouteSegment.Google}", async (
                 HttpContext context,
                 GoogleAuthRequest request,
                 Handler externalAuthService,
-                KrafterContext db,
-                UserManager<KrafterUser> userManager,
-                RoleManager<KrafterRole> roleManager) =>
+                ApplicationDbContext db,
+                UserManager<ApplicationUser> userManager,
+                RoleManager<ApplicationRole> roleManager) =>
             {
                 Response<TokenResponse> res = await externalAuthService.GetTokenAsync(request, CancellationToken.None);
                 return Results.Json(res, statusCode: res.StatusCode);

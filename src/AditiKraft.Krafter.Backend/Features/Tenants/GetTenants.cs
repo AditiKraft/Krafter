@@ -119,7 +119,7 @@ public sealed class GetTenants
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(KrafterRoute.Tenants).AddFluentValidationFilter();
+            RouteGroupBuilder tenant = endpointRouteBuilder.MapGroup(ApiRoutes.Tenants).AddFluentValidationFilter();
 
             tenant.MapGet("/", async
                 (
@@ -131,7 +131,7 @@ public sealed class GetTenants
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<TenantDto>>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Tenants);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Tenants);
         }
     }
 }

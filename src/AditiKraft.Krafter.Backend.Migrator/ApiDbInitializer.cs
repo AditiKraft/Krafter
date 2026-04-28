@@ -28,7 +28,7 @@ public sealed class ApiDbInitializer(
 
             await MigrateDbContextAsync<TenantDbContext>(scope.ServiceProvider, cancellationToken);
             await MigrateDbContextAsync<BackgroundJobsContext>(scope.ServiceProvider, cancellationToken);
-            await MigrateDbContextAsync<KrafterContext>(scope.ServiceProvider, cancellationToken);
+            await MigrateDbContextAsync<ApplicationDbContext>(scope.ServiceProvider, cancellationToken);
 
             logger.LogInformation("Database migration completed.");
         }

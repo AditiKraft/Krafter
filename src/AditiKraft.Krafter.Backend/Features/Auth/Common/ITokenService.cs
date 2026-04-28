@@ -7,7 +7,7 @@ namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 public interface ITokenService
 {
     public Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress);
-    public Task<TokenResponse> GenerateTokensAndUpdateUser(KrafterUser user, string ipAddress);
+    public Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress);
 }
 
 

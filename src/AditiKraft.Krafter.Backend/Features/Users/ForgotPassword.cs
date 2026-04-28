@@ -15,13 +15,13 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class ForgotPassword
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
+        UserManager<ApplicationUser> userManager,
         ITenantGetterService tenantGetterService,
         IJobService jobService) : IScopedHandler
     {
         public async Task<Response> ForgotPasswordAsync(ForgotPasswordRequest request)
         {
-            KrafterUser? user = await userManager.FindByEmailAsync(request.Email.Normalize());
+            ApplicationUser? user = await userManager.FindByEmailAsync(request.Email.Normalize());
             if (user is null)
             {
                 return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
@@ -56,7 +56,7 @@ public sealed class ForgotPassword
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPost($"/{RouteSegment.ForgotPassword}", async (

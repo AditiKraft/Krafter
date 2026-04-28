@@ -12,7 +12,7 @@ public static class ClaimsPrincipalExtensions
     //     => principal.FindFirstValue(FSHClaims.Tenant);
 
     public static string? GetFullName(this ClaimsPrincipal principal)
-        => principal?.FindFirst(KrafterClaims.Fullname)?.Value;
+        => principal?.FindFirst(AppClaimTypes.Fullname)?.Value;
 
     public static string? GetFirstName(this ClaimsPrincipal principal)
         => principal?.FindFirst(ClaimTypes.Name)?.Value;
@@ -31,7 +31,7 @@ public static class ClaimsPrincipalExtensions
 
     public static DateTimeOffset GetExpiration(this ClaimsPrincipal principal) =>
         DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(
-            principal.FindFirstValue(KrafterClaims.Expiration)));
+            principal.FindFirstValue(AppClaimTypes.Expiration)));
 
     private static string? FindFirstValue(this ClaimsPrincipal principal, string claimType) =>
         principal is null

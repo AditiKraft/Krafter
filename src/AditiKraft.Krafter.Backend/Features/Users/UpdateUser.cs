@@ -17,15 +17,15 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 public sealed class UpdateUser
 {
     internal sealed class Handler(
-        UserManager<KrafterUser> userManager,
+        UserManager<ApplicationUser> userManager,
         ITenantGetterService tenantGetterService,
         TenantDbContext tenantDbContext,
-        KrafterContext db) : IScopedHandler
+        ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response> UpdateAsync(string id, CreateUserRequest request, CancellationToken cancellationToken)
         {
             request.Id = id;
-            KrafterUser? user = await userManager.FindByIdAsync(id);
+            ApplicationUser? user = await userManager.FindByIdAsync(id);
             if (user is null)
             {
                 return Response.NotFound("User Not Found");
@@ -87,7 +87,7 @@ public sealed class UpdateUser
         private async Task SyncRolesAsync(string userId, IReadOnlyCollection<string> requestedRoles,
             CancellationToken cancellationToken)
         {
-            List<KrafterUserRole> existingRoles = await db.UserRoles
+            List<ApplicationUserRole> existingRoles = await db.UserRoles
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == userId)
                 .ToListAsync(cancellationToken);
@@ -96,15 +96,15 @@ public sealed class UpdateUser
             var rolesToUpdate = existingRoles.Where(r => requestedRoles.Contains(r.RoleId)).ToList();
             var rolesToAdd = requestedRoles
                 .Where(roleId => !existingRoles.Any(er => er.RoleId == roleId))
-                .Select(roleId => new KrafterUserRole { RoleId = roleId, UserId = userId })
+                .Select(roleId => new ApplicationUserRole { RoleId = roleId, UserId = userId })
                 .ToList();
 
-            foreach (KrafterUserRole role in rolesToRemove)
+            foreach (ApplicationUserRole role in rolesToRemove)
             {
                 role.IsDeleted = true;
             }
 
-            foreach (KrafterUserRole role in rolesToUpdate)
+            foreach (ApplicationUserRole role in rolesToUpdate)
             {
                 role.IsDeleted = false;
             }
@@ -130,7 +130,7 @@ public sealed class UpdateUser
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapPut($"/{RouteSegment.ById}", async (
@@ -143,7 +143,7 @@ public sealed class UpdateUser
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Update, KrafterResource.Users);
+                .MustHavePermission(PermissionAction.Update, PermissionResource.Users);
         }
     }
 }

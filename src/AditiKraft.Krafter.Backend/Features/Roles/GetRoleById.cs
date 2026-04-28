@@ -14,11 +14,11 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 
 public sealed class GetRoleById
 {
-    internal sealed class Handler(RoleManager<KrafterRole> roleManager) : IScopedHandler
+    internal sealed class Handler(RoleManager<ApplicationRole> roleManager) : IScopedHandler
     {
         public async Task<Response<RoleDto>> GetByIdAsync(string id)
         {
-            KrafterRole? role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == id);
+            ApplicationRole? role = await roleManager.Roles.SingleOrDefaultAsync(x => x.Id == id);
 
             if (role is null)
             {
@@ -33,7 +33,7 @@ public sealed class GetRoleById
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapGet($"/{RouteSegment.ById}", async (
@@ -44,7 +44,7 @@ public sealed class GetRoleById
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<RoleDto>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Roles);
         }
     }
 }

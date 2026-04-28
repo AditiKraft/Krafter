@@ -1,6 +1,6 @@
 namespace AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 
-public record KrafterPermission(
+public record PermissionDefinition(
     string Description,
     string Action,
     string Resource,

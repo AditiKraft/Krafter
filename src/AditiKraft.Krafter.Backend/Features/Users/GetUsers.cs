@@ -16,13 +16,13 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class GetUsers
 {
-    internal sealed class Handler(KrafterContext db) : IScopedHandler
+    internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response<PaginationResponse<UserDto>>> GetAsync(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            ExpressionStarter<KrafterUser>? predicate = PredicateBuilder.New<KrafterUser>(true);
+            ExpressionStarter<ApplicationUser>? predicate = PredicateBuilder.New<ApplicationUser>(true);
 
             if (!string.IsNullOrWhiteSpace(requestInput.Id))
             {
@@ -115,7 +115,7 @@ public sealed class GetUsers
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Users)
+            RouteGroupBuilder userGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Users)
                 .AddFluentValidationFilter();
 
             userGroup.MapGet("/", async (
@@ -128,7 +128,7 @@ public sealed class GetUsers
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserDto>>>()
-                .MustHavePermission(KrafterAction.View, KrafterResource.Users);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Users);
         }
     }
 }

@@ -14,14 +14,14 @@ public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinde
     {
         if (string.IsNullOrWhiteSpace(identifier) || TenantSettings.TenancyMode == TenancyMode.Single)
         {
-            return Response<Tenant>.Success(KrafterInitialConstants.KrafterTenant);
+            return Response<Tenant>.Success(SeedDataConstants.DefaultTenant);
         }
 
         Tenant? tenant = await tenantDbContext.Tenants.AsNoTracking()
             .SingleOrDefaultAsync(c => c.Identifier == identifier);
         if (tenant is null)
         {
-            return Response<Tenant>.Success(KrafterInitialConstants.KrafterTenant);
+            return Response<Tenant>.Success(SeedDataConstants.DefaultTenant);
         }
 
         if (tenant.IsActive == false)

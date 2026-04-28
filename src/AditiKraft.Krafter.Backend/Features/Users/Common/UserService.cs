@@ -22,27 +22,27 @@ public static class QueryStringKeys
     public const string UserId = "userId";
 }
 
-public static class KrafterInitialConstants
+public static class SeedDataConstants
 {
     public static class RootUser
     {
         public const string Id = "root";
         public const string LastName = "Admin";
         public const string FirstName = "Admin";
-        public const string EmailAddress = "admin@getkrafter.dev";
+        public const string EmailAddress = "admin@example.com";
     }
 
     public static class RootTenant
     {
         public const string Id = "root";
 
-        public const string Identifier = KrafterTenantConstants.Identifier;
-        public const string Name = KrafterTenantConstants.Name;
+        public const string Identifier = DefaultTenantConstants.Identifier;
+        public const string Name = DefaultTenantConstants.Name;
     }
 
     public const string DefaultPassword = "123Pa$$word!";
 
-    public static Tenant KrafterTenant { private set; get; } = new()
+    public static Tenant DefaultTenant { private set; get; } = new()
     {
         Id = RootTenant.Id,
         Identifier = RootTenant.Identifier,
@@ -55,19 +55,19 @@ public static class KrafterInitialConstants
 }
 
 public class UserService(
-    SignInManager<KrafterUser> signInManager,
-    UserManager<KrafterUser> userManager,
-    RoleManager<KrafterRole> roleManager,
+    SignInManager<ApplicationUser> signInManager,
+    UserManager<ApplicationUser> userManager,
+    RoleManager<ApplicationRole> roleManager,
     ITenantGetterService tenantGetterService,
     TenantDbContext tenantDbContext,
-    KrafterContext db,
+    ApplicationDbContext db,
     IJobService jobService)
     : IUserService, IScopedService
 {
     public async Task<Response<List<string>>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
     {
         //var user = await userManager.Asn.FindByIdAsync(userId);
-        KrafterUser? user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
+        ApplicationUser? user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
         if (user is null)
         {
             return Response<List<string>>.NotFound("User Not Found.");
@@ -75,13 +75,13 @@ public class UserService(
 
         IList<string> userRoles = await userManager.GetRolesAsync(user);
         var permissions = new List<string>();
-        foreach (KrafterRole role in await roleManager.Roles.AsNoTracking()
+        foreach (ApplicationRole role in await roleManager.Roles.AsNoTracking()
                      .Where(r => userRoles.Contains(r.Name!) && r.IsDeleted == false)
                      .ToListAsync(cancellationToken))
         {
             permissions.AddRange(await db.RoleClaims.AsNoTracking()
                 .Where(rc =>
-                    rc.RoleId == role.Id && rc.ClaimType == KrafterClaims.Permission && rc.IsDeleted == false)
+                    rc.RoleId == role.Id && rc.ClaimType == AppClaimTypes.Permission && rc.IsDeleted == false)
                 .Select(rc => rc.ClaimValue!)
                 .ToListAsync(cancellationToken));
         }
@@ -103,12 +103,12 @@ public class UserService(
 
     public async Task<Response> CreateOrUpdateAsync(CreateUserRequest request)
     {
-        KrafterUser? user;
+        ApplicationUser? user;
         bool isNewUser = string.IsNullOrEmpty(request.Id);
 
         if (isNewUser)
         {
-            KrafterRole? basic = await roleManager.FindByNameAsync(KrafterRoleConstant.Basic);
+            ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
             if (basic is null)
             {
                 return Response.NotFound("Basic Role Not Found.");
@@ -117,7 +117,7 @@ public class UserService(
             request.Roles ??= new List<string>();
             request.Roles.Add(basic.Id);
 
-            user = request.Adapt<KrafterUser>();
+            user = request.Adapt<ApplicationUser>();
             user.IsActive = true;
 
             user.Id = Guid.NewGuid().ToString();
@@ -201,16 +201,16 @@ public class UserService(
 
         if (request.Roles.Any())
         {
-            List<KrafterUserRole> roles = await db.UserRoles
+            List<ApplicationUserRole> roles = await db.UserRoles
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == request.Id)
                 .ToListAsync();
 
-            var permissionsToRemove = new List<KrafterUserRole>();
-            var permissionsToUpdate = new List<KrafterUserRole>();
-            var permissionsToAdd = new List<KrafterUserRole>();
+            var permissionsToRemove = new List<ApplicationUserRole>();
+            var permissionsToUpdate = new List<ApplicationUserRole>();
+            var permissionsToAdd = new List<ApplicationUserRole>();
 
-            foreach (KrafterUserRole krafterRoleClaim in roles)
+            foreach (ApplicationUserRole krafterRoleClaim in roles)
             {
                 if (!request.Roles.Contains(krafterRoleClaim.RoleId))
                 {
@@ -220,7 +220,7 @@ public class UserService(
                 }
             }
 
-            foreach (KrafterUserRole krafterRoleClaim in roles)
+            foreach (ApplicationUserRole krafterRoleClaim in roles)
             {
                 if (request.Roles.Contains(krafterRoleClaim.RoleId))
                 {
@@ -232,10 +232,10 @@ public class UserService(
 
             foreach (string claim in request.Roles)
             {
-                KrafterUserRole? firstOrDefault = roles.FirstOrDefault(c => c.RoleId == claim);
+                ApplicationUserRole? firstOrDefault = roles.FirstOrDefault(c => c.RoleId == claim);
                 if (firstOrDefault is null)
                 {
-                    permissionsToAdd.Add(new KrafterUserRole { RoleId = claim, UserId = user.Id });
+                    permissionsToAdd.Add(new ApplicationUserRole { RoleId = claim, UserId = user.Id });
                 }
             }
 
@@ -256,7 +256,7 @@ public class UserService(
         }
         else
         {
-            List<KrafterUserRole> roles = await db.UserRoles
+            List<ApplicationUserRole> roles = await db.UserRoles
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == request.Id)
                 .ToListAsync();

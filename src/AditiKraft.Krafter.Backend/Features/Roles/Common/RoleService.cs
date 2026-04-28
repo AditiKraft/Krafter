@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 namespace AditiKraft.Krafter.Backend.Features.Roles.Common;
 
 public class RoleService(
-    KrafterContext db)
+    ApplicationDbContext db)
     : IRoleService, IScopedService
 {
     public async Task<Response<RoleDto>> GetByIdAsync(string id)
     {
-        KrafterRole? res = await db.Roles.SingleOrDefaultAsync(x => x.Id == id);
+        ApplicationRole? res = await db.Roles.SingleOrDefaultAsync(x => x.Id == id);
         if (res is not null)
         {
             return Response<RoleDto>.Success(res.Adapt<RoleDto>());

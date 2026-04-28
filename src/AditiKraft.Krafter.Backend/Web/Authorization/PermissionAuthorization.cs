@@ -24,7 +24,7 @@ internal class PermissionAuthorizationHandler(IServiceScopeFactory scopeFactory)
         }
 
         // Fast path: check permission claims enriched by BlazorJwtBearerEvents.TokenValidated (SSR)
-        if (context.User!.HasClaim(KrafterClaims.Permission, requirement.Permission))
+        if (context.User!.HasClaim(AppClaimTypes.Permission, requirement.Permission))
         {
             context.Succeed(requirement);
             return;
@@ -49,7 +49,7 @@ internal class PermissionPolicyProvider(IOptions<AuthorizationOptions> options) 
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        if (policyName.StartsWith(KrafterClaims.Permission, StringComparison.OrdinalIgnoreCase))
+        if (policyName.StartsWith(AppClaimTypes.Permission, StringComparison.OrdinalIgnoreCase))
         {
             var policy = new AuthorizationPolicyBuilder();
             policy.AddRequirements(new PermissionRequirement(policyName));
@@ -67,7 +67,7 @@ public static class MustHavePermissionExtension
     public static TBuilder MustHavePermission<TBuilder>(this TBuilder builder, string action, string resource)
         where TBuilder : IEndpointConventionBuilder
     {
-        string policyName = KrafterPermission.NameFor(action, resource);
+        string policyName = PermissionDefinition.NameFor(action, resource);
         if (builder == null)
         {
             throw new ArgumentNullException(nameof(builder));

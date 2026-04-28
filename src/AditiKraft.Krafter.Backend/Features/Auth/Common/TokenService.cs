@@ -16,8 +16,8 @@ using Microsoft.IdentityModel.Tokens;
 namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 
 public class TokenService(
-    UserManager<KrafterUser> userManager,
-    KrafterContext krafterContext,
+    UserManager<ApplicationUser> userManager,
+    ApplicationDbContext applicationDbContext,
     IUserService userService,
     IOptions<JwtSettings> jwtSettings,
     IOptions<SecuritySettings> securitySettings)
@@ -29,7 +29,7 @@ public class TokenService(
 
     public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress)
     {
-        KrafterUser? user = await userManager.FindByIdAsync(userId);
+        ApplicationUser? user = await userManager.FindByIdAsync(userId);
         if (user is null)
         {
             return Response<TokenResponse>.Unauthorized("Authentication Failed.");
@@ -38,12 +38,12 @@ public class TokenService(
         return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress));
     }
 
-    public async Task<TokenResponse> GenerateTokensAndUpdateUser(KrafterUser user, string ipAddress)
+    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress)
     {
         string token = GenerateJwt(user, ipAddress);
         bool newTone = false;
         UserRefreshToken? tokenResponse =
-            await krafterContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            await applicationDbContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
         if (tokenResponse is null)
         {
             newTone = true;
@@ -58,31 +58,31 @@ public class TokenService(
         ;
         if (newTone)
         {
-            krafterContext.UserRefreshTokens.Add(tokenResponse);
+            applicationDbContext.UserRefreshTokens.Add(tokenResponse);
         }
         else
         {
-            krafterContext.UserRefreshTokens.Update(tokenResponse);
+            applicationDbContext.UserRefreshTokens.Update(tokenResponse);
         }
 
         Response<List<string>>? permissions = await userService.GetPermissionsAsync(user.Id, CancellationToken.None);
-        await krafterContext.SaveChangesAsync();
+        await applicationDbContext.SaveChangesAsync();
         return new TokenResponse(token, tokenResponse.RefreshToken, tokenResponse.RefreshTokenExpiryTime,
             tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
     }
 
-    private string GenerateJwt(KrafterUser user, string ipAddress) =>
+    private string GenerateJwt(ApplicationUser user, string ipAddress) =>
         GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress));
 
-    private IEnumerable<Claim> GetClaims(KrafterUser user, string ipAddress) =>
+    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress) =>
         new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Email, user.Email!),
-            new(KrafterClaims.Fullname, $"{user.FirstName} {user.LastName}"),
+            new(AppClaimTypes.Fullname, $"{user.FirstName} {user.LastName}"),
             new(ClaimTypes.Name, user.FirstName ?? string.Empty),
             new(ClaimTypes.Surname, user.LastName ?? string.Empty),
-            new(KrafterClaims.IpAddress, ipAddress),
+            new(AppClaimTypes.IpAddress, ipAddress),
             new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
         };
 

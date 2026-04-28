@@ -16,21 +16,21 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 public sealed class UpdateRolePermissions
 {
     internal sealed class Handler(
-        RoleManager<KrafterRole> roleManager,
-        KrafterContext db) : IScopedHandler
+        RoleManager<ApplicationRole> roleManager,
+        ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response> UpdatePermissionsAsync(
             UpdateRolePermissionsRequest request,
             CancellationToken cancellationToken)
         {
-            KrafterRole? role = await roleManager.FindByIdAsync(request.RoleId);
+            ApplicationRole? role = await roleManager.FindByIdAsync(request.RoleId);
 
             if (role is null)
             {
                 return new Response { IsError = true, StatusCode = 404, Message = "Role Not Found" };
             }
 
-            if (role.Name == KrafterRoleConstant.Admin)
+            if (role.Name == RoleConstants.Admin)
             {
                 return new Response
                 {
@@ -61,9 +61,9 @@ public sealed class UpdateRolePermissions
             {
                 if (!string.IsNullOrEmpty(permission))
                 {
-                    db.RoleClaims.Add(new KrafterRoleClaim
+                    db.RoleClaims.Add(new ApplicationRoleClaim
                     {
-                        RoleId = role.Id, ClaimType = KrafterClaims.Permission, ClaimValue = permission
+                        RoleId = role.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = permission
                     });
                     await db.SaveChangesAsync(cancellationToken);
                 }
@@ -77,7 +77,7 @@ public sealed class UpdateRolePermissions
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapPut("/permissions", async (
@@ -89,7 +89,7 @@ public sealed class UpdateRolePermissions
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Update, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.Update, PermissionResource.Roles);
         }
     }
 }

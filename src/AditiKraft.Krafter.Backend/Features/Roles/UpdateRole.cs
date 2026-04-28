@@ -17,15 +17,15 @@ namespace AditiKraft.Krafter.Backend.Features.Roles;
 public sealed class UpdateRole
 {
     internal sealed class Handler(
-        RoleManager<KrafterRole> roleManager,
-        KrafterContext db,
+        RoleManager<ApplicationRole> roleManager,
+        ApplicationDbContext db,
         ITenantGetterService tenantGetterService) : IScopedHandler
     {
         public async Task<Response> UpdateAsync(string id, CreateOrUpdateRoleRequest request,
             CancellationToken cancellationToken)
         {
             request.Id = id;
-            KrafterRole? role = await roleManager.FindByIdAsync(id);
+            ApplicationRole? role = await roleManager.FindByIdAsync(id);
             if (role == null)
             {
                 return Response.NotFound("Role Not Found");
@@ -33,7 +33,7 @@ public sealed class UpdateRole
 
             if (request.Name != role.Name)
             {
-                if (KrafterRoleConstant.IsDefault(role.Name!))
+                if (RoleConstants.IsDefault(role.Name!))
                 {
                     return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
                 }
@@ -44,7 +44,7 @@ public sealed class UpdateRole
 
             if (request.Description != role.Description)
             {
-                if (KrafterRoleConstant.IsDefault(role.Name!))
+                if (RoleConstants.IsDefault(role.Name!))
                 {
                     return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
                 }
@@ -60,7 +60,7 @@ public sealed class UpdateRole
 
             if (request.Permissions is { Count: > 0 })
             {
-                if (role.Name == KrafterRoleConstant.Admin)
+                if (role.Name == RoleConstants.Admin)
                 {
                     return Response.BadRequest("Not allowed to modify Permissions for this Role.");
                 }
@@ -79,18 +79,18 @@ public sealed class UpdateRole
             string tenantId,
             CancellationToken cancellationToken)
         {
-            List<KrafterRoleClaim> permissions = await db.RoleClaims
+            List<ApplicationRoleClaim> permissions = await db.RoleClaims
                 .IgnoreQueryFilters()
                 .Where(c => c.TenantId == tenantId &&
                             c.RoleId == roleId &&
-                            c.ClaimType == KrafterClaims.Permission)
+                            c.ClaimType == AppClaimTypes.Permission)
                 .ToListAsync(cancellationToken);
 
-            var permissionsToRemove = new List<KrafterRoleClaim>();
-            var permissionsToUpdate = new List<KrafterRoleClaim>();
-            var permissionsToAdd = new List<KrafterRoleClaim>();
+            var permissionsToRemove = new List<ApplicationRoleClaim>();
+            var permissionsToUpdate = new List<ApplicationRoleClaim>();
+            var permissionsToAdd = new List<ApplicationRoleClaim>();
 
-            foreach (KrafterRoleClaim krafterRoleClaim in permissions)
+            foreach (ApplicationRoleClaim krafterRoleClaim in permissions)
             {
                 if (krafterRoleClaim.ClaimValue is not null &&
                     !requestedPermissions.Contains(krafterRoleClaim.ClaimValue))
@@ -100,7 +100,7 @@ public sealed class UpdateRole
                 }
             }
 
-            foreach (KrafterRoleClaim krafterRoleClaim in permissions)
+            foreach (ApplicationRoleClaim krafterRoleClaim in permissions)
             {
                 if (krafterRoleClaim.ClaimValue is not null &&
                     requestedPermissions.Contains(krafterRoleClaim.ClaimValue))
@@ -112,12 +112,12 @@ public sealed class UpdateRole
 
             foreach (string claim in requestedPermissions)
             {
-                KrafterRoleClaim? firstOrDefault = permissions.FirstOrDefault(c => c.ClaimValue == claim);
+                ApplicationRoleClaim? firstOrDefault = permissions.FirstOrDefault(c => c.ClaimValue == claim);
                 if (firstOrDefault is null)
                 {
-                    permissionsToAdd.Add(new KrafterRoleClaim
+                    permissionsToAdd.Add(new ApplicationRoleClaim
                     {
-                        RoleId = roleId, ClaimType = KrafterClaims.Permission, ClaimValue = claim
+                        RoleId = roleId, ClaimType = AppClaimTypes.Permission, ClaimValue = claim
                     });
                 }
             }
@@ -143,7 +143,7 @@ public sealed class UpdateRole
     {
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
-            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(KrafterRoute.Roles)
+            RouteGroupBuilder roleGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Roles)
                 .AddFluentValidationFilter();
 
             roleGroup.MapPut($"/{RouteSegment.ById}", async (
@@ -156,7 +156,7 @@ public sealed class UpdateRole
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(KrafterAction.Update, KrafterResource.Roles);
+                .MustHavePermission(PermissionAction.Update, PermissionResource.Roles);
         }
     }
 }

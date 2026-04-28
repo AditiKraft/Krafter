@@ -1,6 +1,6 @@
 namespace AditiKraft.Krafter.Contracts.Common;
 
-public static class KrafterRoute
+public static class ApiRoutes
 {
     public const string ApiPrefix = "api";
 

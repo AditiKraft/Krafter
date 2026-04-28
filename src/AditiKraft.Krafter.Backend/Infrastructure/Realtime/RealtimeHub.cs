@@ -89,7 +89,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
 
         if (string.IsNullOrWhiteSpace(tenantIdentifier))
         {
-            tenantIdentifier = KrafterInitialConstants.RootTenant.Identifier;
+            tenantIdentifier = SeedDataConstants.RootTenant.Identifier;
         }
 
         return tenantIdentifier;

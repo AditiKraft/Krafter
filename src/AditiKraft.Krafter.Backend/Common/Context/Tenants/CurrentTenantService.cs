@@ -9,13 +9,13 @@ namespace AditiKraft.Krafter.Backend.Common.Context.Tenants;
 public class CurrentTenantService : ITenantGetterService, ITenantSetterService
 {
     public CurrentTenantDetails Tenant { get; private set; } =
-        KrafterInitialConstants.KrafterTenant.Adapt<CurrentTenantDetails>();
+        SeedDataConstants.DefaultTenant.Adapt<CurrentTenantDetails>();
 
     public void SetTenant(CurrentTenantDetails tenant)
     {
         if (string.IsNullOrWhiteSpace(tenant.TenantLink))
         {
-            throw new KrafterException("Tenant domain is required");
+            throw new AppException("Tenant domain is required");
         }
 
         Tenant = tenant;
