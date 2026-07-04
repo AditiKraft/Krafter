@@ -50,6 +50,11 @@ public class TokenService(
             tokenResponse = new UserRefreshToken { UserId = user.Id };
         }
 
+        // Retain the outgoing token as the "previous" one and stamp the rotation time so a concurrent
+        // refresh that still presents this value can be honoured from the grace window (see RefreshToken).
+        tokenResponse.PreviousRefreshToken = tokenResponse.RefreshToken;
+        tokenResponse.RefreshTokenRotatedAt = DateTime.UtcNow;
+
         tokenResponse.RefreshToken = GenerateRefreshToken();
         tokenResponse.RefreshTokenExpiryTime =
             DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationInDays).AddMinutes(-1);
@@ -69,6 +74,16 @@ public class TokenService(
         await applicationDbContext.SaveChangesAsync();
         return new TokenResponse(token, tokenResponse.RefreshToken, tokenResponse.RefreshTokenExpiryTime,
             tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
+    }
+
+    public async Task<TokenResponse> GenerateAccessTokenWithoutRotation(ApplicationUser user, string ipAddress,
+        UserRefreshToken existing)
+    {
+        string token = GenerateJwt(user, ipAddress);
+        Response<List<string>>? permissions = await userService.GetPermissionsAsync(user.Id, CancellationToken.None);
+        DateTime tokenExpiry = DateTime.UtcNow.AddMinutes(_jwtSettings.TokenExpirationInMinutes).AddMinutes(-1);
+        return new TokenResponse(token, existing.RefreshToken!, existing.RefreshTokenExpiryTime,
+            tokenExpiry, permissions?.Data ?? new List<string>());
     }
 
     private string GenerateJwt(ApplicationUser user, string ipAddress) =>
