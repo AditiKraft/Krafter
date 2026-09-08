@@ -1,10 +1,10 @@
 using System.Net;
 using System.Text.Json;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Errors;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Contracts.Common;
-using FluentValidation.Results;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using FluentValidation.Results;
 using Microsoft.Data.SqlClient;
 
 namespace AditiKraft.Krafter.Backend.Web.Middleware;
@@ -114,5 +114,3 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
         }
     }
 }
-
-

@@ -1,6 +1,4 @@
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-
-namespace AditiKraft.Krafter.Backend.Common.Context.Tenants;
+namespace AditiKraft.Krafter.Backend.Common.Tenants;
 
 public static class TenantServiceRegistration
 {
@@ -21,7 +19,7 @@ public static class TenantServiceRegistration
         services.AddScoped<T>();
         foreach (Type type in types)
         {
-            // register a scoped 
+            // register a scoped
             services.AddScoped(type, svc =>
             {
                 T rs = svc.GetRequiredService<T>();
@@ -32,5 +30,3 @@ public static class TenantServiceRegistration
         return services;
     }
 }
-
-

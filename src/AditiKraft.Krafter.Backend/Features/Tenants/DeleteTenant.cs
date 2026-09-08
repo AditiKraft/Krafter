@@ -1,7 +1,7 @@
-using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
+using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Tenants;
 
-public sealed class Delete
+public sealed class DeleteTenant
 {
     internal sealed class Handler(TenantDbContext dbContext, ApplicationDbContext applicationDbContext) : IScopedHandler
     {
@@ -56,6 +56,3 @@ public sealed class Delete
         }
     }
 }
-
-
-

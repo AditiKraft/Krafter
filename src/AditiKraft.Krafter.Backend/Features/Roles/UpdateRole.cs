@@ -1,8 +1,8 @@
-using AditiKraft.Krafter.Backend.Web;
-using AditiKraft.Krafter.Backend.Web.Authorization;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
@@ -117,7 +117,9 @@ public sealed class UpdateRole
                 {
                     permissionsToAdd.Add(new ApplicationRoleClaim
                     {
-                        RoleId = roleId, ClaimType = AppClaimTypes.Permission, ClaimValue = claim
+                        RoleId = roleId,
+                        ClaimType = AppClaimTypes.Permission,
+                        ClaimValue = claim
                     });
                 }
             }
@@ -160,6 +162,3 @@ public sealed class UpdateRole
         }
     }
 }
-
-
-

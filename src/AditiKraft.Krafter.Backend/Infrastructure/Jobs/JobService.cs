@@ -1,26 +1,9 @@
-using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
-using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using TickerQ.Utilities;
-using TickerQ.Utilities.Base;
 using TickerQ.Utilities.Interfaces.Managers;
 using TickerQ.Utilities.Models;
 using TickerQ.Utilities.Models.Ticker;
 
 namespace AditiKraft.Krafter.Backend.Infrastructure.Jobs;
-
-public class Jobs(IEmailService emailService)
-{
-    [TickerFunction(nameof(SendEmailJob))]
-    public async Task SendEmailJob(TickerFunctionContext<SendEmailRequestInput> tickerContext,
-        CancellationToken cancellationToken)
-    {
-        await emailService.SendEmailAsync(
-            tickerContext.Request.Email,
-            tickerContext.Request.Subject,
-            tickerContext.Request.HtmlMessage, cancellationToken
-        );
-    }
-}
 
 public class JobService(ITimeTickerManager<TimeTicker> timeTickerManager)
     : IJobService
@@ -38,6 +21,3 @@ public class JobService(ITimeTickerManager<TimeTicker> timeTickerManager)
         }, cancellationToken);
     }
 }
-
-
-

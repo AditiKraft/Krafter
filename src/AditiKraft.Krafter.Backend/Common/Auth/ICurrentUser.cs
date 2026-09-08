@@ -1,6 +1,6 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 
-namespace AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+namespace AditiKraft.Krafter.Backend.Common.Auth;
 
 public interface ICurrentUser
 {
@@ -17,11 +17,4 @@ public interface ICurrentUser
     public bool IsInRole(string role);
 
     public IEnumerable<Claim>? GetUserClaims();
-}
-
-public interface ICurrentUserInitializer
-{
-    public void SetCurrentUser(ClaimsPrincipal user);
-
-    public void SetCurrentUserId(string userId);
 }

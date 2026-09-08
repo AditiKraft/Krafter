@@ -1,8 +1,7 @@
 using System.Security.Claims;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Contracts.Common.Extensions;
 
-namespace AditiKraft.Krafter.Backend.Common.Context.Auth;
+namespace AditiKraft.Krafter.Backend.Common.Auth;
 
 public class CurrentUser : ICurrentUser, ICurrentUserInitializer
 {
@@ -57,5 +56,3 @@ public class CurrentUser : ICurrentUser, ICurrentUserInitializer
         }
     }
 }
-
-

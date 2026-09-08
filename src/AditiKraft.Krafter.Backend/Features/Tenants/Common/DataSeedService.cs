@@ -1,10 +1,10 @@
 using System.Security.Claims;
-using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
-using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Common;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
@@ -65,7 +65,9 @@ public class DataSeedService(
                 {
                     applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
                     {
-                        RoleId = adminRole.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = permission
+                        RoleId = adminRole.Id,
+                        ClaimType = AppClaimTypes.Permission,
+                        ClaimValue = permission
                     });
                 }
 
@@ -93,7 +95,9 @@ public class DataSeedService(
                 {
                     applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
                     {
-                        RoleId = basicRole.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = permission
+                        RoleId = basicRole.Id,
+                        ClaimType = AppClaimTypes.Permission,
+                        ClaimValue = permission
                     });
                 }
 
@@ -140,7 +144,9 @@ public class DataSeedService(
             {
                 applicationDbContext.UserRoles.Add(new ApplicationUserRole
                 {
-                    RoleId = adminRole.Id, UserId = rootUser.Id, CreatedById = rootUser.Id
+                    RoleId = adminRole.Id,
+                    UserId = rootUser.Id,
+                    CreatedById = rootUser.Id
                 });
             }
 
@@ -149,7 +155,9 @@ public class DataSeedService(
             {
                 applicationDbContext.UserRoles.Add(new ApplicationUserRole
                 {
-                    RoleId = basic.Id, UserId = rootUser.Id, CreatedById = rootUser.Id
+                    RoleId = basic.Id,
+                    UserId = rootUser.Id,
+                    CreatedById = rootUser.Id
                 });
             }
 
@@ -181,7 +189,3 @@ public class DataSeedService(
         return new Response();
     }
 }
-
-
-
-

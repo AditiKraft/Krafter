@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+using AditiKraft.Krafter.Backend.Common.Auth;
+using AditiKraft.Krafter.Backend.Common.Extensions;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
-using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Realtime;
 using Mapster;
@@ -30,7 +30,7 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
             ICurrentUser currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
             CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, tenantFinderService,
                 tenantSetterService, currentUser);
-            if (res is not {})
+            if (res is not { })
             {
                 throw new HubException(AuthenticationFailedMessage);
             }
@@ -130,7 +130,3 @@ public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
         logger.LogInformation("A client disconnected from NotificationHub: {connectionId}", Context.ConnectionId);
     }
 }
-
-
-
-

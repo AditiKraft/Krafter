@@ -1,6 +1,6 @@
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Entities;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
@@ -172,6 +172,3 @@ public class ApplicationDbContext(
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 }
-
-
-

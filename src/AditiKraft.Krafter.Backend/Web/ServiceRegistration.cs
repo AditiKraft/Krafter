@@ -1,11 +1,12 @@
 using System.Reflection;
+using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Features;
 
-namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence;
+namespace AditiKraft.Krafter.Backend.Web;
 
-public static class PersistenceConfiguration
+public static class ServiceRegistration
 {
-    public static IServiceCollection AddPersistenceServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         Assembly assembly = typeof(IScopedService).Assembly;
 

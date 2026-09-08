@@ -1,29 +1,21 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
-using AditiKraft.Krafter.Backend.Web.Authorization;
-using AditiKraft.Krafter.Backend.Web.Configuration;
-using AditiKraft.Krafter.Backend.Web.Middleware;
-using AditiKraft.Krafter.Backend.Infrastructure.Realtime;
-using AditiKraft.Krafter.Contracts.Common;
-using AditiKraft.Krafter.Contracts.Common.Auth;
-using AditiKraft.Krafter.Backend.Common.Context.Auth;
-using AditiKraft.Krafter.Backend.Errors;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Features.Auth;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using Microsoft.Extensions.Primitives;
+using AditiKraft.Krafter.Backend.Web.Authorization;
+using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Web.Middleware;
+using AditiKraft.Krafter.Contracts.Common.Auth;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
-namespace AditiKraft.Krafter.Backend.Web;
+namespace AditiKraft.Krafter.Backend.Web.Authentication;
 
-public static class DependencyInjection
+public static class AuthenticationRegistration
 {
     internal static IServiceCollection AddJwtAuth(this IServiceCollection services, IConfiguration config)
     {
@@ -96,68 +88,3 @@ public static class DependencyInjection
             .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
     }
 }
-
-public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : IConfigureNamedOptions<JwtBearerOptions>
-{
-    private readonly JwtSettings _jwtSettings = jwtSettings.Value;
-
-    public void Configure(JwtBearerOptions options) => Configure(string.Empty, options);
-
-    public void Configure(string? name, JwtBearerOptions options)
-    {
-        if (name != JwtBearerDefaults.AuthenticationScheme)
-        {
-            return;
-        }
-
-        byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Key);
-
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateLifetime = true,
-            ValidateAudience = false,
-            RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.Zero,
-            LifetimeValidator = (before, expires, token, parameters) => expires > DateTime.UtcNow &&
-                                                                        expires <= DateTime.UtcNow.AddMinutes(
-                                                                            _jwtSettings.TokenExpirationInMinutes)
-        };
-        options.Events = new JwtBearerEvents
-        {
-            OnChallenge = context =>
-            {
-                context.HandleResponse();
-                if (!context.Response.HasStarted)
-                {
-                    throw new UnauthorizedException("Authentication Failed.");
-                }
-
-                return Task.CompletedTask;
-            },
-            OnForbidden = _ => throw new ForbiddenException("You are not authorized to access this resource."),
-            OnMessageReceived = context =>
-            {
-                StringValues accessToken = context.Request.Query["access_token"];
-
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    context.HttpContext.Request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}/{nameof(RealtimeHub)}"))
-                {
-                    // Read the token out of the query string
-                    context.Token = accessToken;
-                }
-
-                return Task.CompletedTask;
-            }
-        };
-    }
-}
-
-
-
-
-

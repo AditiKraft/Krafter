@@ -1,18 +1,6 @@
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-
 namespace AditiKraft.Krafter.Backend.Web.Middleware;
 
-public class CurrentUserMiddleware(ICurrentUserInitializer currentUserInitializer) : IMiddleware
-{
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
-    {
-        currentUserInitializer.SetCurrentUser(context.User);
-
-        await next(context);
-    }
-}
-
-public static class MiddlewareExtensions
+public static class AuthenticationMiddlewareExtensions
 {
     public static IApplicationBuilder UseCurrentUser(this IApplicationBuilder app) =>
         app.UseMiddleware<CurrentUserMiddleware>();
@@ -25,4 +13,3 @@ public static class MiddlewareExtensions
             .UseAuthorization();
     }
 }
-

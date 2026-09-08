@@ -1,9 +1,9 @@
-using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
-using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Common;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
@@ -269,7 +269,3 @@ public class UserService(
         return Response.Success();
     }
 }
-
-
-
-

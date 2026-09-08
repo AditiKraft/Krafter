@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
@@ -21,5 +22,3 @@ public class RoleService(
         return Response<RoleDto>.NotFound("Role Not Found");
     }
 }
-
-

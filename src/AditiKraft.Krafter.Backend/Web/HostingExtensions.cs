@@ -1,17 +1,16 @@
-using AditiKraft.Krafter.Backend.Web.Authorization;
-using AditiKraft.Krafter.Backend.Web.Middleware;
-using AditiKraft.Krafter.Backend.Infrastructure.Realtime;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
-using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
-using AditiKraft.Krafter.Backend.Common.Context.Tenants;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using FluentValidation;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
+using AditiKraft.Krafter.Backend.Infrastructure.Realtime;
+using AditiKraft.Krafter.Backend.Web.Authentication;
+using AditiKraft.Krafter.Backend.Web.Authorization;
+using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Web.Middleware;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
+using FluentValidation;
 using Microsoft.AspNetCore.ResponseCompression;
 
 namespace AditiKraft.Krafter.Backend.Web;
@@ -40,7 +39,7 @@ public static class HostingExtensions
         builder.Services.AddAuthorization();
         builder.Services.AddAuthServices(builder.Configuration);
 
-        builder.Services.AddPersistenceServices();
+        builder.Services.AddApplicationServices();
 
         builder.Services.AddNotificationServices(builder.Configuration);
 

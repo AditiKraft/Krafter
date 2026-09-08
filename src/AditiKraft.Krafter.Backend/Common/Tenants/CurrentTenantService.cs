@@ -1,10 +1,9 @@
 using AditiKraft.Krafter.Backend.Errors;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Mapster;
 
-namespace AditiKraft.Krafter.Backend.Common.Context.Tenants;
+namespace AditiKraft.Krafter.Backend.Common.Tenants;
 
 public class CurrentTenantService : ITenantGetterService, ITenantSetterService
 {
@@ -21,7 +20,3 @@ public class CurrentTenantService : ITenantGetterService, ITenantSetterService
         Tenant = tenant;
     }
 }
-
-
-
-
