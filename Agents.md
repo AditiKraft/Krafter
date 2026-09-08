@@ -157,6 +157,8 @@ The split-host template (`krafter`) simply excludes `src-single/`, `aspire-singl
 
 Files in `src-single/` and `aspire-single/` **replace** the corresponding files from `src/` and `aspire/` in the single-host template output. The root source excludes the original files, and the overlay sources copy replacements into the same target paths.
 
+In generated single-host projects, `UI.Web` owns the server configuration. Exclude Backend `appsettings*.json` files along with its `Program.cs`, because Backend runs as a library.
+
 ## 5. Agents.md Variant Strategy
 
 Three root-level Agents.md files ensure correct AI instructions per context:
