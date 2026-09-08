@@ -1,6 +1,7 @@
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.SignalR;
 using Blazored.SessionStorage;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace AditiKraft.Krafter.UI.Web.Client;
 
@@ -21,6 +22,8 @@ public static class RegisterUIServices
         service.AddScoped<LayoutService>();
 
         service.AddScoped<IAuthenticationService, AuthenticationService>();
+        service.AddScoped<AuthTokenService>();
+        service.TryAddScoped<TokenRefreshCoordinator>();
         service.AddScoped<NotificationService>();
         service.AddScoped<ApiCallService>();
     }

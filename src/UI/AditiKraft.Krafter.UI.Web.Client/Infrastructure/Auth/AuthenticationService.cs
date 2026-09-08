@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using Microsoft.AspNetCore.Http;
 
@@ -6,6 +5,7 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public class AuthenticationService(
     IAuthApiService apiService,
+    AuthTokenService tokenService,
     LayoutService layoutService,
     IAuthStorageService localStorage,
     NavigationManager navigationManager,
@@ -55,8 +55,6 @@ public class AuthenticationService(
             return false;
         }
 
-        string? token = tokenResponse.Data.Token;
-        string? refreshToken = tokenResponse.Data.RefreshToken;
         if (formFactor.GetFormFactor() is "WebAssembly")
         {
             await localStorage.CacheAuthTokens(tokenResponse.Data);
@@ -65,29 +63,6 @@ public class AuthenticationService(
         LoginChange?.Invoke("");
         layoutService.UpdateHeading(EventArgs.Empty);
         return true;
-    }
-
-    private bool IsTokenExpired(string? token)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                return true;
-            }
-
-            var handler = new JwtSecurityTokenHandler();
-            if (handler.ReadToken(token) is JwtSecurityToken jwtToken)
-            {
-                return jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1);
-            }
-
-            return true;
-        }
-        catch
-        {
-            return true;
-        }
     }
 
     private async Task HandleNavigationToLogin(bool forceLoad = false)
@@ -120,54 +95,5 @@ public class AuthenticationService(
         logger.LogWarning("Unable to navigate to login - no navigation context available.");
     }
 
-    public async Task<bool> RefreshAsync()
-    {
-        string? token = await localStorage.GetCachedAuthTokenAsync();
-        string? refreshToken = await localStorage.GetCachedRefreshTokenAsync();
-        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(refreshToken))
-        {
-            await HandleNavigationToLogin();
-            return false;
-        }
-
-        if (IsTokenExpired(token))
-        {
-            logger.LogInformation("Token expired, attempting to refresh.");
-        }
-        else
-        {
-            logger.LogInformation("Token is still valid, no need to refresh.");
-            return true;
-        }
-
-        var model = new RefreshTokenRequest { Token = token, RefreshToken = refreshToken };
-
-        Response<TokenResponse>? tokenResponse = null;
-        bool synchronized = await TokenSynchronizationManager.TryExecuteWithSynchronizationAsync(
-            async () =>
-            {
-                tokenResponse = await apiService.RefreshTokenAsync(model, CancellationToken.None);
-                return tokenResponse;
-            },
-            r => r is not null && r.Data is not null && !r.IsError,
-            logger,
-            CancellationToken.None);
-
-        if (tokenResponse is null || tokenResponse.Data is null || tokenResponse.IsError)
-        {
-            if (!IsTokenExpired(await localStorage.GetCachedAuthTokenAsync()))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        if (formFactor.GetFormFactor() is "WebAssembly")
-        {
-            await localStorage.CacheAuthTokens(tokenResponse.Data);
-        }
-
-        return true;
-    }
+    public Task<bool> RefreshAsync() => tokenService.RefreshAsync();
 }

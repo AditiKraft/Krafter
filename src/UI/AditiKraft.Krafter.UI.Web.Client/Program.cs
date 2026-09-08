@@ -13,6 +13,8 @@ builder.Services.AddRadzenComponents();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<IAuthStorageService, AuthStorageService>();
 builder.Services.AddScoped<IAuthApiService, ClientAuthApiService>();
+// Browser API handlers use separate DI scopes but share the same token storage.
+builder.Services.AddSingleton<TokenRefreshCoordinator>();
 
 builder.Services.AddUIServices();
 builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();

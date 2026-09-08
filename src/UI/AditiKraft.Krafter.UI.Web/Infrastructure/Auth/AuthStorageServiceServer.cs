@@ -86,10 +86,7 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
                 out object? freshPermissions) == true &&
             freshPermissions is List<string> permissionsFromTempHttpContextItem)
         {
-            if (permissionsFromTempHttpContextItem.Count > 0)
-            {
-                return await ValueTask.FromResult<ICollection<string>?>(permissionsFromTempHttpContextItem);
-            }
+            return permissionsFromTempHttpContextItem;
         }
 
         string? userId = ExtractUserIdFromToken(await GetCachedAuthTokenAsync());
@@ -143,41 +140,50 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
             return;
         }
 
-        httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.AuthToken, tokenResponse.Token,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires =
-                    tokenResponse
-                        .RefreshTokenExpiryTime // So that even when the token expires, it will get a new token based on the refresh token and the cookie will always pass
-            });
+        HttpContext httpContext = httpContextAccessor.HttpContext;
+        httpContext.Items[StorageConstants.Local.AuthToken] = tokenResponse.Token;
+        httpContext.Items[StorageConstants.Local.RefreshToken] = tokenResponse.RefreshToken;
+        httpContext.Items[StorageConstants.Local.AuthTokenExpiryDate] = tokenResponse.TokenExpiryTime;
+        httpContext.Items[StorageConstants.Local.RefreshTokenExpiryDate] = tokenResponse.RefreshTokenExpiryTime;
+        httpContext.Items[StorageConstants.Local.Permissions] = tokenResponse.Permissions;
 
-        httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.RefreshToken,
-            tokenResponse.RefreshToken,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = tokenResponse.RefreshTokenExpiryTime
-            });
-
-        if (tokenResponse.TokenExpiryTime is { } tokenExpiryTime)
+        if (!httpContext.Response.HasStarted)
         {
-            httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.AuthTokenExpiryDate,
-                tokenExpiryTime.Ticks.ToString(),
-                new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
-        }
+            httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.AuthToken, tokenResponse.Token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires =
+                        tokenResponse
+                            .RefreshTokenExpiryTime // So that even when the token expires, it will get a new token based on the refresh token and the cookie will always pass
+                });
 
-        if (tokenResponse.RefreshTokenExpiryTime is { } refreshTokenExpiry)
-        {
-            httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.RefreshTokenExpiryDate,
-                refreshTokenExpiry.Ticks.ToString(),
-                new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
-        }
+            httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.RefreshToken,
+                tokenResponse.RefreshToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = tokenResponse.RefreshTokenExpiryTime
+                });
 
+            if (tokenResponse.TokenExpiryTime is { } tokenExpiryTime)
+            {
+                httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.AuthTokenExpiryDate,
+                    tokenExpiryTime.Ticks.ToString(),
+                    new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            }
+
+            if (tokenResponse.RefreshTokenExpiryTime is { } refreshTokenExpiry)
+            {
+                httpContextAccessor.HttpContext.Response.Cookies.Append(StorageConstants.Local.RefreshTokenExpiryDate,
+                    refreshTokenExpiry.Ticks.ToString(),
+                    new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            }
+        }
 
         string? userId = ExtractUserIdFromToken(tokenResponse.Token);
         if (!string.IsNullOrWhiteSpace(userId))

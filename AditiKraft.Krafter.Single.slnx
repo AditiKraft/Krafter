@@ -15,5 +15,8 @@
     <Project Path="src/UI/AditiKraft.Krafter.UI.Web.Client/AditiKraft.Krafter.UI.Web.Client.csproj" />
     <Project Path="src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AditiKraft.Krafter.Tests/AditiKraft.Krafter.Tests.csproj" />
+  </Folder>
   <Project Path="build/_build.csproj" />
 </Solution>

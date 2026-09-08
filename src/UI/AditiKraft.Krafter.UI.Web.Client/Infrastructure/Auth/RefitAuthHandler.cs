@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text.Json;
 using AditiKraft.Krafter.Contracts.Common;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
@@ -33,27 +32,16 @@ public class RefitAuthHandler(
         // Get current token
         string? accessToken = await localStorage.GetCachedAuthTokenAsync();
 
-        // For non-public paths, check if token needs refresh
-        if (!isPublicPath && !string.IsNullOrEmpty(accessToken) && IsTokenExpired(accessToken))
+        if (!isPublicPath && !string.IsNullOrEmpty(accessToken) && AuthTokenService.NeedsRefresh(accessToken))
         {
-            // Check if a recent sync already happened (another concurrent request may have refreshed)
-            if (TokenSynchronizationManager.HasRecentSync())
+            try
             {
-                logger.LogInformation("Recent token refresh detected, fetching updated token for {Path}", path);
+                await authenticationService.RefreshAsync();
                 accessToken = await localStorage.GetCachedAuthTokenAsync();
             }
-            else
+            catch (Exception ex)
             {
-                logger.LogInformation("Token expired, attempting refresh before request to {Path}", path);
-                try
-                {
-                    await authenticationService.RefreshAsync();
-                    accessToken = await localStorage.GetCachedAuthTokenAsync();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Token refresh failed before request");
-                }
+                logger.LogWarning(ex, "Token refresh failed before request");
             }
         }
 
@@ -69,34 +57,23 @@ public class RefitAuthHandler(
         // Handle 401 for non-public paths - attempt refresh and retry once
         if (response.StatusCode == HttpStatusCode.Unauthorized && !isPublicPath)
         {
-            // Check if a recent sync already happened before attempting refresh
-            if (TokenSynchronizationManager.HasRecentSync())
+            string? rejectedToken = accessToken;
+            try
             {
-                logger.LogInformation(
-                    "Received 401 but recent refresh detected, retrying with updated token for {Path}", path);
-                accessToken = await localStorage.GetCachedAuthTokenAsync();
+                if (await authenticationService.RefreshAsync())
+                {
+                    accessToken = await localStorage.GetCachedAuthTokenAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                logger.LogInformation("Received 401, attempting token refresh and retry for {Path}", path);
-                try
-                {
-                    bool refreshed = await authenticationService.RefreshAsync();
-                    if (refreshed)
-                    {
-                        accessToken = await localStorage.GetCachedAuthTokenAsync();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Token refresh failed after 401");
-                }
+                logger.LogWarning(ex, "Token refresh failed after 401");
             }
 
-            // Retry with updated token if available
-            if (!string.IsNullOrEmpty(accessToken))
+            // Retry only when another call or this refresh produced a different token.
+            if (!string.IsNullOrEmpty(accessToken) && accessToken != rejectedToken)
             {
-                HttpRequestMessage retryRequest = await CloneRequestAsync(request);
+                using HttpRequestMessage retryRequest = await CloneRequestAsync(request);
                 retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 response.Dispose();
                 response = await base.SendAsync(retryRequest, cancellationToken);
@@ -117,35 +94,6 @@ public class RefitAuthHandler(
         return PublicPaths.Any(p =>
             normalized.StartsWith(p, StringComparison.OrdinalIgnoreCase) ||
             normalized.Contains(p.Trim('/')));
-    }
-
-    private static bool IsTokenExpired(string token)
-    {
-        try
-        {
-            string[] parts = token.Split('.');
-            if (parts.Length != 3)
-            {
-                return true;
-            }
-
-            byte[] payload = Base64UrlDecode(parts[1]);
-            using var doc = JsonDocument.Parse(payload);
-            long exp = doc.RootElement.GetProperty("exp").GetInt64();
-            var expiry = DateTimeOffset.FromUnixTimeSeconds(exp);
-            return DateTimeOffset.UtcNow >= expiry.AddMinutes(-1);
-        }
-        catch
-        {
-            return true;
-        }
-    }
-
-    private static byte[] Base64UrlDecode(string input)
-    {
-        string padded = input.Length % 4 == 0 ? input : input + new string('=', 4 - (input.Length % 4));
-        string base64 = padded.Replace('-', '+').Replace('_', '/');
-        return Convert.FromBase64String(base64);
     }
 
     private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request)

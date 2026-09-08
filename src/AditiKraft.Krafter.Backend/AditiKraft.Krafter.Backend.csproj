@@ -7,6 +7,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="AditiKraft.Krafter.Tests" />
+  </ItemGroup>
+
   <!-- In single-host mode, Program.cs is excluded and Backend is used as a library -->
   <PropertyGroup Condition="!Exists('Program.cs')">
     <OutputType>Library</OutputType>

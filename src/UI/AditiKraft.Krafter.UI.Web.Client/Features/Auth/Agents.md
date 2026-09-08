@@ -5,6 +5,9 @@
 
 ## 1. Core Principles
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
+- `AuthTokenService` owns expiry checks, refresh, and initial token synchronization. Use `NeedsRefresh` for the shared one-minute refresh window.
+- Keep token reads, refresh, and storage writes inside `TokenRefreshCoordinator`. It is shared across browser API clients and scoped on the server. Each caller checks its current token; refresh success is never shared through a process-wide timestamp.
+- `AuthStorageService` saves browser tokens. `AuthStorageServiceServer` saves cookies and makes fresh values available to the current HTTP request.
 - Preserve `ReturnUrl` during login and Google callback.
 - Store Google return URL in `LocalAppState.GoogleLoginReturnUrl`.
 - Use `RootUiUrl` from configuration for non-local Google callback redirects; do not hard-code production domains.
@@ -80,6 +83,8 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthTokenService.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/TokenRefreshCoordinator.cs`
 
 ---
 Last Updated: 2026-09-08

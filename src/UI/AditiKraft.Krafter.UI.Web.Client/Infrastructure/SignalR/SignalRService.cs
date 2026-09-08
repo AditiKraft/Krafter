@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Realtime;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
@@ -44,35 +43,16 @@ public class SignalRService : IAsyncDisposable
                 {
                     options.AccessTokenProvider = async () =>
                     {
-                        string? token =
-                            await _localStorageService
-                                .GetCachedAuthTokenAsync(); //_authenticationService.GetJwtAsync();
-
-                        // Check if the token is expired
-                        if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
+                        string? token = await _localStorageService.GetCachedAuthTokenAsync();
+                        if (AuthTokenService.NeedsRefresh(token))
                         {
-                            // Wait for 2 seconds
-                            await Task.Delay(2000);
-
-                            // Try to get the token again
-                            token = await _localStorageService.GetCachedAuthTokenAsync();
-
-                            // Check again if the token is expired
-                            if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
+                            if (!await _authenticationService.RefreshAsync())
                             {
-                                // Attempt to refresh the token
-                                bool refreshResult = await _authenticationService.RefreshAsync();
-                                if (refreshResult)
-                                {
-                                    token = await _localStorageService.GetCachedAuthTokenAsync();
-                                }
-                                else
-                                {
-                                    // Handle the case when refreshing the token fails
-                                    await _authenticationService.LogoutAsync("SignalRService 71");
-                                    return null;
-                                }
+                                await _authenticationService.LogoutAsync(nameof(SignalRService));
+                                return null;
                             }
+
+                            token = await _localStorageService.GetCachedAuthTokenAsync();
                         }
 
                         return token?.Replace("Bearer ", "").Trim();
@@ -92,17 +72,6 @@ public class SignalRService : IAsyncDisposable
                 (user, message) => { MessageReceived?.Invoke(user, message); });
             await _hubConnection.StartAsync();
         }
-    }
-
-    private bool IsTokenExpired(string token)
-    {
-        var handler = new JwtSecurityTokenHandler();
-        if (handler.ReadToken(token) is JwtSecurityToken jwtToken)
-        {
-            return jwtToken.ValidTo < DateTime.UtcNow;
-        }
-
-        return true;
     }
 
     public async Task SendMessageAsync(string user, string message)

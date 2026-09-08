@@ -196,6 +196,9 @@ dotnet build AditiKraft.Krafter.slnx
 # Build single-host
 dotnet build AditiKraft.Krafter.Single.slnx
 
+# Run authentication and permission regression tests
+dotnet test tests/AditiKraft.Krafter.Tests/AditiKraft.Krafter.Tests.csproj
+
 # Database migrations
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context ApplicationDbContext
 

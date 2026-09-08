@@ -2,12 +2,9 @@ using System.Security.Claims;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
@@ -70,47 +67,23 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
 
         // Proactive token refresh for expired tokens during SSR/prerendering
         string? refreshToken = context.Request.Cookies[StorageConstants.Local.RefreshToken];
-        if (!string.IsNullOrEmpty(cookieToken) && IsTokenExpired(cookieToken) &&
+        if (!string.IsNullOrEmpty(cookieToken) && AuthTokenService.NeedsRefresh(cookieToken) &&
             !string.IsNullOrWhiteSpace(refreshToken))
         {
             ILogger<BlazorJwtBearerEvents> logger =
                 context.HttpContext.RequestServices.GetRequiredService<ILogger<BlazorJwtBearerEvents>>();
-            IAuthApiService apiService =
-                context.HttpContext.RequestServices.GetRequiredService<IAuthApiService>();
+            AuthTokenService tokenService =
+                context.HttpContext.RequestServices.GetRequiredService<AuthTokenService>();
 
             logger.LogInformation("Token expired in OnMessageReceived, attempting refresh...");
 
             try
             {
-                var refreshRequest = new RefreshTokenRequest
+                if (await tokenService.RefreshAsync(context.HttpContext.RequestAborted))
                 {
-                    Token = cookieToken, RefreshToken = refreshToken
-                };
-                Response<TokenResponse> refreshResponse =
-                    await apiService.RefreshTokenAsync(refreshRequest, CancellationToken.None);
-
-                if (refreshResponse is { Data: not null, IsError: false })
-                {
-                    cookieToken = refreshResponse.Data.Token;
-                    if (refreshResponse.Data.Permissions is { Count: > 0 })
-                    {
-                        context.HttpContext.Items[StorageConstants.Local.Permissions] =
-                            refreshResponse.Data.Permissions;
-                    }
-
-                    context.HttpContext.Items[StorageConstants.Local.AuthToken] = refreshResponse.Data.Token;
-                    context.HttpContext.Items[StorageConstants.Local.RefreshToken] =
-                        refreshResponse.Data.RefreshToken;
-                    context.HttpContext.Items[StorageConstants.Local.AuthTokenExpiryDate] =
-                        refreshResponse.Data.TokenExpiryTime;
-                    context.HttpContext.Items[StorageConstants.Local.RefreshTokenExpiryDate] =
-                        refreshResponse.Data.RefreshTokenExpiryTime;
-
-                    // Persist refreshed tokens as cookies so the browser picks up the new values
-                    IAuthStorageService localStorage = context.HttpContext.RequestServices
+                    IAuthStorageService storage = context.HttpContext.RequestServices
                         .GetRequiredService<IAuthStorageService>();
-                    await localStorage.CacheAuthTokens(refreshResponse.Data);
-
+                    cookieToken = await storage.GetCachedAuthTokenAsync();
                     logger.LogInformation("Token refreshed successfully in OnMessageReceived");
                 }
                 else
@@ -209,24 +182,6 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
     private static bool IsApiRequest(HttpRequest request) =>
         request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}") ||
         request.Headers.Accept.Any(a => a != null && a.Contains("application/json"));
-
-    private static bool IsTokenExpired(string token)
-    {
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
-            if (handler.ReadToken(token) is JwtSecurityToken jwtToken)
-            {
-                return jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1);
-            }
-
-            return true;
-        }
-        catch
-        {
-            return true;
-        }
-    }
 
     private static void AddPermissionClaims(ClaimsIdentity identity, IEnumerable<string> permissions)
     {
