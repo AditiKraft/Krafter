@@ -1,6 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Roles;
 
@@ -20,7 +19,7 @@ public partial class Roles(
     {
         IdentifierBasedOnPlacement = nameof(Roles);
 
-        LocalAppSate.CurrentPageTitle = $"Roles";
+        LocalAppState.CurrentPageTitle = $"Roles";
 
         dialogService.OnClose += Close;
         await GetListAsync();

@@ -97,7 +97,10 @@ public class ApiCallService(NotificationService notificationService)
 
         return new Response<T>
         {
-            IsError = true, StatusCode = (int)ex.StatusCode, Message = message, Error = errorResult
+            IsError = true,
+            StatusCode = (int)ex.StatusCode,
+            Message = message,
+            Error = errorResult
         };
     }
 
@@ -281,12 +284,4 @@ public class ApiCallService(NotificationService notificationService)
 
         return "An error occurred.";
     }
-}
-
-public class ValidationErrorResponse
-{
-    public string? Type { get; set; }
-    public string? Title { get; set; }
-    public int Status { get; set; }
-    public Dictionary<string, List<string>> Errors { get; set; } = new();
 }

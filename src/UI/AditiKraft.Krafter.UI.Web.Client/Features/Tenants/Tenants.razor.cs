@@ -1,7 +1,6 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
 
@@ -27,7 +26,7 @@ public partial class Tenants(
             return;
         }
 
-        LocalAppSate.CurrentPageTitle = $"Tenants";
+        LocalAppState.CurrentPageTitle = $"Tenants";
 
         dialogService.OnClose += Close;
         await Get();

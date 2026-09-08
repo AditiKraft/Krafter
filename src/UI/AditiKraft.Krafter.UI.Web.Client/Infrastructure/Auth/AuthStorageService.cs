@@ -1,8 +1,8 @@
-﻿using AditiKraft.Krafter.Contracts.Contracts.Auth;
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 using Blazored.LocalStorage;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public class AuthStorageService(ILocalStorageService localStorageService) : IAuthStorageService
 {

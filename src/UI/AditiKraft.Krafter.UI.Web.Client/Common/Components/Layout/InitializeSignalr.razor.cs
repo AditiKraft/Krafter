@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.SignalR;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
@@ -14,5 +14,3 @@ public partial class InitializeSignalr(
         await signalRService.InitializeAsync();
     }
 }
-
-

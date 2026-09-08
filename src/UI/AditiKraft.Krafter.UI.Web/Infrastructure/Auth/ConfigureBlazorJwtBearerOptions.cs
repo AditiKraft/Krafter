@@ -1,11 +1,9 @@
-using System.Security.Claims;
 using System.Text;
-using AditiKraft.Krafter.Contracts.Common.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
 /// <summary>
 /// Configures JWT bearer options for the Blazor split-host UI.

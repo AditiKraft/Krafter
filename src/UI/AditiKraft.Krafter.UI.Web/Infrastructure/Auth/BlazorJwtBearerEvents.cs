@@ -4,12 +4,12 @@ using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
 /// <summary>
 /// Determines how the Blazor host is deployed, affecting JWT challenge/forbidden behavior.

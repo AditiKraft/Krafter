@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -22,7 +22,7 @@
 
   <!-- Link shared files from split-host UI.Web (source repo only; template output has them directly) -->
   <ItemGroup Condition="Exists('..\..\..\src-single')">
-    <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Services\**\*.cs" Link="Services\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Infrastructure\**\*.cs" Link="Infrastructure\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\GlobalUsings.cs" Link="GlobalUsings.cs" />
     <Content Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.razor" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.cs" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />

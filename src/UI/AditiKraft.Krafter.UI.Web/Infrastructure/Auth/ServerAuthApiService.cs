@@ -1,9 +1,8 @@
 using System.Net;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 using Refit;
 
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
 public class ServerAuthApiService(
     IAuthApi authApi,
@@ -143,4 +142,3 @@ public class ServerAuthApiService(
 
     public Task LogoutAsync(CancellationToken cancellation) => localStorage.ClearCacheAsync();
 }
-

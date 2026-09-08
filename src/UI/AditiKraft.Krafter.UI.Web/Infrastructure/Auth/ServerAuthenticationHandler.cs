@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
 public class ServerAuthenticationHandler(
     IAuthStorageService localStorage,

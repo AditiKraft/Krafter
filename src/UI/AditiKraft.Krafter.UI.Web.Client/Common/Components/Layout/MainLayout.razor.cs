@@ -1,7 +1,6 @@
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
+using AditiKraft.Krafter.UI.Web.Client.Features.AppInfo;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
@@ -97,6 +96,3 @@ public partial class MainLayout(
         return cachedPermissionsAsync?.Contains(category.Permission) == true;
     }
 }
-
-
-

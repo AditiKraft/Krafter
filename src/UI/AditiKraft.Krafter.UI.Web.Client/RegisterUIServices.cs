@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.SignalR;
 using Blazored.SessionStorage;
 
@@ -25,5 +25,3 @@ public static class RegisterUIServices
         service.AddScoped<ApiCallService>();
     }
 }
-
-

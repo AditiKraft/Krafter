@@ -1,5 +1,5 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Models
-<RadzenDropDownDataGrid Name="UsersDropDown" Style="width: 100%;" @ref="_dropDownGrid" AllowSelectAll="false" IsLoading="_isLoading" Density="LocalAppSate.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="true" AllowClear="true" @bind-Value="@ValueEnumerable" Change="@((arg) => OnValueChangedAsync(arg))"
+<RadzenDropDownDataGrid Name="UsersDropDown" Style="width: 100%;" @ref="_dropDownGrid" AllowSelectAll="false" IsLoading="_isLoading" Density="LocalAppState.Density" PageSize="GetRequestInput.MaxResultCount" Multiple="true" AllowClear="true" @bind-Value="@ValueEnumerable" Change="@((arg) => OnValueChangedAsync(arg))"
                         LoadData="@LoadProcessesAsync" AllowFiltering="true"
                         Data="@_data" Count="@(GetCount())" TextProperty="FirstName" ValueProperty="Id" Placeholder="Select Users" Chips="true">
 

@@ -1,6 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
@@ -21,7 +20,7 @@ public partial class Users(
     protected override async Task OnInitializedAsync()
     {
         dialogService.OnClose += Close;
-        LocalAppSate.CurrentPageTitle = "Users";
+        LocalAppState.CurrentPageTitle = "Users";
 
         await GetListAsync();
     }

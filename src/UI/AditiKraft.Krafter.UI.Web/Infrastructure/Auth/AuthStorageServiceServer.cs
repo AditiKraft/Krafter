@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Caching.Hybrid;
 
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
 public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, HybridCache cache)
     : IAuthStorageService

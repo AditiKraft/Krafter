@@ -2,7 +2,7 @@ using AditiKraft.Krafter.Contracts.Common.Extensions;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
 public class PersistingServerAuthenticationStateProvider : ServerAuthenticationStateProvider, IDisposable
 {

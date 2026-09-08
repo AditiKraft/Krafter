@@ -1,4 +1,4 @@
-namespace AditiKraft.Krafter.UI.Web.Services;
+namespace AditiKraft.Krafter.UI.Web.Infrastructure.Services;
 
 public class FormFactorServer : IFormFactor
 {

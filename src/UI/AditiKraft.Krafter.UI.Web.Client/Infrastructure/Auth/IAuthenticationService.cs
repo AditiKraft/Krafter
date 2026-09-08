@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public interface IAuthenticationService
 {
@@ -12,5 +12,3 @@ public interface IAuthenticationService
 
     public Task<bool> RefreshAsync();
 }
-
-

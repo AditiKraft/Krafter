@@ -1,11 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using Microsoft.AspNetCore.Http;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public class AuthenticationService(
     IAuthApiService apiService,
@@ -174,6 +171,3 @@ public class AuthenticationService(
         return true;
     }
 }
-
-
-

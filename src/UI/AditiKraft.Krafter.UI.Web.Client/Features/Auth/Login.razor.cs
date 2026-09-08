@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
@@ -27,11 +27,11 @@ public partial class Login(
         AuthenticationState authState = await AuthState;
         if (authState.User.Identity?.IsAuthenticated is true)
         {
-            if (!string.IsNullOrWhiteSpace(LocalAppSate.GoogleLoginReturnUrl) &&
+            if (!string.IsNullOrWhiteSpace(LocalAppState.GoogleLoginReturnUrl) &&
                 (string.IsNullOrWhiteSpace(ReturnUrl) || ReturnUrl == "/"))
             {
-                ReturnUrl = LocalAppSate.GoogleLoginReturnUrl;
-                LocalAppSate.GoogleLoginReturnUrl = "";
+                ReturnUrl = LocalAppState.GoogleLoginReturnUrl;
+                LocalAppState.GoogleLoginReturnUrl = "";
             }
 
             if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
@@ -128,5 +128,3 @@ public partial class Login(
         navigationManager.NavigateTo(authUrl, true);
     }
 }
-
-

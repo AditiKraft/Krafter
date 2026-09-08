@@ -1,5 +1,3 @@
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users.Common;
 
 public partial class SingleSelectUserDropDownDataGrid(
@@ -48,7 +46,10 @@ public partial class SingleSelectUserDropDownDataGrid(
                 TotalCount = response.Data.TotalCount;
                 Data = response.Data.Items.Where(c => !IdsToDisable.Contains(c.Id ?? "")).Select(c => new UserInfo
                 {
-                    Id = c.Id, FirstName = c.FirstName, LastName = c.LastName, CreatedOn = c.CreatedOn
+                    Id = c.Id,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    CreatedOn = c.CreatedOn
                 }).ToList();
             }
         }
@@ -70,5 +71,3 @@ public partial class SingleSelectUserDropDownDataGrid(
         }
     }
 }
-
-

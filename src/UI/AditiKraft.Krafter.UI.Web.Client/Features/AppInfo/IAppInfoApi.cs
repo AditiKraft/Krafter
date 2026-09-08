@@ -1,6 +1,6 @@
 using Refit;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
+namespace AditiKraft.Krafter.UI.Web.Client.Features.AppInfo;
 
 public interface IAppInfoApi
 {

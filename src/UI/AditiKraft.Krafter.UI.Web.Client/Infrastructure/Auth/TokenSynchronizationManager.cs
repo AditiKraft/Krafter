@@ -1,4 +1,4 @@
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 // Prevents multiple concurrent token refresh attempts - only one refresh executes, others wait and reuse the result
 public static class TokenSynchronizationManager

@@ -1,9 +1,9 @@
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using Microsoft.AspNetCore.Authorization;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
-public static class RegisterPermissionClaimsClass
+public static class PermissionRegistration
 {
     public static void RegisterPermissionClaims(AuthorizationOptions options)
     {
@@ -14,5 +14,3 @@ public static class RegisterPermissionClaimsClass
         }
     }
 }
-
-

@@ -1,7 +1,7 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using Refit;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
+namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
 public interface IAuthApi
 {

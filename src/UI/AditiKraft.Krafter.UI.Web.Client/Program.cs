@@ -1,10 +1,7 @@
 using AditiKraft.Krafter.UI.Web.Client;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +19,7 @@ builder.Services.AddSingleton<IHttpContextAccessor, NullHttpContextAccessor>();
 builder.Services.AddScoped<TenantIdentifier>();
 
 builder.Services.AddScoped<AuthenticationStateProvider, UIAuthenticationStateProvider>()
-    .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
+    .AddAuthorizationCore(PermissionRegistration.RegisterPermissionClaims);
 
 builder.Services.AddCascadingAuthenticationState();
 
@@ -30,6 +27,3 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddApiRefitClients();
 
 await builder.Build().RunAsync();
-
-
-

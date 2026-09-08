@@ -1,12 +1,11 @@
-using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Components;
-using AditiKraft.Krafter.UI.Web.Services;
+using AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
+using AditiKraft.Krafter.UI.Web.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,7 +53,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAuthStorageService, AuthStorageServiceServer>();
 builder.Services.AddUIServices();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
-    .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
+    .AddAuthorizationCore(PermissionRegistration.RegisterPermissionClaims);
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<TenantIdentifier>();
 
@@ -129,6 +128,3 @@ static void MapAuthTokenEndpoints(WebApplication app)
         return Results.Ok();
     });
 }
-
-
-

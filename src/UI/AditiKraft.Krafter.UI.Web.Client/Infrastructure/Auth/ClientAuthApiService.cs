@@ -1,10 +1,9 @@
 using System.Net;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 using Refit;
 
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public class ClientAuthApiService(
     IAuthApi authApi,
@@ -147,4 +146,3 @@ public class ClientAuthApiService(
         await localStorage.ClearCacheAsync();
     }
 }
-
