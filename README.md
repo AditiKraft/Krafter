@@ -1,4 +1,4 @@
-﻿# Krafter
+# Krafter
 
 <p align="center">
   <img src="docs/krafter-logo.svg" alt="Krafter logo" width="560" />
@@ -235,7 +235,7 @@ MyApp/
 │   │   ├── Web/                         # HTTP pipeline, middleware, auth config
 │   │   ├── Features/                    # Vertical slices
 │   │   ├── Infrastructure/              # Jobs, notifications, persistence, realtime
-│   │   ├── Common/                      # Context, entities, interfaces, extensions
+│   │   ├── Common/                      # Auth, tenants, entities, extensions
 │   │   ├── Errors/                      # Exception types
 │   │   ├── Migrations/                  # EF Core migrations
 │   │   └── Program.cs                   # (split host only)
@@ -243,7 +243,7 @@ MyApp/
 │   └── UI/
 │       ├── MyApp.UI.Web.Client/         # Blazor WebAssembly
 │       │   ├── Features/
-│       │   ├── Infrastructure/          # AuthApi, Refit, SignalR, Storage, Http
+│       │   ├── Infrastructure/          # Auth, Refit, SignalR, Http
 │       │   └── Common/                  # Shared components, models
 │       └── MyApp.UI.Web/               # Blazor Server host (or combined host in single mode)
 ├── build/                               # NUKE build automation
@@ -266,6 +266,24 @@ For detailed feature-by-feature instructions, naming conventions, and backend/UI
 - `src/AditiKraft.Krafter.Backend/`
 - `src/UI/`
 - `src/AditiKraft.Krafter.Contracts/`
+
+### Where to Put Code
+
+Start with the feature you are changing. For example, the Users UI folder contains `Users.razor`, `CreateOrUpdateUser.razor`, their code-behind files, and `IUsersApi.cs`. The Backend Users folder contains one file for each operation. Shared user requests and responses stay in the Contracts project.
+
+| Work | Location |
+|------|----------|
+| Backend operation or feature-specific service | `src/AditiKraft.Krafter.Backend/Features/<Feature>/` |
+| Current user and tenant context | Backend `Common/Auth/` and `Common/Tenants/` |
+| Database, email, jobs, or realtime implementation | Backend `Infrastructure/` |
+| HTTP pipeline and service registration | Backend `Web/` |
+| Page, dialog, or feature API interface | UI.Web.Client `Features/<Feature>/` |
+| Shared authentication and token management | UI.Web.Client `Infrastructure/Auth/` |
+| Server authentication and cookie handling | UI.Web `Infrastructure/Auth/` |
+| Shared HTTP client registration | UI.Web.Client `Infrastructure/Refit/` |
+| Request, response, or validator | Contracts `Contracts/<Feature>/` |
+
+Keep namespaces aligned with folders. Use the [Backend instructions](src/AditiKraft.Krafter.Backend/Agents.md) and [UI instructions](src/UI/Agents.md) for the detailed placement rules.
 
 ### Key Commands
 

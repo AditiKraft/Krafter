@@ -6,10 +6,13 @@
 ## 1. Core Principles
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
 - Preserve `ReturnUrl` during login and Google callback.
-- Store Google return URL in `LocalAppSate.GoogleLoginReturnUrl`.
+- Store Google return URL in `LocalAppState.GoogleLoginReturnUrl`.
 - Use `RootUiUrl` from configuration for non-local Google callback redirects; do not hard-code production domains.
 
 ## 2. Decision Tree
+- Login pages and auth API contract? Use this feature folder (`IAuthApi.cs`).
+- Login/logout orchestration, refresh, or token storage? Use `../../Infrastructure/Auth/`.
+- Server cookies or JWT events? Use `../../../AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`.
 - Standard login? Use `AuthenticationService.LoginAsync(TokenRequest)`.
 - Google login? Redirect to Google OAuth URL and handle `/google-callback`.
 - Already authenticated? Redirect to `ReturnUrl` or `/`.
@@ -76,11 +79,11 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Common/AuthenticationService.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs`
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Common/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json
+Last Updated: 2026-09-08
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json
 ---
 
 

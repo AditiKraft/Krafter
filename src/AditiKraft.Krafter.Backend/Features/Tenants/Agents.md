@@ -12,7 +12,7 @@
 - Create tenant? Use `CreateTenant` (checks identifier uniqueness and seeds data).
 - Update tenant? Use `UpdateTenant` (handles tenant updates and admin sync).
 - Get tenants? Use `Get` with `GetRequestInput` (supports history and deleted).
-- Delete tenant? Use `Delete` with `RouteSegment.ById`.
+- Delete tenant? Use `DeleteTenant` with `RouteSegment.ById`.
 - Seed tenant data? Use `SeedBasicData` route with `RouteSegment.SeedData`.
 
 ## 3. Code Templates
@@ -63,13 +63,13 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs`
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
+Last Updated: 2026-09-08
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
 ---
 
 

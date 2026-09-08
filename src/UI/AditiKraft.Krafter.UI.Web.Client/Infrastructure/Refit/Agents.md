@@ -1,9 +1,11 @@
 # UI Refit AI Instructions
 
-> **SCOPE**: Refit interfaces, routes, and registration.
+> **SCOPE**: Shared Refit transport and registration. Also read this file when adding or changing a feature API interface.
 > **PARENT**: See also: ../../../Agents.md
 
 ## 1. Core Principles
+- Keep API interfaces in `Features/<Feature>/I<Feature>Api.cs`, beside their feature pages.
+- Keep shared registration and tenant forwarding in this folder. `RefitAuthHandler` lives in `Infrastructure/Auth/` with token management.
 - Use literal route strings in Refit, especially when parameters are present.
 - Route parameter names must match method parameter names.
 - Use `[Query] GetRequestInput` for list endpoints.
@@ -51,7 +53,7 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 ```
 
 ## 4. Checklist
-1. Create the interface in `Infrastructure/Refit/`.
+1. Create the interface in `Features/<Feature>/` and match its namespace to that folder.
 2. Use literal routes in attributes (`[Get("/users/{id}")]`).
 3. Add `[Query] GetRequestInput` for list endpoints.
 4. Register the Refit client in `RefitServiceExtensions.cs` with the correct handler chain for that API.
@@ -68,6 +70,6 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 - New API client conventions added (e.g., BFF vs direct).
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+Last Updated: 2026-09-08
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/AppInfo/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

@@ -6,7 +6,7 @@
 ## Quick Start: New UI Feature
 1. If `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/Agents.md` exists, read it first.
 2. Ensure Shared DTOs + routes exist in `src/AditiKraft.Krafter.Contracts/`.
-3. Add a Refit interface in `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/` (see `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`).
+3. Add `I<Feature>Api.cs` beside the pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`. Read `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md` for route and registration rules.
 4. Register the Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`.
 5. Create `Features/<Feature>/<Feature>s.razor` and add `.razor.cs` if you need logic.
 6. Create `Features/<Feature>/CreateOrUpdate<Feature>.razor` and `.razor.cs` for form logic.
@@ -27,8 +27,15 @@
 - List page: `Features/<Feature>/<Feature>s.razor` (+ `.razor.cs` if needed)
 - Form dialog: `Features/<Feature>/CreateOrUpdate<Feature>.razor` (+ `.razor.cs` if needed)
 - Feature-shared UI pieces: `Features/<Feature>/Common/`
-- Refit interfaces: `Infrastructure/Refit/`
+- Feature API interface: `Features/<Feature>/I<Feature>Api.cs`
+- Shared HTTP client registration and tenant handler: `Infrastructure/Refit/`
+- Authentication services, state provider, token storage, and auth handler: `Infrastructure/Auth/`
+- Server authentication implementations: `AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`
+- Shared visual components: `Common/Components/`
+- Shared UI state and models: `Common/Models/`
 - Menu: `Infrastructure/Services/MenuService.cs`
+
+Keep each feature's pages, dialogs, and API interface together. Keep namespaces aligned with folders. Use explicit feature imports for cross-feature API calls. Put a shared implementation in `Infrastructure` only when more than one feature uses it.
 
 ## Minimal List Page Pattern
 ```csharp
@@ -43,7 +50,7 @@ public partial class Users(
 
     protected override async Task OnInitializedAsync()
     {
-        LocalAppSate.CurrentPageTitle = "Users";
+        LocalAppState.CurrentPageTitle = "Users";
         dialogService.OnClose += Close;
         await GetListAsync();
     }
@@ -98,9 +105,9 @@ public partial class Users(
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs`
 
 ## Common Mistakes
 - Calling Refit directly without `ApiCallService`.
@@ -115,8 +122,8 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+Last Updated: 2026-09-08
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---
 
 
