@@ -7,6 +7,7 @@
 - Use `TenantDbContext` for tenant data; use `ApplicationDbContext` for identity-side updates.
 - Creating a tenant triggers data seeding in a scoped tenant context.
 - Root tenant cannot be deleted.
+- Update admin emails through `IUserMutationService.UpdateEmailAsync` in the target tenant scope. Check the response before saving the tenant record; this keeps profile fields and roles intact.
 
 ## 2. Decision Tree
 - Create tenant? Use `CreateTenant` (checks identifier uniqueness and seeds data).
@@ -68,7 +69,7 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs`
 
 ---
-Last Updated: 2026-09-08
+Last Updated: 2026-09-09
 Verified Against: src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
 ---
 

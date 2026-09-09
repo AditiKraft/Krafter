@@ -8,7 +8,6 @@ using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Tenants;
-using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -84,18 +83,17 @@ public sealed class UpdateTenant
                 tenantSetter.SetTenant(currentTenantDetails);
 
                 UserManager<ApplicationUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                IUserMutationService userService = scope.ServiceProvider.GetRequiredService<IUserMutationService>();
 
                 ApplicationUser? user = await userManager.Users.AsNoTracking()
                     .FirstOrDefaultAsync(c => c.NormalizedEmail == tenant.AdminEmail.ToUpper(), cancellationToken);
                 if (user is not null)
                 {
-                    await userService.CreateOrUpdateAsync(new CreateUserRequest
+                    Response userResult = await userService.UpdateEmailAsync(user.Id, request.AdminEmail, cancellationToken);
+                    if (userResult.IsError)
                     {
-                        Id = user.Id,
-                        Email = request.AdminEmail,
-                        UpdateTenantEmail = false
-                    });
+                        return userResult;
+                    }
                 }
 
                 tenant.AdminEmail = request.AdminEmail;

@@ -71,6 +71,7 @@ public static class AuthenticationRegistration
         services.Configure<SecuritySettings>(config.GetSection(nameof(SecuritySettings)));
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<RolePermissionService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddHttpClient<ExternalAuth.GoogleAuthClient>(client =>
         {

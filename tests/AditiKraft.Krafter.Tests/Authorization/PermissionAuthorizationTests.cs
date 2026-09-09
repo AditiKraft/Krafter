@@ -5,7 +5,6 @@ using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -194,9 +193,6 @@ public sealed class PermissionAuthorizationTests
         }
 
         public Task<Response<List<string>>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
-            => throw new NotSupportedException();
-
-        public Task<Response> CreateOrUpdateAsync(CreateUserRequest request)
             => throw new NotSupportedException();
 
         public void Dispose() => IsDisposed = true;

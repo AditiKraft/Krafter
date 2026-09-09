@@ -1,128 +1,20 @@
-using AditiKraft.Krafter.Backend.Common.Tenants;
-using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
-using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
-using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PasswordGenerator = AditiKraft.Krafter.Backend.Common.PasswordGenerator;
 
 namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class CreateUser
 {
-    internal sealed class Handler(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager,
-        ITenantGetterService tenantGetterService,
-        ApplicationDbContext db,
-        IJobService jobService) : IScopedHandler
+    internal sealed class Handler(IUserMutationService service) : IScopedHandler
     {
-        public async Task<Response> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken)
-        {
-            ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
-            if (basic is null)
-            {
-                return Response.NotFound("Basic Role Not Found.");
-            }
-
-            request.Id = null;
-            request.Roles ??= [];
-            if (!request.Roles.Contains(basic.Id))
-            {
-                request.Roles.Add(basic.Id);
-            }
-
-            var user = new ApplicationUser
-            {
-                Id = Guid.NewGuid().ToString(),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                UserName = string.IsNullOrWhiteSpace(request.UserName) ? request.Email : request.UserName,
-                PhoneNumber = request.PhoneNumber,
-                IsActive = true
-            };
-
-            string password = PasswordGenerator.GeneratePassword();
-            IdentityResult result = await userManager.CreateAsync(user, password);
-            if (!result.Succeeded)
-            {
-                return Response.BadRequest("An error occurred while creating user.");
-            }
-
-            string loginUrl = $"{tenantGetterService.Tenant.TenantLink}/login";
-            string emailSubject = "Account Created";
-            string emailBody = $"Hello {user.FirstName} {user.LastName},<br/><br/>" +
-                               "Your account has been created successfully.<br/><br/> " +
-                               $"Your username/email is:<br/>{user.UserName}<br/><br/>" +
-                               $"Your password is:<br/>{password}<br/><br/>" +
-                               $"Please <a href='{loginUrl}'>click here</a> to log in.<br/><br/>" +
-                               $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
-
-            if (!string.IsNullOrWhiteSpace(user.Email))
-            {
-                await jobService.EnqueueAsync(
-                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                    nameof(Jobs.SendEmailJob),
-                    cancellationToken);
-            }
-
-            await SyncRolesAsync(user.Id, request.Roles, cancellationToken);
-            await db.SaveChangesAsync([], true, cancellationToken);
-
-            return new Response();
-        }
-
-        private async Task SyncRolesAsync(string userId, IReadOnlyCollection<string> requestedRoles,
-            CancellationToken cancellationToken)
-        {
-            List<ApplicationUserRole> existingRoles = await db.UserRoles
-                .IgnoreQueryFilters()
-                .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == userId)
-                .ToListAsync(cancellationToken);
-
-            var rolesToRemove = existingRoles.Where(r => !requestedRoles.Contains(r.RoleId)).ToList();
-            var rolesToUpdate = existingRoles.Where(r => requestedRoles.Contains(r.RoleId)).ToList();
-            var rolesToAdd = requestedRoles
-                .Where(roleId => !existingRoles.Any(er => er.RoleId == roleId))
-                .Select(roleId => new ApplicationUserRole { RoleId = roleId, UserId = userId })
-                .ToList();
-
-            foreach (ApplicationUserRole role in rolesToRemove)
-            {
-                role.IsDeleted = true;
-            }
-
-            foreach (ApplicationUserRole role in rolesToUpdate)
-            {
-                role.IsDeleted = false;
-            }
-
-            if (rolesToAdd.Count > 0)
-            {
-                db.UserRoles.AddRange(rolesToAdd);
-            }
-
-            if (rolesToRemove.Count > 0)
-            {
-                db.UserRoles.UpdateRange(rolesToRemove);
-            }
-
-            if (rolesToUpdate.Count > 0)
-            {
-                db.UserRoles.UpdateRange(rolesToUpdate);
-            }
-        }
+        public Task<Response> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken)
+            => service.CreateAsync(request, cancellationToken);
     }
 
     public sealed class Route : IRouteRegistrar

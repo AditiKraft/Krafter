@@ -1,10 +1,8 @@
-using System.Security.Claims;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
-using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
@@ -17,7 +15,8 @@ public sealed class UpdateRolePermissions
 {
     internal sealed class Handler(
         RoleManager<ApplicationRole> roleManager,
-        ApplicationDbContext db) : IScopedHandler
+        ApplicationDbContext db,
+        RolePermissionService permissionService) : IScopedHandler
     {
         public async Task<Response> UpdatePermissionsAsync(
             UpdateRolePermissionsRequest request,
@@ -38,36 +37,8 @@ public sealed class UpdateRolePermissions
                 };
             }
 
-            IList<Claim> currentClaims = await roleManager.GetClaimsAsync(role);
-
-            // Remove permissions that were previously selected
-            foreach (Claim claim in currentClaims.Where(c => request.Permissions.All(p => p != c.Value)))
-            {
-                IdentityResult removeResult = await roleManager.RemoveClaimAsync(role, claim);
-                if (!removeResult.Succeeded)
-                {
-                    return new Response
-                    {
-                        IsError = true,
-                        StatusCode = 400,
-                        Message =
-                            $"Update permissions failed: {string.Join(", ", removeResult.Errors.Select(e => e.Description))}"
-                    };
-                }
-            }
-
-            // Add all permissions that were not previously selected
-            foreach (string permission in request.Permissions.Where(c => currentClaims.All(p => p.Value != c)))
-            {
-                if (!string.IsNullOrEmpty(permission))
-                {
-                    db.RoleClaims.Add(new ApplicationRoleClaim
-                    {
-                        RoleId = role.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = permission
-                    });
-                    await db.SaveChangesAsync(cancellationToken);
-                }
-            }
+            await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
 
             return new Response { Message = "Role permissions updated successfully" };
         }
