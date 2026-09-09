@@ -6,7 +6,7 @@
 Krafter is a .NET 10 full-stack application with combined Backend API and Blazor UI in a single process:
 - **Backend**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA) — runs as an in-process library
 - **UI**: Hybrid Blazor (WebAssembly + Server) + Radzen Components — hosts the combined app
-- **Infrastructure**: .NET Aspire, OpenTelemetry, PostgreSQL/MySQL
+- **Infrastructure**: .NET Aspire, OpenTelemetry, PostgreSQL
 
 > **Single-Host Mode**: Backend and UI run in ONE process. The UI.Web project references the Backend project and is the only executable entry point. Aspire orchestrates a single combined app resource.
 

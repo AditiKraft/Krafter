@@ -4,6 +4,7 @@
 > **PARENT**: See also: ../../../Agents.md
 
 ## 1. Core Principles
+- Use the request validator in Contracts. Do not add a duplicate UI validator.
 - Use `ApiCallService` for all tenant API calls.
 - Tenant list uses `Close(object? result)`; keep this signature if editing the page.
 - Use `CreateOrUpdateTenant` dialog with `TenantInput`.
@@ -40,6 +41,6 @@ Response result = await api.CallAsync(
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
 
 ---
-Last Updated: 2026-04-28
+Last Updated: 2026-09-09
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

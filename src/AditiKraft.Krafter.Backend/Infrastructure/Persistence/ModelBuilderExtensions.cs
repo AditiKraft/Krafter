@@ -1,4 +1,3 @@
-using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Entities;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using Microsoft.EntityFrameworkCore;
@@ -28,28 +27,13 @@ public static class ModelBuilderExtensions
             builder.Entity(entityType.ClrType).Property("CreatedById").HasMaxLength(36);
         }
 
-        IEnumerable<IMutableEntityType> temporalEntities = allEntities
+        IEnumerable<IMutableEntityType> historyEntities = allEntities
             .Where(e => typeof(IHistory).IsAssignableFrom(e.ClrType));
-        foreach (IMutableEntityType entityType in temporalEntities)
+        foreach (IMutableEntityType entityType in historyEntities)
         {
-            builder.Entity(entityType.ClrType).ToTable(entityType.ClrType.Name, b => b.IsTemporal());
-
-            if (DatabaseSelected.Type == DatabaseType.Postgresql)
-            {
-                builder.Entity(entityType.ClrType).Property("CreatedOn")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-            }
-            else if (DatabaseSelected.Type == DatabaseType.MySql)
-            {
-                builder.Entity(entityType.ClrType).Property("CreatedOn")
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-            }
-            else
-            {
-                throw new NotSupportedException(
-                    $"Database type {DatabaseSelected.Type} is not supported for temporal entities.");
-            }
+            builder.Entity(entityType.ClrType).ToTable(entityType.ClrType.Name);
+            builder.Entity(entityType.ClrType).Property("CreatedOn")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
         }
 
         Type commonEntityType = typeof(ICommonAuthEntityProperty);

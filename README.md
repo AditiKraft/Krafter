@@ -88,7 +88,7 @@ Krafter is a **production-ready .NET 10 application template**, not a starter to
 | **Frontend** | Hybrid Blazor (WebAssembly + Server), Radzen UI components, code-behind pattern, responsive layouts, theming support |
 | **Security** | JWT authentication, Google OAuth, permission-based authorization, token refresh, ASP.NET Core Identity |
 | **Multi-tenancy** | Tenant-aware design with database-level isolation patterns |
-| **Data** | Entity Framework Core 10, PostgreSQL / MySQL support, migrations, soft delete, multiple database contexts |
+| **Data** | Entity Framework Core 10, PostgreSQL, migrations, soft delete, multiple database contexts (historical queries are not supported) |
 | **Realtime & jobs** | SignalR for live updates, TickerQ for background processing |
 | **API consumption** | Refit-based type-safe HTTP clients with token handling |
 | **Observability** | .NET Aspire, OpenTelemetry, health checks, structured logging |

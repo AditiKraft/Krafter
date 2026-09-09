@@ -6,7 +6,7 @@
 Krafter is a .NET 10 full-stack application with separate Backend API and Blazor UI hosts:
 - **Backend**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA) — runs as its own process
 - **UI**: Hybrid Blazor (WebAssembly + Server) + Radzen Components — runs as a separate process with BFF proxy
-- **Infrastructure**: .NET Aspire (orchestrates both hosts), OpenTelemetry, PostgreSQL/MySQL
+- **Infrastructure**: .NET Aspire (orchestrates both hosts), OpenTelemetry, PostgreSQL
 
 ## 1.1 Hosting Architecture (Split-Host)
 This project uses a **split-host** topology — Backend and UI run as independent processes:

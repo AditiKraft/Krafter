@@ -56,7 +56,6 @@ builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.Authenticatio
 });
 
 // ── UI services ────────────────────────────────────────────────────────────────
-builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
 builder.Services.AddScoped<IAuthApiService, ServerAuthApiService>();
 builder.Services.AddCascadingAuthenticationState();

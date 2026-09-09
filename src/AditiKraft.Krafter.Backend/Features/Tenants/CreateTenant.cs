@@ -19,7 +19,6 @@ public sealed class CreateTenant
 {
     internal sealed class Handler(
         TenantDbContext dbContext,
-        ApplicationDbContext applicationDbContext,
         ITenantGetterService tenantGetterService,
         IServiceProvider serviceProvider,
         ICurrentUser currentUser) : IScopedHandler
@@ -57,7 +56,6 @@ public sealed class CreateTenant
 
             dbContext.Tenants.Add(entity);
             await dbContext.SaveChangesAsync(cancellationToken);
-            await applicationDbContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
 
             string rootTenantLink = tenantGetterService.Tenant.TenantLink;
             using IServiceScope scope = serviceProvider.CreateScope();

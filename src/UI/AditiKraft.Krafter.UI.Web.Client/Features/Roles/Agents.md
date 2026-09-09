@@ -4,6 +4,7 @@
 > **PARENT**: See also: ../../../Agents.md
 
 ## 1. Core Principles
+- Use the request validator in Contracts. Do not add a duplicate UI validator.
 - Use `ApiCallService` for all role API calls.
 - Role list uses `Close(object? result)`; keep this signature if editing the page.
 - Build grouped permissions from `PermissionCatalog.All` in the dialog.
@@ -56,6 +57,6 @@ CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<s
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs`
 
 ---
-Last Updated: 2026-04-28
+Last Updated: 2026-09-09
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

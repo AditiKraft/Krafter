@@ -42,8 +42,6 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="LinqKit.Microsoft.EntityFrameworkCore" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.DynamicLinq" Version="10.7.0" />
-    <!--<PackageReference Include="EFCore.BulkExtensions" Version="9.0.1" />-->
-    <PackageReference Include="EFCore.BulkExtensions.Dotnet10" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.0" />
 
     <!-- API & Swagger -->

@@ -13,7 +13,7 @@ namespace AditiKraft.Krafter.Backend.Features.Tenants;
 
 public sealed class DeleteTenant
 {
-    internal sealed class Handler(TenantDbContext dbContext, ApplicationDbContext applicationDbContext) : IScopedHandler
+    internal sealed class Handler(TenantDbContext dbContext) : IScopedHandler
     {
         public async Task<Response> DeleteAsync(string id)
         {
@@ -33,7 +33,6 @@ public sealed class DeleteTenant
             tenant.IsDeleted = true;
             dbContext.Tenants.Update(tenant);
             await dbContext.SaveChangesAsync();
-            await applicationDbContext.SaveChangesAsync([nameof(Tenant)]);
             return new Response();
         }
     }

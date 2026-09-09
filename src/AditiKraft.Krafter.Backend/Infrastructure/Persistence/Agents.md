@@ -14,7 +14,9 @@
 ## 2. Decision Tree
 - New tenant-scoped entity? Add to `ApplicationDbContext` and apply tenant query filter.
 - Tenant management or cross-tenant queries? Use `TenantDbContext`.
-- Provider-specific history/temporal rules? Update `ModelBuilderExtensions`.
+- PostgreSQL is the supported provider. Tenant history queries are not supported.
+- Old migration snapshots contain unused SQL Server annotations. Leave historical migrations unchanged; the PostgreSQL model comparison test verifies that no schema update is required.
+- Use the standard `SaveChangesAsync(cancellationToken)` overload; it applies tenant and soft-delete rules.
 
 ## 3. Code Templates
 
@@ -72,7 +74,7 @@ modelBuilder.Entity<Tenant>(entity =>
 - New cross-entity configuration added in `ModelBuilderExtensions`.
 
 ---
-Last Updated: 2026-04-28
+Last Updated: 2026-09-09
 Verified Against: src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/TenantDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ModelBuilderExtensions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Backend.Migrator/ApiDbInitializer.cs, aspire/AditiKraft.Krafter.Aspire.AppHost/Program.cs
 ---
 

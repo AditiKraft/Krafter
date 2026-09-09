@@ -12,7 +12,7 @@
 ## 2. Decision Tree
 - Create tenant? Use `CreateTenant` (checks identifier uniqueness and seeds data).
 - Update tenant? Use `UpdateTenant` (handles tenant updates and admin sync).
-- Get tenants? Use `Get` with `GetRequestInput` (supports history and deleted).
+- Get tenants? Use `Get` with `GetRequestInput` (supports current and deleted tenants; history requests return BadRequest).
 - Delete tenant? Use `DeleteTenant` with `RouteSegment.ById`.
 - Seed tenant data? Use `SeedBasicData` route with `RouteSegment.SeedData`.
 

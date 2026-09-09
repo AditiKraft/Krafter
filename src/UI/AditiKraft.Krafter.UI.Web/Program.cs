@@ -28,7 +28,6 @@ builder.Services.AddDistributedPostgresCache(options =>
     options.CreateIfNotExists = true;
 });
 builder.Services.AddHybridCache();
-builder.Services.AddScoped<ServerAuthenticationHandler>();
 builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
 builder.Services.AddScoped<IAuthApiService, ServerAuthApiService>();
 builder.Services.AddCascadingAuthenticationState();

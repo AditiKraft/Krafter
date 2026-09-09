@@ -150,7 +150,7 @@ public sealed class ExternalAuth
                 }
 
                 db.UserRoles.Add(new ApplicationUserRole { RoleId = basic.Id, UserId = user.Id });
-                await db.SaveChangesAsync(new List<string>(), true, cancellationToken);
+                await db.SaveChangesAsync(cancellationToken);
             }
 
             Response<TokenResponse> res = await tokenService.GenerateTokensAndUpdateUser(user.Id, string.Empty);

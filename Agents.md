@@ -11,7 +11,7 @@ Krafter is a .NET 10 full-stack **project template** that generates applications
 
 The template project itself contains both variants. Shared business code lives in `src/`, while hosting-specific files live in `src-single/` and `aspire-single/` (overlaid by the template engine).
 
-**Stack**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA), Hybrid Blazor (WebAssembly + Server) + Radzen Components, .NET Aspire, OpenTelemetry, PostgreSQL/MySQL.
+**Stack**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA), Hybrid Blazor (WebAssembly + Server) + Radzen Components, .NET Aspire, OpenTelemetry, PostgreSQL.
 
 ## 2. Which Instructions to Read?
 

@@ -19,7 +19,6 @@ public sealed class UpdateTenant
 {
     internal sealed class Handler(
         TenantDbContext dbContext,
-        ApplicationDbContext applicationDbContext,
         ITenantGetterService tenantGetterService,
         IServiceProvider serviceProvider) : IScopedHandler
     {
@@ -110,7 +109,6 @@ public sealed class UpdateTenant
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            await applicationDbContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
             return new Response();
         }
     }

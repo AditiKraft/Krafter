@@ -58,9 +58,8 @@ if (role.Name == RoleConstants.Admin)
 - `src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRolePermissions.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Roles/Common/RoleService.cs`
 
 ---
 Last Updated: 2026-09-09
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Roles/Common/RolePermissionService.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoles.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleById.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleByIdWithPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRolePermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/Common/RoleService.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/AppClaimTypes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Roles/Common/RolePermissionService.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoles.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleById.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleByIdWithPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRolePermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/Common/RolePermissionService.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/AppClaimTypes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---
