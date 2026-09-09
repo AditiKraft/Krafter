@@ -1,4 +1,4 @@
-<RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest __) => Submit(__))">
+<RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest input) => SubmitAsync(input))">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
     <RadzenStack Gap="1rem" Orientation="Orientation.Vertical">
 
@@ -24,13 +24,25 @@
 
         @if (!string.IsNullOrWhiteSpace(UserDetails.Id))
         {
+            @if (isLoadingPermissions)
+            {
+                <p role="status">Loading role permissions...</p>
+            }
+            else if (permissionLoadFailed)
+            {
+                <div role="alert">
+                    <p>Could not load role permissions. Retry before saving.</p>
+                    <RadzenButton ButtonType="ButtonType.Button" Text="Retry" Click="@LoadPermissionsAsync"/>
+                </div>
+            }
+
             <RadzenRow AlignItems="AlignItems.Center">
                 <RadzenColumn Size="12" SizeMD="4">
                     <RadzenLabel Text="Permission" Component="FinalPermission"/>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="8">
                     <RadzenDropDown Style="width: 100%" @bind-Value=@CreateUserRequest.Permissions Multiple=true AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="FinalPermission"
-                                    Data=@(GroupedData != null ? GroupedData : Enumerable.Empty<GroupPermissionData>()) DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
+                                    Disabled="@(!permissionsLoaded || isBusy)" Data=@(GroupedData != null ? GroupedData : Enumerable.Empty<GroupPermissionData>()) DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
                         <Template Context="product">
                             @(product.Resource ?? product.FinalPermission)
                         </Template>
@@ -40,7 +52,7 @@
         }
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
+        <RadzenButton ButtonType="ButtonType.Submit" Disabled="@(!CanSave)" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
         <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
     </RadzenStack>
 </RadzenTemplateForm>

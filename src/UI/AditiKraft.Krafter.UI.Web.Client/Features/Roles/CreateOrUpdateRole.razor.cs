@@ -28,6 +28,12 @@ public partial class CreateOrUpdateRole(
     private IEnumerable<GroupPermissionData> GroupedData = new List<GroupPermissionData>();
 
     private bool isBusy = false;
+    private bool permissionsLoaded;
+    private bool isLoadingPermissions;
+    private bool permissionLoadFailed;
+
+    private bool CanSave => !isBusy &&
+        (string.IsNullOrWhiteSpace(UserDetails.Id) || permissionsLoaded);
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,20 +54,47 @@ public partial class CreateOrUpdateRole(
                                 IsRoot = o.IsRoot,
                                 FinalPermission = PermissionDefinition.NameFor(o.Action, o.Resource)
                             }))).ToList();
-                Response<RoleDto> rolePermissions = await api.CallAsync(
-                    () => rolesApi.GetRolePermissionsAsync(UserDetails.Id),
-                    showErrorNotification: true);
-                CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<string>();
-                OriginalCreateUserRequest.Permissions = CreateUserRequest.Permissions;
+                await LoadPermissionsAsync();
             }
         }
     }
 
-    private async void Submit(CreateOrUpdateRoleRequest input)
+    private async Task LoadPermissionsAsync()
     {
-        if (UserDetails is not null)
+        permissionsLoaded = false;
+        permissionLoadFailed = false;
+        isLoadingPermissions = true;
+        try
         {
-            isBusy = true;
+            Response<RoleDto> response = await api.CallAsync(
+                () => rolesApi.GetRolePermissionsAsync(UserDetails.Id),
+                showErrorNotification: true);
+            if (response is not { IsError: false, Data.Permissions: not null })
+            {
+                permissionLoadFailed = true;
+                return;
+            }
+
+            CreateUserRequest.Permissions = [.. response.Data.Permissions];
+            OriginalCreateUserRequest.Permissions = [.. response.Data.Permissions];
+            permissionsLoaded = true;
+        }
+        finally
+        {
+            isLoadingPermissions = false;
+        }
+    }
+
+    private async Task SubmitAsync(CreateOrUpdateRoleRequest input)
+    {
+        if (!CanSave)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
             Response result;
             if (string.IsNullOrWhiteSpace(input.Id))
             {
@@ -75,16 +108,15 @@ public partial class CreateOrUpdateRole(
                     () => rolesApi.UpdateRoleAsync(input.Id, input),
                     successMessage: "Role updated successfully");
             }
-            isBusy = false;
-            StateHasChanged();
+
             if (result is { IsError: false })
             {
                 dialogService.Close(true);
             }
         }
-        else
+        finally
         {
-            dialogService.Close(false);
+            isBusy = false;
         }
     }
 
