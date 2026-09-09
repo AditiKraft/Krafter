@@ -6,7 +6,9 @@
 ## 1. Core Principles
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
 - `AuthTokenService` owns expiry checks, refresh, and initial token synchronization. Use `NeedsRefresh` for the shared one-minute refresh window.
-- Keep token reads, refresh, and storage writes inside `TokenRefreshCoordinator`. It is shared across browser API clients and scoped on the server. Each caller checks its current token; refresh success is never shared through a process-wide timestamp.
+- Keep token reads, refresh, and storage writes inside `TokenRefreshCoordinator`. It is shared across browser API clients and scoped on the server.
+- Server HTTP-client scopes do not share that coordinator. `ServerAuthApiService` uses the shared `HybridCache` to combine refresh calls for the exact access/refresh token pair. Successful responses stay in local memory for five seconds so each request can save the same new cookies. Cache keys contain a hash, not credentials; refresh results never go to the distributed cache.
+- Different token pairs refresh independently. Failed responses are not cached, and canceling one waiter does not cancel another waiting request. This coordination is within one UI server process; it is not a distributed lock.
 - `AuthStorageService` saves browser tokens. `AuthStorageServiceServer` saves cookies and makes fresh values available to the current HTTP request.
 - Preserve `ReturnUrl` during login and Google callback.
 - Store Google return URL in `LocalAppState.GoogleLoginReturnUrl`.
@@ -87,8 +89,8 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/TokenRefreshCoordinator.cs`
 
 ---
-Last Updated: 2026-09-08
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json
+Last Updated: 2026-09-09
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Auth/ServerAuthApiService.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json
 ---
 
 

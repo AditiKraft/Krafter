@@ -1,5 +1,8 @@
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
+using Microsoft.Extensions.Caching.Hybrid;
 using Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
@@ -7,8 +10,16 @@ namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 public class ServerAuthApiService(
     IAuthApi authApi,
     IAuthStorageService localStorage,
+    HybridCache cache,
     ILogger<ServerAuthApiService> logger) : IAuthApiService
 {
+    private static readonly HybridCacheEntryOptions RefreshCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromSeconds(5),
+        LocalCacheExpiration = TimeSpan.FromSeconds(5),
+        Flags = HybridCacheEntryFlags.DisableDistributedCache
+    };
+
     public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request,
         CancellationToken cancellation)
     {
@@ -43,7 +54,31 @@ public class ServerAuthApiService(
     {
         try
         {
-            return await authApi.RefreshTokenAsync(request, cancellation);
+            // Handler scopes and HTTP requests share the result only for this exact token pair.
+            // Hash credentials to keep them out of cache keys; never write tokens to the distributed cache.
+            string key = "auth-refresh:" + Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes($"{request.Token}\0{request.RefreshToken}")));
+            return await cache.GetOrCreateAsync(key, async cancel =>
+            {
+                Response<TokenResponse> response = await authApi.RefreshTokenAsync(request, cancel);
+                if (response is not { IsError: false, Data: not null } ||
+                    string.IsNullOrWhiteSpace(response.Data.Token) ||
+                    string.IsNullOrWhiteSpace(response.Data.RefreshToken))
+                {
+                    // A failed attempt must not prevent a later retry with the same credentials.
+                    throw new RefreshRejectedException(response);
+                }
+
+                return response;
+            }, RefreshCacheOptions, cancellationToken: cancellation);
+        }
+        catch (RefreshRejectedException ex)
+        {
+            return ex.Response;
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            throw;
         }
         catch (ApiException ex)
         {
@@ -141,4 +176,9 @@ public class ServerAuthApiService(
     }
 
     public Task LogoutAsync(CancellationToken cancellation) => localStorage.ClearCacheAsync();
+
+    private sealed class RefreshRejectedException(Response<TokenResponse> response) : Exception
+    {
+        public Response<TokenResponse> Response { get; } = response;
+    }
 }
