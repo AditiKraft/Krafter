@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <PackageType>Template</PackageType>
+    <!-- Keep the template packaging tool separate from application package versions. -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <PackageVersion>0.0.1</PackageVersion>
     <Version>$(PackageVersion)</Version>
     <PackageId>AditiKraft.Krafter.Templates</PackageId>

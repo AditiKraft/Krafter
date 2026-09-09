@@ -40,7 +40,7 @@ Requirements:
 1. Shared contracts (CategoryDto, CreateCategoryRequest with validator)
 2. Backend entity
 3. All three operations: Get (paginated), CreateOrUpdate, Delete
-4. Add DbSet to KrafterContext with EF configuration
+4. Add DbSet to ApplicationDbContext with EF configuration
 5. Add permissions and EntityKind enum value
 ```
 

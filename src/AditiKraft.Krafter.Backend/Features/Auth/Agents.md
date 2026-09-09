@@ -19,7 +19,7 @@
 
 ### Refresh Token Validation
 ```csharp
-UserRefreshToken? refreshToken = await krafterContext.UserRefreshTokens
+UserRefreshToken? refreshToken = await applicationDbContext.UserRefreshTokens
     .FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
 
 if (refreshToken is null ||
@@ -63,7 +63,7 @@ if (basic is null)
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
 
 ---
-Last Updated: 2026-04-28
+Last Updated: 2026-09-09
 Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
 ---
 

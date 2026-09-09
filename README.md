@@ -162,7 +162,7 @@ The diagrams below reflect the template structure and are useful before you gene
 
 AppHost applies checked-in migrations automatically through `krafter-migrator`. In normal local development, start AppHost and let the migrator complete.
 
-The existing `ConnectionStrings:KrafterDbMigration` value in `src/AditiKraft.Krafter.Backend/appsettings.Local.json` already works for `dotnet ef migrations add`. Do not change it.
+For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` in the environment or use `ConnectionStrings:AppDbMigration` in an optional `appsettings.Local.json` in the current directory. Single-host output has no backend settings files, so use the environment variable there. A placeholder PostgreSQL connection string is enough to create migration files; applying migrations requires a real database.
 
 Install EF Core tools once if needed:
 
@@ -175,7 +175,7 @@ Create a migration from the Backend project:
 ```bash
 cd src/AditiKraft.Krafter.Backend
 
-dotnet ef migrations add <MigrationName> --context KrafterContext
+dotnet ef migrations add <MigrationName> --context ApplicationDbContext
 dotnet ef migrations add <MigrationName> --context TenantDbContext
 dotnet ef migrations add <MigrationName> --context BackgroundJobsContext
 ```
@@ -193,7 +193,7 @@ dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Unable to create DbContext" | Missing `ConnectionStrings:KrafterDbMigration` or wrong working directory | Restore the `KrafterDbMigration` entry in `appsettings.Local.json` and run the command from `src/AditiKraft.Krafter.Backend` |
+| "Unable to create DbContext" | Missing `ConnectionStrings:AppDbMigration` or wrong working directory | Set `ConnectionStrings__AppDbMigration`, or run from the directory containing an optional `appsettings.Local.json` with the `AppDbMigration` connection string |
 | "`krafter-api` does not start" | `krafter-migrator` failed first | Check the `krafter-migrator` logs and fix the migration error |
 | "Migration already exists" | Duplicate migration name | Use `dotnet ef migrations remove --context <ContextName>` |
 | "Pending model changes" | The model changed but no migration exists yet | Add a new migration for the affected context before restarting AppHost |
@@ -295,7 +295,7 @@ dotnet build AditiKraft.Krafter.Dev.slnx
 dotnet test
 
 # Create migrations
-dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context ApplicationDbContext
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context BackgroundJobsContext
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context TenantDbContext
 
@@ -386,6 +386,12 @@ dotnet new install ./nupkg/AditiKraft.Krafter.Templates.*.nupkg
 dotnet new krafter -n TestApp -o ../TestApp
 dotnet new krafter-single -n TestSingle -o ../TestSingle
 ```
+
+### Package Versions and Host Setup
+
+Edit [Directory.Packages.props](Directory.Packages.props) to change package versions. Project files declare which packages they use, without repeating the versions. Both generated templates include this file. The template packaging project manages its own build-tool package separately.
+
+Both UI hosts use [UiHostServiceRegistration.cs](src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs) for Blazor, cache, UI authentication state, and API-client services. Each host keeps its own authentication setup, middleware, and endpoints in `Program.cs`.
 
 ### Contribution Notes
 

@@ -30,6 +30,7 @@
 - Feature API interface: `Features/<Feature>/I<Feature>Api.cs`
 - Shared HTTP client registration and tenant handler: `Infrastructure/Refit/`
 - Authentication services, state provider, token storage, and auth handler: `Infrastructure/Auth/`
+- Common server UI registration: `AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Both hosting variants call `AddUiHostServices(configuration)`; keep their authentication setup and endpoint mapping in their own `Program.cs`.
 - Server authentication implementations: `AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`
 - Shared visual components: `Common/Components/`
 - Shared UI state and models: `Common/Models/`

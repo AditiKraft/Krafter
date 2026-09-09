@@ -11,14 +11,14 @@ internal static class DesignTimeConnectionStringHelper
     {
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.Local.json", false, false)
+            .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .Build();
         string? connectionString = configuration.GetConnectionString("AppDbMigration");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
-                "Connection string 'KrafterDbMigration' not found. Please create 'appsettings.Local.json' with the connection string or set it via environment variables.");
+                "Connection string 'AppDbMigration' not found. Set ConnectionStrings__AppDbMigration or add it to appsettings.Local.json.");
         }
 
         return connectionString;
@@ -37,7 +37,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TenantDbCo
     }
 }
 
-public class DesignTimeKrafterContextDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+public class DesignTimeApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {

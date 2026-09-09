@@ -9,7 +9,8 @@
 - `ApplicationDbContext` uses soft delete; do not remove entities directly.
 - Keep `ApplyCommonConfigureAcrossEntity()` in `OnModelCreating`.
 - Runtime migration execution belongs in `src/AditiKraft.Krafter.Backend.Migrator/`; `aspire/` should orchestrate it as an executable resource and gate the API with `WaitForCompletion(...)`.
-- `dotnet ef migrations add` only needs `ConnectionStrings:AppDbMigration` to exist in `src/AditiKraft.Krafter.Backend/appsettings.Local.json`; the existing placeholder value is enough.
+- For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` or put `ConnectionStrings:AppDbMigration` in an optional `appsettings.Local.json` in the current directory. A placeholder PostgreSQL connection string is enough to generate migration files.
+- Single-host output excludes backend settings files. Use the environment variable for design-time commands.
 
 ## 2. Decision Tree
 - New tenant-scoped entity? Add to `ApplicationDbContext` and apply tenant query filter.
@@ -58,7 +59,7 @@ modelBuilder.Entity<Tenant>(entity =>
 3. Configure model in `ApplicationDbContext.OnModelCreating(...)`.
 4. Use `TenantDbContext` only for tenant admin data.
 5. Create the migration in `src/AditiKraft.Krafter.Backend/Migrations`.
-6. Leave `src/AditiKraft.Krafter.Backend/appsettings.Local.json` in place for `dotnet ef migrations add`.
+6. Supply `AppDbMigration` through the environment or an optional local settings file for design-time commands.
 7. Let `src/AditiKraft.Krafter.Backend.Migrator/` apply migrations at startup; do not run them from the API host.
 
 ## 5. Common Mistakes
