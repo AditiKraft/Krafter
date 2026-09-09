@@ -19,8 +19,8 @@
 - Use `ApiCallService` for Refit calls made directly from UI components; auth flows go through `IAuthenticationService`.
 - Use `ApiRoutes` from Shared for `RoutePath`.
 - Add `@attribute [MustHavePermission(...)]` to list pages.
-- List pages implement `IDisposable` and unsubscribe `dialogService.OnClose`.
-- Keep `Close(...)` signature consistent with the feature (Users uses `dynamic`, Roles/Tenants use `object?`).
+- Await each `DialogService.OpenAsync` result and reload the list only when it is `true`.
+- The DI scope owns `DialogService`. Pages must not dispose it or subscribe to its shared `OnClose` event.
 - Delete flow uses `DialogService.Confirm()` + Refit delete endpoint.
 
 ## File Placement
@@ -42,7 +42,7 @@ Keep each feature's pages, dialogs, and API interface together. Keep namespaces 
 public partial class Users(
     DialogService dialogService,
     ApiCallService api,
-    IUsersApi usersApi) : ComponentBase, IDisposable
+    IUsersApi usersApi) : ComponentBase
 {
     public const string RoutePath = ApiRoutes.Users;
     private GetRequestInput requestInput = new();
@@ -51,7 +51,6 @@ public partial class Users(
     protected override async Task OnInitializedAsync()
     {
         LocalAppState.CurrentPageTitle = "Users";
-        dialogService.OnClose += Close;
         await GetListAsync();
     }
 
@@ -78,18 +77,15 @@ public partial class Users(
         }
     }
 
-    private async void Close(object? result)
+    private async Task AddUser()
     {
-        if (result is not bool)
-            return;
-        await GetListAsync();
-    }
-    // NOTE: If an existing page uses `dynamic`, keep that signature.
-
-    public void Dispose()
-    {
-        dialogService.OnClose -= Close;
-        dialogService.Dispose();
+        object? result = await dialogService.OpenAsync<CreateOrUpdateUser>("Add New User",
+            new Dictionary<string, object> { { "UserInput", new UserDto() } },
+            new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 }
 ```
@@ -111,8 +107,8 @@ public partial class Users(
 
 ## Common Mistakes
 - Calling Refit directly without `ApiCallService`.
-- Forgetting to unsubscribe `dialogService.OnClose` on `Dispose`.
-- Changing a page's `Close(...)` signature instead of matching the existing feature pattern.
+- Reloading on canceled dialogs or handling another page's dialog through the shared `OnClose` event.
+- Disposing an injected service that the DI scope owns.
 - Using UI-local route/permission constants instead of Shared.
 - Refit route parameter name mismatch (e.g., `{id}` requires `id`).
 - Skipping delete confirmation.
@@ -122,7 +118,7 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-09-08
+Last Updated: 2026-09-09
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---
 

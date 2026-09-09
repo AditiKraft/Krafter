@@ -6,7 +6,7 @@
 ## 1. Core Principles
 - Use the request validator in Contracts. Do not add a duplicate UI validator.
 - Use `ApiCallService` for all tenant API calls.
-- Tenant list uses `Close(object? result)`; keep this signature if editing the page.
+- Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Use `CreateOrUpdateTenant` dialog with `TenantInput`.
 
 ## 2. Decision Tree
@@ -26,11 +26,11 @@ Response result = await api.CallAsync(
 ## 4. Checklist
 1. Use `ApiRoutes.Tenants` as `RoutePath`.
 2. Use `ApiCallService` for list and delete.
-3. Keep `Close(object? result)` on the Tenants list page.
+3. Await the dialog result and reload only after a successful save.
 
 ## 5. Common Mistakes
 - Skipping confirmation before delete.
-- Changing the `Close` signature in the Tenants list page.
+- Subscribing to the shared `OnClose` event or disposing the injected dialog service.
 
 ## 6. Evolution Triggers
 - Tenant creation flow changes.

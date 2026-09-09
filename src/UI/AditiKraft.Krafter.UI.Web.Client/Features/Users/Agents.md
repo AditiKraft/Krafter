@@ -5,7 +5,7 @@
 
 ## 1. Core Principles
 - Use `ApiCallService` for all user API calls.
-- Users list uses `Close(dynamic result)`; keep this signature if editing the page.
+- Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Populate role selections by calling `GetUserRolesAsync` when editing a user.
 
 ## 2. Decision Tree
@@ -44,11 +44,11 @@ if (confirmed == true)
 1. Use `ApiRoutes.Users` as `RoutePath`.
 2. Use `ApiCallService` for list and delete.
 3. Use `CreateOrUpdateUser` dialog for create/edit.
-4. Keep `Close(dynamic result)` on the Users list page.
+4. Await the dialog result and reload only after a successful save.
 
 ## 5. Common Mistakes
 - Skipping role prefill when editing an existing user.
-- Changing the `Close` signature in the Users list page.
+- Subscribing to the shared `OnClose` event or disposing the injected dialog service.
 
 ## 6. Evolution Triggers
 - User role/permission UI changes.
@@ -62,6 +62,6 @@ if (confirmed == true)
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs`
 
 ---
-Last Updated: 2026-04-28
+Last Updated: 2026-09-09
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

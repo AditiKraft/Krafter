@@ -6,7 +6,7 @@
 ## 1. Core Principles
 - Use the request validator in Contracts. Do not add a duplicate UI validator.
 - Use `ApiCallService` for all role API calls.
-- Role list uses `Close(object? result)`; keep this signature if editing the page.
+- Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Build grouped permissions from `PermissionCatalog.All` in the dialog.
 
 ## 2. Decision Tree
@@ -41,12 +41,12 @@ CreateUserRequest.Permissions = rolePermissions?.Data?.Permissions ?? new List<s
 ## 4. Checklist
 1. Use `ApiRoutes.Roles` as `RoutePath`.
 2. Use `ApiCallService` for list and delete.
-3. Keep `Close(object? result)` on the Roles list page.
+3. Await the dialog result and reload only after a successful save.
 4. Use grouped permissions + `GetRolePermissionsAsync` in dialog.
 
 ## 5. Common Mistakes
 - Skipping grouped permissions setup.
-- Changing the `Close` signature in the Roles list page.
+- Subscribing to the shared `OnClose` event or disposing the injected dialog service.
 
 ## 6. Evolution Triggers
 - Permission model changes.
