@@ -6,6 +6,7 @@
 ## 1. Core Principles
 - Use `TenantDbContext` for tenant data; use `ApplicationDbContext` for identity-side updates.
 - Creating a tenant triggers data seeding in a scoped tenant context.
+- `CreateTenant.Handler` sets `CreatedOn` to UTC before saving. `TenantDbContext` does not set audit timestamps. Updates must preserve the creation time.
 - Root tenant cannot be deleted.
 - Update admin emails through `IUserMutationService.UpdateEmailAsync` in the target tenant scope. Check the response before saving the tenant record; this keeps profile fields and roles intact.
 
@@ -70,7 +71,7 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 
 ---
 Last Updated: 2026-09-09
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
+Verified Against: tests/AditiKraft.Krafter.Tests/Tenants/TenantCreationTests.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
 ---
 
 

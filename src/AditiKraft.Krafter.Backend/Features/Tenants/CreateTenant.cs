@@ -52,6 +52,7 @@ public sealed class CreateTenant
             entity.ValidUpto = new DateTime(request.ValidUpto!.Value.Year,
                 request.ValidUpto.Value.Month, request.ValidUpto.Value.Day, 0, 0, 0, 0, 0,
                 DateTimeKind.Utc);
+            entity.CreatedOn = DateTime.UtcNow;
             entity.CreatedById = currentUser.GetUserId();
 
             dbContext.Tenants.Add(entity);
