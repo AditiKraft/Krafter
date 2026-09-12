@@ -9,6 +9,7 @@
 - Use `ApiCallService` for all tenant API calls.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Use `CreateOrUpdateTenant` dialog with `TenantInput`.
+- Bind expiry directly to the local value returned by Refit. Serialization converts it to UTC. Preserve unchanged values and show root validity as "No expiry". Hide expiry timestamps during server prerendering, where responses remain UTC. Expiry filtering is disabled because grid filter strings do not use the JSON converter.
 
 ## 2. Decision Tree
 - List page? Use `Features/Tenants/Tenants.razor` + `.razor.cs`.

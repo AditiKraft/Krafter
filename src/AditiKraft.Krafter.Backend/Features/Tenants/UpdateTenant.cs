@@ -62,6 +62,12 @@ public sealed class UpdateTenant
                 return Response.BadRequest(string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
+            if (request.ValidUpto!.Value.Kind != DateTimeKind.Utc
+                && !(tenant.Id == DefaultTenantConstants.Identifier && request.ValidUpto == DateTime.MaxValue))
+            {
+                return Response.BadRequest("Send the expiry time in UTC with a Z suffix.");
+            }
+
             bool identifierExists = await dbContext.Tenants.AsNoTracking()
                 .AnyAsync(c => c.Id != tenant.Id && c.Identifier.ToLower() == request.Identifier, cancellationToken);
             if (identifierExists)
@@ -113,8 +119,7 @@ public sealed class UpdateTenant
 
             if (request.ValidUpto != tenant.ValidUpto)
             {
-                // Match creation: preserve the selected calendar date at midnight UTC.
-                tenant.ValidUpto = DateTime.SpecifyKind(request.ValidUpto!.Value.Date, DateTimeKind.Utc);
+                tenant.ValidUpto = request.ValidUpto!.Value;
             }
 
             try

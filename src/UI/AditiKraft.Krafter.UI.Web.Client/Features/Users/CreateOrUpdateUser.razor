@@ -11,7 +11,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.FirstName" Name="FirstName"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.FirstName)"/>
+            <ValidationMessage For="@(() => CreateUserRequest.FirstName)"/>
         </RadzenRow>
 
 
@@ -22,7 +22,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.LastName" Name="LastName"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.LastName)"/>
+            <ValidationMessage For="@(() => CreateUserRequest.LastName)"/>
         </RadzenRow>
 
 
@@ -33,7 +33,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.PhoneNumber" Name="PhoneNumber"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.PhoneNumber)"/>
+            <ValidationMessage For="@(() => CreateUserRequest.PhoneNumber)"/>
         </RadzenRow>
 
         @if (!string.IsNullOrWhiteSpace(UserInput.Id))
@@ -45,7 +45,7 @@
                 <RadzenColumn Size="12" SizeMD="10">
                     <MultiSelectRoleDropDownDataGrid @bind-Value="@CreateUserRequest.Roles"></MultiSelectRoleDropDownDataGrid>
                 </RadzenColumn>
-                <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Roles)"/>
+                <ValidationMessage For="@(() => CreateUserRequest.Roles)"/>
             </RadzenRow>
         }
 
@@ -57,7 +57,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.Email" Name="Email"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Email)"/>
+            <ValidationMessage For="@(() => CreateUserRequest.Email)"/>
         </RadzenRow>
 
 

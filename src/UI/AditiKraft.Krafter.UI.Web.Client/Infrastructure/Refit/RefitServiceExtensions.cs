@@ -21,6 +21,7 @@ public static class RefitServiceExtensions
 
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         options.Converters.Add(new JsonNumberEnumConverter<EntityKind>());
+        options.Converters.Add(new UiDateTimeJsonConverter(localizeResponses: OperatingSystem.IsBrowser()));
         var refitSettings = new RefitSettings { ContentSerializer = new SystemTextJsonContentSerializer(options) };
 
         // Placeholder URL - will be rewritten by RefitTenantHandler at runtime
