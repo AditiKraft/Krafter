@@ -38,6 +38,11 @@ public sealed class CreateTenant
                 return Response.BadRequest(string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
+            if (request.ValidUpto!.Value.Kind != DateTimeKind.Utc)
+            {
+                return Response.BadRequest("Send the expiry time in UTC with a Z suffix.");
+            }
+
             bool identifierExists = await dbContext.Tenants.AsNoTracking()
                 .AnyAsync(c => c.Identifier.ToLower() == request.Identifier, cancellationToken);
             if (identifierExists)
@@ -47,9 +52,7 @@ public sealed class CreateTenant
 
             request.Id = Guid.NewGuid().ToString();
             Tenant entity = request.Adapt<Tenant>();
-            entity.ValidUpto = new DateTime(request.ValidUpto!.Value.Year,
-                request.ValidUpto.Value.Month, request.ValidUpto.Value.Day, 0, 0, 0, 0, 0,
-                DateTimeKind.Utc);
+            entity.ValidUpto = request.ValidUpto!.Value;
             entity.CreatedOn = DateTime.UtcNow;
             entity.CreatedById = currentUser.GetUserId();
 

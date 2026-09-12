@@ -46,10 +46,11 @@ public sealed class TenantUpdateEndpointTests
     }
 
     [Theory]
-    [InlineData("2030-06-15T00:00:00")]
-    [InlineData("2030-06-15T14:30:00")]
-    [InlineData("2030-06-15T00:00:00Z")]
-    public async Task UpdateStoresSelectedValidityDateAtUtcMidnight(string validUntil)
+    [InlineData("2030-06-15T00:00:00", HttpStatusCode.BadRequest)]
+    [InlineData("2030-06-15T14:30:00", HttpStatusCode.BadRequest)]
+    [InlineData("2030-06-15T00:00:00Z", HttpStatusCode.OK)]
+    [InlineData("2030-06-15T18:15:00Z", HttpStatusCode.OK)]
+    public async Task UpdateRequiresUtcAndPreservesExactExpiry(string validUntil, HttpStatusCode expectedStatus)
     {
         await using WebApplication app = await CreateAppAsync();
         using var client = new HttpClient { BaseAddress = new Uri(Assert.Single(app.Urls)) };
@@ -59,13 +60,16 @@ public sealed class TenantUpdateEndpointTests
             IsActive = true, ValidUpto = validUntil
         });
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(expectedStatus, response.StatusCode);
         await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
         TenantDbContext db = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
         Tenant saved = await db.Tenants.SingleAsync(tenant => tenant.Id == "blue-id");
         // DateTime equality ignores Kind, but PostgreSQL timestamp with time zone requires UTC.
         Assert.Equal(DateTimeKind.Utc, saved.ValidUpto.Kind);
-        Assert.Equal(new DateTime(2030, 6, 15, 0, 0, 0, DateTimeKind.Utc), saved.ValidUpto);
+        DateTime expected = expectedStatus == HttpStatusCode.OK
+            ? DateTime.Parse(validUntil, null, System.Globalization.DateTimeStyles.RoundtripKind)
+            : new DateTime(2030, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        Assert.Equal(expected, saved.ValidUpto);
     }
 
     [Fact]
@@ -76,7 +80,7 @@ public sealed class TenantUpdateEndpointTests
         using HttpResponseMessage response = await client.PutAsJsonAsync($"/{ApiRoutes.Tenants}/root", new
         {
             Identifier = "root", Name = "Root tenant", AdminEmail = "admin@example.com",
-            IsActive = true, ValidUpto = "2030-06-15T00:00:00"
+            IsActive = true, ValidUpto = "2030-06-15T00:00:00Z"
         });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

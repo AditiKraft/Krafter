@@ -7,7 +7,7 @@
 - Use `TenantDbContext` for tenant data; use `ApplicationDbContext` for identity-side updates.
 - Creating a tenant triggers data seeding in a scoped tenant context.
 - `CreateTenant.Handler` sets `CreatedOn` to UTC before saving. `TenantDbContext` does not set audit timestamps. Updates must preserve the creation time.
-- Store the selected `ValidUpto` calendar date at midnight UTC on create and update. Date-picker input can have `DateTimeKind.Unspecified`; keep its calendar date instead of converting through the server time zone. Preserve the root tenant's protected validity value.
+- `ValidUpto` is an exact UTC expiry timestamp. The UI converts browser-local input to UTC before sending it. Validate UTC in backend handlers, after shared form validation, and preserve the time on create and update; truncating it to midnight changes the expiry. Preserve the root tenant's protected validity value.
 - Root tenant cannot be deleted.
 - Validate identifiers through `CreateOrUpdateTenantRequestValidator` with the configured `AppUrls` in both create and update handlers. Keep format, length, and reserved-name rules shared with the UI. Check uniqueness without regard to letter case, excluding the current tenant on update.
 - `IX_Tenant_Identifier_Lower` enforces uniqueness for tenants that are not deleted. Its expression index is defined in the `UniqueTenantIdentifiers` raw SQL migration, not the EF model snapshot. Return 409 for this named constraint violation if concurrent writes pass the initial check.

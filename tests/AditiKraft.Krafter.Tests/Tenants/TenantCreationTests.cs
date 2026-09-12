@@ -58,7 +58,7 @@ public sealed class TenantCreationTests
             Identifier = "example",
             AdminEmail = "admin@example.com",
             IsActive = true,
-            ValidUpto = DateTime.UtcNow.AddDays(30)
+            ValidUpto = new DateTime(2030, 6, 15, 18, 15, 0, DateTimeKind.Utc)
         };
         var create = new CreateTenant.Handler(db, provider, currentUser, Urls);
 
@@ -72,6 +72,8 @@ public sealed class TenantCreationTests
         Assert.InRange(saved.CreatedOn, before, after);
         Assert.Equal(DateTimeKind.Utc, saved.CreatedOn.Kind);
         Assert.Equal("creator", saved.CreatedById);
+        Assert.Equal(request.ValidUpto, saved.ValidUpto);
+        Assert.Equal(DateTimeKind.Utc, saved.ValidUpto.Kind);
 
         request.Name = "Updated tenant";
         var update = new UpdateTenant.Handler(db, provider, Urls);
@@ -82,6 +84,7 @@ public sealed class TenantCreationTests
         Tenant reloaded = await db.Tenants.AsNoTracking().SingleAsync();
         Assert.Equal("Updated tenant", reloaded.Name);
         Assert.Equal(saved.CreatedOn, reloaded.CreatedOn);
+        Assert.Equal(saved.ValidUpto, reloaded.ValidUpto);
     }
 
     [Theory]
