@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client;
@@ -11,7 +12,6 @@ using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AditiKraft.Krafter.Tests.Auth;
@@ -30,11 +30,11 @@ public sealed class RefitRefreshCoordinationTests
         var sentTokens = new ConcurrentBag<string?>();
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["RemoteHostUrl"] = "https://localhost:5001"
-            }).Build());
+        services.AddSingleton(new AppUrls
+        {
+            RootUiUrl = "https://localhost:5002",
+            ApiBaseUrl = "https://localhost:5001"
+        });
         services.AddSingleton<NavigationManager, BrowserNavigationManager>();
         services.AddSingleton<IFormFactor, FormFactor>();
         services.AddSingleton<IAuthStorageService>(storage);

@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
@@ -9,8 +10,10 @@ namespace AditiKraft.Krafter.UI.Web.Infrastructure.Hosting;
 
 public static class UiHostServiceRegistration
 {
-    public static IServiceCollection AddUiHostServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddUiHostServices(this IServiceCollection services, IConfiguration configuration,
+        BlazorHostingMode hostingMode = BlazorHostingMode.SplitHost)
     {
+        services.AddSingleton(UiUrlConfiguration.Resolve(configuration, hostingMode));
         services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();

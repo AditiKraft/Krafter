@@ -8,6 +8,7 @@
 - Validate credentials with `UserManager<ApplicationUser>`.
 - Refresh flow validates the stored `UserRefreshToken` and expiry.
 - External login creates a user if missing and assigns the Basic role.
+- Google login and token exchange use `AppUrls.GetGoogleRedirectUri()` from `Urls:RootUiUrl`. Register that exact callback with Google; keep one callback source for both steps.
 - Prefer `Response<T>` factory methods for errors.
 
 ## 2. Decision Tree
@@ -63,8 +64,8 @@ if (basic is null)
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
 
 ---
-Last Updated: 2026-09-09
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
+Last Updated: 2026-09-12
+Verified Against: src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, tests/AditiKraft.Krafter.Tests/Configuration/GoogleCallbackTests.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
 ---
 
 

@@ -14,6 +14,8 @@
 8. Add menu item in `Infrastructure/Services/MenuService.cs`.
 9. Update `_Imports.razor` with the new contract namespace.
 
+For URL settings, server API connections, tenant routing, or Google callbacks, read [Configure application URLs](../../docs/url-configuration.md). Browser startup loads public `AppUrls` from `/configuration/urls`; server URL resolution belongs in UI.Web `Infrastructure/Hosting/UiUrlConfiguration.cs`.
+
 ## Core Rules
 - Use DTOs from `AditiKraft.Krafter.Contracts.Contracts.*`.
 - Use `ApiCallService` for Refit calls made directly from UI components; auth flows go through `IAuthenticationService`.
@@ -30,7 +32,7 @@
 - Feature API interface: `Features/<Feature>/I<Feature>Api.cs`
 - Shared HTTP client registration and tenant handler: `Infrastructure/Refit/`
 - Authentication services, state provider, token storage, and auth handler: `Infrastructure/Auth/`
-- Common server UI registration: `AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Both hosting variants call `AddUiHostServices(configuration)`; keep their authentication setup and endpoint mapping in their own `Program.cs`.
+- Common server UI registration: `AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Both hosting variants call `AddUiHostServices(configuration, hostingMode)` (split host is the default); keep their authentication setup and endpoint mapping in their own `Program.cs`.
 - Server authentication implementations: `AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`
 - Shared visual components: `Common/Components/`
 - Shared UI state and models: `Common/Models/`
@@ -119,8 +121,8 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-09-09
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+Last Updated: 2026-09-12
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 
 

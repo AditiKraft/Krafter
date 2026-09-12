@@ -24,7 +24,7 @@ This project uses a **single-host topology** — everything runs in ONE process.
 - **All API routes** are prefixed with `/api`
 - **Auth cookies** (`HttpOnly`, `Secure`, `SameSite=Strict`) are shared naturally since Backend and UI share the same origin
 - **`AuthCookieMiddleware`** handles cookie persistence for auth endpoints
-- **BFF-specific endpoints** (get current token, logout) are the only UI.Web-owned endpoints; all auth/CRUD routes are served directly by the backend
+- **UI.Web-owned endpoints** include current-token, logout, and public URL configuration; all other auth/CRUD routes are served directly by the backend
 
 ## 2. Which Instructions to Read?
 
@@ -50,6 +50,8 @@ This project uses a **single-host topology** — everything runs in ONE process.
 │     └── READ BOTH Backend + UI sub-files                   │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
 
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
@@ -268,6 +270,6 @@ Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Inf
 ```
 
 ---
-Last Updated: 2026-09-09
-Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.single.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
+Last Updated: 2026-09-12
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.single.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

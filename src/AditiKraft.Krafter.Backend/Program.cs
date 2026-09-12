@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Web.Configuration;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
@@ -22,8 +23,10 @@ public static class Program
         // Aspire observability + health checks
         builder.AddServiceDefaults();
 
+        _ = AppUrls.ParseOrigin(builder.Configuration["Urls:ApiBaseUrl"], "Urls:ApiBaseUrl");
+
         // CORS (split-host needs cross-origin support)
-        builder.Services.AddCorsConfiguration(builder.Configuration, builder.Environment);
+        builder.Services.AddCorsConfiguration(builder.Configuration);
 
         // All backend services (DB, auth, persistence, jobs, SignalR, swagger, validation, routes)
         builder.AddBackendServices();

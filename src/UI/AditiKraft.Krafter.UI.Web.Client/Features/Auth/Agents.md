@@ -12,7 +12,7 @@
 - `AuthStorageService` saves browser tokens. `AuthStorageServiceServer` saves cookies and makes fresh values available to the current HTTP request.
 - Preserve `ReturnUrl` during login and Google callback.
 - Store Google return URL in `LocalAppState.GoogleLoginReturnUrl`.
-- Use `RootUiUrl` from configuration for non-local Google callback redirects; do not hard-code production domains.
+- Use injected `AppUrls.GetGoogleRedirectUri()` for Google callbacks in every environment. Backend uses the same method for code exchange. Read [Configure application URLs](../../../../../docs/url-configuration.md) when changing callback or deployment settings.
 
 ## 2. Decision Tree
 - Login pages and auth API contract? Use this feature folder (`IAuthApi.cs`).
@@ -26,20 +26,8 @@
 
 ### Start Google Login
 ```csharp
-string? clientId = configuration["Authentication:Google:ClientId"];
-string redirectUri = $"{navigationManager.BaseUri}google-callback";
-if (!redirectUri.Contains("localhost"))
-{
-    string rootUiUrl = configuration["RootUiUrl"]
-                       ?? throw new InvalidOperationException("RootUiUrl not configured");
-
-    if (!Uri.TryCreate(rootUiUrl, UriKind.Absolute, out Uri? rootUiUri))
-    {
-        throw new InvalidOperationException("RootUiUrl must be an absolute URL");
-    }
-
-    redirectUri = $"{rootUiUri.AbsoluteUri.TrimEnd('/')}/google-callback";
-}
+string clientId = configuration["Authentication:Google:ClientId"] ?? "";
+string redirectUri = appUrls.GetGoogleRedirectUri().AbsoluteUri;
 string scope = "email profile";
 string responseType = "code";
 string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(returnUrl)}";
@@ -68,13 +56,13 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 ## 4. Checklist
 1. Use `@page "/login"` and `@page "/Account/Login"` routes.
 2. Respect `ReturnUrl` query parameter.
-3. Configure `RootUiUrl` in both split-host and single-host UI appsettings.
+3. Configure `Urls:RootUiUrl` on UI.Web and also on Backend in split-host mode. Keep these values identical; the browser reads UI.Web's public configuration.
 4. After external login, navigate to the stored return URL or `/`.
 
 ## 5. Common Mistakes
 - Calling `IAuthApi` directly instead of `IAuthenticationService`.
 - Dropping `ReturnUrl` during Google login round-trip.
-- Hard-coding an external Google callback domain instead of using `RootUiUrl`.
+- Building Google callbacks from the current tenant host or a separate redirect setting instead of `AppUrls.GetGoogleRedirectUri()`.
 
 ## 6. Evolution Triggers
 - Auth service or token storage logic changes.
@@ -89,8 +77,8 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/TokenRefreshCoordinator.cs`
 
 ---
-Last Updated: 2026-09-09
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Auth/ServerAuthApiService.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json
+Last Updated: 2026-09-12
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Auth/ServerAuthApiService.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 
 

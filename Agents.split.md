@@ -19,7 +19,7 @@ This project uses a **split-host** topology — Backend and UI run as independen
 | **Aspire AppHost** | Orchestrates Backend + UI.Web as separate resources. Provides service discovery so UI.Web can locate Backend by name. |
 
 **Request flow**: Feature APIs: Browser (WASM) → Backend API (`/api/...`) directly. Auth APIs: Browser → UI.Web BFF → Backend API.
-**Service discovery**: UI.Web uses Aspire service discovery to resolve the Backend URL at runtime. Server-side Refit on UI.Web calls Backend directly via the discovered endpoint.
+**Server connections**: UI.Web resolves the Backend address in `UiUrlConfiguration`: explicit server override, then Aspire service discovery, then the public API address. Server-side Refit sends the tenant identifier in a header.
 
 ## 2. Which Instructions to Read?
 
@@ -45,6 +45,8 @@ This project uses a **split-host** topology — Backend and UI run as independen
 │     └── READ BOTH Backend + UI sub-files                   │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
 
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
@@ -264,6 +266,6 @@ Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Inf
 ```
 
 ---
-Last Updated: 2026-09-09
-Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.split.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md
+Last Updated: 2026-09-12
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.split.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

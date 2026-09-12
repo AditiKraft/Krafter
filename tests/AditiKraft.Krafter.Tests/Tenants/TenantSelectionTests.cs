@@ -6,6 +6,7 @@ using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
 using AditiKraft.Krafter.Backend.Web.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace AditiKraft.Krafter.Tests.Tenants;
 
@@ -29,7 +30,10 @@ public sealed class TenantSelectionTests
         db.Tenants.AddRange(ActiveTenant("blue"), ActiveTenant("127"));
         await db.SaveChangesAsync();
         var tenant = new CurrentTenantService();
-        var middleware = new MultiTenantServiceMiddleware(new TenantFinderService(db), tenant, new CurrentUser());
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Urls:RootUiUrl"] = "https://example.com" }).Build();
+        var middleware = new MultiTenantServiceMiddleware(
+            new TenantFinderService(db), tenant, new CurrentUser(), configuration);
         var context = new DefaultHttpContext();
         context.Request.Scheme = "https";
         context.Request.Host = new HostString(host);

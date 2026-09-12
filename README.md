@@ -209,8 +209,11 @@ Local development works with the checked-in dev settings.
 Only change configuration if you need custom values for:
 
 - PostgreSQL container credentials in `aspire/AditiKraft.Krafter.Aspire.AppHost/appsettings.json`
-- JWT, TickerQ, or Google auth settings in `src/AditiKraft.Krafter.Backend/appsettings.json`
-- UI backend URL or Google client settings in `src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json` and `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json`
+- JWT, TickerQ, or Google auth settings in the Backend host (split host) or UI.Web (single host)
+- Public URLs in the server `Urls` section: `RootUiUrl` for both modes, plus `ApiBaseUrl` for split host
+- Google client ID in the UI settings; the client secret stays on the server
+
+The browser loads public URLs from UI.Web automatically. For deployment examples, tenant domains, CORS, Google callbacks, and migration from old keys, read [Configure application URLs](docs/url-configuration.md).
 
 For anything outside local development, prefer user-secrets or environment variables instead of committed values.
 
@@ -218,7 +221,7 @@ For anything outside local development, prefer user-secrets or environment varia
 
 ## 📁 Project Structure
 
-The structure below is what you get after running `dotnet new krafter -n MyApp` (split host). Single host is identical except Backend has no `Program.cs`.
+The structure below is what you get after running `dotnet new krafter -n MyApp` (split host). In single host, UI.Web owns server configuration and startup; Backend has no `Program.cs` or `appsettings*.json`.
 
 ```text
 MyApp/

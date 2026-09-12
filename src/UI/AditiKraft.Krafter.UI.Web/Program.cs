@@ -18,19 +18,11 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlaz
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ => { });
 
-string? apiUrl = builder.Configuration.GetValue<string>("services:api:https:0");
-if (string.IsNullOrWhiteSpace(apiUrl))
-{
-    throw new Exception("API URL not found");
-}
-
-// Override RemoteHostUrl with Aspire service discovery URL for server-side Refit calls
-builder.Configuration["RemoteHostUrl"] = apiUrl;
-
 builder.Services.AddUiHostServices(builder.Configuration);
 WebApplication app = builder.Build();
 
 app.MapDefaultEndpoints();
+app.MapUiUrlConfiguration();
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();

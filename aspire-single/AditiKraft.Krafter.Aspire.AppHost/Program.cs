@@ -35,8 +35,8 @@ IResourceBuilder<ProjectResource> app = builder.AddProject<Projects.AditiKraft_K
     .WithReference(database)
     .WaitForCompletion(migrator);
 
-// In single-host mode, RemoteHostUrl points to self (API is in-process).
+// Server HTTP calls use the local endpoint. Browser calls stay on their current origin.
 // Inject the app's own HTTPS endpoint so Refit calls loop back correctly.
-app.WithEnvironment("RemoteHostUrl", app.GetEndpoint("https"));
+app.WithEnvironment("Urls__ServerApiBaseUrl", app.GetEndpoint("https"));
 
 builder.Build().Run();

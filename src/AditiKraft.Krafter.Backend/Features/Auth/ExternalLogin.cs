@@ -46,7 +46,8 @@ public sealed class ExternalAuth
         {
             string? clientId = _configuration["Authentication:Google:ClientId"];
             string? clientSecret = _configuration["Authentication:Google:ClientSecret"];
-            string? redirectUri = _configuration["Authentication:Google:RedirectUri"];
+            AppUrls urls = _configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
+            string redirectUri = urls.GetGoogleRedirectUri().AbsoluteUri;
 
             var tokenRequestParams = new Dictionary<string, string?>
             {

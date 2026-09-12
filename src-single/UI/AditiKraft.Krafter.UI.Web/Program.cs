@@ -33,12 +33,7 @@ builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.Authenticatio
     options.Events = new BlazorJwtBearerEvents(BlazorHostingMode.SingleHost);
 });
 
-// In single-host mode, RemoteHostUrl points to self since API routes are in the same process.
-// Value comes from: Aspire (env var injection) or appsettings.Development.json (standalone dev).
-_ = builder.Configuration["RemoteHostUrl"]
-    ?? throw new InvalidOperationException("RemoteHostUrl not configured. Set it in appsettings or via Aspire.");
-
-builder.Services.AddUiHostServices(builder.Configuration);
+builder.Services.AddUiHostServices(builder.Configuration, BlazorHostingMode.SingleHost);
 
 // ── Build ──────────────────────────────────────────────────────────────────────
 WebApplication app = builder.Build();
@@ -47,6 +42,7 @@ WebApplication app = builder.Build();
 app.UseForwardedHeaders();
 app.UseResponseCompression();
 app.MapDefaultEndpoints();
+app.MapUiUrlConfiguration();
 app.UseSwaggerConfiguration();
 app.UseHttpsRedirection();
 

@@ -193,7 +193,8 @@ public sealed class ServerRefreshCoordinationTests
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["RemoteHostUrl"] = "https://localhost:5001"
+                ["Urls:RootUiUrl"] = "https://localhost:7291",
+                ["Urls:ApiBaseUrl"] = "https://localhost:5001"
             }).Build();
         var services = new ServiceCollection();
         services.AddLogging();

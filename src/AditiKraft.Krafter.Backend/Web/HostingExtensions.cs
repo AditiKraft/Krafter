@@ -26,6 +26,11 @@ public static class HostingExtensions
     /// </summary>
     public static WebApplicationBuilder AddBackendServices(this WebApplicationBuilder builder)
     {
+        AppUrls urls = builder.Configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
+        _ = urls.GetRootUiUri();
+        _ = urls.GetApiUri();
+        _ = urls.GetServerApiUri();
+
         builder.Services.AddDatabaseConfiguration(builder.Configuration);
 
         builder.Services.AddCurrentUserServices();

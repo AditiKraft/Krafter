@@ -49,6 +49,8 @@ The template project itself contains both variants. Shared business code lives i
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
+
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
 2. Add contracts + validators in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
@@ -153,7 +155,7 @@ The single-host template (`krafter-single`) uses four `sources` entries in its `
 
 1. **Root (`./` → `./`)** — copies everything except files that will be overlaid, plus excludes `src-single/`, `aspire-single/`, and split-only files (`AditiKraft.Krafter.slnx`). Renames `AditiKraft.Krafter.Single.slnx` → `AditiKraft.Krafter.slnx`.
 2. **UI.Web overlay** (`src-single/UI/AditiKraft.Krafter.UI.Web/` → `src/UI/AditiKraft.Krafter.UI.Web/`) — replaces `Program.cs`, `.csproj`, and `appsettings*.json` with the combined-host versions.
-3. **WASM wwwroot overlay** (`src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/` → `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/`) — replaces `appsettings.json` and `appsettings.Development.json` (removes the separate backend base URL since API is same-origin).
+3. **WASM wwwroot overlay** (`src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/` → `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/`) — replaces `appsettings.json` and `appsettings.Development.json` (contains public non-URL settings; browser URLs come from the UI host).
 4. **Aspire overlay** (`aspire-single/AditiKraft.Krafter.Aspire.AppHost/` → `aspire/AditiKraft.Krafter.Aspire.AppHost/`) — replaces `Program.cs` and `.csproj` to register a single combined app resource instead of two separate ones.
 
 The split-host template (`krafter`) simply excludes `src-single/`, `aspire-single/`, and `AditiKraft.Krafter.Single.slnx` — no overlays needed.
@@ -337,7 +339,7 @@ Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Inf
 ```
 
 ---
-Last Updated: 2026-09-09
-Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs
+Last Updated: 2026-09-12
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

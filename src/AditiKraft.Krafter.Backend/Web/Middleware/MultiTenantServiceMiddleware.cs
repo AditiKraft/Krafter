@@ -1,4 +1,3 @@
-using System.Net;
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Backend.Common.Tenants;
@@ -14,7 +13,8 @@ namespace AditiKraft.Krafter.Backend.Web.Middleware;
 public class MultiTenantServiceMiddleware(
     ITenantFinderService tenantFinderService,
     ITenantSetterService tenantSetterService,
-    ICurrentUser currentUser) : IMiddleware
+    ICurrentUser currentUser,
+    IConfiguration configuration) : IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -32,17 +32,8 @@ public class MultiTenantServiceMiddleware(
             return;
         }
 
-        string? tenantIdentifier = "";
-        string host = context.Request.Host.Host;
-        string[] strings = host.Split('.');
-        if (strings.Length > 2 && !IPAddress.TryParse(host, out _))
-        {
-            tenantIdentifier = strings[0];
-        }
-        else
-        {
-            tenantIdentifier = context.Request.Headers["x-tenant-identifier"];
-        }
+        string? tenantIdentifier = GetHostTenant(context.Request.Host.Host)
+            ?? context.Request.Headers["x-tenant-identifier"].ToString();
 
         if (string.IsNullOrWhiteSpace(tenantIdentifier))
         {
@@ -67,4 +58,22 @@ public class MultiTenantServiceMiddleware(
         tenantSetterService.SetTenant(currentTenant);
         await next(context);
     }
+
+    private string? GetHostTenant(string host)
+    {
+        AppUrls urls = configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
+        Uri rootUiUri = urls.GetRootUiUri();
+        Uri? apiUri = urls.GetApiUri();
+        Uri serverApiUri = urls.GetServerApiUri();
+        if (host.Equals(rootUiUri.Host, StringComparison.OrdinalIgnoreCase) ||
+            (apiUri is not null && host.Equals(apiUri.Host, StringComparison.OrdinalIgnoreCase)) ||
+            host.Equals(serverApiUri.Host, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return (apiUri is null ? null : AppUrls.GetSubdomain(host, apiUri))
+            ?? AppUrls.GetSubdomain(host, rootUiUri);
+    }
+
 }
