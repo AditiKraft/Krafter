@@ -160,6 +160,10 @@ The single-host template (`krafter-single`) uses four `sources` entries in its `
 
 The split-host template (`krafter`) simply excludes `src-single/`, `aspire-single/`, and `AditiKraft.Krafter.Single.slnx` — no overlays needed.
 
+The source single-host AppHost selects the `src-single` UI project when it exists; generated projects select `src/UI`. Source-only launch profiles and AppHost settings are physical files because Aspire reads them from each project directory. Keep these copies aligned with the shared files in `src/UI` and `aspire`. The overlay sources exclude these support files, so generated projects retain the shared root copies.
+
+`AditiKraft.Krafter.Single.slnx` describes generated paths. In the source repository, build `AditiKraft.Krafter.Dev.slnx` or the exact `aspire-single` AppHost project to verify the combined host.
+
 ### 4.3 Overlay Rule
 
 Files in `src-single/` and `aspire-single/` **replace** the corresponding files from `src/` and `aspire/` in the single-host template output. The root source excludes the original files, and the overlay sources copy replacements into the same target paths.
@@ -200,8 +204,8 @@ dotnet run --project aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.
 # Build split-host
 dotnet build AditiKraft.Krafter.slnx
 
-# Build single-host
-dotnet build AditiKraft.Krafter.Single.slnx
+# Build the source single-host AppHost and its combined UI host
+dotnet build aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 
 # Run authentication and permission regression tests
 dotnet test tests/AditiKraft.Krafter.Tests/AditiKraft.Krafter.Tests.csproj
@@ -340,6 +344,6 @@ Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Inf
 
 ---
 Last Updated: 2026-09-12
-Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+Verified Against: aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj, aspire-single/AditiKraft.Krafter.Aspire.AppHost/Properties/launchSettings.json, src-single/UI/AditiKraft.Krafter.UI.Web/Properties/launchSettings.json, Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

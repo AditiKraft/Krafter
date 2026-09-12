@@ -26,7 +26,6 @@
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\GlobalUsings.cs" Link="GlobalUsings.cs" />
     <Content Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.razor" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.cs" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
-    <None Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Properties\launchSettings.json" Link="Properties\launchSettings.json" />
   </ItemGroup>
 
   <PropertyGroup>

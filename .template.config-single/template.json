@@ -69,7 +69,8 @@
         {
           "exclude": [
             "**/bin/**",
-            "**/obj/**"
+            "**/obj/**",
+            "Properties/**"
           ]
         }
       ]
@@ -93,7 +94,9 @@
         {
           "exclude": [
             "**/bin/**",
-            "**/obj/**"
+            "**/obj/**",
+            "Properties/**",
+            "appsettings*.json"
           ]
         }
       ]

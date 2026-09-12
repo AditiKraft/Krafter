@@ -13,9 +13,11 @@
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- In generated single-host output, src-single/ is overlaid into src/, so this path is correct.
-         In the template repo this points at the split-host UI.Web; use generated output to test single-host. -->
+  <!-- Source development uses the combined host in src-single. Generated projects use src. -->
+  <ItemGroup Condition="Exists('..\..\src-single\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj')">
+    <ProjectReference Include="..\..\src-single\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('..\..\src-single\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj')">
     <ProjectReference Include="..\..\src\UI\AditiKraft.Krafter.UI.Web\AditiKraft.Krafter.UI.Web.csproj" />
   </ItemGroup>
 

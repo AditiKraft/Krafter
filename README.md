@@ -376,6 +376,12 @@ dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter
 dotnet run --project aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 ```
 
+Run one source AppHost at a time. Both modes use the same local UI ports, Aspire dashboard ports, and PostgreSQL container name.
+
+To build both source variants, use `dotnet build AditiKraft.Krafter.Dev.slnx`. To build only the source combined host, build `aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj`. The `AditiKraft.Krafter.Single.slnx` file describes the paths used after template generation.
+
+The source single-host AppHost selects `src-single/UI/AditiKraft.Krafter.UI.Web`. Generated single-host projects select the overlaid `src/UI/AditiKraft.Krafter.UI.Web`. Source-only launch profiles and AppHost settings are excluded from the overlays; generated projects keep the shared profiles and settings.
+
 ### Test Template Output Locally
 
 ```bash
