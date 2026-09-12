@@ -1,3 +1,4 @@
+using System.Net;
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Extensions;
 using AditiKraft.Krafter.Backend.Common.Tenants;
@@ -32,9 +33,9 @@ public class MultiTenantServiceMiddleware(
         }
 
         string? tenantIdentifier = "";
-        string host = context.Request.Host.Value ?? "";
+        string host = context.Request.Host.Host;
         string[] strings = host.Split('.');
-        if (strings.Length > 2)
+        if (strings.Length > 2 && !IPAddress.TryParse(host, out _))
         {
             tenantIdentifier = strings[0];
         }
