@@ -10,19 +10,25 @@ jobs:
     name: ubuntu-latest
     runs-on: ubuntu-latest
     permissions:
-      packages: write   # ✅ only allow writing to GitHub Packages
-      contents: read  
+      packages: write
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Setup .NET 10 SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      # NuGet policy: owner AditiKraft, repository Krafter, workflow main.yml.
+      - name: NuGet login with trusted publishing
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: dotnet run --project ./build/_build.csproj
         run: |
           dotnet run --project ./build/_build.csproj
         env:
-          # Ensure these are set as GitHub repository secrets
           PAT: ${{ secrets.GITHUB_TOKEN }}
           DeploymentWebhookUrl: ${{ secrets.DeploymentWebhookUrl }}
-          NuGetPAT : ${{ secrets.NuGetPAT }}
+          NuGetPAT: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
