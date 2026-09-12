@@ -102,6 +102,22 @@ Urls__ServerApiBaseUrl=http://backend_krafter:8080
 
 This gives tenant `blue` the UI address `https://blue.getkrafter.dev`. Google login still uses the fixed root callback, `https://krafter.getkrafter.dev/google-callback`.
 
+### Root tenant address
+
+The root tenant's identifier is `root`. Its public address is configured separately through `Urls:RootUiUrl`; it is not built from the identifier. This rule applies to both hosting modes.
+
+With the deployment settings above:
+
+| Address | Result |
+|---------|--------|
+| `https://krafter.getkrafter.dev` | Opens the root tenant, whose identifier is `root` |
+| `https://blue.getkrafter.dev` | Opens tenant `blue`, if it exists |
+| `https://root.getkrafter.dev` | Returns "Tenant not found"; it is not an automatic alias for the root tenant |
+
+The configured root UI hostname is recognized first. On other tenant hostnames, `root` is a reserved identifier and is rejected. Links generated for the root tenant also use `RootUiUrl`.
+
+You can choose `https://root.getkrafter.dev` as `RootUiUrl` instead, but that makes it the configured root address; it does not enable both addresses. Update matching host settings and the registered Google callback when changing `RootUiUrl`. If you want a second address for convenience, configure a redirect at your reverse proxy to the configured root address.
+
 ### Tenant identifiers
 
 Tenant URL identifiers are separate from display names. Identifiers must contain 1–10 lowercase ASCII letters, numbers, or hyphens. They must start and end with a letter or number. Create and update operations check uniqueness without regard to letter case.

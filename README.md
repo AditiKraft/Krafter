@@ -76,6 +76,11 @@ Try the live demo at [https://krafter.getkrafter.dev/](https://krafter.getkrafte
 
 Alternatively, log in with Google to create a new account.
 
+> [!IMPORTANT]
+> **The root tenant's identifier is `root`, but its address comes from `Urls:RootUiUrl`.**
+> With `RootUiUrl=https://krafter.getkrafter.dev` and `TenantBaseDomain=getkrafter.dev`, open `krafter.getkrafter.dev` for the root tenant. `root.getkrafter.dev` is not an automatic alias and returns "Tenant not found". Regular tenants, such as `blue`, use `blue.getkrafter.dev` once created.
+> See [Root tenant address](docs/url-configuration.md#root-tenant-address) for details.
+
 ## 🎯 What Krafter Gives You
 
 Krafter is a **production-ready .NET 10 application template**, not a starter toy project. It gives you a structured foundation for full-stack business apps with modern defaults already wired together.
