@@ -113,7 +113,8 @@ public sealed class UpdateTenant
 
             if (request.ValidUpto != tenant.ValidUpto)
             {
-                tenant.ValidUpto = request.ValidUpto ?? tenant.ValidUpto;
+                // Match creation: preserve the selected calendar date at midnight UTC.
+                tenant.ValidUpto = DateTime.SpecifyKind(request.ValidUpto!.Value.Date, DateTimeKind.Utc);
             }
 
             try
