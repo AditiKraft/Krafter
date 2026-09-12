@@ -29,6 +29,7 @@ For URL settings, server API connections, tenant routing, or Google callbacks, r
 ## File Placement
 - Shared colors and component styles: `AditiKraft.Krafter.UI.Web.Client/wwwroot/app.css`. Use its `--kr-*` semantic tokens and Radzen mappings. Brand Blue is the primary action color; surfaces are solid and neutral.
 - Load `app.css` after `RadzenTheme` in `UI.Web/Components/App.razor`. Dark tokens follow `#radzen-theme-link` because Radzen changes the stylesheet URL, not a class on the document. Keep Auto, Light, and Dark preferences working through `ThemeManager`.
+- Map grid frozen-cell and loading colors explicitly to surface tokens. Frozen headers use the header surface; the loading mask stays translucent so existing rows remain visible during refresh.
 - List page: `Features/<Feature>/<Feature>s.razor` (+ `.razor.cs` if needed)
 - Form dialog: `Features/<Feature>/CreateOrUpdate<Feature>.razor` (+ `.razor.cs` if needed)
 - Feature-shared UI pieces: `Features/<Feature>/Common/`

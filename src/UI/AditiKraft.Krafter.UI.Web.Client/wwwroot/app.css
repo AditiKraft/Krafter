@@ -279,6 +279,11 @@
     --rz-overlay-background-color: var(--kr-elevated);
     --rz-overlay-shadow: var(--kr-shadow-raised);
     --rz-grid-header-background-color: var(--kr-subtle);
+    --rz-grid-frozen-cell-background-color: var(--kr-surface);
+    --rz-grid-frozen-cell-border: var(--rz-border-normal);
+    --rz-grid-loading-indicator-color: var(--kr-link);
+    --rz-grid-loading-indicator-background-color: var(--kr-surface);
+    --rz-grid-loading-indicator-background-opacity: 0.15;
     --rz-grid-stripe-background-color: var(--kr-surface);
     --rz-grid-stripe-odd-background-color: var(--kr-surface);
     --rz-grid-cell-font-size: 0.875rem;
@@ -364,6 +369,7 @@ h1:focus { outline: none; }
 .rz-body { min-width: 0; }
 .rz-body > .rz-row:not(.kr-auth-panel) { max-width: 1440px; margin-inline: auto; }
 .rz-datatable thead th { font-weight: 600; }
+.rz-grid-table thead { --rz-grid-frozen-cell-background-color: var(--rz-grid-header-background-color); }
 
 .rz-button.rz-primary.rz-variant-text, .rz-button.rz-primary.rz-variant-outlined { color: var(--kr-link); }
 .rz-color-primary { color: var(--kr-link) !important; }
