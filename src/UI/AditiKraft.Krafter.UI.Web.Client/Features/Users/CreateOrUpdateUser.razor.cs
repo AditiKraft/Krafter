@@ -1,4 +1,3 @@
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using Mapster;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;

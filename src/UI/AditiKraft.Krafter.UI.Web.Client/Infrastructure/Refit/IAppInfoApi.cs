@@ -1,9 +1,0 @@
-using Refit;
-
-namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-
-public interface IAppInfoApi
-{
-    [Get("/api/app-info")]
-    public Task<Response<string>> GetAppInfoAsync(CancellationToken cancellationToken = default);
-}

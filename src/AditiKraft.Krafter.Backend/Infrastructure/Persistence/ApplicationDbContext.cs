@@ -1,6 +1,6 @@
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Entities;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
@@ -114,18 +114,18 @@ public class ApplicationDbContext(
 
     public override int SaveChanges()
     {
-        UpdateSoftDeleteStatusesAndSetTenant(null);
+        UpdateSoftDeleteStatusesAndSetTenant();
         return base.SaveChanges();
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
-        UpdateSoftDeleteStatusesAndSetTenant(null);
+        UpdateSoftDeleteStatusesAndSetTenant();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
-    private void UpdateSoftDeleteStatusesAndSetTenant(int? userId)
+    private void UpdateSoftDeleteStatusesAndSetTenant()
     {
         foreach (EntityEntry entry in ChangeTracker.Entries())
         {
@@ -164,14 +164,4 @@ public class ApplicationDbContext(
             entry.CurrentValues["TenantId"] = tenant.Id;
         }
     }
-
-    public Task<int> SaveChangesAsync(List<string> entitiesToUpdateVersions, bool acceptAllChangesOnSuccess = true,
-        CancellationToken cancellationToken = default)
-    {
-        UpdateSoftDeleteStatusesAndSetTenant(null);
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-    }
 }
-
-
-

@@ -1,7 +1,9 @@
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Extensions;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
@@ -12,7 +14,9 @@ internal class PermissionRequirement(string permission) : IAuthorizationRequirem
     public string Permission { get; private set; } = permission;
 }
 
-internal class PermissionAuthorizationHandler(IServiceScopeFactory scopeFactory) : AuthorizationHandler<PermissionRequirement>
+internal class PermissionAuthorizationHandler(
+    IServiceScopeFactory scopeFactory,
+    ITenantGetterService tenantGetterService) : AuthorizationHandler<PermissionRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
         PermissionRequirement requirement)
@@ -30,9 +34,17 @@ internal class PermissionAuthorizationHandler(IServiceScopeFactory scopeFactory)
             return;
         }
 
-        // Slow path: query DB in a new scope to avoid DbContext concurrency issues
-        // during Blazor SSR where multiple AuthorizeView components trigger concurrent checks
+        CurrentTenantDetails tenant = tenantGetterService.Tenant;
+        if (string.IsNullOrWhiteSpace(tenant.Id) || string.IsNullOrWhiteSpace(tenant.TenantLink))
+        {
+            return;
+        }
+
+        // Concurrent Blazor authorization checks need separate DbContexts for the same tenant.
         await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
+        ITenantSetterService tenantSetter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
+        tenantSetter.SetTenant(tenant);
+
         IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
         if ((await userService.HasPermissionAsync(userId, requirement.Permission)).Data)
         {

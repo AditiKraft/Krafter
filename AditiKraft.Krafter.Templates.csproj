@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <PackageType>Template</PackageType>
+    <!-- Keep the template packaging tool separate from application package versions. -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
     <PackageVersion>0.0.1</PackageVersion>
     <Version>$(PackageVersion)</Version>
     <PackageId>AditiKraft.Krafter.Templates</PackageId>
@@ -9,7 +11,7 @@
     <Authors>Aditi Kraft</Authors>
     <Company>AditiKraft</Company>
     <Product>Krafter</Product>
-    <Description>Complete .NET 10 full-stack templates with ASP.NET Core Minimal APIs (Vertical Slice Architecture), Blazor Hybrid (WASM + Server), .NET Aspire, and PostgreSQL/MySQL support. Includes both split-host (separate API + UI) and single-host (combined) variants. Created by AditiKraft.</Description>
+    <Description>Complete .NET 10 full-stack templates with ASP.NET Core Minimal APIs (Vertical Slice Architecture), Blazor Hybrid (WASM + Server), .NET Aspire, and PostgreSQL support. Includes both split-host (separate API + UI) and single-host (combined) variants. Created by AditiKraft.</Description>
     <PackageTags>dotnet-new;templates;aspnetcore;blazor;aspire;vertical-slice;full-stack;csharp;aditikraft;krafter</PackageTags>
     <PackageProjectUrl>https://github.com/AditiKraft/Krafter</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AditiKraft/Krafter</RepositoryUrl>

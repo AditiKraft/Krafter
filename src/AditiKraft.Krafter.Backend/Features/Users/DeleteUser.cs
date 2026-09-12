@@ -42,7 +42,7 @@ public sealed class DeleteUser
                 userRole.IsDeleted = true;
             }
 
-            await db.SaveChangesAsync([nameof(ApplicationUser)]);
+            await db.SaveChangesAsync();
 
             return new Response();
         }

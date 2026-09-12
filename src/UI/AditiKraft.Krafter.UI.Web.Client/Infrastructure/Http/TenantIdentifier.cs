@@ -1,146 +1,57 @@
-using System.Net;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 
-public class TenantIdentifier(IServiceProvider serviceProvider, IConfiguration configuration)
+public class TenantIdentifier(IServiceProvider serviceProvider, AppUrls urls)
 {
     public (string tenantIdentifier, string backendUrl, string rootDomain, string clientBaseAddress, bool isServerSide)
         Get()
     {
-        IFormFactor formFactor = serviceProvider.GetRequiredService<IFormFactor>();
-        string navigationManagerBaseUri;
-        string tenantIdentifier;
-        string formFactorType = formFactor.GetFormFactor();
-        bool isServerSide = formFactorType == "Web";
-
-        if (formFactorType == "Web")
+        string formFactor = serviceProvider.GetRequiredService<IFormFactor>().GetFormFactor();
+        bool isServerSide = formFactor == "Web";
+        Uri uiUri = GetCurrentUiUri(formFactor);
+        if (TenantSettings.TenancyMode == TenancyMode.Multi && urls.IsInvalidUiTenantHost(uiUri.Host))
         {
-            IHttpContextAccessor httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            HttpRequest? httpRequest = httpContextAccessor.HttpContext?.Request;
-            if (httpRequest == null)
-            {
-                throw new Exception("Request is null");
-            }
-
-            navigationManagerBaseUri = $"{httpRequest.Scheme}://{httpRequest.Host}";
+            throw new InvalidOperationException("Tenant not found.");
         }
-        else if (formFactorType == "WebAssembly")
+        string? subdomain = TenantSettings.TenancyMode == TenancyMode.Multi
+            ? urls.GetUiTenantIdentifier(uiUri.Host)
+            : null;
+        string tenantIdentifier = subdomain ?? DefaultTenantConstants.Identifier;
+        string clientBaseAddress = uiUri.GetLeftPart(UriPartial.Authority);
+        Uri apiUri;
+
+        if (isServerSide)
         {
-            NavigationManager navigationManager = serviceProvider.GetRequiredService<NavigationManager>();
-            navigationManagerBaseUri = navigationManager.BaseUri;
+            // Server requests use the configured connection address and carry the tenant in a header.
+            apiUri = urls.GetServerApiUri();
         }
         else
         {
-            navigationManagerBaseUri = GetRootUiUrl();
+            apiUri = urls.GetApiUri() ?? uiUri;
         }
 
-        var uri = new Uri(navigationManagerBaseUri);
-        string host = uri.Host;
-        string backendUrl;
-        bool isRunningLocally = IsLocalHost(host);
-        string clientBaseAddress;
-
-        string remoteHostUrl = configuration["RemoteHostUrl"] ??
-                               throw new InvalidOperationException("RemoteHostUrl not configured");
-        bool isRemoteHostFullUrl = Uri.TryCreate(remoteHostUrl, UriKind.Absolute, out Uri? remoteHostUri);
-
-        if (TenantSettings.TenancyMode == TenancyMode.Single)
-        {
-            tenantIdentifier = DefaultTenantConstants.Identifier;
-            clientBaseAddress = navigationManagerBaseUri;
-            backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
-        }
-        else if (isRunningLocally)
-        {
-            tenantIdentifier = DefaultTenantConstants.Identifier;
-            clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
-            backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
-        }
-        else
-        {
-            string[] strings = host.Split('.');
-            tenantIdentifier = strings.Length > 2 ? strings[0] : "api";
-            clientBaseAddress = $"{uri.Scheme}://{uri.Host}:{uri.Port}";
-
-            if (isRemoteHostFullUrl)
-            {
-                if (isServerSide || remoteHostUri is null || IsLocalHost(remoteHostUri.Host) || !CanAddTenantSubdomain(remoteHostUri.Host, tenantIdentifier))
-                {
-                    backendUrl = ToAbsoluteUrl(remoteHostUrl, remoteHostUri);
-                }
-                else
-                {
-                    UriBuilder builder = new(remoteHostUri)
-                    {
-                        Host = $"{tenantIdentifier}.{remoteHostUri.Host}"
-                    };
-                    backendUrl = builder.Uri.AbsoluteUri.TrimEnd('/');
-                }
-            }
-            else
-            {
-                backendUrl = $"https://{tenantIdentifier}.{remoteHostUrl}";
-            }
-        }
-
-        string rootDomain;
-        if (TenantSettings.TenancyMode == TenancyMode.Single)
-        {
-            rootDomain = host;
-        }
-        else
-        {
-            string prefix = tenantIdentifier + ".";
-            rootDomain = host.StartsWith(prefix) ? host.Substring(prefix.Length) : host;
-        }
-
-        return (tenantIdentifier, backendUrl, rootDomain, clientBaseAddress, isServerSide);
+        string rootDomain = urls.GetTenantBaseUri().Host;
+        return (tenantIdentifier, apiUri.GetLeftPart(UriPartial.Authority), rootDomain, clientBaseAddress, isServerSide);
     }
 
-    private static bool IsLocalHost(string host)
+    private Uri GetCurrentUiUri(string formFactor)
     {
-        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+        if (formFactor == "Web")
         {
-            return true;
+            HttpRequest request = serviceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext?.Request
+                ?? throw new InvalidOperationException("The current HTTP request is required to resolve tenant URLs.");
+            return new Uri($"{request.Scheme}://{request.Host}");
         }
 
-        return IPAddress.TryParse(host, out IPAddress? address) && IPAddress.IsLoopback(address);
-    }
-
-    private static bool CanAddTenantSubdomain(string host, string tenantIdentifier)
-    {
-        UriHostNameType hostType = Uri.CheckHostName(host);
-        if (hostType != UriHostNameType.Dns)
+        if (formFactor == "WebAssembly")
         {
-            return false;
+            return new Uri(serviceProvider.GetRequiredService<NavigationManager>().BaseUri);
         }
 
-        return !host.StartsWith(tenantIdentifier + ".", StringComparison.OrdinalIgnoreCase);
+        return urls.GetRootUiUri();
     }
 
-    private static string ToAbsoluteUrl(string remoteHostUrl, Uri? remoteHostUri)
-    {
-        if (remoteHostUri is not null)
-        {
-            return remoteHostUri.AbsoluteUri.TrimEnd('/');
-        }
-
-        return $"https://{remoteHostUrl.TrimEnd('/')}";
-    }
-
-    private string GetRootUiUrl()
-    {
-        string rootUiUrl = configuration["RootUiUrl"]
-                           ?? throw new InvalidOperationException("RootUiUrl not configured");
-
-        if (!Uri.TryCreate(rootUiUrl, UriKind.Absolute, out Uri? rootUiUri))
-        {
-            throw new InvalidOperationException("RootUiUrl must be an absolute URL");
-        }
-
-        return rootUiUri.AbsoluteUri.TrimEnd('/');
-    }
 }

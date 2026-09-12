@@ -1,13 +1,12 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Roles;
 
 public partial class Roles(
     ApiCallService api,
     IRolesApi rolesApi,
-    DialogService dialogService) : ComponentBase, IDisposable
+    DialogService dialogService) : ComponentBase
 {
     public const string RoutePath = ApiRoutes.Roles;
     private RadzenDataGrid<RoleDto> grid = default!;
@@ -20,9 +19,8 @@ public partial class Roles(
     {
         IdentifierBasedOnPlacement = nameof(Roles);
 
-        LocalAppSate.CurrentPageTitle = $"Roles";
+        LocalAppState.CurrentPageTitle = $"Roles";
 
-        dialogService.OnClose += Close;
         await GetListAsync();
     }
 
@@ -44,16 +42,24 @@ public partial class Roles(
 
     private async Task AddRole()
     {
-        await dialogService.OpenAsync<CreateOrUpdateRole>($"Add New Role",
+        object? result = await dialogService.OpenAsync<CreateOrUpdateRole>($"Add New Role",
             new Dictionary<string, object> { { "UserDetails", new RoleDto() } },
             new DialogOptions { Width = "50vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 
     private async Task UpdateRole(RoleDto user)
     {
-        await dialogService.OpenAsync<CreateOrUpdateRole>($"Update Role {user.Name}",
+        object? result = await dialogService.OpenAsync<CreateOrUpdateRole>($"Update Role {user.Name}",
             new Dictionary<string, object> { { "UserDetails", user } },
             new DialogOptions { Width = "50vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 
     private async Task DeleteRole(RoleDto roleDto)
@@ -74,16 +80,6 @@ public partial class Roles(
                 await GetListAsync();
             }
         }
-    }
-
-    private async void Close(object? result)
-    {
-        if (result is not bool)
-        {
-            return;
-        }
-
-        await grid.Reload();
     }
 
     private async Task LoadData(LoadDataArgs args)
@@ -111,11 +107,5 @@ public partial class Roles(
         {
             await DeleteRole(data);
         }
-    }
-
-    public void Dispose()
-    {
-        dialogService.OnClose -= Close;
-        dialogService.Dispose();
     }
 }

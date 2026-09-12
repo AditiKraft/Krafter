@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
@@ -38,5 +38,3 @@ public partial class TopRight(
         navigationManager.NavigateTo("/login");
     }
 }
-
-

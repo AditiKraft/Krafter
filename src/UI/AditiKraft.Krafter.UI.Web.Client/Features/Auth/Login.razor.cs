@@ -1,6 +1,7 @@
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
@@ -8,7 +9,8 @@ public partial class Login(
     IAuthenticationService authenticationService,
     NavigationManager navigationManager,
     ThemeManager themeManager,
-    IConfiguration configuration
+    IConfiguration configuration,
+    AppUrls appUrls
 ) : ComponentBase
 {
     [CascadingParameter] public Task<AuthenticationState> AuthState { get; set; } = default!;
@@ -27,11 +29,11 @@ public partial class Login(
         AuthenticationState authState = await AuthState;
         if (authState.User.Identity?.IsAuthenticated is true)
         {
-            if (!string.IsNullOrWhiteSpace(LocalAppSate.GoogleLoginReturnUrl) &&
+            if (!string.IsNullOrWhiteSpace(LocalAppState.GoogleLoginReturnUrl) &&
                 (string.IsNullOrWhiteSpace(ReturnUrl) || ReturnUrl == "/"))
             {
-                ReturnUrl = LocalAppSate.GoogleLoginReturnUrl;
-                LocalAppSate.GoogleLoginReturnUrl = "";
+                ReturnUrl = LocalAppState.GoogleLoginReturnUrl;
+                LocalAppState.GoogleLoginReturnUrl = "";
             }
 
             if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
@@ -98,19 +100,7 @@ public partial class Login(
         string host = new Uri(navigationManager.BaseUri).Host;
 
         string clientId = configuration["Authentication:Google:ClientId"] ?? "";
-        string redirectUri = $"{navigationManager.BaseUri}google-callback";
-        if (!redirectUri.Contains("localhost"))
-        {
-            string rootUiUrl = configuration["RootUiUrl"]
-                               ?? throw new InvalidOperationException("RootUiUrl not configured");
-
-            if (!Uri.TryCreate(rootUiUrl, UriKind.Absolute, out Uri? rootUiUri))
-            {
-                throw new InvalidOperationException("RootUiUrl must be an absolute URL");
-            }
-
-            redirectUri = $"{rootUiUri.AbsoluteUri.TrimEnd('/')}/google-callback";
-        }
+        string redirectUri = appUrls.GetGoogleRedirectUri().AbsoluteUri;
 
         string scope = "email profile";
         string responseType = "code";
@@ -128,5 +118,3 @@ public partial class Login(
         navigationManager.NavigateTo(authUrl, true);
     }
 }
-
-

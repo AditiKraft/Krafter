@@ -11,7 +11,7 @@ Krafter is a .NET 10 full-stack **project template** that generates applications
 
 The template project itself contains both variants. Shared business code lives in `src/`, while hosting-specific files live in `src-single/` and `aspire-single/` (overlaid by the template engine).
 
-**Stack**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA), Hybrid Blazor (WebAssembly + Server) + Radzen Components, .NET Aspire, OpenTelemetry, PostgreSQL/MySQL.
+**Stack**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA), Hybrid Blazor (WebAssembly + Server) + Radzen Components, .NET Aspire, OpenTelemetry, PostgreSQL.
 
 ## 2. Which Instructions to Read?
 
@@ -49,12 +49,26 @@ The template project itself contains both variants. Shared business code lives i
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
+
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
 2. Add contracts + validators in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
 3. Add permissions/routes in `src/AditiKraft.Krafter.Contracts/Common/`.
 4. Add Backend operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/`.
-5. Add UI Refit + pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/`.
+5. Add UI pages and `I<Feature>Api.cs` together in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+
+## File Placement
+
+- Package versions: root `Directory.Packages.props`. Add `PackageReference` entries without a `Version` in project files.
+- Shared server UI registration: `src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Keep host-specific authentication and endpoints in `Program.cs`.
+
+- Backend operations: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`.
+- UI pages, dialogs, and API interface: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+- Shared requests, responses, and validators: `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
+- Follow `src/AditiKraft.Krafter.Backend/Agents.md` and `src/UI/Agents.md` for infrastructure placement.
+- Match file names to their main types and namespaces to folders. Keep each operation's Handler + Route together and each request's validator with its request.
+- After moving files, update imports, file links, and instruction references. Template developers must also verify the `src-single` file links and both generated hosting variants.
 
 ## 2.2 Deep Dives
 - Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
@@ -122,6 +136,8 @@ AditiKraft.Krafter/
 └── pack-and-install.cmd
 ```
 
+The template packaging project keeps its own `Microsoft.TemplateEngine.Tasks` reference. It opts out of central package versions; do not move its floating tool version into the application package list.
+
 ## 4. Template Mechanism
 
 ### 4.1 Two Template Configs
@@ -139,14 +155,20 @@ The single-host template (`krafter-single`) uses four `sources` entries in its `
 
 1. **Root (`./` → `./`)** — copies everything except files that will be overlaid, plus excludes `src-single/`, `aspire-single/`, and split-only files (`AditiKraft.Krafter.slnx`). Renames `AditiKraft.Krafter.Single.slnx` → `AditiKraft.Krafter.slnx`.
 2. **UI.Web overlay** (`src-single/UI/AditiKraft.Krafter.UI.Web/` → `src/UI/AditiKraft.Krafter.UI.Web/`) — replaces `Program.cs`, `.csproj`, and `appsettings*.json` with the combined-host versions.
-3. **WASM wwwroot overlay** (`src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/` → `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/`) — replaces `appsettings.json` and `appsettings.Development.json` (removes the separate backend base URL since API is same-origin).
+3. **WASM wwwroot overlay** (`src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/` → `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/`) — replaces `appsettings.json` and `appsettings.Development.json` (contains public non-URL settings; browser URLs come from the UI host).
 4. **Aspire overlay** (`aspire-single/AditiKraft.Krafter.Aspire.AppHost/` → `aspire/AditiKraft.Krafter.Aspire.AppHost/`) — replaces `Program.cs` and `.csproj` to register a single combined app resource instead of two separate ones.
 
 The split-host template (`krafter`) simply excludes `src-single/`, `aspire-single/`, and `AditiKraft.Krafter.Single.slnx` — no overlays needed.
 
+The source single-host AppHost selects the `src-single` UI project when it exists; generated projects select `src/UI`. Source-only launch profiles and AppHost settings are physical files because Aspire reads them from each project directory. Keep these copies aligned with the shared files in `src/UI` and `aspire`. The overlay sources exclude these support files, so generated projects retain the shared root copies.
+
+`AditiKraft.Krafter.Single.slnx` describes generated paths. In the source repository, build `AditiKraft.Krafter.Dev.slnx` or the exact `aspire-single` AppHost project to verify the combined host.
+
 ### 4.3 Overlay Rule
 
 Files in `src-single/` and `aspire-single/` **replace** the corresponding files from `src/` and `aspire/` in the single-host template output. The root source excludes the original files, and the overlay sources copy replacements into the same target paths.
+
+In generated single-host projects, `UI.Web` owns the server configuration. Exclude Backend `appsettings*.json` files along with its `Program.cs`, because Backend runs as a library.
 
 ## 5. Agents.md Variant Strategy
 
@@ -182,8 +204,11 @@ dotnet run --project aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.
 # Build split-host
 dotnet build AditiKraft.Krafter.slnx
 
-# Build single-host
-dotnet build AditiKraft.Krafter.Single.slnx
+# Build the source single-host AppHost and its combined UI host
+dotnet build aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
+
+# Run authentication and permission regression tests
+dotnet test tests/AditiKraft.Krafter.Tests/AditiKraft.Krafter.Tests.csproj
 
 # Database migrations
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context ApplicationDbContext
@@ -313,12 +338,12 @@ Add to each Agents.md:
 ```markdown
 ---
 Last Updated: YYYY-MM-DD
-Verified Against: [list key files checked]
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, [list key files checked]
 ---
 ```
 
 ---
-Last Updated: 2026-04-28
-Verified Against: Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs
+Last Updated: 2026-09-12
+Verified Against: aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj, aspire-single/AditiKraft.Krafter.Aspire.AppHost/Properties/launchSettings.json, src-single/UI/AditiKraft.Krafter.UI.Web/Properties/launchSettings.json, Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

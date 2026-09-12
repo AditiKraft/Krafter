@@ -1,6 +1,6 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 
@@ -40,10 +40,11 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                 if (host == uri.Host)
                 {
                     string ReturnUrl = returnUrl;
-                    LocalAppSate.GoogleLoginReturnUrl = ReturnUrl;
+                    LocalAppState.GoogleLoginReturnUrl = ReturnUrl;
                     bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
                     {
-                        IsExternalLogin = true, Code = code.ToString()
+                        IsExternalLogin = true,
+                        Code = code.ToString()
                     });
                     if (isSuccess)
                     {
@@ -73,5 +74,3 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
         }
     }
 }
-
-

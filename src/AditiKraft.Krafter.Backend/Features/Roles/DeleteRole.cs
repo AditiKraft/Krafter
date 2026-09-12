@@ -45,7 +45,7 @@ public sealed class DeleteRole
                 krafterRoleClaim.IsDeleted = true;
             }
 
-            await db.SaveChangesAsync([nameof(ApplicationRole)]);
+            await db.SaveChangesAsync();
             return new Response();
         }
     }

@@ -20,6 +20,7 @@
 - Common models: `Common/Models/`
 - Enums: `Common/Enums/`
 - Auth helpers: `Common/Auth/`
+- Shared public URL model and tenant-domain helpers: `Common/AppUrls.cs`. Server configuration binding stays in the host. Keep `ServerApiBaseUrl` excluded from JSON; browsers receive public addresses and public reserved identifiers only. Share tenant identifier rules between request validation and URL resolution. Read [Configure application URLs](../../docs/url-configuration.md) before changing this contract.
 
 ## 3. Code Templates
 
@@ -85,7 +86,7 @@ return Response<UserDto>.Success(dto);
 - New permissions or routes added.
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionDefinition.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+Last Updated: 2026-09-12
+Verified Against: src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionDefinition.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

@@ -7,6 +7,9 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 public class TenantDbContext(DbContextOptions<TenantDbContext> options)
     : DbContext(options)
 {
+    // The expression index is created by UniqueTenantIdentifiers; EF indexes only model properties.
+    public const string TenantIdentifierIndexName = "IX_Tenant_Identifier_Lower";
+
     public DbSet<Tenant> Tenants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -17,10 +20,6 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options)
         {
             entity.HasQueryFilter(c => c.IsDeleted == false);
 
-            // Configure CreatedOn with database-specific settings
-            //   ConfigureCreatedOnColumn(entity);
-
-            // Remove IsTemporal() for cross-database compatibility
             entity.ToTable(nameof(Tenant));
 
             entity.HasData(new List<Tenant>
@@ -38,46 +37,4 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options)
             });
         });
     }
-
-    private void ConfigureCreatedOnColumn(
-        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Tenant> entity)
-    {
-        string? provider = Database.ProviderName;
-
-        switch (provider)
-        {
-            case "Microsoft.EntityFrameworkCore.SqlServer":
-                entity.Property(b => b.CreatedOn)
-                    .HasColumnType("datetime2")
-                    .HasDefaultValueSql("GETUTCDATE()");
-                break;
-
-            case "Npgsql.EntityFrameworkCore.PostgreSQL":
-                entity.Property(b => b.CreatedOn)
-                    .HasColumnType("timestamp with time zone")
-                    .HasDefaultValueSql("NOW()") // NOW() returns timestamptz
-                    .ValueGeneratedOnAdd();
-                break;
-
-            case "Pomelo.EntityFrameworkCore.MySql":
-            case "MySql.EntityFrameworkCore":
-                entity.Property(b => b.CreatedOn)
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-                break;
-
-            case "Microsoft.EntityFrameworkCore.Sqlite":
-                entity.Property(b => b.CreatedOn)
-                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
-                break;
-
-            default:
-                // Fallback: set in application code
-                entity.Property(b => b.CreatedOn)
-                    .HasDefaultValue(DateTime.UtcNow);
-                break;
-        }
-    }
 }
-
-

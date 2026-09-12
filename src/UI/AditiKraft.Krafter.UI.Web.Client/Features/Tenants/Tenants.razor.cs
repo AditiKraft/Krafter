@@ -1,7 +1,6 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Enums;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
 
@@ -9,8 +8,9 @@ public partial class Tenants(
     ApiCallService api,
     ITenantsApi tenantsApi,
     DialogService dialogService,
-    NavigationManager navigationManager
-) : ComponentBase, IDisposable
+    NavigationManager navigationManager,
+    AppUrls urls
+) : ComponentBase
 {
     public const string RoutePath = ApiRoutes.Tenants;
     private RadzenDataGrid<TenantDto> grid = default!;
@@ -27,13 +27,12 @@ public partial class Tenants(
             return;
         }
 
-        LocalAppSate.CurrentPageTitle = $"Tenants";
+        LocalAppState.CurrentPageTitle = $"Tenants";
 
-        dialogService.OnClose += Close;
-        await Get();
+        await GetListAsync();
     }
 
-    private async Task Get(bool resetPaginationData = false)
+    private async Task GetListAsync(bool resetPaginationData = false)
     {
         IsLoading = true;
         if (resetPaginationData)
@@ -48,16 +47,24 @@ public partial class Tenants(
 
     private async Task Add()
     {
-        await dialogService.OpenAsync<CreateOrUpdateTenant>($"Add New Tenant",
+        object? result = await dialogService.OpenAsync<CreateOrUpdateTenant>($"Add New Tenant",
             new Dictionary<string, object> { { "TenantInput", new TenantDto() } },
             new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 
     private async Task Update(TenantDto tenant)
     {
-        await dialogService.OpenAsync<CreateOrUpdateTenant>($"Update Tenant {tenant.Name}",
+        object? result = await dialogService.OpenAsync<CreateOrUpdateTenant>($"Update Tenant {tenant.Name}",
             new Dictionary<string, object> { { "TenantInput", tenant } },
             new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 
     private async Task Delete(TenantDto input)
@@ -75,19 +82,9 @@ public partial class Tenants(
 
             if (!result.IsError)
             {
-                await Get();
+                await GetListAsync();
             }
         }
-    }
-
-    private async void Close(object? result)
-    {
-        if (result is not bool)
-        {
-            return;
-        }
-
-        await grid.Reload();
     }
 
     private async Task LoadData(LoadDataArgs args)
@@ -98,7 +95,7 @@ public partial class Tenants(
         _requestInput.MaxResultCount = args.Top ?? 10;
         _requestInput.Filter = args.Filter;
         _requestInput.OrderBy = args.OrderBy;
-        await Get();
+        await GetListAsync();
     }
 
     private async Task ActionClicked(RadzenSplitButtonItem? item, TenantDto data)
@@ -115,11 +112,5 @@ public partial class Tenants(
         {
             await Delete(data);
         }
-    }
-
-    public void Dispose()
-    {
-        dialogService.OnClose -= Close;
-        dialogService.Dispose();
     }
 }

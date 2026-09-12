@@ -1,0 +1,20 @@
+using AditiKraft.Krafter.Contracts.Contracts.Auth;
+
+namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
+
+public interface IAuthStorageService
+{
+    public Task ClearCacheAsync();
+
+    public ValueTask<DateTime> GetAuthTokenExpiryDate();
+
+    public ValueTask<DateTime> GetRefreshTokenExpiryDate();
+
+    public ValueTask CacheAuthTokens(TokenResponse tokenResponse);
+
+    public ValueTask<string?> GetCachedAuthTokenAsync();
+
+    public ValueTask<string?> GetCachedRefreshTokenAsync();
+
+    public ValueTask<ICollection<string>?> GetCachedPermissionsAsync();
+}

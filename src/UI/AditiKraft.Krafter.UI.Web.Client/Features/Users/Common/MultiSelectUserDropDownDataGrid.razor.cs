@@ -1,5 +1,3 @@
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
-
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users.Common;
 
 public partial class MultiSelectUserDropDownDataGrid(
@@ -72,5 +70,3 @@ public partial class MultiSelectUserDropDownDataGrid(
         }
     }
 }
-
-

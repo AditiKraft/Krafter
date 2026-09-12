@@ -1,11 +1,11 @@
 using System.Net;
 using System.Text.Json;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Errors;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
 using AditiKraft.Krafter.Contracts.Common;
-using FluentValidation.Results;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using Microsoft.Data.SqlClient;
+using FluentValidation.Results;
+using Npgsql;
 
 namespace AditiKraft.Krafter.Backend.Web.Middleware;
 
@@ -62,28 +62,9 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
                     errorResult.Message = e.Message;
                     break;
 
-                case SqlException sqlException:
+                case NpgsqlException:
                     res.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    res.Error.Message = "A database error occurred.";
-                    switch (sqlException.Number)
-                    {
-                        case 2627: // Unique constraint error
-                        case 547: // Constraint check violation
-                        case 2601: // Duplicated key row error
-                            // Constraint violation exception
-                            res.Error.Message = "A constraint violation occurred in the database.";
-                            break;
-                        case 1205: // Deadlock
-                            // Deadlock exception
-                            res.Error.Message = "A deadlock occurred in the database.";
-                            break;
-                        // TODO: You can add more case statements here to handle other error codes
-                        default:
-                            // Unknown database error
-                            res.Error.Message = "An unknown database error occurred.";
-                            break;
-                    }
-
+                    errorResult.Message = "A database error occurred.";
                     break;
 
                 case KeyNotFoundException:
@@ -114,5 +95,3 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
         }
     }
 }
-
-

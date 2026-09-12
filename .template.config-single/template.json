@@ -42,6 +42,7 @@
             "Agents.md",
             "Agents.split.md",
             "src/AditiKraft.Krafter.Backend/Program.cs",
+            "src/AditiKraft.Krafter.Backend/appsettings*.json",
             "src/UI/AditiKraft.Krafter.UI.Web/Program.cs",
             "src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj",
             "src/UI/AditiKraft.Krafter.UI.Web/appsettings.json",
@@ -68,7 +69,8 @@
         {
           "exclude": [
             "**/bin/**",
-            "**/obj/**"
+            "**/obj/**",
+            "Properties/**"
           ]
         }
       ]
@@ -92,7 +94,9 @@
         {
           "exclude": [
             "**/bin/**",
-            "**/obj/**"
+            "**/obj/**",
+            "Properties/**",
+            "appsettings*.json"
           ]
         }
       ]

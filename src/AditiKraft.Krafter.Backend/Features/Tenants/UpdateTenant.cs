@@ -1,18 +1,18 @@
-using AditiKraft.Krafter.Backend.Web;
-using AditiKraft.Krafter.Backend.Web.Authorization;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Tenants;
-using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace AditiKraft.Krafter.Backend.Features.Tenants;
 
@@ -20,19 +20,13 @@ public sealed class UpdateTenant
 {
     internal sealed class Handler(
         TenantDbContext dbContext,
-        ApplicationDbContext applicationDbContext,
-        ITenantGetterService tenantGetterService,
-        IServiceProvider serviceProvider) : IScopedHandler
+        IServiceProvider serviceProvider,
+        AppUrls urls) : IScopedHandler
     {
         public async Task<Response> UpdateAsync(string id, CreateOrUpdateTenantRequest request,
             CancellationToken cancellationToken)
         {
             request.Id = id;
-            if (!string.IsNullOrWhiteSpace(request.Identifier))
-            {
-                request.Identifier = request.Identifier.Trim();
-            }
-
             Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
             if (tenant is null)
             {
@@ -62,6 +56,19 @@ public sealed class UpdateTenant
                 }
             }
 
+            var validation = await new CreateOrUpdateTenantRequestValidator(urls).ValidateAsync(request, cancellationToken);
+            if (!validation.IsValid)
+            {
+                return Response.BadRequest(string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            bool identifierExists = await dbContext.Tenants.AsNoTracking()
+                .AnyAsync(c => c.Id != tenant.Id && c.Identifier.ToLower() == request.Identifier, cancellationToken);
+            if (identifierExists)
+            {
+                return Response.Conflict("Identifier already exists, please try a different identifier.");
+            }
+
             if (request.Name != tenant.Name)
             {
                 tenant.Name = request.Name;
@@ -74,26 +81,26 @@ public sealed class UpdateTenant
 
             if (request.AdminEmail != tenant.AdminEmail)
             {
-                string rootTenantLink = tenantGetterService.Tenant.TenantLink;
                 using IServiceScope scope = serviceProvider.CreateScope();
 
                 ITenantSetterService tenantSetter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
                 CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
                 currentTenantDetails.TenantLink =
-                    TenantLinkBuilder.GetSubTenantLinkBasedOnRootTenant(rootTenantLink, request.Identifier);
+                    TenantLinkBuilder.GetTenantLink(urls, request.Identifier);
                 tenantSetter.SetTenant(currentTenantDetails);
 
                 UserManager<ApplicationUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                IUserService userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                IUserMutationService userService = scope.ServiceProvider.GetRequiredService<IUserMutationService>();
 
                 ApplicationUser? user = await userManager.Users.AsNoTracking()
                     .FirstOrDefaultAsync(c => c.NormalizedEmail == tenant.AdminEmail.ToUpper(), cancellationToken);
                 if (user is not null)
                 {
-                    await userService.CreateOrUpdateAsync(new CreateUserRequest
+                    Response userResult = await userService.UpdateEmailAsync(user.Id, request.AdminEmail, cancellationToken);
+                    if (userResult.IsError)
                     {
-                        Id = user.Id, Email = request.AdminEmail, UpdateTenantEmail = false
-                    });
+                        return userResult;
+                    }
                 }
 
                 tenant.AdminEmail = request.AdminEmail;
@@ -109,8 +116,15 @@ public sealed class UpdateTenant
                 tenant.ValidUpto = request.ValidUpto ?? tenant.ValidUpto;
             }
 
-            await dbContext.SaveChangesAsync(cancellationToken);
-            await applicationDbContext.SaveChangesAsync([nameof(Tenant)], true, cancellationToken);
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (exception.InnerException is PostgresException
+                   { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: TenantDbContext.TenantIdentifierIndexName })
+            {
+                return Response.Conflict("Identifier already exists, please try a different identifier.");
+            }
             return new Response();
         }
     }
@@ -120,6 +134,13 @@ public sealed class UpdateTenant
         public void MapRoute(IEndpointRouteBuilder endpointRouteBuilder)
         {
             RouteGroupBuilder tenantGroup = endpointRouteBuilder.MapGroup(ApiRoutes.Tenants)
+                .AddEndpointFilter((context, next) =>
+                {
+                    // Validation must use the route ID, not an optional or untrusted body ID.
+                    CreateOrUpdateTenantRequest request = context.Arguments.OfType<CreateOrUpdateTenantRequest>().Single();
+                    request.Id = context.HttpContext.Request.RouteValues["id"]?.ToString();
+                    return next(context);
+                })
                 .AddFluentValidationFilter();
 
             tenantGroup.MapPut($"/{RouteSegment.ById}", async (
@@ -136,6 +157,3 @@ public sealed class UpdateTenant
         }
     }
 }
-
-
-

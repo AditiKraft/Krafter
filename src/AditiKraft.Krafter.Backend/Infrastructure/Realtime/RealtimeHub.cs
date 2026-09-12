@@ -1,12 +1,6 @@
-using System.Text.RegularExpressions;
-using AditiKraft.Krafter.Backend.Common.Interfaces;
-using AditiKraft.Krafter.Backend.Common.Interfaces.Auth;
-using AditiKraft.Krafter.Backend.Features.Tenants.Common;
-using AditiKraft.Krafter.Backend.Features.Users.Common;
-using AditiKraft.Krafter.Backend.Common.Extensions;
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Realtime;
-using Mapster;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AditiKraft.Krafter.Backend.Infrastructure.Realtime;
@@ -14,123 +8,50 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.Realtime;
 public class RealtimeHub(ILogger<RealtimeHub> logger) : Hub
 {
     private const string AuthenticationFailedMessage = "Authentication Failed.";
+    private const string TenantGroupKey = "RealtimeTenantGroup";
 
-    public async Task SendMessageAsync(string user, string message) =>
-        await Clients.All.SendAsync(nameof(SignalRMethods.ReceiveMessage), user, message);
+    public async Task SendMessageAsync(string user, string message)
+    {
+        if (!Context.Items.TryGetValue(TenantGroupKey, out object? value) || value is not string group)
+        {
+            throw new HubException(AuthenticationFailedMessage);
+        }
+
+        await Clients.Group(group).SendAsync(nameof(SignalRMethods.ReceiveMessage), user, message);
+    }
 
     public override async Task OnConnectedAsync()
     {
         HttpContext? httpContext = Context.GetHttpContext();
-        if (httpContext != null)
-        {
-            ITenantFinderService tenantFinderService =
-                httpContext.RequestServices.GetRequiredService<ITenantFinderService>();
-            ITenantSetterService tenantSetterService =
-                httpContext.RequestServices.GetRequiredService<ITenantSetterService>();
-            ICurrentUser currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-            CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, tenantFinderService,
-                tenantSetterService, currentUser);
-            if (res is not {})
-            {
-                throw new HubException(AuthenticationFailedMessage);
-            }
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"GroupTenant-{res.Id}");
-        }
-        else
+        if (httpContext is null)
         {
             throw new HubException(AuthenticationFailedMessage);
         }
 
+        // Hub instances have their own scope. Use the HTTP scope populated by tenant middleware.
+        CurrentTenantDetails tenant = httpContext.RequestServices
+            .GetRequiredService<ITenantGetterService>().Tenant;
+        if (string.IsNullOrWhiteSpace(tenant.Id))
+        {
+            throw new HubException(AuthenticationFailedMessage);
+        }
+
+        string group = $"GroupTenant-{tenant.Id}";
+        Context.Items[TenantGroupKey] = group;
+        await Groups.AddToGroupAsync(Context.ConnectionId, group);
         await base.OnConnectedAsync();
 
-        logger.LogInformation("A client connected to NotificationHub: {connectionId}", Context.ConnectionId);
+        logger.LogInformation("A client connected to RealtimeHub: {ConnectionId}", Context.ConnectionId);
     }
-
-
-    private async Task<CurrentTenantDetails?> SetTenantContextAsync(
-        HttpContext httpContext,
-        ITenantFinderService tenantFinderService,
-        ITenantSetterService tenantSetterService,
-        ICurrentUser currentUser)
-    {
-        string tenantIdentifier = GetTenantIdentifier(httpContext);
-        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier);
-        if (tenantResponse.IsError || tenantResponse.Data is null)
-        {
-            return null;
-        }
-
-        Tenant tenant = tenantResponse.Data;
-        CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
-        currentTenantDetails.TenantLink = httpContext.Request.GetOrigin();
-        currentTenantDetails.IpAddress = httpContext.Connection.RemoteIpAddress?.ToString();
-        currentTenantDetails.UserId = currentUser.GetUserId();
-
-        tenantSetterService.SetTenant(currentTenantDetails);
-        return currentTenantDetails;
-    }
-
-    private string GetTenantIdentifier(HttpContext httpContext)
-    {
-        string tenantIdentifier = "";
-        string host = httpContext.Request.Host.Value ?? "";
-        string pattern = @"^(.+)\.api\..*$";
-        Match match = Regex.Match(host, pattern);
-
-        if (match.Success)
-        {
-            tenantIdentifier = match.Groups[1].Value;
-        }
-        else
-        {
-            tenantIdentifier = httpContext?.Request?.Headers["x-tenant-identifier"].ToString() ?? "";
-        }
-
-        if (string.IsNullOrWhiteSpace(tenantIdentifier))
-        {
-            tenantIdentifier = SeedDataConstants.RootTenant.Identifier;
-        }
-
-        return tenantIdentifier;
-    }
-
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        HttpContext? httpContext = Context.GetHttpContext();
-        if (httpContext != null)
+        if (Context.Items.TryGetValue(TenantGroupKey, out object? value) && value is string group)
         {
-            ITenantFinderService tenantFinderService =
-                httpContext.RequestServices.GetRequiredService<ITenantFinderService>();
-            ITenantSetterService tenantSetterService =
-                httpContext.RequestServices.GetRequiredService<ITenantSetterService>();
-            ICurrentUser currentUser = httpContext.RequestServices.GetRequiredService<ICurrentUser>();
-            CurrentTenantDetails? res = await SetTenantContextAsync(httpContext, tenantFinderService,
-                tenantSetterService, currentUser);
-            if (res is null)
-            {
-                throw new HubException(AuthenticationFailedMessage);
-            }
-
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"GroupTenant-{res.Id}");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
         }
-        else
-        {
-            throw new HubException(AuthenticationFailedMessage);
-        }
-
-        await base.OnConnectedAsync();
-
-        logger.LogInformation("A client connected to NotificationHub: {connectionId}", Context.ConnectionId);
-
 
         await base.OnDisconnectedAsync(exception);
-
-        logger.LogInformation("A client disconnected from NotificationHub: {connectionId}", Context.ConnectionId);
+        logger.LogInformation("A client disconnected from RealtimeHub: {ConnectionId}", Context.ConnectionId);
     }
 }
-
-
-
-

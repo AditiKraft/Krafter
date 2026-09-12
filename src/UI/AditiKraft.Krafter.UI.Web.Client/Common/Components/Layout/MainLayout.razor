@@ -15,7 +15,7 @@
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Center">
                     <RadzenLabel>
-                        <strong> @LocalAppSate.CurrentPageTitle</strong>
+                        <strong> @LocalAppState.CurrentPageTitle</strong>
                     </RadzenLabel>
                 </RadzenStack>
             </RadzenColumn>
@@ -33,7 +33,7 @@
 
     <RadzenBody @ref="@(body0)">
         <ChildContent>
-            <PageTitle>@LocalAppSate.CurrentPageTitle</PageTitle>
+            <PageTitle>@LocalAppState.CurrentPageTitle</PageTitle>
             @Body
         </ChildContent>
     </RadzenBody>

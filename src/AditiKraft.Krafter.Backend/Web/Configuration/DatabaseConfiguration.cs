@@ -1,4 +1,3 @@
-using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +20,7 @@ public static class DatabaseConfiguration
         // BackgroundJobsContext (TickerQ operational store)
         services.AddDbContext<BackgroundJobsContext>(opts => ConfigureDbContext(opts, connectionString));
 
-        // KrafterContext (main multi-tenant context)
+        // ApplicationDbContext (main multi-tenant context)
         services.AddDbContext<ApplicationDbContext>(opts => ConfigureDbContext(opts, connectionString));
 
         return services;
@@ -29,15 +28,7 @@ public static class DatabaseConfiguration
 
     private static void ConfigureDbContext(DbContextOptionsBuilder opts, string connectionString)
     {
-        switch (DatabaseSelected.Type)
-        {
-            case DatabaseType.Postgresql:
-                opts.UseNpgsql(connectionString);
-                break;
-
-            default:
-                throw new NotSupportedException($"Database type '{DatabaseSelected.Type}' is not supported");
-        }
+        opts.UseNpgsql(connectionString);
     }
 }
 

@@ -4,7 +4,7 @@
 > **PARENT**: See also: ../../Agents.md
 
 ## 1. Core Principles
-- Job methods live in `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/JobService.cs`.
+- Job methods live in `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Jobs.cs`. `JobService.cs` contains the enqueue implementation.
 - Use `[TickerFunction(nameof(JobName))]` for each job method.
 - Enqueue via `IJobService.EnqueueAsync(request, nameof(Jobs.JobName), cancellationToken)` from callers.
 
@@ -59,7 +59,7 @@ await jobService.EnqueueAsync(
 - New job types added that need documentation.
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/JobService.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs
+Last Updated: 2026-09-08
+Verified Against: src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Jobs.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/JobService.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs
 ---
 

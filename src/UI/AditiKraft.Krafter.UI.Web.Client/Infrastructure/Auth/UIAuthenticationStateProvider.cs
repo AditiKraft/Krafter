@@ -1,12 +1,6 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 using AditiKraft.Krafter.Contracts.Common.Auth;
-using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
@@ -15,20 +9,17 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
     private readonly IAuthenticationService _authenticationService;
     private readonly PersistentComponentState _persistentState;
     private readonly IAuthStorageService _localStorage;
-    private readonly ILogger<UIAuthenticationStateProvider> _logger;
-    private readonly IAuthApiService _apiService;
+    private readonly AuthTokenService _tokenService;
     private bool _isInitialLoad = true;
 
-    public UIAuthenticationStateProvider(IAuthApiService apiService, IAuthStorageService localStorage,
+    public UIAuthenticationStateProvider(AuthTokenService tokenService, IAuthStorageService localStorage,
         IAuthenticationService authenticationService,
-        ILogger<UIAuthenticationStateProvider> logger,
         PersistentComponentState persistentState)
     {
         _authenticationService = authenticationService;
         _persistentState = persistentState;
         _localStorage = localStorage;
-        _logger = logger;
-        _apiService = apiService;
+        _tokenService = tokenService;
 
         authenticationService.LoginChange += name =>
         {
@@ -46,7 +37,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             var claimsPrincipal = new ClaimsPrincipal(CreateIdentityFromUserInfo(userInfo));
 
             // Sync tokens from server-side cookies to WebAssembly storage
-            await SynchronizeTokensFromServerAsync();
+            await _tokenService.SynchronizeFromServerAsync();
 
             return new AuthenticationState(claimsPrincipal);
         }
@@ -57,7 +48,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
-        if (IsTokenExpired(cachedToken))
+        if (AuthTokenService.NeedsRefresh(cachedToken))
         {
             bool refreshResult = await _authenticationService.RefreshAsync();
             if (!refreshResult)
@@ -83,51 +74,6 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
         }
 
         return new AuthenticationState(new ClaimsPrincipal(claimsIdentity));
-    }
-
-    private bool IsTokenExpired(string token)
-    {
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
-            if (handler.ReadToken(token) is JwtSecurityToken jwtToken)
-            {
-                return jwtToken.ValidTo <= DateTime.UtcNow.AddMinutes(1);
-            }
-
-            return true;
-        }
-        catch
-        {
-            return true;
-        }
-    }
-
-    private async Task SynchronizeTokensFromServerAsync()
-    {
-        await TokenSynchronizationManager.TryExecuteWithSynchronizationAsync(
-            async () =>
-            {
-                _logger.LogInformation("Starting token synchronization from server");
-                Response<TokenResponse>? tokenData = await _apiService.GetCurrentTokenAsync(CancellationToken.None);
-
-                if (tokenData?.Data?.Token != null && tokenData.Data.RefreshToken != null)
-                {
-                    string? existingToken = await _localStorage.GetCachedAuthTokenAsync();
-                    if (existingToken != tokenData.Data.Token)
-                    {
-                        _logger.LogInformation("Caching fresh tokens from server");
-                        await _localStorage.CacheAuthTokens(tokenData.Data);
-                    }
-
-                    return tokenData.Data;
-                }
-
-                return null;
-            },
-            result => result != null,
-            _logger
-        );
     }
 
     private static ClaimsIdentity CreateIdentityFromUserInfo(UserInfo userInfo)
@@ -194,6 +140,3 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
         return Convert.FromBase64String(base64);
     }
 }
-
-
-

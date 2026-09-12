@@ -11,16 +11,20 @@
 </AuthorizeView>
 
 
-<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppSate.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppSate.Density" AllowColumnResize="LocalAppSate.AllowColumnResize" IsLoading="IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response?.Data?.Items" AllowFiltering="true" AllowPaging="true" PageSize="@_requestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
+<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppState.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppState.Density" AllowColumnResize="LocalAppState.AllowColumnResize" IsLoading="IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response?.Data?.Items" AllowFiltering="true" AllowPaging="true" PageSize="@_requestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
     <Columns>
 
         <RadzenDataGridColumn Property="Name" Title="Name"/>
         <RadzenDataGridColumn Property="Identifier" Title="Identifier">
             <Template Context="data">
-                @{
-                    var remoteHostUrl = $"https://{data.Identifier}.{TenantInfo.MainDomain}";
+                @if (urls.CanUseTenantIdentifier(data.Identifier))
+                {
+                    <RadzenLink Path="@urls.GetTenantUiUri(data.Identifier).AbsoluteUri" Text="@data.Identifier" target="_blank"/>
                 }
-                <RadzenLink Path="@remoteHostUrl" Text="@data.Identifier" target="_blank"/>
+                else
+                {
+                    @data.Identifier
+                }
             </Template>
         </RadzenDataGridColumn>
 

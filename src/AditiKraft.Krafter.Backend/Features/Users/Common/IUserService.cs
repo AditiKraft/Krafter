@@ -1,5 +1,4 @@
 using AditiKraft.Krafter.Contracts.Common.Models;
-using AditiKraft.Krafter.Contracts.Contracts.Users;
 
 namespace AditiKraft.Krafter.Backend.Features.Users.Common;
 
@@ -10,7 +9,6 @@ public interface IUserService
     public Task<Response<bool>> HasPermissionAsync(string userId, string permission,
         CancellationToken cancellationToken = default);
 
-    public Task<Response> CreateOrUpdateAsync(CreateUserRequest request);
 }
 
 

@@ -1,6 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
@@ -8,7 +7,7 @@ public partial class Users(
     DialogService dialogService,
     ApiCallService api,
     IUsersApi usersApi
-) : ComponentBase, IDisposable
+) : ComponentBase
 {
     public const string RoutePath = ApiRoutes.Users;
     private RadzenDataGrid<UserDto> grid = default!;
@@ -20,8 +19,7 @@ public partial class Users(
 
     protected override async Task OnInitializedAsync()
     {
-        dialogService.OnClose += Close;
-        LocalAppSate.CurrentPageTitle = "Users";
+        LocalAppState.CurrentPageTitle = "Users";
 
         await GetListAsync();
     }
@@ -52,16 +50,24 @@ public partial class Users(
 
     private async Task AddUser()
     {
-        await dialogService.OpenAsync<CreateOrUpdateUser>($"Add New User",
+        object? result = await dialogService.OpenAsync<CreateOrUpdateUser>($"Add New User",
             new Dictionary<string, object> { { "UserInput", new UserDto() } },
             new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 
     private async Task UpdateUser(UserDto user)
     {
-        await dialogService.OpenAsync<CreateOrUpdateUser>($"Update User {user.FirstName}",
+        object? result = await dialogService.OpenAsync<CreateOrUpdateUser>($"Update User {user.FirstName}",
             new Dictionary<string, object> { { "UserInput", user } },
             new DialogOptions { Width = "40vw", Resizable = true, Draggable = true, Top = "5vh" });
+        if (result is true)
+        {
+            await GetListAsync();
+        }
     }
 
     private async Task DeleteUser(UserDto user)
@@ -84,16 +90,6 @@ public partial class Users(
         }
     }
 
-    private async void Close(dynamic result)
-    {
-        if (result == null || !result!.Equals(true))
-        {
-            return;
-        }
-
-        await GetListAsync();
-    }
-
     private async Task ActionClicked(RadzenSplitButtonItem? item, UserDto data)
     {
         if (item is { Value: PermissionAction.Update })
@@ -108,11 +104,5 @@ public partial class Users(
         {
             await DeleteUser(data);
         }
-    }
-
-    public void Dispose()
-    {
-        dialogService.OnClose -= Close;
-        dialogService.Dispose();
     }
 }

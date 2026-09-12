@@ -8,7 +8,7 @@ global using AditiKraft.Krafter.Contracts.Common.Models;
 global using AditiKraft.Krafter.Contracts.Contracts.Auth;
 global using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 global using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
-global using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Storage;
+global using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Forms;
 global using Microsoft.AspNetCore.Components.Routing;

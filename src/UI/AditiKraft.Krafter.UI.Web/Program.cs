@@ -1,38 +1,15 @@
-using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
-using AditiKraft.Krafter.UI.Web.Client;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.AuthApi;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
-using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Components;
-using AditiKraft.Krafter.UI.Web.Services;
+using AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
+using AditiKraft.Krafter.UI.Web.Infrastructure.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddDistributedPostgresCache(options =>
-{
-    options.ConnectionString = builder.Configuration.GetConnectionString("appDb")
-                               ?? throw new InvalidOperationException("Connection string 'appDb' not found");
-    options.SchemaName = "public";
-    options.TableName = "cache";
-    options.CreateIfNotExists = true;
-});
-builder.Services.AddHybridCache();
-builder.Services.AddScoped<ServerAuthenticationHandler>();
-builder.Services.AddSingleton<IFormFactor, FormFactorServer>();
-builder.Services.AddScoped<IAuthApiService, ServerAuthApiService>();
-builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddOptions<JwtSettings>()
     .BindConfiguration($"SecuritySettings:{nameof(JwtSettings)}")
     .ValidateDataAnnotations()
@@ -41,28 +18,11 @@ builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlaz
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ => { });
 
-string? apiUrl = builder.Configuration.GetValue<string>("services:api:https:0");
-if (string.IsNullOrWhiteSpace(apiUrl))
-{
-    throw new Exception("API URL not found");
-}
-
-// Override RemoteHostUrl with Aspire service discovery URL for server-side Refit calls
-builder.Configuration["RemoteHostUrl"] = apiUrl;
-
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IAuthStorageService, AuthStorageServiceServer>();
-builder.Services.AddUIServices();
-builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>()
-    .AddAuthorizationCore(RegisterPermissionClaimsClass.RegisterPermissionClaims);
-builder.Services.AddRadzenComponents();
-builder.Services.AddScoped<TenantIdentifier>();
-
-// Server uses apiUrl for both AditiKraft.Krafter.Backend and BFF since it manages cookies directly
-builder.Services.AddApiRefitClients();
+builder.Services.AddUiHostServices(builder.Configuration);
 WebApplication app = builder.Build();
 
 app.MapDefaultEndpoints();
+app.MapUiUrlConfiguration();
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -129,6 +89,3 @@ static void MapAuthTokenEndpoints(WebApplication app)
         return Results.Ok();
     });
 }
-
-
-

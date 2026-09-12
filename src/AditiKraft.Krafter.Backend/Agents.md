@@ -25,7 +25,16 @@
 - Feature operation: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`
 - Feature entity: `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Entity>.cs`
 - Feature-only service: `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Service>.cs`
-- Cross-feature service: `src/AditiKraft.Krafter.Backend/Infrastructure/` or `src/AditiKraft.Krafter.Backend/Common/`
+- Current user interfaces and implementation: `Common/Auth/`
+- Current tenant interfaces and implementation: `Common/Tenants/`
+- Shared entity types and query helpers: `Common/Entities/` and `Common/Extensions/`
+- Database, email, jobs, and realtime implementations: `Infrastructure/`
+- HTTP pipeline, endpoint discovery, and service registration: `Web/`
+- Authentication registration and JWT options: `Web/Authentication/`
+
+Keep business rules in their feature. Keep an interface beside its implementation or related types. Name a standalone type's file after the type. Keep Handler + Route together in each operation file; keep request validators with requests in Contracts.
+
+`Web/ServiceRegistration.cs` discovers handlers and services through `AddApplicationServices()`. `Common/IScopedService.cs` and `Features/IScopedHandler.cs` are its registration markers. Database registration remains in `Web/Configuration/DatabaseConfiguration.cs`.
 
 ## Minimal Operation Skeleton
 ```csharp
@@ -82,13 +91,16 @@ public sealed class GetUsers
 - `src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs`
 
 ## Common Mistakes
 - Returning raw types instead of `Response` / `Response<T>`.
 - Using `MapPost("/delete", ...)` instead of `MapDelete($"/{RouteSegment.ById}", ...)`.
 - Route parameter name mismatches (e.g., `{id}` requires parameter `id`).
 - Putting DTOs in Backend instead of `src/AditiKraft.Krafter.Contracts/Contracts/`.
+- Tenant detection uses `Request.Host.Host` and `Urls:TenantBaseDomain` (the root UI hostname when unset). Known UI, API, and server connection hosts use `x-tenant-identifier`, then root. Tenant UI hosts use one valid, non-reserved label before the tenant base domain; IP addresses do not identify tenants. Unknown tenants return 404. Split-host browser clients use one shared API address and send the tenant header.
+- For URL settings, CORS, or callback changes, read [the URL configuration guide](../../docs/url-configuration.md). Validate URL settings before registering infrastructure in `Web/HostingExtensions.cs`; the standalone Backend also requires `Urls:ApiBaseUrl` in `Program.cs`.
+- Permission checks use a separate service scope for concurrent Blazor rendering. Copy the current tenant with `ITenantSetterService.SetTenant()` before resolving `IUserService` or `ApplicationDbContext`, as in `Web/Authorization/PermissionAuthorization.cs`.
 
 ## Evolution & Maintenance
 
@@ -96,8 +108,8 @@ public sealed class GetUsers
 - Add feature-specific Agents when a feature grows beyond 5 operations.
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Delete.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs
+Last Updated: 2026-09-12
+Verified Against: docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Backend/Program.cs, src/AditiKraft.Krafter.Backend/Web/HostingExtensions.cs, src/AditiKraft.Krafter.Backend/Web/Middleware/MultiTenantServiceMiddleware.cs, tests/AditiKraft.Krafter.Tests/Tenants/TenantSelectionTests.cs, src/AditiKraft.Krafter.Backend/Web/Authorization/PermissionAuthorization.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs
 ---
 
 

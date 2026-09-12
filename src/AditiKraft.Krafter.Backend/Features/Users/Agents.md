@@ -18,25 +18,12 @@
 
 ## 3. Code Templates
 
-### Role Sync (CreateUser / UpdateUser)
-```csharp
-List<ApplicationUserRole> existingRoles = await db.UserRoles
-    .IgnoreQueryFilters()
-    .Where(c => c.TenantId == tenantGetterService.Tenant.Id && c.UserId == user.Id)
-    .ToListAsync();
+### Shared User Changes
+`CreateUser` and `UpdateUser` delegate to `IUserMutationService`. `UserMutationService` owns user creation, profile updates, role synchronization, and account email jobs. `IUserService` is for permission queries.
 
-var rolesToRemove = existingRoles.Where(r => !request.Roles.Contains(r.RoleId)).ToList();
-var rolesToUpdate = existingRoles.Where(r => request.Roles.Contains(r.RoleId)).ToList();
-var rolesToAdd = request.Roles
-    .Where(roleId => !existingRoles.Any(er => er.RoleId == roleId))
-    .Select(roleId => new ApplicationUserRole { RoleId = roleId, UserId = user.Id })
-    .ToList();
+For tenant admin email changes, call `UpdateEmailAsync(id, email, cancellationToken)`. This preserves the user's profile and roles. Check the returned response before saving the tenant email.
 
-foreach (ApplicationUserRole role in rolesToRemove)
-{
-    role.IsDeleted = true;
-}
-```
+Role synchronization checks that requested roles belong to the current tenant. New users receive the Basic role. Existing profile-only updates preserve roles when the list is omitted or empty.
 
 ## 4. Checklist
 1. Use `UserManager`/`RoleManager` for user and role operations.
@@ -56,6 +43,7 @@ foreach (ApplicationUserRole role in rolesToRemove)
 - User role/permission query patterns change.
 
 ## References (real code)
+- `src/AditiKraft.Krafter.Backend/Features/Users/Common/UserMutationService.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs`
@@ -66,6 +54,6 @@ foreach (ApplicationUserRole role in rolesToRemove)
 - `src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs`
 
 ---
-Last Updated: 2026-04-28
-Verified Against: src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ResetPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserRoles.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
+Last Updated: 2026-09-09
+Verified Against: src/AditiKraft.Krafter.Backend/Features/Users/Common/UserMutationService.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ResetPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserRoles.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
 ---

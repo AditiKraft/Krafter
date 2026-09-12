@@ -6,7 +6,7 @@
 Krafter is a .NET 10 full-stack application with combined Backend API and Blazor UI in a single process:
 - **Backend**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA) — runs as an in-process library
 - **UI**: Hybrid Blazor (WebAssembly + Server) + Radzen Components — hosts the combined app
-- **Infrastructure**: .NET Aspire, OpenTelemetry, PostgreSQL/MySQL
+- **Infrastructure**: .NET Aspire, OpenTelemetry, PostgreSQL
 
 > **Single-Host Mode**: Backend and UI run in ONE process. The UI.Web project references the Backend project and is the only executable entry point. Aspire orchestrates a single combined app resource.
 
@@ -24,7 +24,7 @@ This project uses a **single-host topology** — everything runs in ONE process.
 - **All API routes** are prefixed with `/api`
 - **Auth cookies** (`HttpOnly`, `Secure`, `SameSite=Strict`) are shared naturally since Backend and UI share the same origin
 - **`AuthCookieMiddleware`** handles cookie persistence for auth endpoints
-- **BFF-specific endpoints** (get current token, logout) are the only UI.Web-owned endpoints; all auth/CRUD routes are served directly by the backend
+- **UI.Web-owned endpoints** include current-token, logout, and public URL configuration; all other auth/CRUD routes are served directly by the backend
 
 ## 2. Which Instructions to Read?
 
@@ -51,12 +51,26 @@ This project uses a **single-host topology** — everything runs in ONE process.
 └─────────────────────────────────────────────────────────────┘
 ```
 
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
+
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
 2. Add contracts + validators in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
 3. Add permissions/routes in `src/AditiKraft.Krafter.Contracts/Common/`.
 4. Add Backend operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/`.
-5. Add UI Refit + pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/`.
+5. Add UI pages and `I<Feature>Api.cs` together in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+
+## File Placement
+
+- Package versions: root `Directory.Packages.props`. Add `PackageReference` entries without a `Version` in project files.
+- Shared server UI registration: `src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Keep host-specific authentication and endpoints in `Program.cs`.
+
+- Backend operations: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`.
+- UI pages, dialogs, and API interface: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+- Shared requests, responses, and validators: `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
+- Follow `src/AditiKraft.Krafter.Backend/Agents.md` and `src/UI/Agents.md` for infrastructure placement.
+- Match file names to their main types and namespaces to folders. Keep each operation's Handler + Route together and each request's validator with its request.
+- After moving files, update imports, file links, and instruction references. Template developers must also verify the `src-single` file links and both generated hosting variants.
 
 ## 2.2 Deep Dives
 - Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
@@ -93,7 +107,7 @@ AditiKraft.Krafter/
 │   │   ├── Web/                 # HTTP pipeline, HostingExtensions
 │   │   ├── Features/            # Vertical slices (business logic)
 │   │   ├── Infrastructure/      # Persistence, jobs, notifications, realtime
-│   │   ├── Common/              # Context, entities, interfaces, extensions
+│   │   ├── Common/              # Auth, tenants, entities, extensions
 │   │   ├── Errors/              # Exception types
 │   │   └── Migrations/          # EF Core migrations
 │   ├── AditiKraft.Krafter.Backend.Migrator/        # Short-lived EF migration runner
@@ -251,11 +265,11 @@ Add to each Agents.md:
 ```markdown
 ---
 Last Updated: YYYY-MM-DD
-Verified Against: [list key files checked]
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, [list key files checked]
 ---
 ```
 
 ---
-Last Updated: 2026-04-28
-Verified Against: Agents.single.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md
+Last Updated: 2026-09-12
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.single.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

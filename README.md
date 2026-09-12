@@ -1,4 +1,4 @@
-﻿# Krafter
+# Krafter
 
 <p align="center">
   <img src="docs/krafter-logo.svg" alt="Krafter logo" width="560" />
@@ -88,7 +88,7 @@ Krafter is a **production-ready .NET 10 application template**, not a starter to
 | **Frontend** | Hybrid Blazor (WebAssembly + Server), Radzen UI components, code-behind pattern, responsive layouts, theming support |
 | **Security** | JWT authentication, Google OAuth, permission-based authorization, token refresh, ASP.NET Core Identity |
 | **Multi-tenancy** | Tenant-aware design with database-level isolation patterns |
-| **Data** | Entity Framework Core 10, PostgreSQL / MySQL support, migrations, soft delete, multiple database contexts |
+| **Data** | Entity Framework Core 10, PostgreSQL, migrations, soft delete, multiple database contexts (historical queries are not supported) |
 | **Realtime & jobs** | SignalR for live updates, TickerQ for background processing |
 | **API consumption** | Refit-based type-safe HTTP clients with token handling |
 | **Observability** | .NET Aspire, OpenTelemetry, health checks, structured logging |
@@ -162,7 +162,7 @@ The diagrams below reflect the template structure and are useful before you gene
 
 AppHost applies checked-in migrations automatically through `krafter-migrator`. In normal local development, start AppHost and let the migrator complete.
 
-The existing `ConnectionStrings:KrafterDbMigration` value in `src/AditiKraft.Krafter.Backend/appsettings.Local.json` already works for `dotnet ef migrations add`. Do not change it.
+For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` in the environment or use `ConnectionStrings:AppDbMigration` in an optional `appsettings.Local.json` in the current directory. Single-host output has no backend settings files, so use the environment variable there. A placeholder PostgreSQL connection string is enough to create migration files; applying migrations requires a real database.
 
 Install EF Core tools once if needed:
 
@@ -175,7 +175,7 @@ Create a migration from the Backend project:
 ```bash
 cd src/AditiKraft.Krafter.Backend
 
-dotnet ef migrations add <MigrationName> --context KrafterContext
+dotnet ef migrations add <MigrationName> --context ApplicationDbContext
 dotnet ef migrations add <MigrationName> --context TenantDbContext
 dotnet ef migrations add <MigrationName> --context BackgroundJobsContext
 ```
@@ -193,7 +193,7 @@ dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Unable to create DbContext" | Missing `ConnectionStrings:KrafterDbMigration` or wrong working directory | Restore the `KrafterDbMigration` entry in `appsettings.Local.json` and run the command from `src/AditiKraft.Krafter.Backend` |
+| "Unable to create DbContext" | Missing `ConnectionStrings:AppDbMigration` or wrong working directory | Set `ConnectionStrings__AppDbMigration`, or run from the directory containing an optional `appsettings.Local.json` with the `AppDbMigration` connection string |
 | "`krafter-api` does not start" | `krafter-migrator` failed first | Check the `krafter-migrator` logs and fix the migration error |
 | "Migration already exists" | Duplicate migration name | Use `dotnet ef migrations remove --context <ContextName>` |
 | "Pending model changes" | The model changed but no migration exists yet | Add a new migration for the affected context before restarting AppHost |
@@ -209,8 +209,11 @@ Local development works with the checked-in dev settings.
 Only change configuration if you need custom values for:
 
 - PostgreSQL container credentials in `aspire/AditiKraft.Krafter.Aspire.AppHost/appsettings.json`
-- JWT, TickerQ, or Google auth settings in `src/AditiKraft.Krafter.Backend/appsettings.json`
-- UI backend URL or Google client settings in `src/UI/AditiKraft.Krafter.UI.Web/appsettings.Development.json` and `src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json`
+- JWT, TickerQ, or Google auth settings in the Backend host (split host) or UI.Web (single host)
+- Public URLs in the server `Urls` section: `RootUiUrl` for both modes, `TenantBaseDomain` for tenant UI addresses, and the shared `ApiBaseUrl` for split host
+- Google client ID in the UI settings; the client secret stays on the server
+
+The browser loads public URLs from UI.Web automatically. For deployment examples, tenant domains, CORS, Google callbacks, and migration from old keys, read [Configure application URLs](docs/url-configuration.md).
 
 For anything outside local development, prefer user-secrets or environment variables instead of committed values.
 
@@ -218,7 +221,7 @@ For anything outside local development, prefer user-secrets or environment varia
 
 ## 📁 Project Structure
 
-The structure below is what you get after running `dotnet new krafter -n MyApp` (split host). Single host is identical except Backend has no `Program.cs`.
+The structure below is what you get after running `dotnet new krafter -n MyApp` (split host). In single host, UI.Web owns server configuration and startup; Backend has no `Program.cs` or `appsettings*.json`.
 
 ```text
 MyApp/
@@ -235,7 +238,7 @@ MyApp/
 │   │   ├── Web/                         # HTTP pipeline, middleware, auth config
 │   │   ├── Features/                    # Vertical slices
 │   │   ├── Infrastructure/              # Jobs, notifications, persistence, realtime
-│   │   ├── Common/                      # Context, entities, interfaces, extensions
+│   │   ├── Common/                      # Auth, tenants, entities, extensions
 │   │   ├── Errors/                      # Exception types
 │   │   ├── Migrations/                  # EF Core migrations
 │   │   └── Program.cs                   # (split host only)
@@ -243,7 +246,7 @@ MyApp/
 │   └── UI/
 │       ├── MyApp.UI.Web.Client/         # Blazor WebAssembly
 │       │   ├── Features/
-│       │   ├── Infrastructure/          # AuthApi, Refit, SignalR, Storage, Http
+│       │   ├── Infrastructure/          # Auth, Refit, SignalR, Http
 │       │   └── Common/                  # Shared components, models
 │       └── MyApp.UI.Web/               # Blazor Server host (or combined host in single mode)
 ├── build/                               # NUKE build automation
@@ -267,6 +270,24 @@ For detailed feature-by-feature instructions, naming conventions, and backend/UI
 - `src/UI/`
 - `src/AditiKraft.Krafter.Contracts/`
 
+### Where to Put Code
+
+Start with the feature you are changing. For example, the Users UI folder contains `Users.razor`, `CreateOrUpdateUser.razor`, their code-behind files, and `IUsersApi.cs`. The Backend Users folder contains one file for each operation. Shared user requests and responses stay in the Contracts project.
+
+| Work | Location |
+|------|----------|
+| Backend operation or feature-specific service | `src/AditiKraft.Krafter.Backend/Features/<Feature>/` |
+| Current user and tenant context | Backend `Common/Auth/` and `Common/Tenants/` |
+| Database, email, jobs, or realtime implementation | Backend `Infrastructure/` |
+| HTTP pipeline and service registration | Backend `Web/` |
+| Page, dialog, or feature API interface | UI.Web.Client `Features/<Feature>/` |
+| Shared authentication and token management | UI.Web.Client `Infrastructure/Auth/` |
+| Server authentication and cookie handling | UI.Web `Infrastructure/Auth/` |
+| Shared HTTP client registration | UI.Web.Client `Infrastructure/Refit/` |
+| Request, response, or validator | Contracts `Contracts/<Feature>/` |
+
+Keep namespaces aligned with folders. Use the [Backend instructions](src/AditiKraft.Krafter.Backend/Agents.md) and [UI instructions](src/UI/Agents.md) for the detailed placement rules.
+
 ### Key Commands
 
 ```bash
@@ -277,7 +298,7 @@ dotnet build AditiKraft.Krafter.Dev.slnx
 dotnet test
 
 # Create migrations
-dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context KrafterContext
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context ApplicationDbContext
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context BackgroundJobsContext
 dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context TenantDbContext
 
@@ -355,6 +376,12 @@ dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter
 dotnet run --project aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
 ```
 
+Run one source AppHost at a time. Both modes use the same local UI ports, Aspire dashboard ports, and PostgreSQL container name.
+
+To build both source variants, use `dotnet build AditiKraft.Krafter.Dev.slnx`. To build only the source combined host, build `aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj`. The `AditiKraft.Krafter.Single.slnx` file describes the paths used after template generation.
+
+The source single-host AppHost selects `src-single/UI/AditiKraft.Krafter.UI.Web`. Generated single-host projects select the overlaid `src/UI/AditiKraft.Krafter.UI.Web`. Source-only launch profiles and AppHost settings are excluded from the overlays; generated projects keep the shared profiles and settings.
+
 ### Test Template Output Locally
 
 ```bash
@@ -368,6 +395,12 @@ dotnet new install ./nupkg/AditiKraft.Krafter.Templates.*.nupkg
 dotnet new krafter -n TestApp -o ../TestApp
 dotnet new krafter-single -n TestSingle -o ../TestSingle
 ```
+
+### Package Versions and Host Setup
+
+Edit [Directory.Packages.props](Directory.Packages.props) to change package versions. Project files declare which packages they use, without repeating the versions. Both generated templates include this file. The template packaging project manages its own build-tool package separately.
+
+Both UI hosts use [UiHostServiceRegistration.cs](src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs) for Blazor, cache, UI authentication state, and API-client services. Each host keeps its own authentication setup, middleware, and endpoints in `Program.cs`.
 
 ### Contribution Notes
 

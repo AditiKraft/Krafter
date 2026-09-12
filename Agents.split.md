@@ -6,7 +6,7 @@
 Krafter is a .NET 10 full-stack application with separate Backend API and Blazor UI hosts:
 - **Backend**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA) — runs as its own process
 - **UI**: Hybrid Blazor (WebAssembly + Server) + Radzen Components — runs as a separate process with BFF proxy
-- **Infrastructure**: .NET Aspire (orchestrates both hosts), OpenTelemetry, PostgreSQL/MySQL
+- **Infrastructure**: .NET Aspire (orchestrates both hosts), OpenTelemetry, PostgreSQL
 
 ## 1.1 Hosting Architecture (Split-Host)
 This project uses a **split-host** topology — Backend and UI run as independent processes:
@@ -19,7 +19,7 @@ This project uses a **split-host** topology — Backend and UI run as independen
 | **Aspire AppHost** | Orchestrates Backend + UI.Web as separate resources. Provides service discovery so UI.Web can locate Backend by name. |
 
 **Request flow**: Feature APIs: Browser (WASM) → Backend API (`/api/...`) directly. Auth APIs: Browser → UI.Web BFF → Backend API.
-**Service discovery**: UI.Web uses Aspire service discovery to resolve the Backend URL at runtime. Server-side Refit on UI.Web calls Backend directly via the discovered endpoint.
+**Server connections**: UI.Web resolves the Backend address in `UiUrlConfiguration`: explicit server override, then Aspire service discovery, then the public API address. Server-side Refit sends the tenant identifier in a header.
 
 ## 2. Which Instructions to Read?
 
@@ -46,12 +46,26 @@ This project uses a **split-host** topology — Backend and UI run as independen
 └─────────────────────────────────────────────────────────────┘
 ```
 
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
+
 ## 2.1 New Feature Flow (Short Version)
 1. If a feature-level `Agents.md` exists, read it first.
 2. Add contracts + validators in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
 3. Add permissions/routes in `src/AditiKraft.Krafter.Contracts/Common/`.
 4. Add Backend operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/`.
-5. Add UI Refit + pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/`.
+5. Add UI pages and `I<Feature>Api.cs` together in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+
+## File Placement
+
+- Package versions: root `Directory.Packages.props`. Add `PackageReference` entries without a `Version` in project files.
+- Shared server UI registration: `src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Keep host-specific authentication and endpoints in `Program.cs`.
+
+- Backend operations: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`.
+- UI pages, dialogs, and API interface: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+- Shared requests, responses, and validators: `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
+- Follow `src/AditiKraft.Krafter.Backend/Agents.md` and `src/UI/Agents.md` for infrastructure placement.
+- Match file names to their main types and namespaces to folders. Keep each operation's Handler + Route together and each request's validator with its request.
+- After moving files, update imports, file links, and instruction references. Template developers must also verify the `src-single` file links and both generated hosting variants.
 
 ## 2.2 Deep Dives
 - Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
@@ -88,7 +102,7 @@ AditiKraft.Krafter/
 │   │   ├── Web/                 # HTTP pipeline (routes, middleware, auth config)
 │   │   ├── Features/            # Vertical slices (business logic)
 │   │   ├── Infrastructure/      # Persistence, jobs, notifications, realtime
-│   │   ├── Common/              # Context, entities, interfaces, extensions
+│   │   ├── Common/              # Auth, tenants, entities, extensions
 │   │   ├── Errors/              # Exception types
 │   │   └── Migrations/          # EF Core migrations
 │   ├── AditiKraft.Krafter.Backend.Migrator/        # Short-lived EF migration runner
@@ -247,11 +261,11 @@ Add to each Agents.md:
 ```markdown
 ---
 Last Updated: YYYY-MM-DD
-Verified Against: [list key files checked]
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, [list key files checked]
 ---
 ```
 
 ---
-Last Updated: 2026-04-28
-Verified Against: Agents.split.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md
+Last Updated: 2026-09-12
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.split.md, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

@@ -22,94 +22,52 @@ public sealed class GetTenants
             GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
+            if (requestInput.History)
+            {
+                return Response<PaginationResponse<TenantDto>>.BadRequest(
+                    "Tenant history is not supported. Request current or deleted tenants instead.");
+            }
+
             ExpressionStarter<Tenant>? predicate = PredicateBuilder.New<Tenant>(true);
             if (!string.IsNullOrWhiteSpace(requestInput.Id))
             {
                 predicate = predicate.And(c => c.Id == requestInput.Id);
             }
 
-            IQueryable<TenantDto> queryableProducts;
-            if (requestInput.History)
+            IQueryable<Tenant> tenants = requestInput.IsDeleted
+                ? dbContext.Tenants.IgnoreQueryFilters().Where(tenant => tenant.IsDeleted)
+                : dbContext.Tenants;
+            IQueryable<TenantDto> query = tenants.Where(predicate).Select(tenant => new TenantDto
             {
-                if (requestInput.Filter == "CreatedOn desc")
-                {
-                    requestInput.Filter = "PeriodEnd desc";
-                }
-
-                predicate = predicate.And(c => EF.Property<DateTime>(c, "PeriodEnd") < DateTime.UtcNow);
-                queryableProducts = dbContext.Tenants.TemporalAll().Where(predicate)
-                    .Select(x => new TenantDto
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                        Identifier = x.Identifier,
-                        AdminEmail = x.AdminEmail,
-                        ValidUpto = x.ValidUpto,
-                        IsActive = x.IsActive,
-                        CreatedById = x.CreatedById,
-                        IsDeleted = x.IsDeleted,
-                        CreatedOn = x.CreatedOn,
-                        DeleteReason = x.DeleteReason,
-                        PeriodEnd = EF.Property<DateTime>(x, "PeriodEnd"),
-                        PeriodStart = EF.Property<DateTime>(x, "PeriodStart")
-                    });
-            }
-            else
-            {
-                if (requestInput.IsDeleted)
-                {
-                    predicate = predicate.And(c => c.IsDeleted == true);
-                    queryableProducts = dbContext.Tenants.IgnoreQueryFilters().Where(predicate)
-                        .Select(x => new TenantDto
-                        {
-                            Id = x.Id,
-                            Name = x.Name,
-                            Identifier = x.Identifier,
-                            AdminEmail = x.AdminEmail,
-                            ValidUpto = x.ValidUpto,
-                            IsActive = x.IsActive,
-                            CreatedById = x.CreatedById,
-                            IsDeleted = x.IsDeleted,
-                            CreatedOn = x.CreatedOn,
-                            DeleteReason = x.DeleteReason
-                        });
-                }
-                else
-                {
-                    queryableProducts = dbContext.Tenants.Where(predicate)
-                        .Select(x => new TenantDto
-                        {
-                            Id = x.Id,
-                            Name = x.Name,
-                            Identifier = x.Identifier,
-                            AdminEmail = x.AdminEmail,
-                            ValidUpto = x.ValidUpto,
-                            IsActive = x.IsActive,
-                            CreatedById = x.CreatedById,
-                            IsDeleted = x.IsDeleted,
-                            CreatedOn = x.CreatedOn,
-                            DeleteReason = x.DeleteReason
-                        });
-                }
-            }
+                Id = tenant.Id,
+                Name = tenant.Name,
+                Identifier = tenant.Identifier,
+                AdminEmail = tenant.AdminEmail,
+                ValidUpto = tenant.ValidUpto,
+                IsActive = tenant.IsActive,
+                CreatedById = tenant.CreatedById,
+                IsDeleted = tenant.IsDeleted,
+                CreatedOn = tenant.CreatedOn,
+                DeleteReason = tenant.DeleteReason
+            });
 
             if (!string.IsNullOrEmpty(requestInput.Filter))
             {
-                queryableProducts = queryableProducts.Where(requestInput.Filter);
+                query = query.Where(requestInput.Filter);
             }
 
             if (!string.IsNullOrEmpty(requestInput.OrderBy))
             {
-                queryableProducts = queryableProducts.OrderBy(requestInput.OrderBy);
+                query = query.OrderBy(requestInput.OrderBy);
             }
 
             List<TenantDto> res =
-                await queryableProducts.PageBy(requestInput).ToListAsync(cancellationToken);
+                await query.PageBy(requestInput).ToListAsync(cancellationToken);
 
             return new Response<PaginationResponse<TenantDto>>
             {
                 Data = new PaginationResponse<TenantDto>(res,
-                    await queryableProducts.CountAsync(cancellationToken),
+                    await query.CountAsync(cancellationToken),
                     requestInput.SkipCount, requestInput.MaxResultCount)
             };
         }
