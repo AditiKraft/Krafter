@@ -149,12 +149,31 @@ public class ApplicationDbContext(
     {
         if (entry.Entity is IHistory)
         {
-            entry.CurrentValues["CreatedOn"] = DateTime.UtcNow;
-            entry.Property("CreatedOn").IsModified = true;
-            if (currentUser is not null && !string.IsNullOrWhiteSpace(currentUser.GetUserId()))
+            string? userId = currentUser?.GetUserId();
+            bool hasUser = !string.IsNullOrWhiteSpace(userId);
+
+            if (entry.State == EntityState.Added)
             {
-                entry.CurrentValues["CreatedById"] = currentUser.GetUserId();
-                entry.Property("CreatedById").IsModified = true;
+                // New record: stamp the creation audit columns only.
+                entry.CurrentValues["CreatedOn"] = DateTime.UtcNow;
+                entry.Property("CreatedOn").IsModified = true;
+                if (hasUser)
+                {
+                    entry.CurrentValues["CreatedById"] = userId;
+                    entry.Property("CreatedById").IsModified = true;
+                }
+            }
+            else
+            {
+                // Modified (including soft-delete, which is converted to Modified above): stamp the
+                // update audit columns and leave the original Created* values untouched.
+                entry.CurrentValues["UpdatedOn"] = DateTime.UtcNow;
+                entry.Property("UpdatedOn").IsModified = true;
+                if (hasUser)
+                {
+                    entry.CurrentValues["UpdatedById"] = userId;
+                    entry.Property("UpdatedById").IsModified = true;
+                }
             }
         }
 
