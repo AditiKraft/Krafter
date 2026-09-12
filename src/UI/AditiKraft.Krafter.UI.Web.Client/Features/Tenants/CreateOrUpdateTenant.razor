@@ -1,4 +1,4 @@
-﻿<RadzenTemplateForm Data="@CreateRequest" Submit="@((CreateOrUpdateTenantRequest __) => Submit(__))">
+<RadzenTemplateForm TItem="CreateOrUpdateTenantRequest" Data="@CreateRequest" Submit="@SubmitAsync">
 
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
     <RadzenStack>
@@ -35,10 +35,18 @@
         </RadzenRow>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="ValidUpto" Component="ValidUpto"/>
+                <RadzenLabel Text="Expires (your time)" Component="ValidUpto"/>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenDatePicker Name="ValidUpto" Style="width: 100%" @bind-Value="@CreateRequest.ValidUpto"/>
+                @if (IsRoot)
+                {
+                    <RadzenText>No expiry</RadzenText>
+                }
+                else
+                {
+                    <RadzenDatePicker TValue="DateTime?" Name="ValidUpto" Style="width: 100%" ShowTime="true"
+                                      DateFormat="dd/MM/yyyy HH:mm" Value="CreateRequest.ValidUpto" ValueChanged="@ChangeLocalExpiry" />
+                }
             </RadzenColumn>
             <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.ValidUpto)"/>
         </RadzenRow>
@@ -53,8 +61,12 @@
             <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.IsActive)"/>
         </RadzenRow>
     </RadzenStack>
+    @if (dateError is not null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false">@dateError</RadzenAlert>
+    }
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
+        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Disabled="@(dateError is not null)" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
         <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
     </RadzenStack>
 </RadzenTemplateForm>

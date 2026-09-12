@@ -23,6 +23,7 @@ For URL settings, server API connections, tenant routing, or Google callbacks, r
 - Add `@attribute [MustHavePermission(...)]` to list pages.
 - Await each `DialogService.OpenAsync` result and reload the list only when it is `true`.
 - The DI scope owns `DialogService`. Pages must not dispose it or subscribe to its shared `OnClose` event.
+- Refit converts JSON timestamps to UTC on send and to local time on browser reads. Bind UI fields directly to these local values. See [Refit instructions](AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md) for server rendering and date-only rules.
 - Delete flow uses `DialogService.Confirm()` + Refit delete endpoint.
 
 ## File Placement

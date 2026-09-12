@@ -14,6 +14,14 @@
 - External APIs should not use tenant/auth handlers.
 - `TenantIdentifier` uses injected `AppUrls`. Browser feature calls use the exact shared `ApiBaseUrl` in split host and the current origin in single host. Resolve tenant UI hosts from `TenantBaseDomain`, with the root UI hostname as its fallback. Server calls use the resolved internal address. Both browser and server calls forward the tenant header. Read [Configure application URLs](../../../../../docs/url-configuration.md) before changing address selection or tenant subdomains.
 
+## Date and time JSON
+
+- `UiDateTimeJsonConverter` converts outgoing `DateTime` values (including nullable values) to UTC. Unspecified picker input means local time. Incoming timestamps become local time only in WebAssembly; server clients retain UTC. API timestamps without an offset are treated as UTC.
+- Bind browser UI fields directly to response values. Hide local timestamps during server prerendering. Revisit this policy before switching to Interactive Server, which cannot use the browser time zone.
+- Use `DateOnly` for calendar dates. Minimum and maximum date sentinels retain their values.
+- JSON conversion does not cover query parameters, grid filter strings, multipart forms, or raw HTTP calls. Handle timestamps explicitly in those paths.
+- Keep UTC validation in backend handlers; shared form validators run before serialization.
+
 ## 2. Decision Tree
 - Authenticated backend API? Register with both handlers.
 - BFF/auth endpoint or internal tenant-resolved endpoint without auth forwarding? Register with `RefitTenantHandler` only.
@@ -72,5 +80,5 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 
 ---
 Last Updated: 2026-09-12
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/AppInfo/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/UiDateTimeJsonConverter.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/AppInfo/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

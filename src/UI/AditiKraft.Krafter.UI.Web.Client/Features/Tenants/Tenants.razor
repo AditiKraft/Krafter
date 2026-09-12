@@ -29,7 +29,22 @@
         </RadzenDataGridColumn>
 
         <RadzenDataGridColumn Property="AdminEmail" Title="Admin Email"/>
-        <RadzenDataGridColumn Property="ValidUpto" Title="ValidUpto"/>
+        <RadzenDataGridColumn Property="ValidUpto" Title="Expires (your time)" Filterable="false">
+            <Template Context="data">
+                @if (data.ValidUpto == DateTime.MaxValue)
+                {
+                    <span>No expiry</span>
+                }
+                else if (RendererInfo.IsInteractive)
+                {
+                    @data.ValidUpto.ToString(LocalAppState.DateTimeFormat)
+                }
+                else
+                {
+                    <span>…</span>
+                }
+            </Template>
+        </RadzenDataGridColumn>
         <RadzenDataGridColumn Property="IsActive" Title="IsActive"/>
 
         <RadzenDataGridColumn Title="Created By" Frozen="true" Sortable="false" Filterable="false" TextAlign="TextAlign.Center">

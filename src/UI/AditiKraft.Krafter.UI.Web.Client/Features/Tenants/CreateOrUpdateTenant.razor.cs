@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common;
 using Mapster;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
@@ -5,49 +6,67 @@ namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
 public partial class CreateOrUpdateTenant(
     DialogService dialogService,
     ApiCallService api,
-    ITenantsApi tenantsApi
-) : ComponentBase
+    ITenantsApi tenantsApi) : ComponentBase
 {
     [Parameter] public TenantDto? TenantInput { get; set; } = new();
     private CreateOrUpdateTenantRequest CreateRequest = new();
-    private bool isBusy = false;
+    private bool isBusy;
+    private string? dateError;
+    private bool IsRoot => TenantInput?.Id == DefaultTenantConstants.Identifier;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        if (TenantInput is not null)
+        CreateRequest = TenantInput?.Adapt<CreateOrUpdateTenantRequest>() ?? new();
+        if (string.IsNullOrWhiteSpace(CreateRequest.Id))
         {
-            CreateRequest = TenantInput.Adapt<CreateOrUpdateTenantRequest>();
+            CreateRequest.ValidUpto = null;
         }
     }
 
-    private async void Submit(CreateOrUpdateTenantRequest input)
+    private void ChangeLocalExpiry(DateTime? value)
     {
-        if (TenantInput is not null)
+        if (IsRoot)
         {
-            isBusy = true;
-            Response result;
-            if (string.IsNullOrWhiteSpace(input.Id))
-            {
-                result = await api.CallAsync(
-                    () => tenantsApi.CreateTenantAsync(input),
-                    successMessage: "Tenant created successfully");
-            }
-            else
-            {
-                result = await api.CallAsync(
-                    () => tenantsApi.UpdateTenantAsync(input.Id, input),
-                    successMessage: "Tenant updated successfully");
-            }
-            isBusy = false;
-            StateHasChanged();
-            if (result is { IsError: false })
+            return;
+        }
+
+        dateError = null;
+        // Keep the original Local value, including its daylight-saving offset, when unchanged.
+        if (value == CreateRequest.ValidUpto)
+        {
+            return;
+        }
+
+        if (value is { } local && (TimeZoneInfo.Local.IsInvalidTime(local) || TimeZoneInfo.Local.IsAmbiguousTime(local)))
+        {
+            CreateRequest.ValidUpto = null;
+            dateError = "This time is skipped or repeated when the clocks change. Choose another time.";
+            return;
+        }
+        CreateRequest.ValidUpto = value;
+    }
+
+    private async Task SubmitAsync(CreateOrUpdateTenantRequest input)
+    {
+        if (isBusy || dateError is not null)
+        {
+            return;
+        }
+
+        isBusy = true;
+        try
+        {
+            Response result = string.IsNullOrWhiteSpace(input.Id)
+                ? await api.CallAsync(() => tenantsApi.CreateTenantAsync(input), successMessage: "Tenant created successfully")
+                : await api.CallAsync(() => tenantsApi.UpdateTenantAsync(input.Id, input), successMessage: "Tenant updated successfully");
+            if (!result.IsError)
             {
                 dialogService.Close(true);
             }
         }
-        else
+        finally
         {
-            dialogService.Close(false);
+            isBusy = false;
         }
     }
 
