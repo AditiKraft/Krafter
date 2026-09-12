@@ -9,7 +9,7 @@
             <RadzenColumn Size="12" SizeMD="8">
                 <RadzenTextBox Style="width: 100%" Disabled="!string.IsNullOrWhiteSpace(UserDetails.Id)" @bind-Value="@CreateUserRequest.Name" Name="Name"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Name)"/>
+            <ValidationMessage For="@(() => CreateUserRequest.Name)"/>
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
@@ -19,7 +19,7 @@
             <RadzenColumn Size="12" SizeMD="8">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateUserRequest.Description" Name="Description"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateUserRequest.Description)"/>
+            <ValidationMessage For="@(() => CreateUserRequest.Description)"/>
         </RadzenRow>
 
         @if (!string.IsNullOrWhiteSpace(UserDetails.Id))

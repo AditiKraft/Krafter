@@ -27,6 +27,8 @@ For URL settings, server API connections, tenant routing, or Google callbacks, r
 - Delete flow uses `DialogService.Confirm()` + Refit delete endpoint.
 
 ## File Placement
+- Shared colors and component styles: `AditiKraft.Krafter.UI.Web.Client/wwwroot/app.css`. Use its `--kr-*` semantic tokens and Radzen mappings. Brand Blue is the primary action color; surfaces are solid and neutral.
+- Load `app.css` after `RadzenTheme` in `UI.Web/Components/App.razor`. Dark tokens follow `#radzen-theme-link` because Radzen changes the stylesheet URL, not a class on the document. Keep Auto, Light, and Dark preferences working through `ThemeManager`.
 - List page: `Features/<Feature>/<Feature>s.razor` (+ `.razor.cs` if needed)
 - Form dialog: `Features/<Feature>/CreateOrUpdate<Feature>.razor` (+ `.razor.cs` if needed)
 - Feature-shared UI pieces: `Features/<Feature>/Common/`
@@ -123,7 +125,7 @@ public partial class Users(
 
 ---
 Last Updated: 2026-09-12
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/app.css, src/UI/AditiKraft.Krafter.UI.Web/Components/App.razor, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 
 

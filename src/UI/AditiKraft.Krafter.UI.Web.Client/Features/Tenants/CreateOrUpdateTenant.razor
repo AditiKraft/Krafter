@@ -10,7 +10,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Name" Name="Name"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.Name)"/>
+            <ValidationMessage For="@(() => CreateRequest.Name)"/>
         </RadzenRow>
 
 
@@ -21,7 +21,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Identifier" Name="Identifier"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.Identifier)"/>
+            <ValidationMessage For="@(() => CreateRequest.Identifier)"/>
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
@@ -31,7 +31,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.AdminEmail" Name="AdminEmail"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.AdminEmail)"/>
+            <ValidationMessage For="@(() => CreateRequest.AdminEmail)"/>
         </RadzenRow>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
@@ -48,7 +48,7 @@
                                       DateFormat="dd/MM/yyyy HH:mm" Value="CreateRequest.ValidUpto" ValueChanged="@ChangeLocalExpiry" />
                 }
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.ValidUpto)"/>
+            <ValidationMessage For="@(() => CreateRequest.ValidUpto)"/>
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
@@ -58,7 +58,7 @@
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenCheckBox @bind-Value="@CreateRequest.IsActive" Name="IsActive"/>
             </RadzenColumn>
-            <ValidationMessage style="font-size: 13px" For="@(() => CreateRequest.IsActive)"/>
+            <ValidationMessage For="@(() => CreateRequest.IsActive)"/>
         </RadzenRow>
     </RadzenStack>
     @if (dateError is not null)

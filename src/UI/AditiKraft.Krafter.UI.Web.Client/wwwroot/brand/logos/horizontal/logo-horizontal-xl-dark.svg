@@ -3,7 +3,7 @@
     <defs>
         <style>
             .k-nav { fill: #FFFFFF; }
-            .k-grn { fill: #764AF1; }
+            .k-grn { fill: #2563EB; }
             .brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #FFFFFF; }
             .tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #FFFFFF; }
         </style>
