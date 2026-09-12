@@ -20,7 +20,7 @@
 - Common models: `Common/Models/`
 - Enums: `Common/Enums/`
 - Auth helpers: `Common/Auth/`
-- Shared public URL model and origin helpers: `Common/AppUrls.cs`. Server configuration binding stays in the host. Keep `ServerApiBaseUrl` excluded from JSON; browsers receive public addresses only. Read [Configure application URLs](../../docs/url-configuration.md) before changing this contract.
+- Shared public URL model and tenant-domain helpers: `Common/AppUrls.cs`. Server configuration binding stays in the host. Keep `ServerApiBaseUrl` excluded from JSON; browsers receive public addresses and public reserved identifiers only. Share tenant identifier rules between request validation and URL resolution. Read [Configure application URLs](../../docs/url-configuration.md) before changing this contract.
 
 ## 3. Code Templates
 

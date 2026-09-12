@@ -8,7 +8,8 @@ public partial class Tenants(
     ApiCallService api,
     ITenantsApi tenantsApi,
     DialogService dialogService,
-    NavigationManager navigationManager
+    NavigationManager navigationManager,
+    AppUrls urls
 ) : ComponentBase
 {
     public const string RoutePath = ApiRoutes.Tenants;

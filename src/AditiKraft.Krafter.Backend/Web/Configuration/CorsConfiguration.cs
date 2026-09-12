@@ -12,6 +12,7 @@ public static class CorsConfiguration
     {
         AppUrls urls = configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
         Uri rootUiOrigin = urls.GetRootUiUri();
+        _ = urls.GetTenantBaseUri();
         string[] additionalOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
         Uri[] allowedOrigins = additionalOrigins
             .Select((origin, index) => AppUrls.ParseOrigin(origin, $"Cors:AllowedOrigins:{index}"))
@@ -20,7 +21,7 @@ public static class CorsConfiguration
         bool allowTenantSubdomains = configuration.GetValue<bool>("Cors:AllowTenantSubdomains");
 
         services.AddCors(options => options.AddPolicy(PolicyName, policy => policy
-            .SetIsOriginAllowed(origin => IsOriginAllowed(origin, rootUiOrigin, allowedOrigins, allowTenantSubdomains))
+            .SetIsOriginAllowed(origin => IsOriginAllowed(origin, urls, allowedOrigins, allowTenantSubdomains))
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()));
@@ -32,7 +33,7 @@ public static class CorsConfiguration
 
     private static bool IsOriginAllowed(
         string origin,
-        Uri rootUiOrigin,
+        AppUrls urls,
         Uri[] allowedOrigins,
         bool allowTenantSubdomains)
     {
@@ -49,6 +50,7 @@ public static class CorsConfiguration
             return true;
         }
 
+        Uri rootUiOrigin = urls.GetRootUiUri();
         if (!allowTenantSubdomains || rootUiOrigin.HostNameType != UriHostNameType.Dns ||
             rootUiOrigin.IsLoopback || !rootUiOrigin.IdnHost.Contains('.') ||
             uri.HostNameType != UriHostNameType.Dns ||
@@ -57,7 +59,8 @@ public static class CorsConfiguration
             return false;
         }
 
-        return AppUrls.GetSubdomain(uri.IdnHost, rootUiOrigin) is not null;
+        string? identifier = urls.GetUiTenantIdentifier(uri.IdnHost);
+        return identifier is not null && !urls.IsReservedTenantIdentifier(identifier);
     }
 
     private static bool HasSameOrigin(Uri origin, Uri allowed) =>

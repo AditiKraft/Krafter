@@ -112,6 +112,30 @@ public sealed class CorsConfigurationTests
         Assert.Contains("Cors:AllowedOrigins:0", error.Message);
     }
 
+    [Theory]
+    [InlineData("https://krafter.getkrafter.dev", true)]
+    [InlineData("https://blue.getkrafter.dev", true)]
+    [InlineData("https://new-tenant.getkrafter.dev", true)]
+    [InlineData("https://api.getkrafter.dev", false)]
+    [InlineData("https://www.getkrafter.dev", false)]
+    [InlineData("https://mail.getkrafter.dev", false)]
+    [InlineData("https://support.getkrafter.dev", false)]
+    [InlineData("https://blue.krafter.getkrafter.dev", false)]
+    [InlineData("https://getkrafter.dev", false)]
+    [InlineData("https://blue.getkrafter.dev.attacker.com", false)]
+    [InlineData("http://blue.getkrafter.dev", false)]
+    [InlineData("https://blue.getkrafter.dev:8443", false)]
+    public async Task SiblingTenantCorsExcludesReservedAndUnrelatedOrigins(string origin, bool expected)
+    {
+        CorsPolicy policy = await CreatePolicyAsync("https://krafter.getkrafter.dev", true, new()
+        {
+            ["Urls:TenantBaseDomain"] = "getkrafter.dev",
+            ["Urls:ApiBaseUrl"] = "https://api.getkrafter.dev",
+            ["Urls:ReservedTenantIdentifiers:0"] = "support"
+        });
+        Assert.Equal(expected, policy.IsOriginAllowed(origin));
+    }
+
     private static async Task<CorsPolicy> CreatePolicyAsync(
         string rootOrigin,
         bool allowTenantSubdomains = false,

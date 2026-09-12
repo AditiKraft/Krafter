@@ -19,8 +19,8 @@ public sealed class TenantUrlRoutingTests
 {
     [Theory]
     [InlineData("https://app.example.com", "https://api.example.com", "root", "https://api.example.com")]
-    [InlineData("https://blue.app.example.com", "https://api.example.com", "blue", "https://blue.api.example.com")]
-    [InlineData("https://BLUE.app.example.com", "https://api.example.com:8443", "blue", "https://blue.api.example.com:8443")]
+    [InlineData("https://blue.app.example.com", "https://api.example.com", "blue", "https://api.example.com")]
+    [InlineData("https://BLUE.app.example.com", "https://api.example.com:8443", "blue", "https://api.example.com:8443")]
     [InlineData("https://app.example.com", null, "root", "https://app.example.com")]
     [InlineData("https://blue.app.example.com:8443", null, "blue", "https://blue.app.example.com:8443")]
     [InlineData("http://localhost:5002", "http://localhost:5001", "root", "http://localhost:5001")]
@@ -32,7 +32,6 @@ public sealed class TenantUrlRoutingTests
     [InlineData("https://blue.app.example.com", "http://[::1]:5001", "blue", "http://[::1]:5001")]
     [InlineData("https://blue.unrelated.com", "https://api.example.com", "root", "https://api.example.com")]
     [InlineData("https://blue.app.example.com.attacker.com", "https://api.example.com", "root", "https://api.example.com")]
-    [InlineData("https://nested.blue.app.example.com", "https://api.example.com", "root", "https://api.example.com")]
     public async Task BrowserRoutesUseHostingModeAndConfiguredRootDomain(
         string currentOrigin, string? apiOrigin, string expectedTenant, string expectedApiOrigin)
     {
@@ -85,12 +84,11 @@ public sealed class TenantUrlRoutingTests
     [InlineData("api.example.com", "blue", "blue")]
     [InlineData("api.example.com", null, "root")]
     [InlineData("blue.app.example.com", "other", "blue")]
-    [InlineData("blue.api.example.com:8443", "other", "blue")]
+    [InlineData("blue.api.example.com:8443", "other", "other")]
     [InlineData("internal-api:8080", "blue", "blue")]
     [InlineData("192.168.1.10:5001", "blue", "blue")]
     [InlineData("[::1]:5001", "blue", "blue")]
     [InlineData("blue.unrelated.com", null, "root")]
-    [InlineData("nested.blue.app.example.com", null, "root")]
     [InlineData("blue.api.example.com.attacker.com", null, "root")]
     public async Task BackendUsesConfiguredTenantDomainsBeforeHeader(string host, string? header, string expectedTenant)
     {
@@ -119,6 +117,43 @@ public sealed class TenantUrlRoutingTests
 
         await AssertBackendTenantAsync(urls.RootUiUrl, transport.RequestUri!.Authority,
             transport.TenantHeader, "blue", serverOrigin);
+    }
+
+    [Theory]
+    [InlineData("https://krafter.getkrafter.dev", "root")]
+    [InlineData("https://blue.getkrafter.dev", "blue")]
+    [InlineData("https://new-tenant.getkrafter.dev", "new-tenant")]
+    public async Task SiblingTenantRoutesUseSharedApiAndPreserveTenant(string origin, string expectedTenant)
+    {
+        var urls = new AppUrls
+        {
+            RootUiUrl = "https://krafter.getkrafter.dev",
+            TenantBaseDomain = "getkrafter.dev",
+            ApiBaseUrl = "https://api.getkrafter.dev",
+            ServerApiBaseUrl = "http://backend_krafter:8080"
+        };
+        foreach (bool server in new[] { false, true })
+        {
+            using ServiceProvider provider = CreateProvider(origin, server);
+            var identifier = new TenantIdentifier(provider, urls);
+            await AssertTransportAsync(identifier,
+                server ? urls.ServerApiBaseUrl : urls.ApiBaseUrl, expectedTenant);
+        }
+
+        urls.ApiBaseUrl = null;
+        using ServiceProvider browser = CreateProvider(origin, server: false);
+        await AssertTransportAsync(new TenantIdentifier(browser, urls), origin, expectedTenant);
+    }
+
+    [Theory]
+    [InlineData("https://root.getkrafter.dev")]
+    [InlineData("https://www.getkrafter.dev")]
+    [InlineData("https://blue.krafter.getkrafter.dev")]
+    public void InvalidTenantUiHostsCannotSelectRoot(string origin)
+    {
+        var urls = new AppUrls { RootUiUrl = "https://krafter.getkrafter.dev", TenantBaseDomain = "getkrafter.dev" };
+        using ServiceProvider provider = CreateProvider(origin, server: false);
+        Assert.Throws<InvalidOperationException>(() => new TenantIdentifier(provider, urls).Get());
     }
 
     private static async Task AssertBackendTenantAsync(string rootUiUrl, string host, string? header, string expectedTenant, string? serverOrigin = null)

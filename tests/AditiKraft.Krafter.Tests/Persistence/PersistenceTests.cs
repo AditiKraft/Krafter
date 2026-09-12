@@ -5,11 +5,33 @@ using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AditiKraft.Krafter.Tests.Persistence;
 
 public sealed class PersistenceTests
 {
+    [Fact]
+    public void PostgreSqlTenantMigrationEnforcesCaseInsensitiveUniquenessForNondeletedTenants()
+    {
+        var options = new DbContextOptionsBuilder<TenantDbContext>()
+            .UseNpgsql("Host=localhost;Database=model_check;Username=model_check;Password=unused")
+            .Options;
+        using var db = new TenantDbContext(options);
+
+        Assert.False(db.Database.HasPendingModelChanges());
+        IMigrator migrator = db.GetService<IMigrator>();
+        string upgrade = migrator.GenerateScript("20260428150352_FirstMigTenant", "20260912000000_UniqueTenantIdentifiers");
+        Assert.Contains("CREATE UNIQUE INDEX \"IX_Tenant_Identifier_Lower\"", upgrade);
+        Assert.Contains("ON \"Tenant\" (lower(\"Identifier\"))", upgrade);
+        Assert.Contains("WHERE NOT \"IsDeleted\"", upgrade);
+
+        string downgrade = migrator.GenerateScript("20260912000000_UniqueTenantIdentifiers", "20260428150352_FirstMigTenant");
+        Assert.Contains("DROP INDEX \"IX_Tenant_Identifier_Lower\"", downgrade);
+        Assert.DoesNotContain("DROP TABLE", downgrade);
+    }
+
     [Fact]
     public void PostgreSqlModelMatchesExistingMigrations()
     {

@@ -17,10 +17,14 @@
         <RadzenDataGridColumn Property="Name" Title="Name"/>
         <RadzenDataGridColumn Property="Identifier" Title="Identifier">
             <Template Context="data">
-                @{
-                    var remoteHostUrl = $"https://{data.Identifier}.{TenantInfo.MainDomain}";
+                @if (urls.CanUseTenantIdentifier(data.Identifier))
+                {
+                    <RadzenLink Path="@urls.GetTenantUiUri(data.Identifier).AbsoluteUri" Text="@data.Identifier" target="_blank"/>
                 }
-                <RadzenLink Path="@remoteHostUrl" Text="@data.Identifier" target="_blank"/>
+                else
+                {
+                    @data.Identifier
+                }
             </Template>
         </RadzenDataGridColumn>
 

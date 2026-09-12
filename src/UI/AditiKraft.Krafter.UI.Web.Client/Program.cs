@@ -16,6 +16,7 @@ using (var configurationClient = new HttpClient { BaseAddress = new Uri(builder.
     AppUrls urls = await configurationClient.GetFromJsonAsync<AppUrls>(AppUrls.ConfigurationPath)
         ?? throw new InvalidOperationException("The UI host did not return its public URL configuration.");
     _ = urls.GetRootUiUri();
+    _ = urls.GetTenantBaseUri();
     _ = urls.GetApiUri();
     builder.Services.AddSingleton(urls);
 }

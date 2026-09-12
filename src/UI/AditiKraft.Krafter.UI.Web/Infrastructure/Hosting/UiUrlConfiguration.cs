@@ -9,6 +9,7 @@ public static class UiUrlConfiguration
     {
         AppUrls urls = configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
         _ = urls.GetRootUiUri();
+        _ = urls.GetTenantBaseUri();
 
         if (hostingMode == BlazorHostingMode.SingleHost)
         {
@@ -35,7 +36,13 @@ public static class UiUrlConfiguration
         return endpoints.MapGet("/" + AppUrls.ConfigurationPath, (AppUrls urls, HttpContext context) =>
         {
             context.Response.Headers.CacheControl = "no-store";
-            return Results.Json(new AppUrls { RootUiUrl = urls.RootUiUrl, ApiBaseUrl = urls.ApiBaseUrl });
+            return Results.Json(new AppUrls
+            {
+                RootUiUrl = urls.RootUiUrl,
+                ApiBaseUrl = urls.ApiBaseUrl,
+                TenantBaseDomain = urls.TenantBaseDomain,
+                ReservedTenantIdentifiers = urls.ReservedTenantIdentifiers
+            });
         }).AllowAnonymous();
     }
 }

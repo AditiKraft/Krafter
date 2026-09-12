@@ -210,7 +210,7 @@ Only change configuration if you need custom values for:
 
 - PostgreSQL container credentials in `aspire/AditiKraft.Krafter.Aspire.AppHost/appsettings.json`
 - JWT, TickerQ, or Google auth settings in the Backend host (split host) or UI.Web (single host)
-- Public URLs in the server `Urls` section: `RootUiUrl` for both modes, plus `ApiBaseUrl` for split host
+- Public URLs in the server `Urls` section: `RootUiUrl` for both modes, `TenantBaseDomain` for tenant UI addresses, and the shared `ApiBaseUrl` for split host
 - Google client ID in the UI settings; the client secret stays on the server
 
 The browser loads public URLs from UI.Web automatically. For deployment examples, tenant domains, CORS, Google callbacks, and migration from old keys, read [Configure application URLs](docs/url-configuration.md).

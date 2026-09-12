@@ -18,10 +18,12 @@ public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinde
         }
 
         Tenant? tenant = await tenantDbContext.Tenants.AsNoTracking()
-            .SingleOrDefaultAsync(c => c.Identifier == identifier);
+            .SingleOrDefaultAsync(c => c.Identifier.ToLower() == identifier.ToLower());
         if (tenant is null)
         {
-            return Response<Tenant>.Success(SeedDataConstants.DefaultTenant);
+            return identifier.Equals(DefaultTenantConstants.Identifier, StringComparison.OrdinalIgnoreCase)
+                ? Response<Tenant>.Success(SeedDataConstants.DefaultTenant)
+                : Response<Tenant>.NotFound("Tenant not found");
         }
 
         if (tenant.IsActive == false)

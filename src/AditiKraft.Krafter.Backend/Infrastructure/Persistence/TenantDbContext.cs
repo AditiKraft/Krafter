@@ -7,6 +7,9 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 public class TenantDbContext(DbContextOptions<TenantDbContext> options)
     : DbContext(options)
 {
+    // The expression index is created by UniqueTenantIdentifiers; EF indexes only model properties.
+    public const string TenantIdentifierIndexName = "IX_Tenant_Identifier_Lower";
+
     public DbSet<Tenant> Tenants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

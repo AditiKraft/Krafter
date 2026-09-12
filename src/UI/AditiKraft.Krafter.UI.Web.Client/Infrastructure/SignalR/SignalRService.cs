@@ -39,7 +39,8 @@ public class SignalRService : IAsyncDisposable
         if (isAuthenticated)
         {
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(TenantInfo.HostUrl + $"/{ApiRoutes.ApiPrefix}/RealtimeHub", options =>
+                // Browser WebSocket connections cannot send a custom tenant header.
+                .WithUrl(TenantInfo.HostUrl + $"/{ApiRoutes.ApiPrefix}/RealtimeHub?tenantIdentifier={Uri.EscapeDataString(TenantInfo.Identifier)}", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

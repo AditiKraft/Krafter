@@ -101,6 +101,8 @@ public sealed class UiUrlConfigurationTests
         builder.Services.AddSingleton(new AppUrls
         {
             RootUiUrl = "https://app.example.com",
+            TenantBaseDomain = "example.com",
+            ReservedTenantIdentifiers = ["support"],
             ApiBaseUrl = publicApiUrl,
             ServerApiBaseUrl = "http://private-api:8080"
         });
@@ -121,7 +123,51 @@ public sealed class UiUrlConfigurationTests
         Assert.NotNull(urls);
         Assert.Equal("https://app.example.com", urls.RootUiUrl);
         Assert.Equal(publicApiUrl, urls.ApiBaseUrl);
+        Assert.Equal("example.com", urls.TenantBaseDomain);
+        Assert.Equal(["support"], urls.ReservedTenantIdentifiers);
         Assert.Null(urls.ServerApiBaseUrl);
+    }
+
+    [Theory]
+    [InlineData("ftp://example.com")]
+    [InlineData("http://example.com")]
+    [InlineData("https://example.com:8443")]
+    [InlineData("https://example.com/path")]
+    [InlineData("https://example.com?query=1")]
+    [InlineData("https://example.com#fragment")]
+    [InlineData("https://user:password@example.com")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("example.com:443")]
+    [InlineData("example.com/path")]
+    [InlineData("*.example.com")]
+    [InlineData("example.com.")]
+    [InlineData("-bad.example.com")]
+    [InlineData("other.com")]
+    [InlineData("com")]
+    [InlineData("127.0.0.1")]
+    public void InvalidTenantDomainFailsAtStartup(string domain)
+    {
+        var error = Assert.Throws<InvalidOperationException>(() => UiUrlConfiguration.Resolve(
+            CreateConfiguration(new() { ["Urls:TenantBaseDomain"] = domain }), BlazorHostingMode.SingleHost));
+        Assert.Contains("Urls:TenantBaseDomain", error.Message);
+    }
+
+    [Theory]
+    [InlineData("https://krafter.getkrafter.dev", "getkrafter.dev", "blue", "https://blue.getkrafter.dev/")]
+    [InlineData("https://krafter.getkrafter.dev", "https://getkrafter.dev", "blue", "https://blue.getkrafter.dev/")]
+    [InlineData("https://krafter.getkrafter.dev", "HTTPS://GETKRAFTER.DEV:443/", "blue", "https://blue.getkrafter.dev/")]
+    [InlineData("http://krafter.getkrafter.dev", "getkrafter.dev", "blue", "http://blue.getkrafter.dev/")]
+    [InlineData("http://krafter.getkrafter.dev", "http://getkrafter.dev", "blue", "http://blue.getkrafter.dev/")]
+    [InlineData("https://krafter.getkrafter.dev:8443", "https://getkrafter.dev:8443", "blue", "https://blue.getkrafter.dev:8443/")]
+    [InlineData("https://krafter.getkrafter.dev", "getkrafter.dev", "root", "https://krafter.getkrafter.dev/")]
+    [InlineData("https://krafter.getkrafter.dev:8443", "getkrafter.dev", "new-tenant", "https://new-tenant.getkrafter.dev:8443/")]
+    [InlineData("https://app.example.com", null, "blue", "https://blue.app.example.com/")]
+    [InlineData("https://localhost:7291", "", "blue", "https://localhost:7291/")]
+    [InlineData("http://127.0.0.1:5116", null, "blue", "http://127.0.0.1:5116/")]
+    public void TenantLinksUsePublicUiDomainAndPreserveSchemeAndPort(string root, string? domain, string tenant, string expected)
+    {
+        var urls = new AppUrls { RootUiUrl = root, TenantBaseDomain = domain };
+        Assert.Equal(expected, urls.GetTenantUiUri(tenant).AbsoluteUri);
     }
 
     private static IConfiguration CreateConfiguration(Dictionary<string, string?> values)

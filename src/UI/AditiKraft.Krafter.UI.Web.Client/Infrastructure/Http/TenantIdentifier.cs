@@ -1,4 +1,3 @@
-using System.Net;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Enums;
 using Microsoft.AspNetCore.Http;
@@ -13,9 +12,12 @@ public class TenantIdentifier(IServiceProvider serviceProvider, AppUrls urls)
         string formFactor = serviceProvider.GetRequiredService<IFormFactor>().GetFormFactor();
         bool isServerSide = formFactor == "Web";
         Uri uiUri = GetCurrentUiUri(formFactor);
-        Uri rootUiUri = urls.GetRootUiUri();
+        if (TenantSettings.TenancyMode == TenancyMode.Multi && urls.IsInvalidUiTenantHost(uiUri.Host))
+        {
+            throw new InvalidOperationException("Tenant not found.");
+        }
         string? subdomain = TenantSettings.TenancyMode == TenancyMode.Multi
-            ? AppUrls.GetSubdomain(uiUri.Host, rootUiUri)
+            ? urls.GetUiTenantIdentifier(uiUri.Host)
             : null;
         string tenantIdentifier = subdomain ?? DefaultTenantConstants.Identifier;
         string clientBaseAddress = uiUri.GetLeftPart(UriPartial.Authority);
@@ -28,15 +30,10 @@ public class TenantIdentifier(IServiceProvider serviceProvider, AppUrls urls)
         }
         else
         {
-            Uri? publicApiUri = urls.GetApiUri();
-            apiUri = publicApiUri ?? uiUri;
-            if (publicApiUri is not null && subdomain is not null && CanAddTenantSubdomain(publicApiUri))
-            {
-                apiUri = new UriBuilder(publicApiUri) { Host = $"{subdomain}.{publicApiUri.Host}" }.Uri;
-            }
+            apiUri = urls.GetApiUri() ?? uiUri;
         }
 
-        string rootDomain = subdomain is null ? uiUri.Host : rootUiUri.Host;
+        string rootDomain = urls.GetTenantBaseUri().Host;
         return (tenantIdentifier, apiUri.GetLeftPart(UriPartial.Authority), rootDomain, clientBaseAddress, isServerSide);
     }
 
@@ -57,9 +54,4 @@ public class TenantIdentifier(IServiceProvider serviceProvider, AppUrls urls)
         return urls.GetRootUiUri();
     }
 
-    private static bool CanAddTenantSubdomain(Uri uri) =>
-        uri.HostNameType == UriHostNameType.Dns &&
-        !uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) &&
-        !uri.Host.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase) &&
-        !IPAddress.TryParse(uri.Host, out _);
 }

@@ -28,8 +28,10 @@ public static class HostingExtensions
     {
         AppUrls urls = builder.Configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
         _ = urls.GetRootUiUri();
+        _ = urls.GetTenantBaseUri();
         _ = urls.GetApiUri();
         _ = urls.GetServerApiUri();
+        builder.Services.AddSingleton(urls);
 
         builder.Services.AddDatabaseConfiguration(builder.Configuration);
 

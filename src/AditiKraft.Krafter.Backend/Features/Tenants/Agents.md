@@ -8,6 +8,9 @@
 - Creating a tenant triggers data seeding in a scoped tenant context.
 - `CreateTenant.Handler` sets `CreatedOn` to UTC before saving. `TenantDbContext` does not set audit timestamps. Updates must preserve the creation time.
 - Root tenant cannot be deleted.
+- Validate identifiers through `CreateOrUpdateTenantRequestValidator` with the configured `AppUrls` in both create and update handlers. Keep format, length, and reserved-name rules shared with the UI. Check uniqueness without regard to letter case, excluding the current tenant on update.
+- `IX_Tenant_Identifier_Lower` enforces uniqueness for tenants that are not deleted. Its expression index is defined in the `UniqueTenantIdentifiers` raw SQL migration, not the EF model snapshot. Return 409 for this named constraint violation if concurrent writes pass the initial check.
+- Build tenant links with `TenantLinkBuilder.GetTenantLink(urls, identifier)`. Read [Configure application URLs](../../../../docs/url-configuration.md) before changing tenant domains or reserved names.
 - Update admin emails through `IUserMutationService.UpdateEmailAsync` in the target tenant scope. Check the response before saving the tenant record; this keeps profile fields and roles intact.
 
 ## 2. Decision Tree
@@ -21,11 +24,10 @@
 
 ### Ensure Unique Identifier
 ```csharp
-Tenant? existingTenant = await dbContext.Tenants
-    .AsNoTracking()
-    .FirstOrDefaultAsync(c => c.Identifier.ToLower() == request.Identifier.ToLower());
+bool identifierExists = await dbContext.Tenants.AsNoTracking()
+    .AnyAsync(c => c.Identifier.ToLower() == request.Identifier, cancellationToken);
 
-if (existingTenant is not null)
+if (identifierExists)
 {
     return Response.Conflict("Identifier already exists, please try a different identifier.");
 }
@@ -33,16 +35,15 @@ if (existingTenant is not null)
 
 ### Seed New Tenant Data
 ```csharp
-using (IServiceScope scope = serviceProvider.CreateScope())
-{
-    ITenantSetterService setter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
-    CurrentTenantDetails currentTenant = entity.Adapt<CurrentTenantDetails>();
-    currentTenant.TenantLink = GetSubTenantLinkBasedOnRootTenant(rootTenantLink, request.Identifier);
-    setter.SetTenant(currentTenant);
+using IServiceScope scope = serviceProvider.CreateScope();
+ITenantSetterService tenantSetter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
+CurrentTenantDetails currentTenantDetails = entity.Adapt<CurrentTenantDetails>();
+currentTenantDetails.TenantLink =
+    TenantLinkBuilder.GetTenantLink(urls, request.Identifier);
+tenantSetter.SetTenant(currentTenantDetails);
 
-    DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
-    await seedService.SeedBasicData(new SeedDataRequest());
-}
+DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
+await seedService.SeedBasicData(new SeedDataRequest());
 ```
 
 ## 4. Checklist
@@ -62,6 +63,7 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - Tenant admin email sync changes.
 
 ## References (real code)
+- `src/AditiKraft.Krafter.Backend/Migrations/TenantDb/20260912000000_UniqueTenantIdentifiers.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
@@ -70,8 +72,8 @@ using (IServiceScope scope = serviceProvider.CreateScope())
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs`
 
 ---
-Last Updated: 2026-09-09
-Verified Against: tests/AditiKraft.Krafter.Tests/Tenants/TenantCreationTests.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
+Last Updated: 2026-09-12
+Verified Against: docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Contracts/Contracts/Tenants/CreateOrUpdateTenantRequest.cs, tests/AditiKraft.Krafter.Tests/Tenants/TenantCreationTests.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
 ---
 
 

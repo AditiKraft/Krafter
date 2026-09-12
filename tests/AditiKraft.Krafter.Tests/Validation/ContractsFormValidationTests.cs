@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 using AditiKraft.Krafter.UI.Web.Client.Features.Roles;
@@ -81,6 +82,31 @@ public sealed class ContractsFormValidationTests
         });
     }
 
+    [Theory]
+    [InlineData("krafter")]
+    [InlineData("status")]
+    public async Task TenantFormUsesConfiguredReservedIdentifiers(string identifier)
+    {
+        await using var editor = new Editor();
+        HtmlRootComponent root = await editor.RenderAsync<CreateOrUpdateTenant>();
+
+        await editor.RunAsync(async () =>
+        {
+            CreateOrUpdateTenantRequest model = editor.Form<CreateOrUpdateTenantRequest>().Data;
+            model.Name = "Example tenant";
+            model.Identifier = identifier;
+            model.AdminEmail = "admin@example.com";
+            model.IsActive = true;
+            model.ValidUpto = new DateTime(2030, 1, 1);
+
+            Assert.False(await editor.Validator.ValidateAsync());
+            Assert.Contains("This identifier is reserved", root.ToHtmlString());
+
+            model.Identifier = "new-tenant";
+            Assert.True(await editor.Validator.ValidateAsync());
+        });
+    }
+
     private sealed class Editor : IAsyncDisposable
     {
         private readonly ServiceProvider services;
@@ -91,6 +117,13 @@ public sealed class ContractsFormValidationTests
         {
             var registrations = new ServiceCollection();
             registrations.AddLogging();
+            registrations.AddSingleton(new AppUrls
+            {
+                RootUiUrl = "https://krafter.getkrafter.dev",
+                TenantBaseDomain = "getkrafter.dev",
+                ApiBaseUrl = "https://api.getkrafter.dev",
+                ReservedTenantIdentifiers = ["status"]
+            });
             registrations.AddSingleton<NavigationManager, TestNavigationManager>();
             registrations.AddSingleton<IJSRuntime, NoJavaScript>();
             registrations.AddSingleton<DialogService>();

@@ -5,6 +5,7 @@
 
 ## 1. Core Principles
 - Use the request validator in Contracts. Do not add a duplicate UI validator.
+- Resolve the validator with the public `AppUrls` so tenant identifiers use the configured reserved names. Backend handlers enforce the same rules and check uniqueness. Build tenant links from `AppUrls`, not by adding a prefix to the root UI URL.
 - Use `ApiCallService` for all tenant API calls.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Use `CreateOrUpdateTenant` dialog with `TenantInput`.
@@ -41,6 +42,6 @@ Response result = await api.CallAsync(
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
 
 ---
-Last Updated: 2026-09-09
-Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+Last Updated: 2026-09-12
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs, src/AditiKraft.Krafter.Contracts/Contracts/Tenants/CreateOrUpdateTenantRequest.cs, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

@@ -98,7 +98,7 @@ public sealed class GetUsers
 - Using `MapPost("/delete", ...)` instead of `MapDelete($"/{RouteSegment.ById}", ...)`.
 - Route parameter name mismatches (e.g., `{id}` requires parameter `id`).
 - Putting DTOs in Backend instead of `src/AditiKraft.Krafter.Contracts/Contracts/`.
-- Tenant detection uses `Request.Host.Host` and the configured `Urls` base domains. Known UI, API, and server connection hosts use `x-tenant-identifier`, then root. Only one DNS label before a configured public base domain identifies a tenant; IP addresses do not.
+- Tenant detection uses `Request.Host.Host` and `Urls:TenantBaseDomain` (the root UI hostname when unset). Known UI, API, and server connection hosts use `x-tenant-identifier`, then root. Tenant UI hosts use one valid, non-reserved label before the tenant base domain; IP addresses do not identify tenants. Unknown tenants return 404. Split-host browser clients use one shared API address and send the tenant header.
 - For URL settings, CORS, or callback changes, read [the URL configuration guide](../../docs/url-configuration.md). Validate URL settings before registering infrastructure in `Web/HostingExtensions.cs`; the standalone Backend also requires `Urls:ApiBaseUrl` in `Program.cs`.
 - Permission checks use a separate service scope for concurrent Blazor rendering. Copy the current tenant with `ITenantSetterService.SetTenant()` before resolving `IUserService` or `ApplicationDbContext`, as in `Web/Authorization/PermissionAuthorization.cs`.
 
