@@ -1,16 +1,16 @@
 using System;
 using System.Linq;
-using Nuke.Common;
-using Nuke.Common.IO;
-using Nuke.Common.ProjectModel;
-using Nuke.Common.Utilities.Collections;
+using Fallout.Common;
+using Fallout.Common.IO;
+using Fallout.Solutions;
+using Fallout.Common.Utilities.Collections;
 using System.Net.Http;
-using Nuke.Common.CI.GitHubActions;
-using Nuke.Common.Git;
-using Nuke.Common.Tools.Docker;
-using Nuke.Common.Tools.DotNet;
+using Fallout.Common.CI.GitHubActions;
+using Fallout.Common.Git;
+using Fallout.Common.Tools.Docker;
+using Fallout.Common.Tools.DotNet;
 
-internal class Build : NukeBuild
+internal class Build : FalloutBuild
 {
     public static int Main() => Execute<Build>(x => x.PublishTemplate);
 

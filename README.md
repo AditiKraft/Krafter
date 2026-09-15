@@ -97,7 +97,7 @@ Krafter is a **production-ready .NET 10 application template**, not a starter to
 | **Realtime & jobs** | SignalR for live updates, TickerQ for background processing |
 | **API consumption** | Refit-based type-safe HTTP clients with token handling |
 | **Observability** | .NET Aspire, OpenTelemetry, health checks, structured logging |
-| **Delivery** | Docker support, NUKE build automation, GitHub Actions workflows |
+| **Delivery** | Docker support, Fallout build automation, GitHub Actions workflows |
 
 ### Why teams choose it
 
@@ -254,7 +254,7 @@ MyApp/
 │       │   ├── Infrastructure/          # Auth, Refit, SignalR, Http
 │       │   └── Common/                  # Shared components, models
 │       └── MyApp.UI.Web/               # Blazor Server host (or combined host in single mode)
-├── build/                               # NUKE build automation
+├── build/                               # Fallout build automation
 ├── docs/                                # Documentation assets
 ├── .github/                             # GitHub Actions workflows
 └── README.md
@@ -434,7 +434,7 @@ test(scope): add tests
 - [.NET Team](https://github.com/dotnet) - For the amazing .NET platform
 - [Radzen](https://www.radzen.com/) - For the excellent Blazor components
 - [Refit](https://github.com/reactiveui/refit) - For the type-safe REST client
-- [NUKE Build](https://nuke.build/) - For the build automation framework
+- [Fallout Build](https://fallout.build/) - For the build automation framework
 
 <div align="center">
 

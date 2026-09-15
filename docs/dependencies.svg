@@ -105,7 +105,7 @@
   <!-- Build -->
   <rect x="350" y="510" width="280" height="60" rx="8" class="build box"/>
   <text x="490" y="535" class="subtitle" text-anchor="middle">Build (_build)</text>
-  <text x="360" y="555" class="text">NUKE Build | Docker | GitHub Actions</text>
+  <text x="360" y="555" class="text">Fallout Build | Docker | GitHub Actions</text>
   
   <!-- Arrows -->
   <line x1="300" y1="130" x2="350" y2="130" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
