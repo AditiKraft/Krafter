@@ -140,7 +140,7 @@
         },
         "TemplateVersion": {
           "type": "string",
-          "description": "Template version (default: 0.0.12)"
+          "description": "Template version (default: 0.0.13)"
         }
       }
     },

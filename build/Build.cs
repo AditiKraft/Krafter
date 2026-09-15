@@ -43,7 +43,7 @@ internal class Build : FalloutBuild
     [Parameter("Personal Access Token")] private readonly string PAT;
     [Parameter("NuGet API Key for publishing templates")] private readonly string NuGetPAT;
     [Parameter("Deployment Webhook Url")] private readonly string DeploymentWebhookUrl;
-    [Parameter("Template version (default: 0.0.12)")] private readonly string TemplateVersion = "0.0.12";
+    [Parameter("Template version (default: 0.0.13)")] private readonly string TemplateVersion = "0.0.13";
     private GitHubActions GitHubActions => GitHubActions.Instance;
 
     private Target SetBuildInfo => _ => _
