@@ -1,16 +1,16 @@
 using System;
 using System.Linq;
-using Nuke.Common;
-using Nuke.Common.IO;
-using Nuke.Common.ProjectModel;
-using Nuke.Common.Utilities.Collections;
+using Fallout.Common;
+using Fallout.Common.IO;
+using Fallout.Solutions;
+using Fallout.Common.Utilities.Collections;
 using System.Net.Http;
-using Nuke.Common.CI.GitHubActions;
-using Nuke.Common.Git;
-using Nuke.Common.Tools.Docker;
-using Nuke.Common.Tools.DotNet;
+using Fallout.Common.CI.GitHubActions;
+using Fallout.Common.Git;
+using Fallout.Common.Tools.Docker;
+using Fallout.Common.Tools.DotNet;
 
-internal class Build : NukeBuild
+internal class Build : FalloutBuild
 {
     public static int Main() => Execute<Build>(x => x.PublishTemplate);
 
@@ -43,7 +43,7 @@ internal class Build : NukeBuild
     [Parameter("Personal Access Token")] private readonly string PAT;
     [Parameter("NuGet API Key for publishing templates")] private readonly string NuGetPAT;
     [Parameter("Deployment Webhook Url")] private readonly string DeploymentWebhookUrl;
-    [Parameter("Template version (default: 0.0.12)")] private readonly string TemplateVersion = "0.0.12";
+    [Parameter("Template version (default: 0.0.13)")] private readonly string TemplateVersion = "0.0.13";
     private GitHubActions GitHubActions => GitHubActions.Instance;
 
     private Target SetBuildInfo => _ => _

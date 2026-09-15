@@ -30,7 +30,7 @@
             "**/obj/**",
             "**/*.user",
             "**/.DS_Store",
-            ".nuke/temp/**",
+            ".fallout/temp/**",
             ".template.config/**",
             ".template.config-single/**",
             "src-single/**",

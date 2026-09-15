@@ -33,7 +33,7 @@
             "**/obj/**",
             "**/*.user",
             "**/.DS_Store",
-            ".nuke/temp/**",
+            ".fallout/temp/**",
             ".template.config/**",
             ".template.config-single/**",
             "AditiKraft.Krafter.Templates.csproj",

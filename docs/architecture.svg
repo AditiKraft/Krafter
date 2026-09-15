@@ -92,7 +92,7 @@
   
   <rect x="750" y="100" width="180" height="120" rx="5" class="box"/>
   <text x="840" y="120" class="subtitle" text-anchor="middle">CI/CD</text>
-  <text x="760" y="140" class="text">- NUKE Build</text>
+  <text x="760" y="140" class="text">- Fallout Build</text>
   <text x="760" y="155" class="text">- GitHub Actions</text>
   <text x="760" y="170" class="text">- Docker Containers</text>
   <text x="760" y="185" class="text">- Auto Deployment</text>
