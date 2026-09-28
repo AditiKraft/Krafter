@@ -33,7 +33,7 @@
             <FocusOnNavigate RouteData="routeData" Selector="@("h1")"/>
         </Found>
         <NotFound>
-            <img width="100%:height:100%" src="404.svg" alt="404"/>
+            <img width="100%:height:100%" src="@NotFoundIllustration" alt="404"/>
         </NotFound>
     </Router>
 </CascadingValue>
@@ -46,6 +46,9 @@
 
     private DotNetObjectReference<Routes>? objRef;
     private string _themeCssFile = string.Empty;
+
+    private string NotFoundIllustration =>
+        themeManager.CurrentActive == ThemeManager.ThemePreference.Dark ? "404-dark.svg" : "404.svg";
 
     protected override void OnInitialized()
     {
