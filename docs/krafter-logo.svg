@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="1280" height="640">
 	<defs>
 		<style>
-			.k-nav { fill: #FFFFFF; }
-			.k-grn { fill: #764AF1; }
-			.brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #FFFFFF; }
-			.tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #FFFFFF; }
+			.k-nav { fill: #F7F4ED; }
+			.k-grn { fill: #BD3E2D; }
+			.brand { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 700; fill: #F7F4ED; }
+			.tag { font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-weight: 600; fill: #F7F4ED; }
 		</style>
 	</defs>
-	<rect x="0" y="0" width="640" height="320" fill="#0F172A" />
+	<rect x="0" y="0" width="640" height="320" fill="#202724" />
 	<g transform="translate(142.5, 70)">
 		<g id="icon">
 			<rect x="12" y="10" width="48" height="48" rx="6" class="k-nav" />

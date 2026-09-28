@@ -1,24 +1,24 @@
 <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
 	<rect width="100" height="100" fill="transparent" />
-	<rect x="30" y="30" width="5" height="20" fill="#1DB954">
+	<rect x="30" y="30" width="5" height="20" fill="#7C8276">
 		<animate attributeName="height" values="20;30;20" dur="0.8s" repeatCount="indefinite" />
 		<animate attributeName="y" values="30;20;30" dur="0.8s" repeatCount="indefinite" />
 	</rect>
-	<rect x="40" y="30" width="5" height="25" fill="#1DB954">
+	<rect x="40" y="30" width="5" height="25" fill="#7C8276">
 		<animate attributeName="height" values="25;35;25" dur="0.9s" repeatCount="indefinite" />
 		<animate attributeName="y" values="25;15;25" dur="0.9s" repeatCount="indefinite" />
 	</rect>
-	<rect x="50" y="30" width="5" height="15" fill="#1DB954">
+	<rect x="50" y="30" width="5" height="15" fill="#7C8276">
 		<animate attributeName="height" values="15;25;15" dur="1s" repeatCount="indefinite" />
 		<animate attributeName="y" values="35;25;35" dur="1s" repeatCount="indefinite" />
 	</rect>
-	<rect x="60" y="30" width="5" height="30" fill="#1DB954">
+	<rect x="60" y="30" width="5" height="30" fill="#7C8276">
 		<animate attributeName="height" values="30;40;30" dur="1.1s" repeatCount="indefinite" />
 		<animate attributeName="y" values="20;10;20" dur="1.1s" repeatCount="indefinite" />
 	</rect>
-	<rect x="70" y="30" width="5" height="20" fill="#1DB954">
+	<rect x="70" y="30" width="5" height="20" fill="#7C8276">
 		<animate attributeName="height" values="20;30;20" dur="0.8s" repeatCount="indefinite" />
 		<animate attributeName="y" values="30;20;30" dur="0.8s" repeatCount="indefinite" />
 	</rect>
-	<text x="50" y="90" font-family="Arial" font-size="10" fill="#555" text-anchor="middle">Loading...</text>
+	<text x="50" y="90" font-family="Arial" font-size="10" fill="#62695E" text-anchor="middle">Loading...</text>
 </svg>

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 120 120" width="48" height="48">
   <defs>
     <style>
-      .k-nav { fill: #64748B; }
-      .k-grn { fill: #2563EB; }
+      .k-nav { fill: #7C8276; }
+      .k-grn { fill: #BD3E2D; }
 
       /* Modern animation system using CSS keyframes. Each tile uses CSS variables
          to set its initial offset and rotation so we can create a cohesive
@@ -53,7 +53,7 @@
       }
 
       /* Subtle drop shadow for depth */
-      .soft-shadow { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12)); }
+      .soft-shadow { filter: drop-shadow(0 2px 4px rgba(32,39,36,0.12)); }
       @media (prefers-reduced-motion: reduce) {
         #icon, .assemble, .pulse { animation: none; }
       }
@@ -100,7 +100,7 @@
       </g>
 
       <!-- small accent ring to emphasize structure (transparent stroke) -->
-      <circle cx="60" cy="60" r="40" fill="none" stroke="rgba(19,41,75,0.04)" stroke-width="6" />
+      <circle cx="60" cy="60" r="40" fill="none" stroke="rgba(32,39,36,0.04)" stroke-width="6" />
 
     </g>
   </g>
