@@ -1,6 +1,5 @@
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Features.Auth;
-using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
@@ -69,9 +68,7 @@ public static class AuthenticationRegistration
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
         services.Configure<SecuritySettings>(config.GetSection(nameof(SecuritySettings)));
-        services.AddScoped<IUserService, UserService>();
         services.AddScoped<RolePermissionService>();
-        services.AddScoped<ITokenService, TokenService>();
         services.AddHttpClient<ExternalAuth.GoogleAuthClient>(client =>
         {
             client.DefaultRequestHeaders.Accept.Add(
