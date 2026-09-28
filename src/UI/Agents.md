@@ -30,6 +30,7 @@ For URL settings, server API connections, tenant routing, or Google callbacks, r
 - Shared colors and component styles: `AditiKraft.Krafter.UI.Web.Client/wwwroot/app.css`. Use its `--kr-*` semantic tokens and Radzen mappings. Brand Blue is the primary action color; surfaces are solid and neutral.
 - Load `app.css` after `RadzenTheme` in `UI.Web/Components/App.razor`. Dark tokens follow `#radzen-theme-link` because Radzen changes the stylesheet URL, not a class on the document. Keep Auto, Light, and Dark preferences working through `ThemeManager`.
 - Map grid frozen-cell and loading colors explicitly to surface tokens. Frozen headers use the header surface; the loading mask stays translucent so existing rows remain visible during refresh.
+- Keep dark grid borders, filter icons, sorted headers, and filter menus mapped to `--kr-*` tokens in `app.css`. Radzen's dark base scale conflicts with the shared palette. Check both themes, including active filters and frozen columns, after grid color changes.
 - List page: `Features/<Feature>/<Feature>s.razor` (+ `.razor.cs` if needed)
 - Form dialog: `Features/<Feature>/CreateOrUpdate<Feature>.razor` (+ `.razor.cs` if needed)
 - Feature-shared UI pieces: `Features/<Feature>/Common/`
@@ -125,7 +126,7 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-09-12
+Last Updated: 2026-09-28
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/app.css, src/UI/AditiKraft.Krafter.UI.Web/Components/App.razor, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

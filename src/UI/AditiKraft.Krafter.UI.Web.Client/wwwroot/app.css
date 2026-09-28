@@ -309,6 +309,27 @@
     --rz-panel-menu-item-3rd-level-active-background-color: var(--kr-selected);
 }
 
+/* Radzen's dark base scale conflicts with the shared semantic palette. */
+:root:has(#radzen-theme-link[href*="dark"]) {
+    --kr-grid-border: #475569;
+    --rz-grid-cell-border: 1px solid var(--kr-grid-border);
+    --rz-grid-right-cell-border: var(--rz-grid-cell-border);
+    --rz-grid-bottom-cell-border: var(--rz-grid-cell-border);
+    --rz-grid-header-cell-border: var(--rz-grid-cell-border);
+    --rz-grid-header-cell-border-bottom: var(--rz-grid-cell-border);
+    --rz-grid-frozen-cell-border: var(--rz-grid-cell-border);
+    --rz-grid-data-border-shadow: 0 1px 0 0 var(--kr-grid-border), 0 -1px 0 0 var(--kr-grid-border);
+    --rz-grid-header-background-color: var(--kr-hover);
+    --rz-grid-header-sorted-background-color: var(--rz-grid-header-background-color);
+    --rz-grid-filter-color: var(--kr-text-secondary);
+    --rz-grid-sort-icon-color: var(--kr-link);
+    --rz-grid-header-filter-icon-active-color: var(--kr-link);
+    --rz-grid-filter-background-color: var(--kr-elevated);
+    --rz-grid-filter-buttons-background-color: var(--kr-elevated);
+    --rz-grid-clear-filter-button-background-color: var(--kr-hover);
+    --rz-grid-clear-filter-button-color: var(--kr-text);
+}
+
 html, body { font-family: var(--kr-font-sans); background: var(--kr-bg); color: var(--kr-text); }
 html { -webkit-font-smoothing: antialiased; }
 h1 { font-size: 2.5rem; line-height: 3rem; font-weight: 700; }
