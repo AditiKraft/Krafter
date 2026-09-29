@@ -40,7 +40,7 @@
     <RadzenSidebar @ref="@(sidebar0)" @bind-Expanded="@_sidebarExpanded" class="demos-sidebar" style="display: flex; flex-direction: column">
         <AuthorizeView>
             <Authorized>
-                <div style="padding: 1rem">
+                <div style="padding: 0.5rem">
                     <RadzenTextBox id="find" Placeholder="Find items ..." type="search" @oninput="@FilterPanelMenu" style="width: 100%" Class="rz-search-input" aria-label="find"/>
                 </div>
                 <div style="flex: 1; overflow: auto">
@@ -89,26 +89,26 @@
             </Authorized>
         </AuthorizeView>
     </RadzenSidebar>
-    <RadzenSidebar Responsive="false" @bind-Expanded="@_configSidebarExpanded" class="rz-sidebar-second" Style="@($"--rz-sidebar-width: {(IsMobileDevice ? "100vw" : "370px")}; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);")">
-        <RadzenStack class="rz-p-4" Gap="0">
+    <RadzenSidebar Responsive="false" @bind-Expanded="@_configSidebarExpanded" class="rz-sidebar-second" Style="@($"--rz-sidebar-width: {(IsMobileDevice ? "100vw" : "300px")}; grid-area: rz-config-sidebar; background-color: var(--rz-body-background-color); color: var(--rz-text-color);")">
+        <RadzenStack class="rz-p-3" Gap="0">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Demos Configuration</RadzenText>
-                <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => _configSidebarExpanded = false)"/>
+                <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Click="@(() => _configSidebarExpanded = false)" />
             </RadzenStack>
 
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-3">
                 <TopRight ShowProfileCard="true" OnNavigating="@(() => _configSidebarExpanded = false)"></TopRight>
             </RadzenStack>
 
 
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-3">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                     <RadzenLabel Text="Use WCAG compliant colors" Component="WCAG" Title="Use WCAG 2.2 AA compliant color swatches"/>
                     <RadzenButton Icon="info" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" @ref="_wcagColorsInfo" Click="@(args => WcagColorsTooltip(_wcagColorsInfo.Element, new TooltipOptions() { Position = TooltipPosition.Left, Duration = null, Style = "background: var(--rz-base-900); color: var(--rz-base-100)" }))"/>
                 </RadzenStack>
                 <RadzenSwitch Value="@(themeService.Wcag == true)" Name="WCAG" Change="@(themeService.SetWcag)"/>
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-5">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-3">
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                     <RadzenLabel Text="Enable RTL directionality" Component="RTL" Title="Use right to left direction for languages that are written from the right to the left (like Arabic)"/>
                     <RadzenButton Icon="info" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" @ref="_rtlInfo" Click="@(args => RtlTooltip(_rtlInfo.Element, new TooltipOptions() { Position = TooltipPosition.Left, Duration = null, Style = "background: var(--rz-base-900); color: var(--rz-base-100)" }))"/>
@@ -117,11 +117,11 @@
             </RadzenStack>
 
 
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem" class="rz-mt-3">
                 <RadzenText TextStyle="TextStyle.Subtitle1" TagName="TagName.P" class="rz-m-0">Theme Preference</RadzenText>
             </RadzenStack>
 
-            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" Gap="0.5rem" class="rz-mt-2">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" Gap="0.25rem" class="rz-mt-2">
                 <RadzenRadioButtonList @bind-Value="themePreference" TValue="ThemeManager.ThemePreference">
                     <Items>
                         <RadzenRadioButtonListItem Text="Auto (System)" Value="ThemeManager.ThemePreference.Auto"/>

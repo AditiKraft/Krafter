@@ -7,7 +7,7 @@
     {
         <RadzenColumn Size="12" SizeMD="4">
             <RadzenCard Class="kr-auth-intro">
-                <RadzenText TextStyle="TextStyle.H3" TagName="TagName.H2" Class="rz-mb-6">Welcome!</RadzenText>
+                <RadzenText TextStyle="TextStyle.H3" TagName="TagName.H2" Class="rz-mb-3">Welcome!</RadzenText>
                 <RadzenText TextStyle="TextStyle.H6">Join the world's largest community!</RadzenText>
                 <RadzenText TextStyle="TextStyle.Body2">Let's get started with your <strong>30 days</strong> trial.</RadzenText>
             </RadzenCard>
@@ -16,7 +16,7 @@
 
     <RadzenColumn Size="12" SizeMD="8">
         <RadzenCard Class="kr-auth-form">
-            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" TagName="TagName.H2" Class="rz-mb-6">
+            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" TagName="TagName.H2" Class="rz-mb-3">
                 Login
             </RadzenText>
 
@@ -40,13 +40,13 @@
 
             </RadzenStack>
 
-            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1" Class="rz-my-4">
+            <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1" Class="rz-my-2">
                 Or
             </RadzenText>
 
             <RadzenTemplateForm Data="@TokenRequestInput" Submit="@((TokenRequest __) => CreateToken(__))">
                 <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
-                <RadzenStack Gap="3">
+                <RadzenStack Gap="0.5rem">
                     <RadzenRow AlignItems="AlignItems.Center">
                         <RadzenColumn Size="12" SizeMD="2">
                             <RadzenLabel Text="Email" Component="Email"/>
@@ -67,8 +67,8 @@
                     </RadzenRow>
                     <RadzenLink Path="account/forgot-password" Text="Forgot Password?"></RadzenLink>
                 </RadzenStack>
-                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Right" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-                    <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="login" Text="Login"/>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Right" Gap="0.5rem" Class="rz-mt-4 rz-mb-2">
+                    <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Small" Icon="login" Text="Login" />
                 </RadzenStack>
             </RadzenTemplateForm>
         </RadzenCard>

@@ -5,21 +5,28 @@
 
 
 <AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Create, PermissionResource.Tenants))">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="10px" JustifyContent="JustifyContent.End" class="mt-2 mb-4">
-        <RadzenButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Icon="add_circle_outline" Text="Tenant" Click="@Add"/>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
+                 JustifyContent="JustifyContent.End" class="mt-1 mb-2">
+        <RadzenButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Icon="add_circle_outline" Text="Tenant"
+                      Click="@Add" />
     </RadzenStack>
 </AuthorizeView>
 
 
-<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppState.ShowCellDataAsTooltip" @ref="@grid" Density="LocalAppState.Density" AllowColumnResize="LocalAppState.AllowColumnResize" IsLoading="IsLoading" Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response?.Data?.Items" AllowFiltering="true" AllowPaging="true" PageSize="@_requestInput.MaxResultCount" PagerHorizontalAlign="HorizontalAlign.Center">
+<RadzenDataGrid Responsive="true" ShowCellDataAsTooltip="LocalAppState.ShowCellDataAsTooltip" @ref="@grid"
+                Density="LocalAppState.Density" AllowColumnResize="LocalAppState.AllowColumnResize" IsLoading="IsLoading"
+                Count="@(response?.Data?.TotalCount ?? 0)" LoadData="@LoadData" AllowSorting="true" Data="@response?.Data?.Items"
+                AllowFiltering="true" AllowPaging="true" PageSize="@_requestInput.MaxResultCount"
+                PagerHorizontalAlign="HorizontalAlign.Center">
     <Columns>
 
-        <RadzenDataGridColumn Property="Name" Title="Name"/>
+        <RadzenDataGridColumn Property="Name" Title="Name" />
         <RadzenDataGridColumn Property="Identifier" Title="Identifier">
             <Template Context="data">
                 @if (urls.CanUseTenantIdentifier(data.Identifier))
                 {
-                    <RadzenLink Path="@urls.GetTenantUiUri(data.Identifier).AbsoluteUri" Text="@data.Identifier" target="_blank"/>
+                    <RadzenLink Path="@urls.GetTenantUiUri(data.Identifier).AbsoluteUri" Text="@data.Identifier"
+                                target="_blank" />
                 }
                 else
                 {
@@ -28,7 +35,7 @@
             </Template>
         </RadzenDataGridColumn>
 
-        <RadzenDataGridColumn Property="AdminEmail" Title="Admin Email"/>
+        <RadzenDataGridColumn Property="AdminEmail" Title="Admin Email" />
         <RadzenDataGridColumn Property="ValidUpto" Title="Expires (your time)" Filterable="false">
             <Template Context="data">
                 @if (data.ValidUpto == DateTime.MaxValue)
@@ -45,9 +52,10 @@
                 }
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="IsActive" Title="IsActive"/>
+        <RadzenDataGridColumn Property="IsActive" Title="IsActive" />
 
-        <RadzenDataGridColumn Title="Created By" Frozen="true" Sortable="false" Filterable="false" TextAlign="TextAlign.Center">
+        <RadzenDataGridColumn Title="Created By" Frozen="true" Sortable="false" Filterable="false"
+                              TextAlign="TextAlign.Center">
             <Template Context="data">
                 @if (data.CreatedBy is not null)
                 {
@@ -55,15 +63,20 @@
                 }
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Actions" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true" Width="9.28vw" FrozenPosition="FrozenColumnPosition.Right">
+        <RadzenDataGridColumn Title="Actions" Filterable="false" Sortable="false" TextAlign="TextAlign.Right"
+                              Frozen="true" Width="9.28vw" FrozenPosition="FrozenColumnPosition.Right">
             <Template Context="data">
-                <RadzenSplitButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Lighter" Variant="Variant.Flat" AlwaysOpenPopup="true" Click="@(args => ActionClicked(args, data))" Text="Actions" Icon="settings_applications" Style="margin-right: 4px">
+                <RadzenSplitButton ButtonStyle="ButtonStyle.Light" Shade="Shade.Lighter" Variant="Variant.Flat"
+                                   AlwaysOpenPopup="true" Click="@(args => ActionClicked(args, data))" Text="Actions"
+                                   Icon="settings_applications" Style="margin-right: 4px">
                     <ChildContent>
-                        <AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Update, PermissionResource.Tenants))">
-                            <RadzenSplitButtonItem Text="Edit" Value="@PermissionAction.Update" Icon="edit"/>
+                        <AuthorizeView
+                            Policy="@(PermissionDefinition.NameFor(PermissionAction.Update, PermissionResource.Tenants))">
+                            <RadzenSplitButtonItem Text="Edit" Value="@PermissionAction.Update" Icon="edit" />
                         </AuthorizeView>
-                        <AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Delete, PermissionResource.Tenants))">
-                            <RadzenSplitButtonItem Text="Delete" Value="@PermissionAction.Delete" Icon="delete"/>
+                        <AuthorizeView
+                            Policy="@(PermissionDefinition.NameFor(PermissionAction.Delete, PermissionResource.Tenants))">
+                            <RadzenSplitButtonItem Text="Delete" Value="@PermissionAction.Delete" Icon="delete" />
                         </AuthorizeView>
                     </ChildContent>
                 </RadzenSplitButton>

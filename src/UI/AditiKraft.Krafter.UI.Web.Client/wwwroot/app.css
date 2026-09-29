@@ -132,56 +132,56 @@
     --rz-notification-info-color: var(--kr-info-strong);
     --rz-notification-info-background-color: var(--kr-info-soft);
     --rz-notification-info-icon-color: var(--kr-info-strong);
-    --rz-text-display-h1-font-size: 3rem;
-    --rz-text-display-h1-line-height: 3.5rem;
+    --rz-text-display-h1-font-size: 2.5rem;
+    --rz-text-display-h1-line-height: 2.75rem;
     --rz-text-display-h1-font-weight: 700;
     --rz-text-display-h1-letter-spacing: normal;
-    --rz-text-display-h2-font-size: 3rem;
-    --rz-text-display-h2-line-height: 3.5rem;
+    --rz-text-display-h2-font-size: 2.25rem;
+    --rz-text-display-h2-line-height: 2.5rem;
     --rz-text-display-h2-font-weight: 700;
     --rz-text-display-h2-letter-spacing: normal;
-    --rz-text-display-h3-font-size: 3rem;
-    --rz-text-display-h3-line-height: 3.5rem;
+    --rz-text-display-h3-font-size: 2rem;
+    --rz-text-display-h3-line-height: 2.25rem;
     --rz-text-display-h3-font-weight: 700;
     --rz-text-display-h3-letter-spacing: normal;
-    --rz-text-display-h4-font-size: 3rem;
-    --rz-text-display-h4-line-height: 3.5rem;
+    --rz-text-display-h4-font-size: 1.75rem;
+    --rz-text-display-h4-line-height: 2rem;
     --rz-text-display-h4-font-weight: 700;
     --rz-text-display-h4-letter-spacing: normal;
-    --rz-text-h1-font-size: 2.5rem;
-    --rz-text-h1-line-height: 3rem;
+    --rz-text-h1-font-size: 1.875rem;
+    --rz-text-h1-line-height: 2.25rem;
     --rz-text-h1-font-weight: 700;
     --rz-text-h1-letter-spacing: normal;
-    --rz-text-h2-font-size: 2rem;
-    --rz-text-h2-line-height: 2.5rem;
+    --rz-text-h2-font-size: 1.5rem;
+    --rz-text-h2-line-height: 2rem;
     --rz-text-h2-font-weight: 650;
     --rz-text-h2-letter-spacing: normal;
-    --rz-text-h3-font-size: 1.5rem;
-    --rz-text-h3-line-height: 2rem;
+    --rz-text-h3-font-size: 1.25rem;
+    --rz-text-h3-line-height: 1.75rem;
     --rz-text-h3-font-weight: 600;
     --rz-text-h3-letter-spacing: normal;
-    --rz-text-h4-font-size: 1.25rem;
-    --rz-text-h4-line-height: 1.75rem;
+    --rz-text-h4-font-size: 1.125rem;
+    --rz-text-h4-line-height: 1.5rem;
     --rz-text-h4-font-weight: 600;
     --rz-text-h4-letter-spacing: normal;
-    --rz-text-h5-font-size: 1.25rem;
-    --rz-text-h5-line-height: 1.75rem;
+    --rz-text-h5-font-size: 1.125rem;
+    --rz-text-h5-line-height: 1.5rem;
     --rz-text-h5-font-weight: 600;
     --rz-text-h5-letter-spacing: normal;
-    --rz-text-h6-font-size: 1.125rem;
-    --rz-text-h6-line-height: 1.75rem;
+    --rz-text-h6-font-size: 1rem;
+    --rz-text-h6-line-height: 1.5rem;
     --rz-text-h6-font-weight: 600;
     --rz-text-h6-letter-spacing: normal;
-    --rz-text-body1-font-size: 1rem;
-    --rz-text-body1-line-height: 1.5rem;
+    --rz-text-body1-font-size: 0.875rem;
+    --rz-text-body1-line-height: 1.25rem;
     --rz-text-body1-font-weight: 400;
     --rz-text-body1-letter-spacing: normal;
     --rz-text-body2-font-size: 0.875rem;
     --rz-text-body2-line-height: 1.25rem;
     --rz-text-body2-font-weight: 400;
     --rz-text-body2-letter-spacing: normal;
-    --rz-text-subtitle1-font-size: 1.125rem;
-    --rz-text-subtitle1-line-height: 1.75rem;
+    --rz-text-subtitle1-font-size: 1rem;
+    --rz-text-subtitle1-line-height: 1.5rem;
     --rz-text-subtitle1-font-weight: 400;
     --rz-text-subtitle1-letter-spacing: normal;
     --rz-text-subtitle2-font-size: 0.875rem;
@@ -226,8 +226,8 @@
     --rz-base-darker: var(--kr-text);
     --rz-body-background-color: var(--kr-bg);
     --rz-text-font-family: var(--kr-font-sans);
-    --rz-body-font-size: 1rem;
-    --rz-body-line-height: 1.5;
+    --rz-body-font-size: 0.875rem;
+    --rz-body-line-height: 1.429;
     --rz-text-title-color: var(--kr-text);
     --rz-text-color: var(--kr-text);
     --rz-text-secondary-color: var(--kr-text-secondary);
@@ -235,14 +235,19 @@
     --rz-text-disabled-color: var(--kr-disabled);
     --rz-link-color: var(--kr-link);
     --rz-link-hover-color: var(--kr-link-hover);
-    --rz-border-radius: 8px;
+    --rz-border-radius: 4px;
     --rz-border-normal: 1px solid var(--kr-border);
     --rz-border-disabled: 1px solid var(--kr-border);
     --rz-outline-focus: 2px solid var(--kr-focus);
-    --rz-outline-offset: 2px;
+    --rz-outline-offset: 1px;
     --rz-transition: 150ms cubic-bezier(0.2, 0, 0, 1);
     --rz-transition-all: color var(--rz-transition), background-color var(--rz-transition), border-color var(--rz-transition);
-    --rz-button-border-radius: 8px;
+    --rz-icon-size: 1.125rem;
+    --rz-layout-body-padding: 0.75rem;
+    --rz-layout-body-margin: 0;
+    --rz-header-min-height: 2.75rem;
+    --rz-sidebar-width: 232px;
+    --rz-button-border-radius: 4px;
     --rz-button-shadow: none;
     --rz-button-hover-shadow: none;
     --rz-button-active-shadow: none;
@@ -251,19 +256,20 @@
     --rz-button-active-gradient: none;
     --rz-button-base-background-color: var(--kr-subtle);
     --rz-button-base-color: var(--kr-text);
-    --rz-input-height: 40px;
+    --rz-input-height: 2rem;
     --rz-input-border: 1px solid var(--kr-border-strong);
     --rz-input-hover-border: 1px solid var(--kr-muted);
     --rz-input-focus-border: 1px solid var(--kr-focus);
     --rz-input-focus-shadow: none;
     --rz-input-focus-outline: 2px solid var(--kr-focus);
-    --rz-input-focus-outline-offset: 2px;
+    --rz-input-focus-outline-offset: 1px;
     --rz-input-disabled-color: var(--kr-disabled);
     --rz-input-disabled-background-color: var(--kr-subtle);
     --rz-input-disabled-opacity: 1;
     --rz-card-background-color: var(--kr-surface);
     --rz-card-border: 1px solid var(--kr-border);
-    --rz-card-border-radius: 12px;
+    --rz-card-border-radius: 8px;
+    --rz-card-padding: 1rem;
     --rz-card-shadow: var(--kr-shadow-sm);
     --rz-header-background-color: var(--kr-surface);
     --rz-header-color: var(--kr-text);
@@ -278,8 +284,13 @@
     --rz-dialog-title-background-color: var(--kr-elevated);
     --rz-dialog-title-border: 1px solid var(--kr-border);
     --rz-dialog-transition: 200ms cubic-bezier(0.2, 0, 0, 1);
-    --rz-dialog-border-radius: 16px;
+    --rz-dialog-border-radius: 12px;
     --rz-dialog-shadow: var(--kr-shadow-raised);
+    --rz-dialog-content-padding: 1rem;
+    --rz-dialog-title-font-size: 1.125rem;
+    --rz-dialog-title-line-height: 1.5rem;
+    --rz-dialog-title-padding-block: 0.875rem 0.375rem;
+    --rz-dialog-title-padding-inline: 1rem;
     --rz-overlay-background-color: var(--kr-elevated);
     --rz-overlay-shadow: var(--kr-shadow-raised);
     --rz-grid-header-background-color: var(--kr-subtle);
@@ -290,10 +301,34 @@
     --rz-grid-loading-indicator-background-opacity: 0.15;
     --rz-grid-stripe-background-color: var(--kr-surface);
     --rz-grid-stripe-odd-background-color: var(--kr-surface);
-    --rz-grid-cell-font-size: 0.875rem;
+    --rz-grid-cell-font-size: 0.8125rem;
     --rz-grid-cell-line-height: 1.25rem;
-    --rz-grid-cell-padding: 0.75rem 1rem;
-    --rz-grid-header-font-size: 0.875rem;
+    --rz-grid-cell-padding: 0.25rem 0.5rem;
+    --rz-grid-header-font-size: 0.75rem;
+    --rz-grid-header-cell-padding: 0.25rem 0;
+    --rz-grid-header-padding: 0.25rem 0.625rem;
+    --rz-pager-padding: 0.25rem;
+    --rz-pager-gap: 0.25rem;
+    --rz-pager-summary-padding: 0.5rem;
+    --rz-footer-padding: 0.5rem 0.75rem;
+    --rz-sidebar-toggle-padding: 0.5rem;
+    --rz-sidebar-toggle-margin-inline-end: 0.5rem;
+    --rz-form-field-margin-block: 0.5rem 0;
+    --rz-input-padding-block: 0.3125rem;
+    --rz-input-padding-inline: 0.5rem;
+    --rz-dropdown-item-padding: 0.375rem 0.5rem;
+    --rz-notification-padding: 0.75rem 1rem;
+    --rz-alert-padding: 0.75rem;
+    --rz-grid-filter-padding: 0.375rem 0.5rem;
+    --rz-grid-filter-gap: 0.5rem;
+    --rz-grid-filter-buttons-padding: 0 0.75rem 0.75rem;
+    --rz-pager-numeric-button-padding: 0.3125rem;
+    --rz-pager-numeric-button-selected-padding: 0.3125rem;
+    --rz-pager-numeric-button-min-width: 2rem;
+    --rz-panel-menu-item-padding-block: 0.5rem;
+    --rz-panel-menu-item-padding-inline: 0.75rem;
+    --rz-panel-menu-item-2nd-level-padding-block: 0.375rem;
+    --rz-panel-menu-item-2nd-level-padding-inline: 0.75rem;
     --rz-panel-menu-item-color: var(--kr-text-secondary);
     --rz-panel-menu-item-background-color: var(--kr-surface);
     --rz-panel-menu-item-border: 1px solid transparent;
@@ -337,6 +372,8 @@
 html,
 body {
     font-family: var(--kr-font-sans);
+    font-size: 0.875rem;
+    line-height: 1.429;
     background: var(--kr-bg);
     color: var(--kr-text);
 }
@@ -346,26 +383,26 @@ html {
 }
 
 h1 {
-    font-size: 2.5rem;
-    line-height: 3rem;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
     font-weight: 700;
 }
 
 h2 {
-    font-size: 2rem;
-    line-height: 2.5rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
     font-weight: 650;
 }
 
 h3 {
-    font-size: 1.5rem;
-    line-height: 2rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
     font-weight: 600;
 }
 
 h4 {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
     font-weight: 600;
 }
 
@@ -397,7 +434,7 @@ article a:visited,
 
 :focus-visible {
     outline: 2px solid var(--kr-focus);
-    outline-offset: 2px;
+    outline-offset: 1px;
 }
 
 h1:focus {
@@ -406,13 +443,15 @@ h1:focus {
 
 .rz-button.rz-button-md,
 .btn {
-    min-height: 40px;
-    border-radius: 8px;
+    min-height: 2rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 4px;
 }
 
 .rz-button.rz-button-lg,
 .btn-lg {
-    min-height: 44px;
+    min-height: 2.5rem;
+    border-radius: 4px;
 }
 
 .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text),
@@ -449,7 +488,7 @@ h1:focus {
     background: var(--kr-surface);
     color: var(--kr-text);
     border: 1px solid var(--kr-border-strong);
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
 .form-control:focus {
@@ -457,7 +496,7 @@ h1:focus {
     color: var(--kr-text);
     border-color: var(--kr-primary);
     outline: 2px solid var(--kr-focus);
-    outline-offset: 2px;
+    outline-offset: 1px;
     box-shadow: none;
 }
 
@@ -576,11 +615,11 @@ h1:focus {
 /* Shared login and password panels. */
 .kr-auth-panel {
     width: 100%;
-    max-width: 960px;
-    margin: 48px auto;
+    max-width: 880px;
+    margin: 24px auto;
     overflow: hidden;
     border: 1px solid var(--kr-border);
-    border-radius: 16px;
+    border-radius: 12px;
     background: var(--kr-surface);
     box-shadow: var(--kr-shadow-sm);
 }
@@ -589,7 +628,7 @@ h1:focus {
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    padding: 32px;
+    padding: 20px;
     height: 100%;
 }
 
@@ -611,15 +650,15 @@ h1:focus {
 }
 
 .content {
-    padding-top: 16px;
+    padding-top: 8px;
 }
 
 .blazor-error-boundary {
     background: var(--kr-error-soft);
     color: var(--kr-error-strong);
     border-inline-start: 4px solid var(--kr-error);
-    padding: 16px;
-    border-radius: 8px;
+    padding: 12px;
+    border-radius: 6px;
 }
 
 .blazor-error-boundary::after {

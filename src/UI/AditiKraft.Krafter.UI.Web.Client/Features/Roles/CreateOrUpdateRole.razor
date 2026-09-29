@@ -1,6 +1,6 @@
 <RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest input) => SubmitAsync(input))">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
-    <RadzenStack Gap="1rem" Orientation="Orientation.Vertical">
+    <RadzenStack Gap="0.5rem" Orientation="Orientation.Vertical">
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="4">
@@ -51,8 +51,8 @@
             </RadzenRow>
         }
     </RadzenStack>
-    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-        <RadzenButton ButtonType="ButtonType.Submit" Disabled="@(!CanSave)" IsBusy="isBusy" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
-        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="0.5rem" Class="rz-mt-4 rz-mb-2">
+        <RadzenButton ButtonType="ButtonType.Submit" Disabled="@(!CanSave)" IsBusy="isBusy" Size="ButtonSize.Small" Icon="save" Text="Save" />
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" Icon="cancel" Text="Cancel" Click="@Cancel" />
     </RadzenStack>
 </RadzenTemplateForm>
