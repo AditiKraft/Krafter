@@ -1,41 +1,41 @@
 <RadzenTemplateForm TItem="CreateOrUpdateTenantRequest" Data="@CreateRequest" Submit="@SubmitAsync">
 
-    <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
+    <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())" />
     <RadzenStack>
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Name" Component="Name"/>
+                <RadzenLabel Text="Name" Component="Name" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Name" Name="Name"/>
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Name" Name="Name" />
             </RadzenColumn>
-            <ValidationMessage For="@(() => CreateRequest.Name)"/>
+            <ValidationMessage For="@(() => CreateRequest.Name)" />
         </RadzenRow>
 
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Identifier" Component="Identifier"/>
+                <RadzenLabel Text="Identifier" Component="Identifier" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Identifier" Name="Identifier"/>
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.Identifier" Name="Identifier" />
             </RadzenColumn>
-            <ValidationMessage For="@(() => CreateRequest.Identifier)"/>
+            <ValidationMessage For="@(() => CreateRequest.Identifier)" />
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Admin Email" Component="AdminEmail"/>
+                <RadzenLabel Text="Admin Email" Component="AdminEmail" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.AdminEmail" Name="AdminEmail"/>
+                <RadzenTextBox Style="width: 100%" @bind-Value="@CreateRequest.AdminEmail" Name="AdminEmail" />
             </RadzenColumn>
-            <ValidationMessage For="@(() => CreateRequest.AdminEmail)"/>
+            <ValidationMessage For="@(() => CreateRequest.AdminEmail)" />
         </RadzenRow>
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Expires (your time)" Component="ValidUpto"/>
+                <RadzenLabel Text="Expires (your time)" Component="ValidUpto" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
                 @if (IsRoot)
@@ -48,25 +48,28 @@
                                       DateFormat="dd/MM/yyyy HH:mm" Value="CreateRequest.ValidUpto" ValueChanged="@ChangeLocalExpiry" />
                 }
             </RadzenColumn>
-            <ValidationMessage For="@(() => CreateRequest.ValidUpto)"/>
+            <ValidationMessage For="@(() => CreateRequest.ValidUpto)" />
         </RadzenRow>
 
         <RadzenRow AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="2">
-                <RadzenLabel Text="Is Active" Component="IsActive"/>
+                <RadzenLabel Text="Is Active" Component="IsActive" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
-                <RadzenCheckBox @bind-Value="@CreateRequest.IsActive" Name="IsActive"/>
+                <RadzenCheckBox @bind-Value="@CreateRequest.IsActive" Name="IsActive" />
             </RadzenColumn>
-            <ValidationMessage For="@(() => CreateRequest.IsActive)"/>
+            <ValidationMessage For="@(() => CreateRequest.IsActive)" />
         </RadzenRow>
     </RadzenStack>
     @if (dateError is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false">@dateError</RadzenAlert>
     }
-    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Disabled="@(dateError is not null)" Size="ButtonSize.Medium" Icon="save" Text="Save"/>
-        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Icon="cancel" Text="Cancel" Click="@Cancel"/>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="0.5rem"
+                 Class="rz-mt-4 rz-mb-2">
+        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Disabled="@(dateError is not null)"
+                      Size="ButtonSize.Small" Icon="save" Text="Save" />
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" Icon="cancel"
+                      Text="Cancel" Click="@Cancel" />
     </RadzenStack>
 </RadzenTemplateForm>
