@@ -29,6 +29,12 @@ public sealed class RefreshToken
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
+        /// <summary>
+        /// Window during which a just-rotated (previous) refresh token is still accepted, to absorb
+        /// concurrent refreshes that raced against the rotation.
+        /// </summary>
+        private const int RefreshGraceSeconds = 30;
+
         public async Task<Response<TokenResponse>> RefreshTokenAsync(
             RefreshTokenRequest request,
             string ipAddress,
@@ -53,17 +59,43 @@ public sealed class RefreshToken
                 return Response<TokenResponse>.Unauthorized("Authentication failed.");
             }
 
-            UserRefreshToken? refreshToken = await applicationDbContext.UserRefreshTokens
-                .FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
-
-            if (refreshToken is null ||
-                refreshToken.RefreshToken != request.RefreshToken ||
-                refreshToken.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            // Serialise rotation per user so concurrent refreshes are handled one at a time; the
+            // later caller then re-reads the row and is served from the grace window below rather
+            // than racing to rotate and clobbering the winner's token.
+            return await RefreshTokenLock.RunAsync(user.Id, async () =>
             {
-                return Response<TokenResponse>.Unauthorized("Invalid or expired refresh token.");
-            }
+                UserRefreshToken? refreshToken = await applicationDbContext.UserRefreshTokens
+                    .FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
 
-            return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress));
+                if (refreshToken is null || refreshToken.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                {
+                    return Response<TokenResponse>.Unauthorized("Invalid or expired refresh token.");
+                }
+
+                // Normal case: the caller presents the current refresh token — rotate it.
+                if (refreshToken.RefreshToken == request.RefreshToken)
+                {
+                    return Response<TokenResponse>.Success(
+                        await tokenService.GenerateTokensAndUpdateUser(user, ipAddress));
+                }
+
+                // Grace case: a concurrent refresh already rotated this token a moment ago. The
+                // caller still holds the previous value, so re-issue an access token against the
+                // current refresh token instead of forcing a logout.
+                bool presentsRecentlyRotated =
+                    !string.IsNullOrEmpty(refreshToken.PreviousRefreshToken) &&
+                    refreshToken.PreviousRefreshToken == request.RefreshToken &&
+                    refreshToken.RefreshTokenRotatedAt is { } rotatedAt &&
+                    rotatedAt.AddSeconds(RefreshGraceSeconds) > DateTime.UtcNow;
+
+                if (presentsRecentlyRotated)
+                {
+                    return Response<TokenResponse>.Success(
+                        await tokenService.GenerateAccessTokenWithoutRotation(user, ipAddress, refreshToken));
+                }
+
+                return Response<TokenResponse>.Unauthorized("Invalid or expired refresh token.");
+            }, cancellationToken);
         }
 
         private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
