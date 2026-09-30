@@ -24,7 +24,7 @@
   <ItemGroup Condition="Exists('..\..\..\src-single')">
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Infrastructure\**\*.cs" Link="Infrastructure\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\GlobalUsings.cs" Link="GlobalUsings.cs" />
-    <Content Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.razor" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Content Include="../../../src/UI/AditiKraft.Krafter.UI.Web/Components/**/*.razor" Link="Components/%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\..\src\UI\AditiKraft.Krafter.UI.Web\Components\**\*.cs" Link="Components\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
