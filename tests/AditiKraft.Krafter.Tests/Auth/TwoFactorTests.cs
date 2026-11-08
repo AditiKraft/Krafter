@@ -7,6 +7,7 @@ using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using Microsoft.AspNetCore.DataProtection;
@@ -25,7 +26,8 @@ public sealed class TwoFactorTests
         using var harness = new MfaHarness(enrollmentAllowed: false);
         using MfaScope scope = harness.Scope();
         var user = await scope.AddUserAsync();
-        var response = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = MfaHarness.Password }, new());
+        var response = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = MfaHarness.Password },
+            await harness.ManagementPrincipalAsync(scope, user.Id));
         Assert.Equal(503, response.StatusCode);
         Assert.Empty(await scope.Db.TwoFactorChallenges.ToListAsync());
     }
@@ -66,10 +68,8 @@ public sealed class TwoFactorTests
         var user = await scope.AddUserAsync();
         Assert.True((await scope.Users.RemovePasswordAsync(user)).Succeeded);
         Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), new())).IsError);
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim("amr", "google"), new Claim("auth_time", harness.Clock.GetUtcNow().ToUnixTimeSeconds().ToString())
-        }, "test"));
+        var login = await scope.Mfa.ExternalLoginAsync(user.Id, "test");
+        ClaimsPrincipal principal = MfaHarness.Principal(login.Data!.Tokens!);
         Assert.False((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), principal)).IsError);
         harness.Clock.Advance(TimeSpan.FromMinutes(6));
         Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), principal)).IsError);
@@ -83,14 +83,15 @@ public sealed class TwoFactorTests
         ApplicationUser user = await scope.AddUserAsync();
         Response<LoginResponse> initial = await scope.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test");
         Assert.NotNull(initial.Data!.Tokens);
-        var setup = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = MfaHarness.Password }, new());
+        ClaimsPrincipal principal = MfaHarness.Principal(initial.Data.Tokens!);
+        var setup = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = MfaHarness.Password }, principal);
         Assert.False(setup.IsError);
         Assert.Contains("<svg", setup.Data!.QrCodeSvg);
         TwoFactorChallenge pending = await scope.Db.TwoFactorChallenges.SingleAsync();
         Assert.DoesNotContain(setup.Data.SharedKey, pending.ProtectedKey!);
         Assert.NotEqual(setup.Data.EnrollmentId, pending.Id);
         var confirmation = await scope.Mfa.ConfirmEnrollmentAsync(user.Id, new()
-        { ChallengeId = setup.Data.EnrollmentId, Code = harness.Code(setup.Data.SharedKey) });
+        { ChallengeId = setup.Data.EnrollmentId, Code = harness.Code(setup.Data.SharedKey) }, principal);
         Assert.False(confirmation.IsError);
         Assert.Equal(10, confirmation.Data!.Codes.Count);
         Assert.All(await scope.Db.TwoFactorRecoveryCodes.ToListAsync(), x =>
@@ -131,7 +132,8 @@ public sealed class TwoFactorTests
         var completed = await scope.Mfa.CompleteLoginAsync(new() { ChallengeId = login.Data!.Challenge!.Id, Code = codes[0], UseRecoveryCode = true }, "test");
         Assert.False(completed.IsError);
         Assert.Equal(9, (await scope.Mfa.StatusAsync(user.Id)).Data!.RecoveryCodesRemaining);
-        var regenerate = await scope.Mfa.RegenerateAsync(user.Id, new() { Code = codes[1], UseRecoveryCode = true }, new());
+        var regenerate = await scope.Mfa.RegenerateAsync(user.Id, new() { Code = codes[1], UseRecoveryCode = true },
+            MfaHarness.Principal(completed.Data!));
         Assert.False(regenerate.IsError);
         Assert.Equal(10, regenerate.Data!.Codes.Count);
         Assert.False(await scope.Sessions.ValidateAsync(MfaHarness.Principal(completed.Data!)));
@@ -174,8 +176,9 @@ public sealed class TwoFactorTests
         ApplicationUser user = await scope.AddUserAsync();
         (_, IReadOnlyList<string> codes) = await harness.EnrollAsync(scope, user);
         Assert.True((await scope.Mfa.ExternalLoginAsync(user.Id, "test")).Data!.RequiresTwoFactor);
-        Assert.True((await scope.Mfa.DisableAsync(user.Id, new() { Password = MfaHarness.Password }, new())).IsError);
-        Assert.False((await scope.Mfa.DisableAsync(user.Id, new() { Code = codes[0], UseRecoveryCode = true }, new())).IsError);
+        ClaimsPrincipal principal = await harness.ManagementPrincipalAsync(scope, user.Id);
+        Assert.True((await scope.Mfa.DisableAsync(user.Id, new() { Password = MfaHarness.Password }, principal)).IsError);
+        Assert.False((await scope.Mfa.DisableAsync(user.Id, new() { Code = codes[0], UseRecoveryCode = true }, principal)).IsError);
         Assert.False((await scope.Mfa.StatusAsync(user.Id)).Data!.IsEnabled);
         Assert.NotNull((await scope.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test")).Data!.Tokens);
     }
@@ -221,11 +224,27 @@ internal sealed class MfaHarness : IDisposable
     public IServiceProvider Services => provider;
     public MfaScope Scope(string tenantId = "test") => new(provider.CreateScope(), tenantId);
     public string Code(string secret) => new Totp(Base32Encoding.ToBytes(secret)).ComputeTotp(Clock.GetUtcNow().UtcDateTime);
+    public async Task<ClaimsPrincipal> ManagementPrincipalAsync(MfaScope scope, string userId)
+    {
+        // Model middleware's verified claims without creating or rotating a refresh credential.
+        ApplicationUser user = await scope.Db.Users.AsNoTracking().SingleAsync(x => x.Id == userId);
+        return new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(AppClaimTypes.TenantId, user.TenantId),
+            new Claim(AppClaimTypes.AuthenticationVersion, user.AuthenticationVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new Claim(AppClaimTypes.AuthenticationTime, Clock.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new Claim(AppClaimTypes.AuthenticationMethod, "pwd"),
+            new Claim(AppClaimTypes.Mfa, user.TwoFactorEnabled ? "true" : "false")
+        }, "test"));
+    }
     public async Task<(string Secret, IReadOnlyList<string> Codes)> EnrollAsync(MfaScope scope, ApplicationUser user)
     {
-        var setup = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = Password }, new());
+        ClaimsPrincipal principal = await ManagementPrincipalAsync(scope, user.Id);
+        var setup = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = Password }, principal);
         Assert.False(setup.IsError);
-        var confirmed = await scope.Mfa.ConfirmEnrollmentAsync(user.Id, new() { ChallengeId = setup.Data!.EnrollmentId, Code = Code(setup.Data.SharedKey) });
+        var confirmed = await scope.Mfa.ConfirmEnrollmentAsync(user.Id,
+            new() { ChallengeId = setup.Data!.EnrollmentId, Code = Code(setup.Data.SharedKey) }, principal);
         Assert.False(confirmed.IsError);
         return (setup.Data.SharedKey, confirmed.Data!.Codes);
     }

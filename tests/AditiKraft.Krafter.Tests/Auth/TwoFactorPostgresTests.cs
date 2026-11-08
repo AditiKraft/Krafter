@@ -62,8 +62,9 @@ public sealed class TwoFactorPostgresTests
         var start = await scope.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test");
         using MfaScope first = harness.Scope(tenant);
         using MfaScope second = harness.Scope(tenant);
+        var principal = await harness.ManagementPrincipalAsync(scope, user.Id);
         var login = first.Mfa.CompleteLoginAsync(new() { ChallengeId = start.Data!.Challenge!.Id, Code = codes[0], UseRecoveryCode = true }, "first");
-        var regenerate = second.Mfa.RegenerateAsync(user.Id, new() { Code = codes[0], UseRecoveryCode = true }, new());
+        var regenerate = second.Mfa.RegenerateAsync(user.Id, new() { Code = codes[0], UseRecoveryCode = true }, principal);
         await Task.WhenAll(login, regenerate);
         Assert.NotEqual(login.Result.IsError, regenerate.Result.IsError);
     }

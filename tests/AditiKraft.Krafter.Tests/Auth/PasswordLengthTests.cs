@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Users;
@@ -57,7 +56,7 @@ public sealed class PasswordLengthTests
         var login = await scope.Mfa.PasswordLoginAsync(new() { Email = user.Email!, Password = password }, "test");
         Assert.False(login.IsError);
         Assert.NotNull(login.Data!.Tokens);
-        var setup = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = password }, new ClaimsPrincipal());
+        var setup = await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Password = password }, MfaHarness.Principal(login.Data.Tokens!));
         Assert.False(setup.IsError);
     }
 

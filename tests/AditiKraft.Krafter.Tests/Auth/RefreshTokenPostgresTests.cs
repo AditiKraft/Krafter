@@ -41,7 +41,7 @@ public sealed class RefreshTokenPostgresTests
             // refresh value is tracked, but the credential update has not reached PostgreSQL.
             await barrier.Paused.Task.WaitAsync(deadline.Token);
             Task<Response<RecoveryCodesResponse>> change = changing.Mfa.RegenerateAsync(user.Id,
-                new() { Code = codes[1], UseRecoveryCode = true }, new(), deadline.Token);
+                new() { Code = codes[1], UseRecoveryCode = true }, MfaHarness.Principal(original), deadline.Token);
             TokenResponse? fresh = null;
             if (await WaitForAccountLockOrCompletionAsync(change, connectionString, deadline.Token))
             {
@@ -133,7 +133,7 @@ public sealed class RefreshTokenPostgresTests
             await barrier.Paused.Task.WaitAsync(deadline.Token);
             using MfaScope changed = harness.Scope(tenantId);
             var replacement = await changed.Mfa.RegenerateAsync(user.Id,
-                new() { Code = codes[1], UseRecoveryCode = true }, new(), deadline.Token);
+                new() { Code = codes[1], UseRecoveryCode = true }, MfaHarness.Principal(original), deadline.Token);
             Assert.False(replacement.IsError);
             TokenResponse fresh = await LoginAsync(changed, replacement.Data!.Codes[0], deadline.Token);
             barrier.Resume.TrySetResult();

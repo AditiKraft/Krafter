@@ -20,7 +20,8 @@ namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 public sealed class TwoFactorService(
     ApplicationDbContext db, UserManager<ApplicationUser> users, ITokenService tokens,
     ITenantGetterService tenant, IDataProtectionProvider protection, TimeProvider clock,
-    IOptions<SecuritySettings> security, IOptions<TwoFactorProtectionOptions> protectionOptions, ILogger<TwoFactorService> logger)
+    IOptions<SecuritySettings> security, IOptions<TwoFactorProtectionOptions> protectionOptions, ILogger<TwoFactorService> logger,
+    SessionValidator sessions)
 {
     private const int MaxAttempts = 5;
     private DateTimeOffset Now => clock.GetUtcNow();
@@ -196,7 +197,8 @@ public sealed class TwoFactorService(
         cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await users.FindByIdAsync(userId);
         cancellationToken.ThrowIfCancellationRequested();
-        if (user is null || !await EligibleAsync(user, cancellationToken) || !await ManagementProofAsync(user, request, principal, cancellationToken))
+        if (user is null || !await ValidateManagementSessionAsync(user, principal, cancellationToken) ||
+            !await ManagementProofAsync(user, request, principal, cancellationToken))
         {
             return Response<TwoFactorSetupResponse>.Unauthorized("Verify your password or enrolled factor. Google-only accounts must sign in again within five minutes.");
         }
@@ -218,13 +220,14 @@ public sealed class TwoFactorService(
         return Response<TwoFactorSetupResponse>.Success(new(id, secret, svg.GetGraphic(4), challenge.ExpiresAt));
     }, cancellationToken);
 
-    public Task<Response<RecoveryCodesResponse>> ConfirmEnrollmentAsync(string userId, TwoFactorRequest request, CancellationToken cancellationToken = default) => LockedAsync(userId, async () =>
+    public Task<Response<RecoveryCodesResponse>> ConfirmEnrollmentAsync(string userId, TwoFactorRequest request,
+        ClaimsPrincipal principal, CancellationToken cancellationToken = default) => LockedAsync(userId, async () =>
     {
         cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await users.FindByIdAsync(userId);
         cancellationToken.ThrowIfCancellationRequested();
         TwoFactorChallenge? challenge = await ValidChallengeAsync(Hash(request.ChallengeId), user, "enroll", cancellationToken);
-        if (user is null || challenge?.ProtectedKey is null || !await EligibleAsync(user, cancellationToken))
+        if (user is null || challenge?.ProtectedKey is null || !await ValidateManagementSessionAsync(user, principal, cancellationToken))
         {
             return Response<RecoveryCodesResponse>.Unauthorized("Setup expired. Begin setup again.");
         }
@@ -262,7 +265,8 @@ public sealed class TwoFactorService(
         cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await users.FindByIdAsync(userId);
         cancellationToken.ThrowIfCancellationRequested();
-        if (user is null || !user.TwoFactorEnabled || !await EligibleAsync(user, cancellationToken) || !await ManagementProofAsync(user, request, principal, cancellationToken))
+        if (user is null || !user.TwoFactorEnabled || !await ValidateManagementSessionAsync(user, principal, cancellationToken) ||
+            !await ManagementProofAsync(user, request, principal, cancellationToken))
         {
             return Response.Unauthorized("A valid authenticator or recovery code is required.");
         }
@@ -290,7 +294,8 @@ public sealed class TwoFactorService(
         cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await users.FindByIdAsync(userId);
         cancellationToken.ThrowIfCancellationRequested();
-        if (user is null || !user.TwoFactorEnabled || !await EligibleAsync(user, cancellationToken) || !await ManagementProofAsync(user, request, principal, cancellationToken))
+        if (user is null || !user.TwoFactorEnabled || !await ValidateManagementSessionAsync(user, principal, cancellationToken) ||
+            !await ManagementProofAsync(user, request, principal, cancellationToken))
         {
             return Response<RecoveryCodesResponse>.Unauthorized("A valid authenticator or recovery code is required.");
         }
@@ -300,6 +305,15 @@ public sealed class TwoFactorService(
         await db.SaveChangesAsync(cancellationToken);
         return Response<RecoveryCodesResponse>.Success(new(codes));
     }, cancellationToken);
+
+    private async Task<bool> ValidateManagementSessionAsync(ApplicationUser user, ClaimsPrincipal principal, CancellationToken cancellationToken)
+    {
+        // Middleware may have authenticated this request before another transition revoked it.
+        // Recheck its original claims against the state reloaded under the account lock.
+        return principal.Identity?.IsAuthenticated == true &&
+            principal.FindFirstValue(ClaimTypes.NameIdentifier) == user.Id &&
+            await sessions.ValidateAsync(principal, cancellationToken);
+    }
 
     private async Task<bool> ManagementProofAsync(ApplicationUser user, TwoFactorManagementRequest request, ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
