@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj" />
+    <ProjectReference Include="../../src/AditiKraft.Krafter.Backend.Migrator/AditiKraft.Krafter.Backend.Migrator.csproj" />
     <ProjectReference Include="../../src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj" />
   </ItemGroup>
 

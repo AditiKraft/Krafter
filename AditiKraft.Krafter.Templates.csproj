@@ -28,6 +28,9 @@
     <NoDefaultExcludes>true</NoDefaultExcludes>
     
     <LocalizeTemplates>false</LocalizeTemplates>
+    <!-- Exclude deployment secrets from the package itself, not only template output.
+         Public certificate examples should use .cer or .crt, not private-key containers. -->
+    <TemplatePrivateFileExcludes>**/*.pfx;**/*.p12;**/*.pem;**/*.key;**/key-*.xml;**/appsettings.Local*.json;**/appsettings.*.Local.json;**/.env;**/.env.*;**/secrets.json</TemplatePrivateFileExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="**\*" Exclude="**\bin\**;**\obj\**;**\.git\**;**\.vs\**;**\.idea\**;**\*.user;**\.DS_Store;**\.fallout\temp\**;AditiKraft.Krafter.Templates.csproj" />
+    <Content Include="**\*" Exclude="**\bin\**;**\obj\**;**\.git\**;**\.vs\**;**\.idea\**;**\*.user;**\.DS_Store;**\.fallout\temp\**;AditiKraft.Krafter.Templates.csproj;$(TemplatePrivateFileExcludes)" />
     <Compile Remove="**\*" />
   </ItemGroup>
 

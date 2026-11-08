@@ -33,6 +33,16 @@
             "**/obj/**",
             "**/*.user",
             "**/.DS_Store",
+            "**/*.[pP][fF][xX]",
+            "**/*.[pP]12",
+            "**/*.[pP][eE][mM]",
+            "**/*.[kK][eE][yY]",
+            "**/[kK][eE][yY]-*.[xX][mM][lL]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].[lL][oO][cC][aA][lL]*.[jJ][sS][oO][nN]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].*.[lL][oO][cC][aA][lL].[jJ][sS][oO][nN]",
+            "**/.[eE][nN][vV]",
+            "**/.[eE][nN][vV].*",
+            "**/[sS][eE][cC][rR][eE][tT][sS].[jJ][sS][oO][nN]",
             ".fallout/temp/**",
             ".template.config/**",
             ".template.config-single/**",
@@ -70,6 +80,16 @@
           "exclude": [
             "**/bin/**",
             "**/obj/**",
+            "**/*.[pP][fF][xX]",
+            "**/*.[pP]12",
+            "**/*.[pP][eE][mM]",
+            "**/*.[kK][eE][yY]",
+            "**/[kK][eE][yY]-*.[xX][mM][lL]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].[lL][oO][cC][aA][lL]*.[jJ][sS][oO][nN]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].*.[lL][oO][cC][aA][lL].[jJ][sS][oO][nN]",
+            "**/.[eE][nN][vV]",
+            "**/.[eE][nN][vV].*",
+            "**/[sS][eE][cC][rR][eE][tT][sS].[jJ][sS][oO][nN]",
             "Properties/**"
           ]
         }
@@ -83,6 +103,18 @@
           "include": [
             "appsettings.json",
             "appsettings.Development.json"
+          ],
+          "exclude": [
+            "**/*.[pP][fF][xX]",
+            "**/*.[pP]12",
+            "**/*.[pP][eE][mM]",
+            "**/*.[kK][eE][yY]",
+            "**/[kK][eE][yY]-*.[xX][mM][lL]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].[lL][oO][cC][aA][lL]*.[jJ][sS][oO][nN]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].*.[lL][oO][cC][aA][lL].[jJ][sS][oO][nN]",
+            "**/.[eE][nN][vV]",
+            "**/.[eE][nN][vV].*",
+            "**/[sS][eE][cC][rR][eE][tT][sS].[jJ][sS][oO][nN]"
           ]
         }
       ]
@@ -95,6 +127,16 @@
           "exclude": [
             "**/bin/**",
             "**/obj/**",
+            "**/*.[pP][fF][xX]",
+            "**/*.[pP]12",
+            "**/*.[pP][eE][mM]",
+            "**/*.[kK][eE][yY]",
+            "**/[kK][eE][yY]-*.[xX][mM][lL]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].[lL][oO][cC][aA][lL]*.[jJ][sS][oO][nN]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].*.[lL][oO][cC][aA][lL].[jJ][sS][oO][nN]",
+            "**/.[eE][nN][vV]",
+            "**/.[eE][nN][vV].*",
+            "**/[sS][eE][cC][rR][eE][tT][sS].[jJ][sS][oO][nN]",
             "Properties/**",
             "appsettings*.json"
           ]

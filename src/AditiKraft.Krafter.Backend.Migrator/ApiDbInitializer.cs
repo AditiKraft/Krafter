@@ -13,12 +13,11 @@ namespace AditiKraft.Krafter.Backend.Migrator;
 public sealed class ApiDbInitializer(
     IServiceProvider serviceProvider,
     IHostEnvironment hostEnvironment,
-    IHostApplicationLifetime hostApplicationLifetime,
-    ILogger<ApiDbInitializer> logger) : BackgroundService
+    ILogger<ApiDbInitializer> logger)
 {
     private readonly ActivitySource _activitySource = new(hostEnvironment.ApplicationName);
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async Task InitializeAsync(CancellationToken cancellationToken)
     {
         using Activity? activity = _activitySource.StartActivity(hostEnvironment.ApplicationName, ActivityKind.Client);
 
@@ -32,15 +31,10 @@ public sealed class ApiDbInitializer(
 
             logger.LogInformation("Database migration completed.");
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            activity?.AddException(ex);
-            logger.LogError(ex, "Database migration failed.");
+            activity?.AddException(exception);
             throw;
-        }
-        finally
-        {
-            hostApplicationLifetime.StopApplication();
         }
     }
 

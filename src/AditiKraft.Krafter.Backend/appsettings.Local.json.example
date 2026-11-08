@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": {
+    "AppDbMigration": "Host=localhost;Database=your_app;Username=your_user;Password=replace-for-local-use"
+  }
+}

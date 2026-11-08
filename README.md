@@ -167,7 +167,9 @@ The diagrams below reflect the template structure and are useful before you gene
 
 AppHost applies checked-in migrations automatically through `krafter-migrator`. In normal local development, start AppHost and let the migrator complete.
 
-For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` in the environment or use `ConnectionStrings:AppDbMigration` in an optional `appsettings.Local.json` in the current directory. Single-host output has no backend settings files, so use the environment variable there. A placeholder PostgreSQL connection string is enough to create migration files; applying migrations requires a real database.
+The migrator exits with zero only after its work completes. An operation failure returns 1; shutdown cancellation before completion returns 2. Both nonzero outcomes keep the local AppHost's dependent application from starting. Production deployment must provide its own successful migration step before sending traffic to a new release.
+
+For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` in the environment or copy the Backend's `appsettings.Local.json.example` to `appsettings.Local.json` in the current directory and set `ConnectionStrings:AppDbMigration`. The local file is ignored by Git and excluded from template packages and generated applications. Single-host output has no active backend settings files; the environment variable also works there. A placeholder PostgreSQL connection string is enough to create migration files; applying migrations requires a real database.
 
 Install EF Core tools once if needed:
 
@@ -394,6 +396,10 @@ To build both source variants, use `dotnet build AditiKraft.Krafter.Dev.slnx`. T
 The source single-host AppHost selects `src-single/UI/AditiKraft.Krafter.UI.Web`. Generated single-host projects select the overlaid `src/UI/AditiKraft.Krafter.UI.Web`. Source-only launch profiles and AppHost settings are excluded from the overlays; generated projects keep the shared profiles and settings.
 
 ### Test Template Output Locally
+
+Template packages and generated applications exclude local settings, environment files, Data Protection key files, and private-key formats (`.pfx`, `.p12`, `.pem`, `.key`). Keep deployment secrets outside the template tree. Use `.cer` or `.crt` for intentionally public certificate examples and `.json.example` for sample local settings.
+
+The isolated packaging regression check uses only harmless sentinel files in a temporary template fixture: `python3 tests/operations/verify-template-private-files.py`. It checks both the NuGet archive and generation from package/source installs without changing your installed templates.
 
 ```bash
 # Pack the template
