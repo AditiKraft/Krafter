@@ -34,8 +34,8 @@
   <PropertyGroup>
     <ContainerFamily>noble</ContainerFamily>
     <ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
-    <ContainerRepository>ghcr.io/aditikraft/krafter.ui.web</ContainerRepository>
-    <ContainerRegistry>ghcr.io</ContainerRegistry>
+    <ContainerRepository Condition="'$(ContainerRepository)' == ''">$(ContainerNamespace)/krafter.ui.web</ContainerRepository>
+    <ContainerRegistry Condition="'$(ContainerRegistry)' == ''">ghcr.io</ContainerRegistry>
   </PropertyGroup>
   <ItemGroup>
     <ContainerLabel Include="org.opencontainers.image.source" Value="https://github.com/AditiKraft/Krafter" />

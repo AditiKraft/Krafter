@@ -1,11 +1,11 @@
 # Backend AI Instructions (Vertical Slice Architecture)
 
 > **SCOPE**: API endpoints, handlers, entities, and backend feature organization.
-> **PARENT**: See also: ../../Agents.md
+> **PARENT**: See also: ../../AGENTS.md
 
 ## Quick Start: New Backend Feature
-1. If `src/AditiKraft.Krafter.Backend/Features/<Feature>/Agents.md` exists, read it first.
-2. Add shared request/response DTOs in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/` (see `src/AditiKraft.Krafter.Contracts/Agents.md`).
+1. If `src/AditiKraft.Krafter.Backend/Features/<Feature>/AGENTS.md` exists, read it first.
+2. Add shared request/response DTOs in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/` (see `src/AditiKraft.Krafter.Contracts/AGENTS.md`).
 3. Add operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs` (one file per operation).
 4. Add entity in `src/AditiKraft.Krafter.Backend/Features/<Feature>/Common/<Entity>.cs` if needed.
 5. Add DbSet + model configuration in `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs`.
@@ -19,6 +19,7 @@
 - Use `Response` / `Response<T>` (factory methods preferred).
 - Use Shared contracts; do not create backend-only DTOs.
 - GET list endpoints accept `[AsParameters] GetRequestInput` and return `PaginationResponse<T>`.
+- Use `TryApplyListQuery` with the operation's projected property allowlist before executing a list query. It validates paging and bounded grid expressions for direct handler callers as well as HTTP requests. Return its error as `Response<T>.BadRequest`. Keep plain text search in `Query`; Radzen grid expressions belong in `Filter`. See [list query behavior](../../docs/architecture-guidelines.md#list-query-boundary).
 - DELETE endpoints use `MapDelete($"/{RouteSegment.ById}", ...)` with route parameter name matching the placeholder.
 
 ## File Placement
@@ -78,12 +79,12 @@ public sealed class GetUsers
 ```
 
 ## Related Agents
-- `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
-- `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md`
-- `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
-- `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
-- `src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md`
-- `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
+- `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/AGENTS.md`
+- `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/AGENTS.md`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/AGENTS.md`
+- `src/AditiKraft.Krafter.Backend/Features/Users/AGENTS.md`
+- `src/AditiKraft.Krafter.Backend/Features/Roles/AGENTS.md`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/AGENTS.md`
 
 ## References (real code)
 - `src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs`
@@ -111,7 +112,7 @@ public sealed class GetUsers
 
 ---
 Last Updated: 2026-11-08
-Verified Against: docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Backend/Program.cs, src/AditiKraft.Krafter.Backend/Web/HostingExtensions.cs, src/AditiKraft.Krafter.Backend/Web/Middleware/MultiTenantServiceMiddleware.cs, tests/AditiKraft.Krafter.Tests/Tenants/TenantSelectionTests.cs, src/AditiKraft.Krafter.Backend/Web/Authorization/PermissionAuthorization.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DefaultTenantInitializer.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs
+Verified Against: src/AditiKraft.Krafter.Backend/Common/Extensions/ListQueryExtensions.cs, tests/AditiKraft.Krafter.Tests/Queries/ListQueryEndpointTests.cs, tests/AditiKraft.Krafter.Tests/Queries/ListQueryPostgresTests.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Backend/Program.cs, src/AditiKraft.Krafter.Backend/Web/HostingExtensions.cs, src/AditiKraft.Krafter.Backend/Web/Middleware/MultiTenantServiceMiddleware.cs, tests/AditiKraft.Krafter.Tests/Tenants/TenantSelectionTests.cs, src/AditiKraft.Krafter.Backend/Web/Authorization/PermissionAuthorization.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUsers.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DefaultTenantInitializer.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/AGENTS.md, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs
 ---
 
 

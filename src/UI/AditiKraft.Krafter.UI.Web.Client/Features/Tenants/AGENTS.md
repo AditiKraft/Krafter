@@ -1,7 +1,7 @@
 # Tenants UI Feature AI Instructions
 
 > **SCOPE**: Tenant list and create/update dialog.
-> **PARENT**: See also: ../../../Agents.md
+> **PARENT**: See also: ../../../AGENTS.md
 
 ## 1. Core Principles
 - Use the request validator in Contracts. Do not add a duplicate UI validator.
@@ -9,6 +9,7 @@
 - Use `ApiCallService` for all tenant API calls.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Use `CreateOrUpdateTenant` dialog with `TenantInput`.
+- Inherit `EditorDialogBase`, call its initializer, and use its pending-save/disposal guards. Freeze inputs and snapshot the request while saving so a delayed response cannot discard another editor's input.
 - Bind expiry directly to the local value returned by Refit. Serialization converts it to UTC. Preserve unchanged values and show root validity as "No expiry". Hide expiry timestamps during server prerendering, where responses remain UTC. Expiry filtering is disabled because grid filter strings do not use the JSON converter.
 
 ## 2. Decision Tree
@@ -43,6 +44,6 @@ Response result = await api.CallAsync(
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
 
 ---
-Last Updated: 2026-09-12
+Last Updated: 2026-11-08
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs, src/AditiKraft.Krafter.Contracts/Contracts/Tenants/CreateOrUpdateTenantRequest.cs, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

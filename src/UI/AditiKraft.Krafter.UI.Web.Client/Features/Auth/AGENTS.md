@@ -1,7 +1,7 @@
 # Auth UI Feature AI Instructions
 
 > **SCOPE**: Login UI, Google external login, and auth state handling.
-> **PARENT**: See also: ../../../Agents.md
+> **PARENT**: See also: ../../../AGENTS.md
 
 ## 1. Core Principles
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
@@ -10,7 +10,9 @@
 - Server HTTP-client scopes do not share that coordinator. `ServerAuthApiService` uses the shared `HybridCache` to combine refresh calls for the exact access/refresh token pair. Successful responses stay in local memory for five seconds so each request can save the same new cookies. Cache keys contain a hash, not credentials; refresh results never go to the distributed cache.
 - Different token pairs refresh independently. Failed responses are not cached, and canceling one waiter does not cancel another waiting request. This coordination is within one UI server process; it is not a distributed lock.
 - `AuthStorageService` saves browser tokens. `AuthStorageServiceServer` saves cookies and makes fresh values available to the current HTTP request.
+- Treat cookie JWT parsing as best-effort cache-key extraction. Missing, malformed, and oversized cookies must not block sign-out. Clear request-local credentials as well as response cookies so later reads in the same request cannot restore old values; invalid or overflowing expiry cookies are expired.
 - Preserve `ReturnUrl` during login and Google callback.
+- Google sign-in must remain a named semantic button with keyboard activation and visible focus. Keep its light/dark image decorative; route both themes through the same existing nonce-bound `StartGoogleLogin` flow.
 - Store Google return URL in `LocalAppState.GoogleLoginReturnUrl`.
 - Use injected `AppUrls.GetGoogleRedirectUri()` for Google callbacks in every environment. Backend uses the same method for code exchange. Read [Configure application URLs](../../../../../docs/url-configuration.md) when changing callback or deployment settings.
 

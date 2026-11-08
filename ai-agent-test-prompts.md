@@ -16,15 +16,17 @@ Entity properties:
 - Frequency (string - values: "Instant", "Daily", "Weekly")
 
 Requirements:
-1. Create entity in Features/NotificationPreferences/_Shared/
-2. Create shared contracts in Krafter.Shared/Contracts/NotificationPreferences/
-3. Create CreateOrUpdateNotificationPreference.cs operation
-4. Include FluentValidation for the request
+1. Create the entity in src/AditiKraft.Krafter.Backend/Features/NotificationPreferences/Common/
+2. Create shared contracts in src/AditiKraft.Krafter.Contracts/Contracts/NotificationPreferences/
+3. Create separate CreateNotificationPreference.cs and UpdateNotificationPreference.cs operations,
+   each with its Handler and Route, using the corresponding Create or Update permission
+4. Keep each request's FluentValidation validator with that request
+5. Add persistence configuration, migration, routes, and permission catalog entries using existing feature patterns
 ```
 
 ---
 
-## Prompt 2: Intermediate (Backend + Shared)
+## Prompt 2: Intermediate (Backend + Contracts)
 
 ```
 Implement a complete "Category" feature in Krafter.
@@ -37,11 +39,14 @@ Entity properties:
 - IsActive (bool, default true)
 
 Requirements:
-1. Shared contracts (CategoryDto, CreateCategoryRequest with validator)
-2. Backend entity
-3. All three operations: Get (paginated), CreateOrUpdate, Delete
+1. Shared contracts in src/AditiKraft.Krafter.Contracts/Contracts/Categories/:
+   CategoryDto, CreateCategoryRequest, and UpdateCategoryRequest, with each validator beside its request
+2. Backend entity in src/AditiKraft.Krafter.Backend/Features/Categories/Common/
+3. Separate GetCategories (paginated), CreateCategory, UpdateCategory, and DeleteCategory operations,
+   each with its Handler and Route and the corresponding View, Create, Update, or Delete permission
 4. Add DbSet to ApplicationDbContext with EF configuration
-5. Add permissions and EntityKind enum value
+5. Add routes in Common/ApiRoutes.cs, permission catalog entries in Common/Auth/Permissions/,
+   and an EntityKind value in Common/Enums/ (all under src/AditiKraft.Krafter.Contracts/)
 ```
 
 ---
@@ -60,8 +65,11 @@ Entity properties:
 - PerformedById (string)
 
 Requirements:
-1. Shared contracts (ActivityLogDto, CreateActivityLogRequest)
-2. Backend entity and operations (Get with date filtering, Create)
+1. Shared contracts in src/AditiKraft.Krafter.Contracts/Contracts/ActivityLogs/
+   (ActivityLogDto, CreateActivityLogRequest with its validator)
+2. Backend entity in Features/ActivityLogs/Common/ and separate GetActivityLogs (with date filtering)
+   and CreateActivityLog operations in Features/ActivityLogs/, each with its Handler and Route
+   (all backend paths are under src/AditiKraft.Krafter.Backend/)
 3. UI list page with RadzenDataGrid and date filter
 4. Refit interface and registration
 5. Menu item integration
@@ -92,9 +100,12 @@ ProjectMember:
 - AssignedAt (DateTime)
 
 Requirements:
-1. Shared contracts for both entities
+1. Shared contracts for both entities in src/AditiKraft.Krafter.Contracts/Contracts/Projects/;
+   keep request validators with their requests and backend entities in
+   src/AditiKraft.Krafter.Backend/Features/Projects/Common/
 2. Backend operations:
-   - Project CRUD (only owner can delete)
+   - Separate GetProjects, CreateProject, UpdateProject, and DeleteProject operations,
+     each with its Handler and Route and the corresponding permission (only owner can delete)
    - AssignMember (send email notification via background job)
    - RemoveMember (owner cannot be removed)
    - GetMembers

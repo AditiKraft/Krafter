@@ -28,6 +28,10 @@
             ".idea/**",
             "**/bin/**",
             "**/obj/**",
+            "**/*.[nN][uU][pP][kK][gG]",
+            "**/*.[sS][nN][uU][pP][kK][gG]",
+            "**/[nN][uU][pP][kK][gG]/**",
+            "**/[aA][rR][tT][iI][fF][aA][cC][tT][sS]/**",
             "**/*.user",
             "**/.DS_Store",
             "**/*.[pP][fF][xX]",
@@ -48,14 +52,16 @@
             "AditiKraft.Krafter.Single.slnx",
             "AditiKraft.Krafter.Dev.slnx",
             "AditiKraft.Krafter.Templates.csproj",
+            "build/UpstreamRelease.cs",
+            ".github/workflows/main.yml",
             "pack-and-install.cmd",
-            "Agents.md",
-            "Agents.single.md"
+            "AGENTS.md",
+            "AGENTS.single.md"
           ]
         }
       ],
       "rename": {
-        "Agents.split.md": "Agents.md"
+        "AGENTS.split.md": "AGENTS.md"
       }
     }
   ],

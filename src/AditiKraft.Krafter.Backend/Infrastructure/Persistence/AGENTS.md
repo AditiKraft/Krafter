@@ -1,7 +1,7 @@
 # Persistence AI Instructions (EF Core)
 
 > **SCOPE**: DbContext usage, model configuration, query filters, migrations.
-> **PARENT**: See also: ../../Agents.md
+> **PARENT**: See also: ../../AGENTS.md
 
 ## 1. Core Principles
 - Use `ApplicationDbContext` for tenant-scoped data; use `TenantDbContext` for tenant admin data.
@@ -17,8 +17,8 @@
 - New tenant-scoped entity? Add to `ApplicationDbContext` and apply tenant query filter.
 - Tenant management or cross-tenant queries? Use `TenantDbContext`.
 - PostgreSQL is the supported provider. Tenant history queries are not supported.
-- Old migration snapshots contain unused SQL Server annotations. Leave historical migrations unchanged; the PostgreSQL model comparison test verifies that no schema update is required.
-- Use the standard `SaveChangesAsync(cancellationToken)` overload; it applies tenant and soft-delete rules.
+- Old migration snapshots contain unused SQL Server annotations. Preserve historical schema intent; an explicitly authorized, narrowly scoped rollback-syntax fix is allowed (for example PostgreSQL quoting in `RemoveRoleNameIndex.Down`). The PostgreSQL model comparison test verifies that no unintended schema update is required.
+- Save hooks apply tenant, audit and soft-delete rules through synchronous/asynchronous overloads, including the `bool acceptAllChangesOnSuccess` forms. Creation fields remain immutable on updates and soft deletes; `UpdatedOn`/`UpdatedById` record later changes.
 
 ## 3. Code Templates
 
@@ -75,6 +75,14 @@ modelBuilder.Entity<Tenant>(entity =>
 - Changes to `ApplicationDbContext` soft-delete behavior.
 - New cross-entity configuration added in `ModelBuilderExtensions`.
 
+## Atomic domain mutations
+
+`DomainTransaction` owns user creation/memberships, combined role metadata/claims, and tenant registry/identity changes. Shared contexts must use the same relational provider and database with idle connections and no existing transaction or unrelated pending changes. The participant borrows the owner's connection and transaction, then regains its own configured connection on disposal. Externally supplied participant connections are rejected to preserve caller ownership. Do not use distributed transactions or process-local locks for these invariants.
+
+Cancellation reaches required queries and saves. Check it before commit, complete commit with `CancellationToken.None`, and never enqueue credentials for rolled-back identities. Rollback clears tracked state in both contexts. InMemory unit tests have no transaction guarantee; `DomainMutationPostgresTests` exercises the real boundary.
+
+User email/username and role-name unique indexes retain soft-deleted identifiers within each tenant. `IdentityConflict` maps only the named identity unique constraints to controlled 409 responses; preflight history checks always include an explicit tenant predicate. Tenant URL identifier uniqueness remains live-only under `IX_Tenant_Identifier_Lower`.
+
 ## MFA persistence
 - `TwoFactorCredential`, `TwoFactorChallenge` and `TwoFactorRecoveryCode` are tenant-scoped, with explicit query filters. Account transitions acquire a PostgreSQL advisory transaction lock before reloading tracked state.
 - Consume challenges/recovery codes by updating state under that lock; do not issue credentials before the transaction succeeds.
@@ -83,7 +91,7 @@ modelBuilder.Entity<Tenant>(entity =>
 - Real PostgreSQL tests require a dedicated `KRAFTER_TEST_POSTGRES` database. EF InMemory tests do not establish concurrency guarantees.
 
 ---
-Last Updated: 2026-11-07
+Last Updated: 2026-11-08
 Verified Against: src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/TenantDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ModelBuilderExtensions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Backend.Migrator/ApiDbInitializer.cs, aspire/AditiKraft.Krafter.Aspire.AppHost/Program.cs
 ---
 

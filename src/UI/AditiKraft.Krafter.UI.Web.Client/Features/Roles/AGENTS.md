@@ -1,16 +1,19 @@
 # Roles UI Feature AI Instructions
 
 > **SCOPE**: Role list, create/update dialog, and permissions UI.
-> **PARENT**: See also: ../../../Agents.md
+> **PARENT**: See also: ../../../AGENTS.md
 
 ## 1. Core Principles
 - Use the request validator in Contracts. Do not add a duplicate UI validator.
 - Use `ApiCallService` for all role API calls.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Build grouped permissions from `PermissionCatalog.All` in the dialog.
-- Existing roles cannot be saved until their permissions load successfully. Keep Save and the permission selector disabled while loading or after a failed load. Show a retry action on failure.
+- Fetch/display permissions only with `RoleClaims.View`; allow selection changes only with `RoleClaims.Update`. Use UI display policies for those checks. Metadata-only editors must remain usable without claim privileges and submit `Permissions = null`.
+- Editors that can change permissions cannot save existing roles until permissions load successfully. Keep Save and the permission selector disabled while loading or after a failed load. Show a retry action on failure. View-only editors may save metadata after a failed read, always omitting permissions.
 - An empty permission list from a successful load is valid. A failed response, missing role, or null permission list is not an empty selection.
+- Compare selections as sets against the loaded baseline. Send null for unchanged/omitted permissions, a nonempty list for an authorized changed set, and `[]` for an intentional clear. The same nullable request contract supports metadata-only creation.
 - Use a Task-returning submit handler and check `CanSave` inside it as well as on the Save button.
+- Use `EditorDialogBase` for pending-save dismissal and disposal guards; copy the outgoing request before awaiting it.
 
 ## 2. Decision Tree
 - List page? Use `Features/Roles/Roles.razor` + `.razor.cs`.
@@ -45,7 +48,7 @@ if (response is not { IsError: false, Data.Permissions: not null })
 }
 
 CreateUserRequest.Permissions = [.. response.Data.Permissions];
-OriginalCreateUserRequest.Permissions = [.. response.Data.Permissions];
+originalPermissions = new HashSet<string>(response.Data.Permissions, StringComparer.Ordinal);
 permissionsLoaded = true;
 ```
 
@@ -69,6 +72,6 @@ permissionsLoaded = true;
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs`
 
 ---
-Last Updated: 2026-09-09
+Last Updated: 2026-11-08
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/CreateOrUpdateRole.razor.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

@@ -1,12 +1,12 @@
 # UI AI Instructions (Blazor + Radzen)
 
 > **SCOPE**: Blazor pages/components, dialogs, and API integration via Refit.
-> **PARENT**: See also: ../../Agents.md
+> **PARENT**: See also: ../../AGENTS.md
 
 ## Quick Start: New UI Feature
-1. If `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/Agents.md` exists, read it first.
+1. If `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/AGENTS.md` exists, read it first.
 2. Ensure Shared DTOs + routes exist in `src/AditiKraft.Krafter.Contracts/`.
-3. Add `I<Feature>Api.cs` beside the pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`. Read `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md` for route and registration rules.
+3. Add `I<Feature>Api.cs` beside the pages in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`. Read `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/AGENTS.md` for route and registration rules.
 4. Register the Refit client in `Infrastructure/Refit/RefitServiceExtensions.cs`.
 5. Create `Features/<Feature>/<Feature>s.razor` and add `.razor.cs` if you need logic.
 6. Create `Features/<Feature>/CreateOrUpdate<Feature>.razor` and `.razor.cs` for form logic.
@@ -24,7 +24,8 @@ For URL settings, server API connections, tenant routing, or Google callbacks, r
 - Component policies use `UiPermissionPolicy.NameFor(...)` (`UI.Permissions.*`) and the UI `MustHavePermissionAttribute`. These display checks use authenticated permission claims; raw `Permissions.*` policies are reserved for backend operations, which re-check current database permissions. Menu permission values remain raw claims.
 - Await each `DialogService.OpenAsync` result and reload the list only when it is `true`.
 - The DI scope owns `DialogService`. Pages must not dispose it or subscribe to its shared `OnClose` event.
-- Refit converts JSON timestamps to UTC on send and to local time on browser reads. Bind UI fields directly to these local values. See [Refit instructions](AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md) for server rendering and date-only rules.
+- CRUD dialogs inherit `Common/Components/Dialogs/EditorDialogBase`. Its save guard disables Cancel/title-close/overlay dismissal while saving, handles Escape through the form, and ignores completions after disposal. Keep form fields disabled and copy request data before awaiting mutations. Radzen captures its own Escape options on first render; do not try to disable that handler only after saving starts.
+- Refit converts JSON timestamps to UTC on send and to local time on browser reads. Bind UI fields directly to these local values. See [Refit instructions](AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/AGENTS.md) for server rendering and date-only rules.
 - Delete flow uses `DialogService.Confirm()` + Refit delete endpoint.
 
 ## File Placement
@@ -100,11 +101,11 @@ public partial class Users(
 ```
 
 ## Related Agents
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md`
-- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/AGENTS.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/AGENTS.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/AGENTS.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/AGENTS.md`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/AGENTS.md`
 
 ## References (real code)
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs`
@@ -127,6 +128,6 @@ public partial class Users(
 - Update this file when ApiCallService or UI lifecycle patterns change.
 
 ---
-Last Updated: 2026-09-28
+Last Updated: 2026-11-08
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/app.css, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/404.svg, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/404-dark.svg, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/favicon.svg, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/brand/logos, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/brand/loading-indicators, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/svg, src/UI/AditiKraft.Krafter.UI.Web/Components/App.razor, src/UI/AditiKraft.Krafter.UI.Web.Client/Routes.razor, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Roles.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/_Imports.razor, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

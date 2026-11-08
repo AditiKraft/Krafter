@@ -1,13 +1,15 @@
 # Users UI Feature AI Instructions
 
 > **SCOPE**: User list, create/update dialog, and password flows.
-> **PARENT**: See also: ../../../Agents.md
+> **PARENT**: See also: ../../../AGENTS.md
 
 ## 1. Core Principles
 - Use `ApiCallService` for all user API calls.
 - After successful password change/reset, check `IAuthenticationService.LogoutAsync` to confirm cookies and browser auth state were cleared. If it fails, show the retryable error and offer sign-out again without resubmitting the password mutation. The backend revokes old sessions; navigation alone leaves stale client state.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
-- Populate role selections by calling `GetUserRolesAsync` when editing a user.
+- Fetch/display memberships only with `UserRoles.View`, and allow changes only with `UserRoles.Update` after a successful nonnull `GetUserRolesAsync` response. Disable membership editing and Save for membership editors during pending/failed loads, and show a retry action. Keep profile edits intact across retry.
+- Profile-only editors skip unavailable membership reads and send an empty `Roles` list, which intentionally preserves backend memberships. Unchanged memberships also use an empty payload. Do not change the backend's empty-list semantics; explain that this editor cannot remove every role rather than silently claiming that an empty replacement was saved.
+- Use the shared `EditorDialogBase` lifecycle and busy guard. Submit returns `Task`, copies the request before awaiting, and must not close a newer dialog after this component is disposed.
 
 ## 2. Decision Tree
 - List page? Use `Features/Users/Users.razor` + `.razor.cs`.
@@ -19,11 +21,19 @@
 
 ### Load User Roles in Dialog
 ```csharp
-UserRoles = await api.CallAsync(() => usersApi.GetUserRolesAsync(UserInput.Id), showErrorNotification: true);
-CreateUserRequest.Roles = UserRoles?.Data?
-    .Where(c => !string.IsNullOrEmpty(c.RoleId))
-    .Select(c => c.RoleId!)
-    .ToList() ?? new List<string>();
+Response<List<UserRoleDto>> response = await api.CallAsync(
+    () => usersApi.GetUserRolesAsync(UserInput.Id), showErrorNotification: true);
+if (IsDisposed) return;
+if (response is not { IsError: false, Data: not null })
+{
+    roleLoadFailed = true;
+    return;
+}
+
+CreateUserRequest.Roles = response.Data.Where(role => role.Enabled && !string.IsNullOrEmpty(role.RoleId))
+    .Select(role => role.RoleId!).Distinct(StringComparer.Ordinal).ToList();
+originalRoles = new HashSet<string>(CreateUserRequest.Roles, StringComparer.Ordinal);
+rolesLoaded = true;
 ```
 
 ### Delete User (Confirm + API)
@@ -49,6 +59,7 @@ if (confirmed == true)
 
 ## 5. Common Mistakes
 - Skipping role prefill when editing an existing user.
+- Converting a failed role lookup into an editable empty selection, or sending an incomplete nonempty replacement.
 - Subscribing to the shared `OnClose` event or disposing the injected dialog service.
 
 ## 6. Evolution Triggers

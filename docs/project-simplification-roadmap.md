@@ -69,7 +69,7 @@ src/AditiKraft.Krafter.Backend/
 4. Build and verify.
 
 ## Phase 4: Documentation and Agent Rules Sync
-1. Update root and sub `Agents.md` paths and examples.
+1. Update root and sub `AGENTS.md` paths and examples.
 2. Ensure examples match actual file names and folders.
 3. Add a short "how to find code" map for AI and humans.
 
@@ -93,7 +93,7 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
     - `GetTenant` -> `GetTenants`
   - Fixed UI typo naming:
     - `RestPassword.*` -> `ResetPassword.*`
-  - Synced multiple `Agents.md` files with corrected project paths and renamed files.
+  - Synced multiple `AGENTS.md` files with corrected project paths and renamed files.
 - Pending:
   - None for the current naming passes.
 
@@ -130,7 +130,7 @@ This pass starts with Phase 1 and the first part of Phase 2 (Application area si
   - Updated UI Refit APIs for explicit create/update calls:
     - `IUsersApi`, `IRolesApi`, `ITenantsApi`
   - Updated UI dialog submit logic to call create vs update endpoint based on `Id`.
-  - Updated related `Agents.md` references to match the new operation files.
+  - Updated related `AGENTS.md` references to match the new operation files.
 
 ## Validation Checklist
 1. `dotnet build AditiKraft.Krafter.slnx` succeeds.

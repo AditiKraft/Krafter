@@ -1,12 +1,16 @@
 # Users Feature AI Instructions
 
 > **SCOPE**: User CRUD, roles, permissions, and password flows.
-> **PARENT**: See also: ../../Agents.md
+> **PARENT**: See also: ../../AGENTS.md
 
 ## 1. Core Principles
 - Use `UserManager<ApplicationUser>` and `RoleManager<ApplicationRole>` for all user operations.
 - On create, ensure the Basic role is assigned (`RoleConstants.Basic`).
 - Send account and password emails via `IJobService.EnqueueAsync(...)`.
+- HTML-encode dynamic names, tenant labels, credentials, and existing link attribute values when composing email bodies. Keep template-owned markup intact; validators that accept display names do not make those names safe HTML.
+- User creation and its mandatory Basic membership share `DomainTransaction`. Profile/role changes and requested tenant-admin email synchronization also commit together. Check cancellation before commit, finish commit independently once started, and clear tracked state on rollback. Enqueue account credentials only after successful commit with `CancellationToken.None`; job persistence is a separate durable boundary and enqueue failures propagate.
+- Deleted usernames/emails remain reserved within their tenant, ignoring case. Include deleted history with an explicit `TenantId` predicate and translate known identity unique-index conflicts to 409. Validate raw/normalized identifier lengths and the configured Identity username alphabet before writes.
+- Anonymous forgot/reset flows use the authentication throttle and cancellation. Forgot returns the same public success envelope for known, unknown and ineligible accounts, including queue failures; it logs only a fixed message and exception type for non-cancellation enqueue errors. Invalid resets share one public error. Valid reset retains password/version atomicity.
 - Password change/reset must persist `AuthenticationVersion` with the password in one successful Identity update. Advance it before calling Identity; detach the failed user on failure. A second save can leave changed passwords with valid old sessions during concurrency conflicts.
 - Soft-delete users and related roles; never hard-delete.
 - Soft deletion must rotate `ConcurrencyStamp` and `SecurityStamp` and advance `AuthenticationVersion` in the same save. A stale Identity full-row update must fail instead of restoring a deleted account or its prior sessions.
@@ -23,7 +27,7 @@
 ### Shared User Changes
 `CreateUser` and `UpdateUser` delegate to `IUserMutationService`. `UserMutationService` owns user creation, profile updates, role synchronization, and account email jobs. `IUserService` is for permission queries.
 
-For tenant admin email changes, call `UpdateEmailAsync(id, email, cancellationToken)`. This preserves the user's profile and roles. Check the returned response before saving the tenant email.
+For tenant admin email changes, call `UpdateEmailAsync(id, email, cancellationToken)` inside the shared registry/identity transaction owned by `UpdateTenant`. It preserves the user's profile and roles; check its response before committing. Standalone callers receive an identity transaction. User-driven owner email changes synchronize the current tenant by owner identity, including when an older registry email is stale. If an owner requests that synchronization but the registry is missing or deleted, return 409 and roll back the identity/profile changes; nonowner optional synchronization keeps its existing behavior.
 
 Role synchronization checks that requested roles belong to the current tenant. New users receive the Basic role. Additional roles on create and actual membership changes on update require the current actor's live `Permissions.UserRoles.Update` permission. Changing another user's login email also requires that permission, even when the role list is omitted or unchanged, because email recovery can transfer the account's existing permissions. Compare emails using Identity normalization; self email changes and case-equivalent changes remain allowed. Profile-only updates preserve roles when the list is omitted or empty; an unchanged submitted role set is not synchronized. `UpdateEmailAsync` remains the trusted profile-only path for tenant admin synchronization.
 

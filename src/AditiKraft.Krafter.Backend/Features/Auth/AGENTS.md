@@ -1,10 +1,11 @@
 # Auth Feature AI Instructions
 
 > **SCOPE**: Token issuance, refresh tokens, and external login.
-> **PARENT**: See also: ../../Agents.md
+> **PARENT**: See also: ../../AGENTS.md
 
 ## 1. Core Principles
 - Use `ITokenService` for all token issuance.
+- Encode `JwtSettings.Key` as UTF-8 for issuance, refresh validation, and both hosts' access-token validation. Accepted non-ASCII configuration keys must produce identical key bytes throughout the flow.
 - Validate credentials with `UserManager<ApplicationUser>`.
 - Refresh flow validates the stored `UserRefreshToken` and expiry.
 - External login creates a user if missing and assigns the Basic role in one relational transaction. Cancellation before commit rolls both writes back; dispose provisioning before entering the MFA transition.

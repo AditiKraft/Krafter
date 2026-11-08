@@ -31,6 +31,10 @@
             ".idea/**",
             "**/bin/**",
             "**/obj/**",
+            "**/*.[nN][uU][pP][kK][gG]",
+            "**/*.[sS][nN][uU][pP][kK][gG]",
+            "**/[nN][uU][pP][kK][gG]/**",
+            "**/[aA][rR][tT][iI][fF][aA][cC][tT][sS]/**",
             "**/*.user",
             "**/.DS_Store",
             "**/*.[pP][fF][xX]",
@@ -47,10 +51,12 @@
             ".template.config/**",
             ".template.config-single/**",
             "AditiKraft.Krafter.Templates.csproj",
+            "build/UpstreamRelease.cs",
+            ".github/workflows/main.yml",
             "AditiKraft.Krafter.Dev.slnx",
             "pack-and-install.cmd",
-            "Agents.md",
-            "Agents.split.md",
+            "AGENTS.md",
+            "AGENTS.split.md",
             "src/AditiKraft.Krafter.Backend/Program.cs",
             "src/AditiKraft.Krafter.Backend/appsettings*.json",
             "src/UI/AditiKraft.Krafter.UI.Web/Program.cs",
@@ -69,7 +75,7 @@
       ],
       "rename": {
         "AditiKraft.Krafter.Single.slnx": "AditiKraft.Krafter.slnx",
-        "Agents.single.md": "Agents.md"
+        "AGENTS.single.md": "AGENTS.md"
       }
     },
     {
@@ -80,6 +86,10 @@
           "exclude": [
             "**/bin/**",
             "**/obj/**",
+            "**/*.[nN][uU][pP][kK][gG]",
+            "**/*.[sS][nN][uU][pP][kK][gG]",
+            "**/[nN][uU][pP][kK][gG]/**",
+            "**/[aA][rR][tT][iI][fF][aA][cC][tT][sS]/**",
             "**/*.[pP][fF][xX]",
             "**/*.[pP]12",
             "**/*.[pP][eE][mM]",
@@ -105,6 +115,10 @@
             "appsettings.Development.json"
           ],
           "exclude": [
+            "**/*.[nN][uU][pP][kK][gG]",
+            "**/*.[sS][nN][uU][pP][kK][gG]",
+            "**/[nN][uU][pP][kK][gG]/**",
+            "**/[aA][rR][tT][iI][fF][aA][cC][tT][sS]/**",
             "**/*.[pP][fF][xX]",
             "**/*.[pP]12",
             "**/*.[pP][eE][mM]",
@@ -127,6 +141,10 @@
           "exclude": [
             "**/bin/**",
             "**/obj/**",
+            "**/*.[nN][uU][pP][kK][gG]",
+            "**/*.[sS][nN][uU][pP][kK][gG]",
+            "**/[nN][uU][pP][kK][gG]/**",
+            "**/[aA][rR][tT][iI][fF][aA][cC][tT][sS]/**",
             "**/*.[pP][fF][xX]",
             "**/*.[pP]12",
             "**/*.[pP][eE][mM]",

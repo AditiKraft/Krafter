@@ -1,7 +1,7 @@
 # UI Refit AI Instructions
 
 > **SCOPE**: Shared Refit transport and registration. Also read this file when adding or changing a feature API interface.
-> **PARENT**: See also: ../../../Agents.md
+> **PARENT**: See also: ../../../AGENTS.md
 
 ## 1. Core Principles
 - Keep API interfaces in `Features/<Feature>/I<Feature>Api.cs`, beside their feature pages.

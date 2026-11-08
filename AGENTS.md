@@ -15,19 +15,19 @@ The template project itself contains both variants. Shared business code lives i
 
 ## 2. Which Instructions to Read?
 
-- API endpoints, handlers, entities, or database: read [Backend instructions](src/AditiKraft.Krafter.Backend/Agents.md).
-- Blazor pages, components, or UI services: read [UI instructions](src/UI/Agents.md).
-- Shared DTOs, requests, responses, or validators: read [Contracts instructions](src/AditiKraft.Krafter.Contracts/Agents.md).
+- API endpoints, handlers, entities, or database: read [Backend instructions](src/AditiKraft.Krafter.Backend/AGENTS.md).
+- Blazor pages, components, or UI services: read [UI instructions](src/UI/AGENTS.md).
+- Shared DTOs, requests, responses, or validators: read [Contracts instructions](src/AditiKraft.Krafter.Contracts/AGENTS.md).
 - Cross-cutting changes: read both Backend and UI guidance, plus the applicable feature instructions.
 - Aspire, Docker, or CI/CD: follow existing `aspire/` and `.github/workflows/` patterns.
 - Template overlays: see section 4 and both `.template.config` directories.
-- Root instruction variants: see section 5 before changing `Agents.split.md` or `Agents.single.md`.
+- Root instruction variants: see section 5 before changing `AGENTS.split.md` or `AGENTS.single.md`.
 
 
 For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
 
 ## 2.1 New Feature Flow (Short Version)
-1. If a feature-level `Agents.md` exists, read it first.
+1. If a feature-level `AGENTS.md` exists, read it first.
 2. Add contracts + validators in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
 3. Add permissions/routes in `src/AditiKraft.Krafter.Contracts/Common/`.
 4. Add Backend operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/`.
@@ -42,25 +42,25 @@ For URL settings, hosting-mode routing, tenant domains, CORS, or Google callback
 - Backend operations: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`.
 - UI pages, dialogs, and API interface: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
 - Shared requests, responses, and validators: `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
-- Follow `src/AditiKraft.Krafter.Backend/Agents.md` and `src/UI/Agents.md` for infrastructure placement.
+- Follow `src/AditiKraft.Krafter.Backend/AGENTS.md` and `src/UI/AGENTS.md` for infrastructure placement.
 - Match file names to their main types and namespaces to folders. Keep each operation's Handler + Route together and each request's validator with its request.
 - After moving files, update imports, file links, and instruction references. Template developers must also verify the `src-single` file links and both generated hosting variants.
 
 ## 2.2 Deep Dives
-- Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md`
-- Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md`
-- Backend auth: `src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md`
-- Backend Users feature: `src/AditiKraft.Krafter.Backend/Features/Users/Agents.md`
-- Backend roles: `src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md`
-- Backend tenants: `src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md`
-- UI Refit: `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md`
-- UI auth: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md`
-- UI users: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md`
-- UI roles: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md`
-- UI tenants: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md`
+- Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/AGENTS.md`
+- Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/AGENTS.md`
+- Backend auth: `src/AditiKraft.Krafter.Backend/Features/Auth/AGENTS.md`
+- Backend Users feature: `src/AditiKraft.Krafter.Backend/Features/Users/AGENTS.md`
+- Backend roles: `src/AditiKraft.Krafter.Backend/Features/Roles/AGENTS.md`
+- Backend tenants: `src/AditiKraft.Krafter.Backend/Features/Tenants/AGENTS.md`
+- UI Refit: `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/AGENTS.md`
+- UI auth: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/AGENTS.md`
+- UI users: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/AGENTS.md`
+- UI roles: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/AGENTS.md`
+- UI tenants: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/AGENTS.md`
 
 ## 2.3 Bugfix Fast Path
-1. Locate the closest matching feature `Agents.md` and read it.
+1. Locate the closest matching feature `AGENTS.md` and read it.
 2. Find the exact operation file (one file per operation) and trace request/response types in Shared.
 3. Apply minimal diff; verify response shape and route/permission usage.
 
@@ -68,9 +68,9 @@ For URL settings, hosting-mode routing, tenant domains, CORS, or Google callback
 
 ```
 AditiKraft.Krafter/
-├── Agents.md                    ← YOU ARE HERE (template-project version)
-├── Agents.split.md              ← Split-host variant (→ Agents.md in krafter output)
-├── Agents.single.md             ← Single-host variant (→ Agents.md in krafter-single output)
+├── AGENTS.md                    ← YOU ARE HERE (template-project version)
+├── AGENTS.split.md              ← Split-host variant (→ AGENTS.md in krafter output)
+├── AGENTS.single.md             ← Single-host variant (→ AGENTS.md in krafter-single output)
 ├── .template.config/            # Split-host template config
 │   └── template.json
 ├── .template.config-single/     # Single-host template config
@@ -82,11 +82,11 @@ AditiKraft.Krafter/
 │   └── AditiKraft.Krafter.Aspire.AppHost/
 ├── src/                         # Shared business code (used by BOTH templates)
 │   ├── AditiKraft.Krafter.Contracts/
-│   │   ├── Agents.md
+│   │   ├── AGENTS.md
 │   │   ├── Contracts/
 │   │   └── Common/
 │   ├── AditiKraft.Krafter.Backend/
-│   │   ├── Agents.md
+│   │   ├── AGENTS.md
 │   │   ├── Web/                 # Includes HostingExtensions.cs (reusable by single-host)
 │   │   ├── Features/
 │   │   ├── Infrastructure/
@@ -95,7 +95,7 @@ AditiKraft.Krafter/
 │   │   └── Migrations/
 │   ├── AditiKraft.Krafter.Backend.Migrator/
 │   └── UI/
-│       ├── Agents.md
+│       ├── AGENTS.md
 │       ├── AditiKraft.Krafter.UI.Web.Client/
 │       └── AditiKraft.Krafter.UI.Web/   # Split-host version
 ├── src-single/                  # Single-host overlay files
@@ -146,17 +146,17 @@ Files in `src-single/` and `aspire-single/` **replace** the corresponding files 
 
 In generated single-host projects, `UI.Web` owns the server configuration. Exclude Backend `appsettings*.json` files along with its `Program.cs`, because Backend runs as a library.
 
-## 5. Agents.md Variant Strategy
+## 5. AGENTS.md Variant Strategy
 
-Three root-level Agents.md files ensure correct AI instructions per context:
+Three root-level AGENTS.md files ensure correct AI instructions per context:
 
 | File | Audience | Shipped in template output? |
 |------|----------|----------------------------|
-| `Agents.md` | Template developers working on this repo | **No** — excluded by both template configs |
-| `Agents.split.md` | Users of generated split-host projects | **Yes** — renamed to `Agents.md` via template rename in `krafter` output |
-| `Agents.single.md` | Users of generated single-host projects | **Yes** — renamed to `Agents.md` via template rename in `krafter-single` output |
+| `AGENTS.md` | Template developers working on this repo | **No** — excluded by both template configs |
+| `AGENTS.split.md` | Users of generated split-host projects | **Yes** — renamed to `AGENTS.md` via template rename in `krafter` output |
+| `AGENTS.single.md` | Users of generated single-host projects | **Yes** — renamed to `AGENTS.md` via template rename in `krafter-single` output |
 
-All **14 sub-level Agents.md files** (inside `src/`) are mode-agnostic and ship identically in both template outputs. Only the root-level file differs per hosting variant.
+All **14 sub-level AGENTS.md files** (inside `src/`) are mode-agnostic and ship identically in both template outputs. Only the root-level file differs per hosting variant.
 
 ## 6. Global Coding Conventions
 | Rule | Requirement |
@@ -210,7 +210,7 @@ refactor(tenants): consolidate tenant operations
 4. **Minimal Diffs**: Only modify what is strictly necessary.
 5. **Test Build**: Always verify `dotnet build` succeeds.
 
-## 10. Agents.md Evolution & Maintenance
+## 10. AGENTS.md Evolution & Maintenance
 
 Keep instructions accurate and feature-specific; update examples and references when code moves.
 Read [instruction maintenance](docs/agent-instructions-maintenance.md) before changing guidance.
