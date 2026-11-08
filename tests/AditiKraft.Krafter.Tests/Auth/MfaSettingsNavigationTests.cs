@@ -261,6 +261,67 @@ public sealed class MfaSettingsNavigationTests
     }
 
     [Fact]
+    public async Task FailedLogoutKeepsAcknowledgedRecoveryCodesVisibleUntilRetrySucceeds()
+    {
+        await using var page = new SettingsPage(enabled: false);
+        await page.RenderAsync();
+        await page.ClickAsync("Set up authenticator");
+        await page.RunAsync(() => page.Form.Submit.InvokeAsync(page.Form.Data));
+        await page.RunAsync(() => page.CheckBox("RecoveryCodesSaved").ValueChanged.InvokeAsync(true));
+        page.Authentication.FailLogout = true;
+
+        await page.ClickAsync(SignInButton);
+
+        Assert.Equal(1, page.Authentication.LogoutCount);
+        Assert.Null(page.Navigation.LastTarget);
+        await page.RunAsync(() =>
+        {
+            Assert.Contains(TestCodes[0], page.Root.ToHtmlString());
+            Assert.Contains("Unable to sign out. Please try again.", page.Root.ToHtmlString());
+            Assert.False(page.Button(SignInButton).IsBusy);
+            Assert.False(page.Button(SignInButton).Disabled);
+            return Task.CompletedTask;
+        });
+
+        page.Authentication.FailLogout = false;
+        await page.ClickAsync(SignInButton);
+        Assert.Equal(2, page.Authentication.LogoutCount);
+        Assert.Equal("/login", page.Navigation.LastTarget);
+        await page.RunAsync(() =>
+        {
+            Assert.DoesNotContain(TestCodes[0], page.Root.ToHtmlString());
+            return Task.CompletedTask;
+        });
+    }
+
+    [Fact]
+    public async Task FailedLogoutAfterDisableCanRetryWithoutRepeatingTheMutation()
+    {
+        await using var page = new SettingsPage(enabled: true);
+        await page.RenderAsync();
+        page.Authentication.FailLogout = true;
+        Task pending = await page.StartAsync(() => page.Button("Disable two-factor authentication").Click.InvokeAsync(new MouseEventArgs()));
+        await page.RunAsync(() => { page.Dialogs.Close(true); return Task.CompletedTask; });
+        await pending.WaitAsync(Timeout);
+
+        Assert.Equal(1, page.Api.DisableCount);
+        Assert.Equal(1, page.Authentication.LogoutCount);
+        Assert.Null(page.Navigation.LastTarget);
+        await page.RunAsync(() =>
+        {
+            Assert.Contains("Two-factor authentication has been disabled", page.Root.ToHtmlString());
+            Assert.Contains("Unable to sign out. Please try again.", page.Root.ToHtmlString());
+            return Task.CompletedTask;
+        });
+
+        page.Authentication.FailLogout = false;
+        await page.ClickAsync("Sign in again");
+        Assert.Equal(1, page.Api.DisableCount);
+        Assert.Equal(2, page.Authentication.LogoutCount);
+        Assert.Equal("/login", page.Navigation.LastTarget);
+    }
+
+    [Fact]
     public async Task DisposingThePageRemovesItsScopedLogoutBlocker()
     {
         var page = new SettingsPage(enabled: false);
@@ -399,16 +460,18 @@ public sealed class MfaSettingsNavigationTests
     private sealed class Authentication(TestNavigation navigation, AccountSecurityNavigationGuard guard) : IAuthenticationService
     {
         public int LogoutCount { get; private set; }
+        public bool FailLogout { get; set; }
         public bool LoggedOutWhileBlocked { get; private set; }
         public TwoFactorChallengeResponse? PendingChallenge => null;
-        public string? ErrorMessage => null;
+        public string? ErrorMessage => FailLogout ? "Unable to sign out. Please try again." : null;
         public event Action<string?>? LoginChange { add { } remove { } }
-        public Task LogoutAsync(string methodName)
+        public Task<bool> LogoutAsync(string methodName)
         {
             LogoutCount++;
             LoggedOutWhileBlocked |= guard.BlockingMessage is not null;
+            if (FailLogout) return Task.FromResult(false);
             navigation.NavigateTo("/login", true);
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => throw new NotSupportedException();
@@ -423,6 +486,7 @@ public sealed class MfaSettingsNavigationTests
             Response<TwoFactorSetupResponse>.Success(new("test-enrollment", "test-key", "<svg xmlns='http://www.w3.org/2000/svg'/>", DateTimeOffset.UtcNow.AddMinutes(5))));
         public Func<Task<Response<RecoveryCodesResponse>>> SecretResponse { get; set; } = () => Task.FromResult(Response<RecoveryCodesResponse>.Success(new(TestCodes)));
         public int RegenerationCount { get; private set; }
+        public int DisableCount { get; private set; }
         public bool UsedRecoveryCode { get; private set; }
         public string? ManagementCode { get; private set; }
         public Task<Response<TwoFactorStatusResponse>> StatusAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
@@ -432,7 +496,11 @@ public sealed class MfaSettingsNavigationTests
             SecretRequestStarted.TrySetResult();
             return SecretResponse();
         }
-        public Task<Response> DisableAsync(TwoFactorManagementRequest request, CancellationToken cancellationToken = default) => Task.FromResult(Response.Success());
+        public Task<Response> DisableAsync(TwoFactorManagementRequest request, CancellationToken cancellationToken = default)
+        {
+            DisableCount++;
+            return Task.FromResult(Response.Success());
+        }
         public Task<Response<RecoveryCodesResponse>> RegenerateAsync(TwoFactorManagementRequest request, CancellationToken cancellationToken = default)
         {
             RegenerationCount++;

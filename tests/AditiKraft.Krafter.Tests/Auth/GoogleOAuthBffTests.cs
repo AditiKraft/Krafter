@@ -64,6 +64,37 @@ public sealed class GoogleOAuthBffTests
         Assert.Equal(0, api.CallbackCalls);
     }
 
+    [Fact]
+    public async Task ProviderRefusalLetsTheBackendVerifyTheCookieAndChooseTheTrustedFailureDestination()
+    {
+        var api = new RecordingApi
+        { CompletionUrl = "https://blue.example.test/login?error=google-auth-failed&ReturnUrl=%2Fusers" };
+        DefaultHttpContext callback = Context("app.example.test");
+        string proof = new('A', 64);
+        callback.Request.Headers.Cookie = "__Host-Krafter.Google." + api.State + "=" + proof;
+
+        IResult result = await Invoke("CallbackAsync", callback, Urls, api, null, api.State, CancellationToken.None);
+
+        Assert.Equal(api.CompletionUrl, Assert.IsType<RedirectHttpResult>(result).Url);
+        Assert.Equal(1, api.CallbackCalls);
+        Assert.Equal(string.Empty, api.CallbackRequest!.Code);
+        Assert.Equal(proof, api.CallbackRequest.RootCorrelation);
+        Assert.Contains("expires=", Assert.Single(callback.Response.Headers.SetCookie)!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task BackendRejectionKeepsTheFailureAtRoot()
+    {
+        var api = new RecordingApi { RejectCallback = true };
+        DefaultHttpContext callback = Context("app.example.test");
+        callback.Request.Headers.Cookie = "__Host-Krafter.Google." + api.State + "=" + new string('A', 64);
+
+        IResult result = await Invoke("CallbackAsync", callback, Urls, api, "provider-code", api.State, CancellationToken.None);
+
+        Assert.Equal("/login?error=google-auth-failed", Assert.IsType<RedirectHttpResult>(result).Url);
+        Assert.Equal(1, api.CallbackCalls);
+    }
+
     private static readonly AppUrls Urls = new() { RootUiUrl = "https://app.example.test", TenantBaseDomain = "example.test" };
     private static DefaultHttpContext Context(string host)
     {
@@ -77,7 +108,8 @@ public sealed class GoogleOAuthBffTests
     private sealed class RecordingApi : IGoogleOAuthApi
     {
         public string State { get; } = new('B', 64);
-        public string CompletionUrl { get; } = "https://blue.example.test/google-complete#handoff=" + new string('C', 64);
+        public string CompletionUrl { get; set; } = "https://blue.example.test/google-complete#handoff=" + new string('C', 64);
+        public bool RejectCallback { get; set; }
         public int CallbackCalls { get; private set; }
         public GoogleLoginStartRequest? StartRequest { get; private set; }
         public GoogleLoginCallbackRequest? CallbackRequest { get; private set; }
@@ -91,7 +123,9 @@ public sealed class GoogleOAuthBffTests
         {
             CallbackCalls++;
             CallbackRequest = request;
-            return Task.FromResult(Response<GoogleLoginCallbackResponse>.Success(new(CompletionUrl)));
+            return Task.FromResult(RejectCallback
+                ? Response<GoogleLoginCallbackResponse>.Unauthorized("Invalid callback.")
+                : Response<GoogleLoginCallbackResponse>.Success(new(CompletionUrl)));
         }
     }
 }

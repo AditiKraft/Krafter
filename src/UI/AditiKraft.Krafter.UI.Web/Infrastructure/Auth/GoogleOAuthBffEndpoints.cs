@@ -45,10 +45,11 @@ public static class GoogleOAuthBffEndpoints
             return Results.Redirect("/login?error=invalid-google-state");
         string? correlation = context.Request.Cookies[CookiePrefix + state];
         context.Response.Cookies.Delete(CookiePrefix + state, Cookie(null));
-        if (!IsSecret(correlation) || string.IsNullOrWhiteSpace(code))
+        if (!IsSecret(correlation))
             return Results.Redirect("/login?error=invalid-google-state");
+        // Provider refusals have no code. Backend still verifies and consumes state before selecting a failure destination.
         Response<GoogleLoginCallbackResponse> result = await ServerAuthApiErrors.CallAsync(() => api.CallbackAsync(new()
-        { State = state!, Code = code, RootCorrelation = correlation! }, cancellationToken), cancellationToken);
+        { State = state!, Code = code ?? string.Empty, RootCorrelation = correlation! }, cancellationToken), cancellationToken);
         return result.IsError || result.Data is null
             ? Results.Redirect("/login?error=google-auth-failed")
             : Results.Redirect(result.Data.CompletionUrl);

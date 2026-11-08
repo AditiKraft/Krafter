@@ -44,9 +44,9 @@
                 Or
             </RadzenText>
 
-            @if (!string.IsNullOrEmpty(authenticationService.ErrorMessage))
+            @if (!string.IsNullOrEmpty(DisplayError))
             {
-                <RadzenAlert AlertStyle="AlertStyle.Danger" AllowClose="false" role="alert">@authenticationService.ErrorMessage</RadzenAlert>
+                <RadzenAlert AlertStyle="AlertStyle.Danger" AllowClose="false" role="alert">@DisplayError</RadzenAlert>
             }
             @if (authenticationService.PendingChallenge is not null)
             {

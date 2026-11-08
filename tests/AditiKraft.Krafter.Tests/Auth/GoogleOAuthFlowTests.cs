@@ -85,15 +85,100 @@ public sealed class GoogleOAuthFlowTests
         var fixture = new Fixture();
         GoogleLoginStartResponse start = await fixture.Start();
         fixture.Tenants.BlueId = "replacement";
-        Assert.True((await fixture.Callback(start)).IsError);
+        Response<GoogleLoginCallbackResponse> response = await fixture.Callback(start);
+        Assert.True(response.IsError);
+        Assert.Null(response.Data);
         Assert.Equal(0, fixture.Provider.Calls);
+    }
+
+    [Theory]
+    [InlineData("https://app.example.test")]
+    [InlineData("https://blue.example.test")]
+    public async Task VerifiedLoginFailureKeepsItsTenantAndReturnPathWithoutCreatingAHandoff(string origin)
+    {
+        var fixture = new Fixture();
+        fixture.Provider.Result = Response<LoginResponse>.Unauthorized("Private provider/account failure detail.");
+        GoogleLoginStartRequest request = fixture.Request(origin);
+        request.ReturnUrl = "/users?filter=active#details";
+        GoogleLoginStartResponse start = (await fixture.Flow.StartAsync(request, default)).Data!;
+
+        Response<GoogleLoginCallbackResponse> response = await fixture.Callback(start);
+
+        AssertLoginFailure(response, origin, request.ReturnUrl);
+        Assert.Equal(1, fixture.Provider.Calls);
+        Assert.Empty(fixture.Store.Rows);
+        Assert.True((await fixture.Callback(start)).IsError);
+        Assert.Equal(1, fixture.Provider.Calls);
+    }
+
+    [Theory]
+    [InlineData("//attacker.test/path")]
+    [InlineData("/\t/attacker.test/path")]
+    [InlineData("/google-complete#handoff=untrusted")]
+    public async Task VerifiedLoginFailureNormalizesUnsafeReturnPaths(string returnUrl)
+    {
+        var fixture = new Fixture();
+        fixture.Provider.Result = Response<LoginResponse>.Unauthorized("Unable to sign in.");
+        GoogleLoginStartRequest request = fixture.Request("https://blue.example.test");
+        request.ReturnUrl = returnUrl;
+        GoogleLoginStartResponse start = (await fixture.Flow.StartAsync(request, default)).Data!;
+
+        AssertLoginFailure(await fixture.Callback(start), "https://blue.example.test", "/");
+    }
+
+    [Fact]
+    public async Task ProviderRefusalRequiresValidStateBeforeReturningToTheRecordedTenant()
+    {
+        var fixture = new Fixture();
+        GoogleLoginStartResponse start = await fixture.Start();
+        var request = new GoogleLoginCallbackRequest { State = start.State, Code = "", RootCorrelation = new string('A', 64) };
+        Response<GoogleLoginCallbackResponse> rejected = await fixture.Flow.CallbackAsync(request, default);
+        Assert.True(rejected.IsError);
+        Assert.Null(rejected.Data);
+        Assert.Single(fixture.Store.Rows);
+
+        request.RootCorrelation = fixture.Correlation;
+        AssertLoginFailure(await fixture.Flow.CallbackAsync(request, default), "https://blue.example.test", "/users");
+        Assert.Empty(fixture.Store.Rows);
+        Assert.Equal(0, fixture.Provider.Calls);
+        Assert.True((await fixture.Flow.CallbackAsync(request, default)).IsError);
+    }
+
+    [Fact]
+    public async Task ProviderTransportFailuresReturnOnlyTheVerifiedGenericFailureDestination()
+    {
+        foreach (Exception failure in new Exception[]
+        {
+            new HttpRequestException("Private provider detail."),
+            new JsonException("Private provider detail."),
+            new TaskCanceledException("Private provider timeout detail.")
+        })
+        {
+            var fixture = new Fixture();
+            fixture.Provider.Failure = failure;
+            GoogleLoginStartResponse start = await fixture.Start();
+            AssertLoginFailure(await fixture.Callback(start), "https://blue.example.test", "/users");
+            Assert.Empty(fixture.Store.Rows);
+        }
+    }
+
+    [Fact]
+    public async Task CallerCancellationDoesNotBecomeAFailureRedirect()
+    {
+        var fixture = new Fixture();
+        GoogleLoginStartResponse start = await fixture.Start();
+        using var cancellation = new CancellationTokenSource();
+        fixture.Provider.Failure = new OperationCanceledException(cancellation.Token);
+        cancellation.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(() => fixture.Flow.CallbackAsync(new()
+        { State = start.State, Code = "provider-code", RootCorrelation = fixture.Correlation }, cancellation.Token));
     }
 
     [Fact]
     public async Task ConcurrentCallbacksExchangeTheCodeOnceAndEnrolledGoogleLoginStillRequiresMfa()
     {
         var fixture = new Fixture();
-        fixture.Provider.Result = LoginResponse.Pending("local-mfa", fixture.Clock.GetUtcNow().AddMinutes(5));
+        fixture.Provider.Result = Response<LoginResponse>.Success(LoginResponse.Pending("local-mfa", fixture.Clock.GetUtcNow().AddMinutes(5)));
         GoogleLoginStartResponse start = await fixture.Start();
         Response<GoogleLoginCallbackResponse>[] callbacks = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => fixture.Callback(start)));
         Response<GoogleLoginCallbackResponse> success = Assert.Single(callbacks, x => !x.IsError);
@@ -133,6 +218,19 @@ public sealed class GoogleOAuthFlowTests
     }
 
     private static string Handoff(string url) => QueryHelpers.ParseQuery("?" + new Uri(url).Fragment.TrimStart('#'))["handoff"].ToString();
+
+    private static void AssertLoginFailure(Response<GoogleLoginCallbackResponse> response, string origin, string returnUrl)
+    {
+        Assert.False(response.IsError);
+        Uri destination = new(response.Data!.CompletionUrl);
+        Assert.Equal(origin, destination.GetLeftPart(UriPartial.Authority));
+        Assert.Equal("/login", destination.AbsolutePath);
+        var query = QueryHelpers.ParseQuery(destination.Query);
+        Assert.Equal(2, query.Count);
+        Assert.Equal("google-auth-failed", query["error"]);
+        Assert.Equal(returnUrl, query["ReturnUrl"]);
+        Assert.Empty(destination.Fragment);
+    }
 
     private sealed class Fixture
     {
@@ -175,9 +273,14 @@ public sealed class GoogleOAuthFlowTests
     {
         public int Calls;
         public GoogleLoginState? LastState;
-        public LoginResponse Result { get; set; } = LoginResponse.Completed(TokenTestData.Create());
+        public Response<LoginResponse> Result { get; set; } = Response<LoginResponse>.Success(LoginResponse.Completed(TokenTestData.Create()));
+        public Exception? Failure { get; set; }
         public Task<Response<LoginResponse>> AuthenticateAsync(GoogleLoginState state, string code, CancellationToken cancellationToken)
-        { Interlocked.Increment(ref Calls); LastState = state; return Task.FromResult(Response<LoginResponse>.Success(Result)); }
+        {
+            Interlocked.Increment(ref Calls);
+            LastState = state;
+            return Failure is null ? Task.FromResult(Result) : Task.FromException<Response<LoginResponse>>(Failure);
+        }
     }
 
     private sealed class MemoryTransactions(TimeProvider clock) : IGoogleLoginTransactionStore

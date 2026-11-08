@@ -25,8 +25,12 @@ public partial class TopRight(
                 return;
             }
 
-            await authenticationService.LogoutAsync("SplitButtonClick 20");
-            await NavigateToLogin();
+            if (!await authenticationService.LogoutAsync("SplitButtonClick 20"))
+            {
+                notificationService.Notify(NotificationSeverity.Error, "Sign-out failed", authenticationService.ErrorMessage);
+                return;
+            }
+            await OnNavigating.InvokeAsync();
         }
         else if (item is { Value: "ChangePassword" })
         {

@@ -463,7 +463,7 @@ public sealed class ClientRealtimeLifecycleTests
         public TwoFactorChallengeResponse? PendingChallenge => null;
         public string? ErrorMessage => null;
         public void RaiseLoginChange() => LoginChange?.Invoke("test");
-        public Task LogoutAsync(string methodName) { Logouts++; return Task.CompletedTask; }
+        public Task<bool> LogoutAsync(string methodName) { Logouts++; return Task.FromResult(true); }
         public Task<bool> RefreshAsync() => throw new NotSupportedException("The test uses a fresh credential.");
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => throw new NotSupportedException();

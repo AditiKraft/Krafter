@@ -14,6 +14,8 @@ public partial class ChangePassword(
     public string ReturnUrl { get; set; } = default!;
 
     public bool IsBusy { get; set; }
+    private bool passwordChanged;
+    private string? signOutError;
 
     private async Task SubmitChangePassword(ChangePasswordRequest requestInput)
     {
@@ -25,7 +27,20 @@ public partial class ChangePassword(
         IsBusy = false;
         if (response is { IsError: false })
         {
-            await authentication.LogoutAsync("Password changed. Sign in again.");
+            passwordChanged = true;
+            await SignInAgainAsync();
         }
+    }
+
+    private async Task SignInAgainAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            signOutError = await authentication.LogoutAsync("Password changed. Sign in again.")
+                ? null : authentication.ErrorMessage;
+        }
+        finally { IsBusy = false; }
     }
 }

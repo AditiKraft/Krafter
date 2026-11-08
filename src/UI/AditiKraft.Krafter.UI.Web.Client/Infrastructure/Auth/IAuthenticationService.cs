@@ -13,7 +13,7 @@ public interface IAuthenticationService
 
     public Task<bool> LoginAsync(TokenRequest model);
 
-    public Task LogoutAsync(string methodName);
+    public Task<bool> LogoutAsync(string methodName);
 
     public Task<bool> RefreshAsync();
 }

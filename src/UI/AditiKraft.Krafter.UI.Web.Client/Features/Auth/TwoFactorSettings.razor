@@ -52,6 +52,11 @@
             <RadzenButton Text="Cancel setup" Click="@CancelSetup" Disabled="busy" ButtonStyle="ButtonStyle.Light" />
         </RadzenTemplateForm>
     }
+    else if (signInRequired)
+    {
+        <p>Two-factor authentication has been disabled. Sign in again to continue.</p>
+        <RadzenButton Text="Sign in again" Click="@SignInAgainAsync" IsBusy="signingOut" />
+    }
     else if (status is null)
     {
         <p>Loading account security…</p>
@@ -102,6 +107,7 @@
     private bool downloadingCodes;
     private bool downloadRequested;
     private bool signingOut;
+    private bool signInRequired;
     private IDisposable? navigationGuardRegistration;
     private string? NavigationBlockingMessage => secretRequestPending
         ? "Please wait for the account security request to finish before leaving this page."
@@ -252,6 +258,7 @@
             }
             else
             {
+                signInRequired = true;
                 await SignInAgainAsync();
             }
         }
@@ -332,11 +339,18 @@
         }
 
         signingOut = true;
-        recoveryCodes = null;
-        setup = null;
+        error = null;
         try
         {
-            await Authentication.LogoutAsync("MFA settings changed");
+            if (await Authentication.LogoutAsync("MFA settings changed"))
+            {
+                recoveryCodes = null;
+                setup = null;
+            }
+            else
+            {
+                error = Authentication.ErrorMessage;
+            }
         }
         finally
         {

@@ -7,7 +7,6 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public class ClientAuthApiService(
     IAuthApi authApi,
-    IAuthStorageService localStorage,
     ILogger<ClientAuthApiService> logger) : IAuthApiService
 {
     public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
@@ -79,19 +78,7 @@ public class ClientAuthApiService(
         }
     }
 
-    public async Task LogoutAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Call BFF to clear HttpOnly cookies on the server
-            await authApi.LogoutAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error calling logout endpoint");
-        }
-
-        // Clear local storage regardless of BFF call result
-        await localStorage.ClearCacheAsync();
-    }
+    // A transport failure leaves the HttpOnly session cookie intact. The caller must
+    // observe that failure before clearing browser state or navigating to login.
+    public Task LogoutAsync(CancellationToken cancellationToken) => authApi.LogoutAsync(cancellationToken);
 }

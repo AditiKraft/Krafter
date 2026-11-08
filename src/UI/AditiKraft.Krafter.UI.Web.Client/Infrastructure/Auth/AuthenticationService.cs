@@ -6,6 +6,7 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 public class AuthenticationService(
     IAuthApiService apiService,
     AuthTokenService tokenService,
+    TokenRefreshCoordinator coordinator,
     LayoutService layoutService,
     IAuthStorageService localStorage,
     NavigationManager navigationManager,
@@ -17,24 +18,35 @@ public class AuthenticationService(
 {
     public event Action<string?>? LoginChange;
 
-    public async Task LogoutAsync(string methodName)
+    public async Task<bool> LogoutAsync(string methodName)
     {
-        CancelTwoFactor();
+        ErrorMessage = null;
         logger.LogInformation("Logging out user via method: {MethodName}", methodName);
-
-        // Clear local storage first for WASM to ensure clean state before any events fire
-        if (formFactor.GetFormFactor() is "WebAssembly")
+        try
         {
-            await localStorage.ClearCacheAsync();
+            await coordinator.ExecuteAsync(async () =>
+            {
+                // Finish in-flight refresh/current-token writes before clearing cookies and storage.
+                // A failed BFF call must leave the current UI session available for a retry.
+                await apiService.LogoutAsync(CancellationToken.None);
+                if (formFactor.GetFormFactor() is "WebAssembly")
+                {
+                    await localStorage.ClearCacheAsync();
+                }
+                return true;
+            });
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning("Unable to complete sign-out ({FailureType}).", exception.GetType().Name);
+            ErrorMessage = "Unable to sign out. Please try again.";
+            return false;
         }
 
-        // apiService.LogoutAsync handles:
-        // - WASM (ClientAuthApiService): Calls BFF /tokens/logout to clear HttpOnly cookies, then clears local storage
-        // - Server (ServerAuthApiService): Clears cookies and hybrid cache directly
-        await apiService.LogoutAsync(CancellationToken.None);
-
-        LoginChange?.Invoke("");
-        await HandleNavigationToLogin(true);
+        CancelTwoFactor();
+        LoginChange?.Invoke(null);
+        HandleNavigationToLogin(true);
+        return true;
     }
 
     public TwoFactorChallengeResponse? PendingChallenge { get; private set; }
@@ -90,12 +102,8 @@ public class AuthenticationService(
         return true;
     }
 
-    private async Task HandleNavigationToLogin(bool forceLoad = false)
+    private void HandleNavigationToLogin(bool forceLoad = false)
     {
-        await localStorage.ClearCacheAsync();
-
-        LoginChange?.Invoke(null);
-
         try
         {
             navigationManager.NavigateTo("/login", forceLoad);

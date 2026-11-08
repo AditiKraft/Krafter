@@ -52,8 +52,6 @@ public sealed class GoogleOAuthFlow(IGoogleLoginTransactionStore transactions, I
     public async Task<Response<GoogleLoginCallbackResponse>> CallbackAsync(GoogleLoginCallbackRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 4096)
-            return CallbackRejected();
         GoogleLoginState? state = await transactions.TakeAsync<GoogleLoginState>(request.State,
             AuthorizationPurpose, request.RootCorrelation, null, cancellationToken);
         if (state is null) return CallbackRejected();
@@ -61,9 +59,20 @@ public sealed class GoogleOAuthFlow(IGoogleLoginTransactionStore transactions, I
         (Tenant Tenant, Uri Origin)? destination = await ResolveOriginAsync(state.UiOrigin, cancellationToken);
         if (destination is null || destination.Value.Tenant.Id != state.TenantId ||
             destination.Value.Tenant.Identifier != state.TenantIdentifier) return CallbackRejected();
-        Response<LoginResponse> login = await authenticator.AuthenticateAsync(state, request.Code, cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 4096)
+            return LoginFailed(destination.Value.Origin, state.ReturnUrl);
+        Response<LoginResponse> login;
+        try
+        {
+            login = await authenticator.AuthenticateAsync(state, request.Code, cancellationToken);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException ||
+            exception is OperationCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            return LoginFailed(destination.Value.Origin, state.ReturnUrl);
+        }
         if (login.IsError || login.Data is null || (!login.Data.IsCompleted && !login.Data.RequiresTwoFactor))
-            return CallbackRejected();
+            return LoginFailed(destination.Value.Origin, state.ReturnUrl);
         string handoff = await transactions.CreateAsync(HandoffPurpose, state.TenantId, state.ClientNonceHash,
             login.Data, clock.GetUtcNow().AddMinutes(1), cancellationToken);
         // A fragment is not sent in HTTP requests or referrers. No Google code or credential leaves this callback.
@@ -105,6 +114,10 @@ public sealed class GoogleOAuthFlow(IGoogleLoginTransactionStore transactions, I
 
     private static bool SameOrigin(Uri left, Uri right) => left.Scheme == right.Scheme && left.Port == right.Port &&
         string.Equals(left.IdnHost, right.IdnHost, StringComparison.OrdinalIgnoreCase);
+    private static Response<GoogleLoginCallbackResponse> LoginFailed(Uri origin, string returnUrl) =>
+        // Routing completed successfully even when sign-in failed. Only a verified transaction may choose this destination.
+        Response<GoogleLoginCallbackResponse>.Success(new(QueryHelpers.AddQueryString(new Uri(origin, "/login").AbsoluteUri,
+            new Dictionary<string, string?> { ["error"] = "google-auth-failed", ["ReturnUrl"] = LocalReturnPath.Normalize(returnUrl) })));
     private static Response<GoogleLoginCallbackResponse> CallbackRejected() =>
         Response<GoogleLoginCallbackResponse>.Unauthorized("Google login expired or could not be verified. Please try again.");
 }

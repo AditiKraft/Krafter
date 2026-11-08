@@ -20,6 +20,17 @@ public partial class Login(
     [SupplyParameterFromQuery(Name = "ReturnUrl")]
     public string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    private string? QueryErrorMessage => Error switch
+    {
+        "google-auth-failed" => "Unable to sign in with Google. Please try again.",
+        "invalid-google-state" => "Google sign-in expired or could not be verified. Please try again.",
+        _ => null
+    };
+    private string? DisplayError => authenticationService.ErrorMessage ?? QueryErrorMessage;
+
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
     public bool isBusy { get; set; }
@@ -29,6 +40,11 @@ public partial class Login(
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthState;
+        if (QueryErrorMessage is not null)
+        {
+            // A failed provider round-trip must remain visible even if another session exists.
+            return;
+        }
         if (authState.User.Identity?.IsAuthenticated is true)
         {
             // A local JWT can remain unexpired after another tab/device revokes its session.
@@ -68,6 +84,7 @@ public partial class Login(
 
     private async Task CreateToken(TokenRequest loginArgs)
     {
+        Error = null;
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = new Uri(navigationManager.Uri);
@@ -88,6 +105,7 @@ public partial class Login(
 
     private async Task VerifyTwoFactor(TwoFactorRequest _)
     {
+        Error = null;
         isBusy = true;
         try
         {
@@ -107,6 +125,7 @@ public partial class Login(
 
     private async Task StartGoogleLogin()
     {
+        Error = null;
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = new Uri(navigationManager.Uri);

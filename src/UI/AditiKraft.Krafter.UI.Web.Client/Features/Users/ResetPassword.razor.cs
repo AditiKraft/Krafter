@@ -14,6 +14,8 @@ public partial class ResetPassword(
     public string Token { get; set; } = default!;
 
     public bool IsBusy { get; set; }
+    private bool passwordReset;
+    private string? signOutError;
 
     protected override void OnParametersSet() => ResetPasswordRequest.Token = Token;
 
@@ -28,7 +30,20 @@ public partial class ResetPassword(
         IsBusy = false;
         if (response is { IsError: false })
         {
-            await authentication.LogoutAsync("Password reset. Sign in again.");
+            passwordReset = true;
+            await SignInAgainAsync();
         }
+    }
+
+    private async Task SignInAgainAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            signOutError = await authentication.LogoutAsync("Password reset. Sign in again.")
+                ? null : authentication.ErrorMessage;
+        }
+        finally { IsBusy = false; }
     }
 }

@@ -5,7 +5,7 @@
 
 ## 1. Core Principles
 - Use `ApiCallService` for all user API calls.
-- After successful password change/reset, call `IAuthenticationService.LogoutAsync` to clear cookies and browser auth state and require a fresh sign-in. The backend revokes old sessions; navigation alone leaves stale client state.
+- After successful password change/reset, check `IAuthenticationService.LogoutAsync` to confirm cookies and browser auth state were cleared. If it fails, show the retryable error and offer sign-out again without resubmitting the password mutation. The backend revokes old sessions; navigation alone leaves stale client state.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Populate role selections by calling `GetUserRolesAsync` when editing a user.
 

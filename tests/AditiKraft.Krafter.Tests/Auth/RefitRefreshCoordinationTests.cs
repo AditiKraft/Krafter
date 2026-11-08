@@ -113,7 +113,7 @@ public sealed class RefitRefreshCoordinationTests
         }
 
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
-        public Task LogoutAsync(string methodName) => throw new NotSupportedException();
+        public Task<bool> LogoutAsync(string methodName) => throw new NotSupportedException();
     }
 
     private sealed class BrowserNavigationManager : NavigationManager
