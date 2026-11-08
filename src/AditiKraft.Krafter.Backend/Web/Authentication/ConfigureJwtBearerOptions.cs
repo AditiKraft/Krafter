@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using System.Text;
 using AditiKraft.Krafter.Backend.Errors;
 using AditiKraft.Krafter.Backend.Infrastructure.Realtime;
@@ -26,6 +27,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
 
         byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Key);
 
+        options.MapInboundClaims = false;
         options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
@@ -43,6 +45,12 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
         };
         options.Events = new JwtBearerEvents
         {
+            OnTokenValidated = async context =>
+            {
+                SessionValidator validator = context.HttpContext.RequestServices.GetRequiredService<SessionValidator>();
+                if (context.Principal is null || !await validator.ValidateAsync(context.Principal))
+                    context.Fail("Session expired. Sign in again.");
+            },
             OnChallenge = context =>
             {
                 context.HandleResponse();

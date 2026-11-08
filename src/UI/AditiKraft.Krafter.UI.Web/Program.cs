@@ -52,6 +52,7 @@ app.MapRazorComponents<App>()
         typeof(AditiKraft.Krafter.UI.Web.Client._Imports).Assembly);
 
 MapAuthTokenEndpoints(app);
+app.MapTwoFactorBffEndpoints();
 
 app.Run();
 
@@ -66,7 +67,7 @@ static void MapAuthTokenEndpoints(WebApplication app)
     app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}", async ([FromBody] TokenRequest request, IAuthApiService apiService,
         [FromServices] IHttpClientFactory clientFactory) =>
     {
-        Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
+        Response<LoginResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
         return Results.Json(res, statusCode: res.StatusCode);
     });
     app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request,
@@ -80,7 +81,7 @@ static void MapAuthTokenEndpoints(WebApplication app)
     app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
         async ([FromBody] TokenRequest request, IAuthApiService apiService) =>
         {
-            Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
+            Response<LoginResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
             return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
         });
 

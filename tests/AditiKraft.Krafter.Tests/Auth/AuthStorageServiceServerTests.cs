@@ -10,6 +10,21 @@ namespace AditiKraft.Krafter.Tests.Auth;
 
 public sealed class AuthStorageServiceServerTests
 {
+    [Fact]
+    public async Task PermissionOnlyCookiesAreNotAnAuthoritativePermissionSource()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Cookie = $"{StorageConstants.Local.Permissions}=Permissions.Users.View";
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddHybridCache();
+        await using ServiceProvider provider = services.BuildServiceProvider();
+        var storage = new AuthStorageServiceServer(new HttpContextAccessor { HttpContext = context },
+            provider.GetRequiredService<HybridCache>());
+        ICollection<string>? permissions = await storage.GetCachedPermissionsAsync();
+        Assert.True(permissions is null || permissions.Count == 0);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -30,7 +30,9 @@ string clientId = configuration["Authentication:Google:ClientId"] ?? "";
 string redirectUri = appUrls.GetGoogleRedirectUri().AbsoluteUri;
 string scope = "email profile";
 string responseType = "code";
-string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(returnUrl)}";
+string nonce = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(SafeReturnUrl())}|||{nonce}";
+await sessionStorage.SetItemAsStringAsync("krafter-oauth-state", state);
 string encodedState = Uri.EscapeDataString(state);
 
 string authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" +
@@ -76,8 +78,18 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthTokenService.cs`
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/TokenRefreshCoordinator.cs`
 
+## Two-factor authentication
+- `AuthenticationService` keeps pending challenges only in scoped flow memory. It persists tokens only after completed authentication; invalid credentials show a persistent error instead of forcing a reload.
+- `Login.razor` handles authenticator/recovery verification. The Google callback returns to this flow when local MFA is required.
+- `TwoFactorSettings.razor` uses `ITwoFactorApi` for management and holds setup/recovery responses only in transient component state. Do not prerender/persist these secrets, put them in URLs, or capture them in screenshots.
+- `AuthCookieMiddleware` distinguishes primary `LoginResponse` from completed `TokenResponse`, including `/api/two-factor/login`. Pending responses must never write authentication cookies.
+- `TwoFactorBffEndpoints` maps the split-host management/completion routes. Shared `BlazorJwtBearerEvents` validates the exact verified token through the API in split-host mode. Single-host composition supplies an in-process `SessionValidator` callback using the already resolved tenant; do not replace it with a loopback request that derives a new tenant from the connection hostname.
+- Preserve safe local ReturnUrl values and session-bound OAuth state. Never accept arbitrary callback hosts or treat external login alone as verified local MFA.
+- Enrich server permission claims only when the cached credential exactly matches the verified JWT, including before reading fresh request items. Ignore unsigned permission cookies; header/query callers otherwise use backend authorization's database lookup.
+- `AuthApiErrors` normalizes missing/invalid response envelopes and transport failures for generic and non-generic management responses. Use it for every management call, including disabling MFA. `ServerAuthApiErrors` additionally handles standard server resilience rejections without adding those dependencies to WebAssembly.
+
 ---
-Last Updated: 2026-09-12
+Last Updated: 2026-11-08
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Auth/ServerAuthApiService.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

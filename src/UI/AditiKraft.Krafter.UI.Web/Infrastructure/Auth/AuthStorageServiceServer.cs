@@ -98,18 +98,8 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
             return res;
         }
 
-        if (httpContextAccessor.HttpContext?.Request is null)
-        {
-            return await ValueTask.FromResult<ICollection<string>?>(null);
-        }
-
-        string? token = httpContextAccessor.HttpContext.Request.Cookies[StorageConstants.Local.Permissions];
-        if (string.IsNullOrEmpty(token))
-        {
-            return await ValueTask.FromResult<ICollection<string>?>(null);
-        }
-
-        return await ValueTask.FromResult<ICollection<string>?>(token.Split(',').ToList());
+        // Permissions come only from server-controlled state, never an unsigned browser cookie.
+        return null;
     }
 
     private string? ExtractUserIdFromToken(string? token)

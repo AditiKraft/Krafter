@@ -44,6 +44,27 @@
                 Or
             </RadzenText>
 
+            @if (!string.IsNullOrEmpty(authenticationService.ErrorMessage))
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" AllowClose="false" role="alert">@authenticationService.ErrorMessage</RadzenAlert>
+            }
+            @if (authenticationService.PendingChallenge is not null)
+            {
+                <RadzenText TagName="TagName.H2">Two-factor verification</RadzenText>
+                <p>Enter your authenticator code. If you lost your authenticator, use one of your recovery codes.</p>
+                <RadzenTemplateForm Data="@verification" Submit="@((TwoFactorRequest request) => VerifyTwoFactor(request))">
+                    <RadzenLabel Text="Verification or recovery code" Component="VerificationCode" />
+                    <RadzenTextBox Name="VerificationCode" @bind-Value="verification.Code" autocomplete="one-time-code" Style="width:100%" />
+                    <div class="rz-my-3">
+                        <RadzenCheckBox @bind-Value="verification.UseRecoveryCode" Name="UseRecoveryCode" />
+                        <RadzenLabel Component="UseRecoveryCode" Text="Use a recovery code" />
+                    </div>
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Verify" IsBusy="isBusy" />
+                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelVerification" Disabled="isBusy" />
+                </RadzenTemplateForm>
+            }
+            else
+            {
             <RadzenTemplateForm Data="@TokenRequestInput" Submit="@((TokenRequest __) => CreateToken(__))">
                 <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
                 <RadzenStack Gap="0.5rem">
@@ -71,6 +92,8 @@
                     <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Size="ButtonSize.Small" Icon="login" Text="Login" />
                 </RadzenStack>
             </RadzenTemplateForm>
+            }
+
         </RadzenCard>
     </RadzenColumn>
 </RadzenRow>

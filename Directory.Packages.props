@@ -4,6 +4,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="Otp.NET" Version="1.4.1" />
+    <PackageVersion Include="QRCoder" Version="1.8.1" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
     <PackageVersion Include="Bit.BlazorUI.Extras" Version="10.1.1" />
     <PackageVersion Include="Blazored.FluentValidation" Version="2.2.0" />

@@ -10,35 +10,11 @@ public class ClientAuthApiService(
     IAuthStorageService localStorage,
     ILogger<ClientAuthApiService> logger) : IAuthApiService
 {
-    public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            Response<TokenResponse> response = await authApi.CreateTokenAsync(request, cancellationToken);
-            return response;
-        }
-        catch (ApiException ex)
-        {
-            logger.LogError(ex, "Error during client-side token creation");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to create token. Please log in again.",
-                StatusCode = (int)ex.StatusCode
-            };
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during client-side token creation");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to create token. Please log in again.",
-                StatusCode = (int)HttpStatusCode.InternalServerError
-            };
-        }
-    }
+    public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
+        AuthApiErrors.CallAsync(() => authApi.CompleteTwoFactorAsync(request, cancellation));
+
+    public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) =>
+        AuthApiErrors.CallAsync(() => authApi.CreateTokenAsync(request, cancellation));
 
     public async Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
         CancellationToken cancellationToken)
@@ -70,36 +46,8 @@ public class ClientAuthApiService(
         }
     }
 
-    public async Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var googleRequest = new GoogleAuthRequest { Code = request.Code ?? string.Empty };
-            Response<TokenResponse> response = await authApi.GoogleAuthAsync(googleRequest, cancellationToken);
-            return response;
-        }
-        catch (ApiException ex)
-        {
-            logger.LogError(ex, "Error during client-side external auth");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to authenticate. Please try again.",
-                StatusCode = (int)ex.StatusCode
-            };
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during client-side external auth");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to authenticate. Please try again.",
-                StatusCode = (int)HttpStatusCode.InternalServerError
-            };
-        }
-    }
+    public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) =>
+        AuthApiErrors.CallAsync(() => authApi.GoogleAuthAsync(new GoogleAuthRequest { Code = request.Code ?? string.Empty }, cancellation));
 
     public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellationToken)
     {

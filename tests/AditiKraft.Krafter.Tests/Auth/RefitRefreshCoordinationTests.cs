@@ -143,8 +143,8 @@ public sealed class RefitRefreshCoordinationTests
             return Response<TokenResponse>.Success(refreshed);
         }
 
-        public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
-        public Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
         public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation) => throw new NotSupportedException();
         public Task LogoutAsync(CancellationToken cancellation) => throw new NotSupportedException();
     }

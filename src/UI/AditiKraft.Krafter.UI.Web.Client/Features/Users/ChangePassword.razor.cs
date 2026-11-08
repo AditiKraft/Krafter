@@ -1,8 +1,9 @@
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
 public partial class ChangePassword(
-    NavigationManager navigationManager,
+    IAuthenticationService authentication,
     ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
@@ -24,7 +25,7 @@ public partial class ChangePassword(
         IsBusy = false;
         if (response is { IsError: false })
         {
-            navigationManager.NavigateTo(!string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/products");
+            await authentication.LogoutAsync("Password changed. Sign in again.");
         }
     }
 }

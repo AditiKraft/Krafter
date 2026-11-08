@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
@@ -14,7 +17,7 @@ namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 public enum BlazorHostingMode
 {
     /// <summary>
-    /// UI runs as a separate process. OnChallenge always redirects to login.
+    /// UI runs as a separate process. API challenges return JSON; page challenges redirect to login.
     /// </summary>
     SplitHost,
 
@@ -30,10 +33,12 @@ public enum BlazorHostingMode
 /// Handles cookie-based token reading, proactive token refresh, permission claim enrichment,
 /// and hosting-mode-aware challenge/forbidden responses.
 /// </summary>
-public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEvents
+public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
+    Func<TokenValidatedContext, Task<bool>>? validateLocalSession = null) : JwtBearerEvents
 {
     private static readonly string[] AuthEndpointSegments =
     [
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.TwoFactor}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
@@ -111,6 +116,41 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
             return;
         }
 
+        string? verifiedToken = context.SecurityToken switch
+        {
+            JsonWebToken jwt => jwt.EncodedToken,
+            JwtSecurityToken jwt => jwt.RawData,
+            _ => null
+        };
+
+        if (hostingMode == BlazorHostingMode.SingleHost)
+        {
+            // Use the backend's already resolved tenant and principal, including internal API requests.
+            if (validateLocalSession is null || !await validateLocalSession(context))
+            { context.Fail("Session revoked."); return; }
+        }
+        else
+        {
+            // Validate the exact token that passed JWT verification, regardless of cookie/header/query transport.
+            if (string.IsNullOrEmpty(verifiedToken)) { context.Fail("Session validation failed."); return; }
+            try
+            {
+                IAuthApi api = context.HttpContext.RequestServices.GetRequiredService<IAuthApi>();
+                Response<bool> result = await ServerAuthApiErrors.CallAsync(() =>
+                    api.ValidateSessionAsync($"Bearer {verifiedToken}", context.HttpContext.RequestAborted));
+                if (result.IsError || !result.Data) { context.Fail("Session revoked."); return; }
+            }
+            catch (Exception ex) when (ex is Refit.ApiException or HttpRequestException)
+            { context.Fail("Session validation failed."); return; }
+        }
+
+        // Cookie/cache permission state must belong to the exact token that was verified above.
+        // Header/query clients otherwise use backend authorization's database lookup for this principal.
+        IAuthStorageService localStorage = context.HttpContext.RequestServices.GetRequiredService<IAuthStorageService>();
+        string? storageToken = await localStorage.GetCachedAuthTokenAsync();
+        if (string.IsNullOrEmpty(verifiedToken) || !string.Equals(storageToken, verifiedToken, StringComparison.Ordinal))
+            return;
+
         // Fresh permissions from a just-completed token refresh (stored in HttpContext.Items)
         if (context.HttpContext.Items.TryGetValue(StorageConstants.Local.Permissions,
                 out object? freshPermissions) &&
@@ -121,8 +161,6 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
         }
 
         // Fall back to cached permissions
-        IAuthStorageService localStorage = context.HttpContext.RequestServices
-            .GetRequiredService<IAuthStorageService>();
         ICollection<string>? cachedPermissions = await localStorage.GetCachedPermissionsAsync();
         if (cachedPermissions is { Count: > 0 })
         {
@@ -131,7 +169,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
     }
 
     /// <summary>
-    /// SplitHost: always redirects to login.
+    /// Both modes return JSON for API requests and redirect browser page requests to login.
     /// SingleHost: returns 401 JSON for API requests, redirects for browser requests.
     /// </summary>
     public override Task Challenge(JwtBearerChallengeContext context)
@@ -142,7 +180,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
             return Task.CompletedTask;
         }
 
-        if (hostingMode == BlazorHostingMode.SingleHost && IsApiRequest(context.Request))
+        if (IsApiRequest(context.Request))
         {
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
@@ -155,7 +193,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
     }
 
     /// <summary>
-    /// SplitHost: default 403 behavior.
+    /// Both modes return JSON 403 for API requests.
     /// SingleHost: returns 403 JSON for API requests, default behavior for browser requests.
     /// </summary>
     public override Task Forbidden(ForbiddenContext context)
@@ -165,7 +203,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode) : JwtBearerEve
             return Task.CompletedTask;
         }
 
-        if (hostingMode == BlazorHostingMode.SingleHost && IsApiRequest(context.Request))
+        if (IsApiRequest(context.Request))
         {
             context.Response.StatusCode = 403;
             context.Response.ContentType = "application/json";

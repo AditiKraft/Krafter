@@ -1,6 +1,7 @@
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Components;
 using AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
@@ -21,7 +22,9 @@ builder.AddBackendServices();
 // Override events with BlazorJwtBearerEvents for cookie-reading, token refresh, and login redirects.
 builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    options.Events = new BlazorJwtBearerEvents(BlazorHostingMode.SingleHost);
+    options.Events = new BlazorJwtBearerEvents(BlazorHostingMode.SingleHost, async context =>
+        context.Principal is not null && await context.HttpContext.RequestServices
+            .GetRequiredService<SessionValidator>().ValidateAsync(context.Principal));
 });
 
 builder.Services.AddUiHostServices(builder.Configuration, BlazorHostingMode.SingleHost);

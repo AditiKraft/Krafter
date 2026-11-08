@@ -1,5 +1,6 @@
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
@@ -10,7 +11,7 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class ResetPassword
 {
-    internal sealed class Handler(UserManager<ApplicationUser> userManager) : IScopedHandler
+    internal sealed class Handler(UserManager<ApplicationUser> userManager, ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response> ResetPasswordAsync(ResetPasswordRequest request)
         {
@@ -25,9 +26,12 @@ public sealed class ResetPassword
                 };
             }
 
+            // Identity saves the password, security stamp and session version in one update.
+            user.AuthenticationVersion++;
             IdentityResult result = await userManager.ResetPasswordAsync(user, request.Token!, request.Password!);
             if (!result.Succeeded)
             {
+                db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
                 return new Response
                 {
                     Message = "An error occurred while resetting password", StatusCode = 400, IsError = true

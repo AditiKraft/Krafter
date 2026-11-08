@@ -44,7 +44,7 @@ if (basic is null)
 1. Use `ApiRoutes.Tokens` for token endpoints.
 2. Use `RouteSegment.Refresh` for refresh.
 3. Use `ApiRoutes.ExternalAuth` + `RouteSegment.Google` for Google login.
-4. Pull IP from `X-Forwarded-For` when available.
+4. Use `HttpContext.Connection.RemoteIpAddress` after trusted forwarded-header middleware. Never trust raw client-supplied forwarding text.
 
 ## 5. Common Mistakes
 - Issuing tokens without validating user activation or confirmed email settings.
@@ -63,8 +63,19 @@ if (basic is null)
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
 
+## Two-factor authentication
+- `Common/TwoFactorService.cs` owns enrollment, pending login, factor consumption and session revocation. Never issue tokens from a pending challenge.
+- Primary password/Google routes return `Response<LoginResponse>`; only completed login/refresh returns real `TokenResponse` credentials. `ITokenService` requires explicit MFA proof when the user is enrolled.
+- Account transitions run under PostgreSQL transaction-level advisory locks. Bind challenges and replay state to tenant/user and authentication version. Do not replace this with a process-local lock or cache get/remove.
+- Preserve `auth_time` and `amr` on refresh. `SessionValidator` checks tenant, account eligibility, version and MFA assurance in access/refresh paths.
+- Refresh resolves the account and its refresh credential by the verified immutable user ID. Email changes must never select a different account or transfer authentication/MFA claims.
+- Authenticator secrets use Data Protection. Production enrollment requires a persistent key ring and key-encryption certificate. Never log secret-bearing payloads.
+- Management endpoints require the non-simple CSRF header and exact browser origin; the split-host BFF applies the same rule.
+- Per-client throttling depends on trusted proxy configuration in shared ServiceDefaults. The split-host BFF forwards its resolved client address; configure Backend to trust that UI server. Never clear proxy trust lists or key limits directly on untrusted headers.
+- See `docs/two-factor-authentication.md` for key storage, recovery, API compatibility and test requirements. Passkeys are outside this feature's scope.
+
 ---
-Last Updated: 2026-09-12
+Last Updated: 2026-11-08
 Verified Against: src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, tests/AditiKraft.Krafter.Tests/Configuration/GoogleCallbackTests.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
 ---
 

@@ -259,8 +259,8 @@ public sealed class AuthTokenServiceTests
         }
 
         public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation) => Current();
-        public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
-        public Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
         public Task LogoutAsync(CancellationToken cancellation) => throw new NotSupportedException();
     }
 }

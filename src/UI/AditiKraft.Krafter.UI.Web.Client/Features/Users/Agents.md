@@ -5,6 +5,7 @@
 
 ## 1. Core Principles
 - Use `ApiCallService` for all user API calls.
+- After successful password change/reset, call `IAuthenticationService.LogoutAsync` to clear cookies and browser auth state and require a fresh sign-in. The backend revokes old sessions; navigation alone leaves stale client state.
 - Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
 - Populate role selections by calling `GetUserRolesAsync` when editing a user.
 
@@ -62,6 +63,6 @@ if (confirmed == true)
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs`
 
 ---
-Last Updated: 2026-09-09
+Last Updated: 2026-11-08
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Users.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/CreateOrUpdateUser.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ChangePassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ForgotPassword.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/ResetPassword.razor.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

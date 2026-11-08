@@ -6,7 +6,8 @@ using Microsoft.Extensions.Primitives;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
-public partial class GoogleCallback(IAuthenticationService authenticationService, NavigationManager navigationManager)
+public partial class GoogleCallback(IAuthenticationService authenticationService, NavigationManager navigationManager,
+    AditiKraft.Krafter.Contracts.Common.AppUrls urls, Blazored.SessionStorage.ISessionStorageService sessionStorage)
     : ComponentBase
 {
     protected override async Task OnInitializedAsync()
@@ -24,6 +25,9 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                     string[] parts = decoded.Split("|||");
                     host = parts[0];
                     returnUrl = parts.Length > 1 ? parts[1] : "";
+                    bool allowedHost = host.Equals(urls.GetRootUiUri().Host, StringComparison.OrdinalIgnoreCase) ||
+                        (!urls.IsInvalidUiTenantHost(host) && urls.GetUiTenantIdentifier(host) is not null);
+                    if (!allowedHost) { navigationManager.NavigateTo("/login?error=invalid-google-state"); return; }
                     if (host != uri.Host)
                     {
                         uri = new UriBuilder(uri) { Host = host }.Uri;
@@ -39,6 +43,13 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
 
                 if (host == uri.Host)
                 {
+                    string? expected = await sessionStorage.GetItemAsStringAsync("krafter-oauth-state");
+                    string actual = QueryHelpers.ParseQuery(uri.Query)["state"].ToString();
+                    if (string.IsNullOrEmpty(expected) || !string.Equals(expected, actual, StringComparison.Ordinal))
+                    { navigationManager.NavigateTo("/login?error=invalid-google-state"); return; }
+                    await sessionStorage.RemoveItemAsync("krafter-oauth-state");
+                    if (string.IsNullOrEmpty(returnUrl) || !returnUrl.StartsWith('/') || returnUrl.StartsWith("//", StringComparison.Ordinal) || returnUrl.Contains('\\'))
+                        returnUrl = "/";
                     string ReturnUrl = returnUrl;
                     LocalAppState.GoogleLoginReturnUrl = ReturnUrl;
                     bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
@@ -46,6 +57,12 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                         IsExternalLogin = true,
                         Code = code.ToString()
                     });
+                    if (!isSuccess)
+                    {
+                        // Both pending MFA and ordinary errors return to login with scoped flow state intact.
+                        navigationManager.NavigateTo("/login?ReturnUrl=" + Uri.EscapeDataString(ReturnUrl));
+                        return;
+                    }
                     if (isSuccess)
                     {
                         if (!string.IsNullOrWhiteSpace(ReturnUrl))
@@ -63,9 +80,9 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                     await Task.Delay(1000);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Error during Google login: {ex.Message}");
+                navigationManager.NavigateTo("/login?error=google-auth-failed");
             }
         }
         else

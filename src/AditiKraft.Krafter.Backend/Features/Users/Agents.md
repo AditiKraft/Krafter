@@ -7,6 +7,7 @@
 - Use `UserManager<ApplicationUser>` and `RoleManager<ApplicationRole>` for all user operations.
 - On create, ensure the Basic role is assigned (`RoleConstants.Basic`).
 - Send account and password emails via `IJobService.EnqueueAsync(...)`.
+- Password change/reset must persist `AuthenticationVersion` with the password in one successful Identity update. Advance it before calling Identity; detach the failed user on failure. A second save can leave changed passwords with valid old sessions during concurrency conflicts.
 - Soft-delete users and related roles; never hard-delete.
 
 ## 2. Decision Tree
@@ -54,6 +55,6 @@ Role synchronization checks that requested roles belong to the current tenant. N
 - `src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs`
 
 ---
-Last Updated: 2026-09-09
+Last Updated: 2026-11-08
 Verified Against: src/AditiKraft.Krafter.Backend/Features/Users/Common/UserMutationService.cs, src/AditiKraft.Krafter.Backend/Features/Users/CreateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/UpdateUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/DeleteUser.cs, src/AditiKraft.Krafter.Backend/Features/Users/ChangePassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ForgotPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/ResetPassword.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserRoles.cs, src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
 ---

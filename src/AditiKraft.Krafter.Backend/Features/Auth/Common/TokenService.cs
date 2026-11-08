@@ -28,7 +28,7 @@ public class TokenService(
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
 
-    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress)
+    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false)
     {
         ApplicationUser? user = await userManager.FindByIdAsync(userId);
         if (user is null)
@@ -36,12 +36,13 @@ public class TokenService(
             return Response<TokenResponse>.Unauthorized("Authentication Failed.");
         }
 
-        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress));
+        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress, authenticatedAt, method, mfaVerified));
     }
 
-    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress)
+    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false)
     {
-        string token = GenerateJwt(user, ipAddress);
+        if (user.TwoFactorEnabled && !mfaVerified) throw new InvalidOperationException("MFA proof is required before token issuance.");
+        string token = GenerateJwt(user, ipAddress, authenticatedAt, method, mfaVerified);
         bool newTone = false;
         UserRefreshToken? tokenResponse =
             await applicationDbContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
@@ -72,13 +73,18 @@ public class TokenService(
             tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
     }
 
-    private string GenerateJwt(ApplicationUser user, string ipAddress) =>
-        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress));
+    private string GenerateJwt(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false) =>
+        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress, authenticatedAt, method, mfaVerified));
 
-    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress) =>
+    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false) =>
         new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
+            new(AppClaimTypes.TenantId, user.TenantId),
+            new(AppClaimTypes.AuthenticationVersion, user.AuthenticationVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new(AppClaimTypes.AuthenticationTime, (authenticatedAt ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()).ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new(AppClaimTypes.AuthenticationMethod, method),
+            new(AppClaimTypes.Mfa, mfaVerified ? "true" : "false"),
             new(ClaimTypes.Email, user.Email!),
             new(AppClaimTypes.Fullname, $"{user.FirstName} {user.LastName}"),
             new(ClaimTypes.Name, user.FirstName ?? string.Empty),

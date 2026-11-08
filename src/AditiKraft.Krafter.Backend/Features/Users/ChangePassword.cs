@@ -3,6 +3,7 @@ using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
@@ -16,6 +17,7 @@ public sealed class ChangePassword
 {
     internal sealed class Handler(
         UserManager<ApplicationUser> userManager,
+        ApplicationDbContext db,
         ICurrentUser currentUser,
         ITenantGetterService tenantGetterService,
         IJobService jobService) : IScopedHandler
@@ -28,9 +30,12 @@ public sealed class ChangePassword
                 return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
+            // Identity saves the password, security stamp and session version in one update.
+            user.AuthenticationVersion++;
             IdentityResult result = await userManager.ChangePasswordAsync(user, request.Password, request.NewPassword);
             if (!result.Succeeded)
             {
+                db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
                 return new Response { IsError = true, Message = "Current password is incorrect", StatusCode = 400 };
             }
 

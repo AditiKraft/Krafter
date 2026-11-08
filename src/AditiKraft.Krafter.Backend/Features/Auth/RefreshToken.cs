@@ -7,7 +7,6 @@ using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
-using AditiKraft.Krafter.Contracts.Common.Extensions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using Microsoft.AspNetCore.Identity;
@@ -24,7 +23,8 @@ public sealed class RefreshToken
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext applicationDbContext,
         ITokenService tokenService,
-        IOptions<JwtSettings> jwtSettings
+        IOptions<JwtSettings> jwtSettings,
+        SessionValidator sessions
     ) : IScopedHandler
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
@@ -34,20 +34,23 @@ public sealed class RefreshToken
             string ipAddress,
             CancellationToken cancellationToken)
         {
-            ClaimsPrincipal? userPrincipal = GetPrincipalFromExpiredToken(request.Token);
-            if (userPrincipal is null)
+            ClaimsPrincipal? userPrincipal;
+            try { userPrincipal = GetPrincipalFromExpiredToken(request.Token); }
+            catch (Exception ex) when (ex is SecurityTokenException or ArgumentException)
+            { return Response<TokenResponse>.Unauthorized("Invalid token."); }
+            if (userPrincipal is null || !await sessions.ValidateAsync(userPrincipal))
             {
                 return Response<TokenResponse>.Unauthorized("Invalid token.");
             }
 
-            string? userEmail = userPrincipal.GetEmail();
+            string? userId = userPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(userEmail))
+            if (string.IsNullOrEmpty(userId))
             {
                 return Response<TokenResponse>.Unauthorized("Invalid token.");
             }
 
-            ApplicationUser? user = await userManager.FindByEmailAsync(userEmail);
+            ApplicationUser? user = await userManager.FindByIdAsync(userId);
             if (user is null)
             {
                 return Response<TokenResponse>.Unauthorized("Authentication failed.");
@@ -63,7 +66,10 @@ public sealed class RefreshToken
                 return Response<TokenResponse>.Unauthorized("Invalid or expired refresh token.");
             }
 
-            return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress));
+            return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress,
+                long.Parse(userPrincipal.FindFirstValue(AppClaimTypes.AuthenticationTime)!, System.Globalization.CultureInfo.InvariantCulture),
+                userPrincipal.FindFirstValue(AppClaimTypes.AuthenticationMethod) ?? "pwd",
+                mfaVerified: userPrincipal.FindFirstValue(AppClaimTypes.Mfa) == "true"));
         }
 
         private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
@@ -78,7 +84,7 @@ public sealed class RefreshToken
                 ClockSkew = TimeSpan.Zero
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenHandler = new JwtSecurityTokenHandler { MapInboundClaims = false };
             ClaimsPrincipal principal =
                 tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
 
@@ -118,9 +124,7 @@ public sealed class RefreshToken
 
         private static string? GetIpAddress(HttpContext httpContext)
         {
-            return httpContext.Request.Headers.ContainsKey("X-Forwarded-For")
-                ? httpContext.Request.Headers["X-Forwarded-For"]
-                : httpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "N/A";
+            return httpContext.Connection.RemoteIpAddress?.ToString() ?? "N/A";
         }
     }
 }

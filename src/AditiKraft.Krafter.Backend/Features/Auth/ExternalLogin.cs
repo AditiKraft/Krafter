@@ -93,13 +93,13 @@ public sealed class ExternalAuth
     }
 
     internal sealed class Handler(
-        ITokenService tokenService,
+        TwoFactorService twoFactor,
         ApplicationDbContext db,
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
         GoogleAuthClient googleAuthClient) : IScopedHandler
     {
-        public async Task<Response<TokenResponse>> GetTokenAsync(
+        public async Task<Response<LoginResponse>> GetTokenAsync(
             GoogleAuthRequest request,
             CancellationToken cancellationToken)
         {
@@ -108,14 +108,14 @@ public sealed class ExternalAuth
 
             if (tokens == null)
             {
-                return Response<TokenResponse>.Unauthorized("Invalid token");
+                return Response<LoginResponse>.Unauthorized("Invalid token");
             }
 
             // Get user info from Google
             GoogleAuthClient.GoogleUserInfo? userInfo = await googleAuthClient.GetUserInfoAsync(tokens.AccessToken);
-            if (userInfo == null)
+            if (userInfo is null || !userInfo.VerifiedEmail || string.IsNullOrWhiteSpace(userInfo.Email))
             {
-                return Response<TokenResponse>.Unauthorized("Invalid user info");
+                return Response<LoginResponse>.Unauthorized("Invalid user info");
             }
 
             // Find or create user based on email
@@ -125,7 +125,7 @@ public sealed class ExternalAuth
                 ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
                 if (basic is null)
                 {
-                    return Response<TokenResponse>.NotFound("Basic Role Not Found.");
+                    return Response<LoginResponse>.NotFound("Basic Role Not Found.");
                 }
 
                 user = new ApplicationUser
@@ -147,14 +147,14 @@ public sealed class ExternalAuth
                 IdentityResult result = await userManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
-                    return Response<TokenResponse>.BadRequest("An error occurred while creating user.");
+                    return Response<LoginResponse>.BadRequest("An error occurred while creating user.");
                 }
 
                 db.UserRoles.Add(new ApplicationUserRole { RoleId = basic.Id, UserId = user.Id });
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            Response<TokenResponse> res = await tokenService.GenerateTokensAndUpdateUser(user.Id, string.Empty);
+            Response<LoginResponse> res = await twoFactor.ExternalLoginAsync(user.Id, string.Empty);
             return res;
         }
     }
@@ -174,9 +174,9 @@ public sealed class ExternalAuth
                 UserManager<ApplicationUser> userManager,
                 RoleManager<ApplicationRole> roleManager) =>
             {
-                Response<TokenResponse> res = await externalAuthService.GetTokenAsync(request, CancellationToken.None);
+                Response<LoginResponse> res = await externalAuthService.GetTokenAsync(request, CancellationToken.None);
                 return Results.Json(res, statusCode: res.StatusCode);
-            }).AllowAnonymous();
+            }).AllowAnonymous().RequireRateLimiting("authentication");
         }
     }
 }

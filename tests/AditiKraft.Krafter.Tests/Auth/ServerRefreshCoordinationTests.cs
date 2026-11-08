@@ -304,8 +304,10 @@ public sealed class ServerRefreshCoordinationTests
             return refresh(request, cancellationToken);
         }
 
-        public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Response<TokenResponse>> GoogleAuthAsync(GoogleAuthRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<Response<bool>> ValidateSessionAsync(string authorization, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> GoogleAuthAsync(GoogleAuthRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task LogoutAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
     }

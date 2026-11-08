@@ -26,6 +26,14 @@ public class MenuService
             {
                 new Menu
                 {
+                    Name = "Two-factor authentication",
+                    Path = "account/two-factor",
+                    Icon = "security",
+                    Title = "Account security",
+                    Tags = new[] { "security", "2fa", "authenticator" }
+                },
+                new Menu
+                {
                     Name = "Users",
                     Path = ApiRoutes.Users,
                     Title = "User Management",

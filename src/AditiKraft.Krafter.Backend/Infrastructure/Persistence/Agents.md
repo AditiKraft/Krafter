@@ -74,8 +74,15 @@ modelBuilder.Entity<Tenant>(entity =>
 - Changes to `ApplicationDbContext` soft-delete behavior.
 - New cross-entity configuration added in `ModelBuilderExtensions`.
 
+## MFA persistence
+- `TwoFactorCredential`, `TwoFactorChallenge` and `TwoFactorRecoveryCode` are tenant-scoped, with explicit query filters. Account transitions acquire a PostgreSQL advisory transaction lock before reloading tracked state.
+- Consume challenges/recovery codes by updating state under that lock; do not issue credentials before the transaction succeeds.
+- `AuthenticationVersion` and the user concurrency stamp change on factor changes. Access and refresh validation must reject prior versions.
+- `TwoFactorCleanup` deliberately uses untracked `ExecuteDeleteAsync` only for expired challenges/consumed recovery rows. Tracked deletes still follow the existing soft-delete rules.
+- Real PostgreSQL tests require a dedicated `KRAFTER_TEST_POSTGRES` database. EF InMemory tests do not establish concurrency guarantees.
+
 ---
-Last Updated: 2026-09-09
+Last Updated: 2026-11-07
 Verified Against: src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/TenantDbContext.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ModelBuilderExtensions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs, src/AditiKraft.Krafter.Backend.Migrator/Program.cs, src/AditiKraft.Krafter.Backend.Migrator/ApiDbInitializer.cs, aspire/AditiKraft.Krafter.Aspire.AppHost/Program.cs
 ---
 

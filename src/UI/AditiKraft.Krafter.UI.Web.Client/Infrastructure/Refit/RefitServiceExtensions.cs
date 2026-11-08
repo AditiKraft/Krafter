@@ -34,6 +34,11 @@ public static class RefitServiceExtensions
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
             .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), true, sp.GetService<IHttpContextAccessor>()));
 
+        services.AddRefitClient<ITwoFactorApi>(refitSettings)
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), true, sp.GetService<IHttpContextAccessor>()))
+            .AddHttpMessageHandler<RefitAuthHandler>();
+
         // Register authenticated API clients pointing to AditiKraft.Krafter.Backend directly
         // URL is rewritten by RefitTenantHandler to tenant-specific backendUrl
         services.AddRefitClient<IUsersApi>(refitSettings)
