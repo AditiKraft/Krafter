@@ -17,6 +17,8 @@ Replacing recovery codes invalidates the entire old batch. Enabling, disabling, 
 
 Password reset does not disable two-factor authentication. Google login is also subject to Krafter's locally enrolled factor: this implementation does not treat a Google login as proof that Google performed MFA. OAuth state is correlated with the initiating browser session, and callback/return hosts are restricted to the application's configured tenant addresses.
 
+Password login, MFA password proof, and new passwords on change/reset share a maximum of 1,024 characters. Oversized new passwords are rejected before saving. A previously stored password longer than this limit requires a password reset to a supported length, or a password change while the user is already signed in; the current-password field still accepts the old value for that change. Passwords are never truncated. Resetting such a password preserves any enrolled MFA requirement.
+
 TOTP is useful protection against stolen passwords, but is not phishing-resistant. This feature does not make a NIST compliance claim.
 
 ## Production key storage

@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Auth;
@@ -29,7 +30,7 @@ public sealed class TwoFactorManagementRequestValidator : AbstractValidator<TwoF
 {
     public TwoFactorManagementRequestValidator()
     {
-        RuleFor(x => x.Password).MaximumLength(1024);
+        RuleFor(x => x.Password).MaximumLength(PasswordLimits.MaximumLength);
         RuleFor(x => x.Code).MaximumLength(128);
     }
 }

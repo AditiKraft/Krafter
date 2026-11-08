@@ -48,7 +48,7 @@ public sealed class TwoFactorService(
 
     public async Task<Response<LoginResponse>> PasswordLoginAsync(TokenRequest request, string ip)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password) || request.Password.Length > 1024)
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password) || request.Password.Length > PasswordLimits.MaximumLength)
             return Response<LoginResponse>.Unauthorized("Invalid email or password. If the problem persists, try again later.");
         ApplicationUser? found = await users.FindByEmailAsync(request.Email.Trim().Normalize());
         if (found is null) return Response<LoginResponse>.Unauthorized("Invalid email or password. If the problem persists, try again later.");

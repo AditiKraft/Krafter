@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Auth;
@@ -23,6 +24,7 @@ public class TokenRequestValidator : AbstractValidator<TokenRequest>
         RuleFor(p => p.Password)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
+            .MaximumLength(PasswordLimits.MaximumLength)
             .When(p => !p.IsExternalLogin);
     }
 }
