@@ -67,6 +67,7 @@ if (basic is null)
 - `Common/TwoFactorService.cs` owns enrollment, pending login, factor consumption and session revocation. Never issue tokens from a pending challenge.
 - Primary password/Google routes return `Response<LoginResponse>`; only completed login/refresh returns real `TokenResponse` credentials. `ITokenService` requires explicit MFA proof when the user is enrolled.
 - Account transitions run under PostgreSQL transaction-level advisory locks. Bind challenges and replay state to tenant/user and authentication version. Do not replace this with a process-local lock or cache get/remove.
+- Check Identity failure-count/reset results. Detach a rejected user update before the MFA transaction's final save, and reject login if resetting the failure count failed. Never retry stale account state after a concurrent deletion or security change.
 - Preserve `auth_time` and `amr` on refresh. `SessionValidator` checks tenant, account eligibility, version and MFA assurance in access/refresh paths.
 - Refresh resolves the account and its refresh credential by the verified immutable user ID. Email changes must never select a different account or transfer authentication/MFA claims.
 - Realtime validation uses the middleware-resolved tenant in `HttpContext.Items`, then reloads tenant/account eligibility in a fresh scope. Long Polling clones the HTTP service scope; restore its validated tenant before joining the tenant group. Never use the cloned scope's root default as the resolved tenant.

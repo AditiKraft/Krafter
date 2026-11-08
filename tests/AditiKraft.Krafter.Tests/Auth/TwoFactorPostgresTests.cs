@@ -17,6 +17,10 @@ public sealed class PostgresMfaFactAttribute : FactAttribute
 public sealed class TwoFactorPostgresTests
 {
     [PostgresMfaFact]
+    public Task AuthenticationFailureCannotRestoreAConcurrentlyDeletedAccount() =>
+        UserDeletionRaceTests.VerifyAsync(Environment.GetEnvironmentVariable("KRAFTER_TEST_POSTGRES")!, "wrong-password");
+
+    [PostgresMfaFact]
     public async Task ConcurrentCompletionInSeparateScopesIssuesCredentialsOnce()
     {
         using var harness = CreateHarness();

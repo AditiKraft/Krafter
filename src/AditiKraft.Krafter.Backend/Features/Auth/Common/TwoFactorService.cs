@@ -46,6 +46,17 @@ public sealed class TwoFactorService(
         user.IsActive && !user.IsDeleted && user.TenantId == TenantId && !await users.IsLockedOutAsync(user) &&
         (!security.Value.RequireConfirmedAccount || user.EmailConfirmed);
 
+    private async Task<bool> UpdateFailureCountAsync(ApplicationUser user, bool reset = false)
+    {
+        IdentityResult result = reset
+            ? await users.ResetAccessFailedCountAsync(user)
+            : await users.AccessFailedAsync(user);
+        // Identity can reject a concurrent account change. Do not retry its stale
+        // tracked user in the enclosing MFA transaction's final SaveChanges.
+        if (!result.Succeeded) db.Entry(user).State = EntityState.Detached;
+        return result.Succeeded;
+    }
+
     public async Task<Response<LoginResponse>> PasswordLoginAsync(TokenRequest request, string ip)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password) || request.Password.Length > PasswordLimits.MaximumLength)
@@ -59,7 +70,7 @@ public sealed class TwoFactorService(
                 return Response<LoginResponse>.Unauthorized("Invalid email or password. If the problem persists, try again later.");
             if (!await users.CheckPasswordAsync(user, request.Password))
             {
-                await users.AccessFailedAsync(user);
+                await UpdateFailureCountAsync(user);
                 return Response<LoginResponse>.Unauthorized("Invalid email or password. If the problem persists, try again later.");
             }
             return await StartLoginAsync(user, ip, "pwd");
@@ -78,7 +89,8 @@ public sealed class TwoFactorService(
     {
         if (!user.TwoFactorEnabled)
         {
-            await users.ResetAccessFailedCountAsync(user);
+            if (!await UpdateFailureCountAsync(user, reset: true))
+                return Response<LoginResponse>.Unauthorized("Unable to sign in. Please try again.");
             return Response<LoginResponse>.Success(LoginResponse.Completed(
                 await tokens.GenerateTokensAndUpdateUser(user, ip, Now.ToUnixTimeSeconds(), method)));
         }
@@ -107,12 +119,13 @@ public sealed class TwoFactorService(
             {
                 challenge.Attempts++;
                 if (challenge.Attempts >= MaxAttempts) challenge.IsDeleted = true;
-                await users.AccessFailedAsync(user);
+                await UpdateFailureCountAsync(user);
                 await db.SaveChangesAsync();
                 return Response<TokenResponse>.BadRequest("Invalid or already used code. Wait for a new code, or use a recovery code.");
             }
             challenge.IsDeleted = true;
-            await users.ResetAccessFailedCountAsync(user);
+            if (!await UpdateFailureCountAsync(user, reset: true))
+                return Response<TokenResponse>.Unauthorized("Unable to sign in. Please try again.");
             return Response<TokenResponse>.Success(await tokens.GenerateTokensAndUpdateUser(user, ip,
                 Now.ToUnixTimeSeconds(), challenge.PrimaryMethod ?? "pwd", mfaVerified: true));
         });
@@ -159,7 +172,7 @@ public sealed class TwoFactorService(
         {
             challenge.Attempts++;
             if (challenge.Attempts >= MaxAttempts) challenge.IsDeleted = true;
-            await users.AccessFailedAsync(user);
+            await UpdateFailureCountAsync(user);
             await db.SaveChangesAsync();
             return Response<RecoveryCodesResponse>.BadRequest("Invalid code. Check your authenticator and try again.");
         }
@@ -209,13 +222,13 @@ public sealed class TwoFactorService(
         if (user.TwoFactorEnabled)
         {
             if (await ConsumeFactorAsync(user, request.Code, request.UseRecoveryCode)) return true;
-            await users.AccessFailedAsync(user);
+            await UpdateFailureCountAsync(user);
             return false;
         }
         if (await users.HasPasswordAsync(user))
         {
             if (!string.IsNullOrEmpty(request.Password) && await users.CheckPasswordAsync(user, request.Password)) return true;
-            await users.AccessFailedAsync(user);
+            await UpdateFailureCountAsync(user);
             return false;
         }
         return principal.FindFirstValue(AppClaimTypes.AuthenticationMethod) == "google" &&

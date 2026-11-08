@@ -9,6 +9,7 @@
 - Send account and password emails via `IJobService.EnqueueAsync(...)`.
 - Password change/reset must persist `AuthenticationVersion` with the password in one successful Identity update. Advance it before calling Identity; detach the failed user on failure. A second save can leave changed passwords with valid old sessions during concurrency conflicts.
 - Soft-delete users and related roles; never hard-delete.
+- Soft deletion must rotate `ConcurrencyStamp` and `SecurityStamp` and advance `AuthenticationVersion` in the same save. A stale Identity full-row update must fail instead of restoring a deleted account or its prior sessions.
 
 ## 2. Decision Tree
 - Creating a user? Follow `CreateUser` pattern.

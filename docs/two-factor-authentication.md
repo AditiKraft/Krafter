@@ -53,6 +53,8 @@ Account-version checks run on ordinary API requests and on Blazor server authent
 
 Cached server permissions are attached only when their credential matches the exact verified token. Unsigned permission cookies are ignored; other header/query callers use the verified user's database permissions. Invalid response envelopes and temporary authentication-service failures produce structured errors, and unavailable session validation rejects authentication.
 
+Deleting a non-owner account advances its authentication version and rotates its Identity concurrency/security stamps together with the soft deletion. In-flight Identity updates cannot restore the deleted row. Rejected failure-count updates are detached before the MFA transaction finishes; a failed failure-count reset cannot issue credentials.
+
 Consumed recovery records are purged hourly. Challenges older than one day past expiry are purged hourly. Cleanup explicitly bypasses tracked soft-delete handling only for expired/consumed MFA state and never deletes active authenticator credentials.
 
 ## Lost authenticator and all recovery codes
