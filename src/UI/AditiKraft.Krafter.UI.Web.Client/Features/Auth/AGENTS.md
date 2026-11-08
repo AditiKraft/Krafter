@@ -13,6 +13,7 @@
 - Treat cookie JWT parsing as best-effort cache-key extraction. Missing, malformed, and oversized cookies must not block sign-out. Clear request-local credentials as well as response cookies so later reads in the same request cannot restore old values; invalid or overflowing expiry cookies are expired.
 - Preserve `ReturnUrl` during login and Google callback.
 - Google sign-in must remain a named semantic button with keyboard activation and visible focus. Keep its light/dark image decorative; route both themes through the same existing nonce-bound `StartGoogleLogin` flow.
+- Login observes `ThemeManager.ThemeChangeRequested` so its Google image updates when stored preferences load after rendering. Unsubscribe on disposal and ignore callbacks queued before disposal.
 - Store Google return URL in `LocalAppState.GoogleLoginReturnUrl`.
 - Use injected `AppUrls.GetGoogleRedirectUri()` for Google callbacks in every environment. Backend uses the same method for code exchange. Read [Configure application URLs](../../../../../docs/url-configuration.md) when changing callback or deployment settings.
 

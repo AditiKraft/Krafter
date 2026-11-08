@@ -13,7 +13,7 @@ public partial class Login(
     ThemeManager themeManager,
     AppUrls appUrls,
     Blazored.SessionStorage.ISessionStorageService sessionStorage
-) : ComponentBase
+) : ComponentBase, IDisposable
 {
     [CascadingParameter] public Task<AuthenticationState> AuthState { get; set; } = default!;
 
@@ -36,6 +36,30 @@ public partial class Login(
     public bool isBusy { get; set; }
     public TokenRequest TokenRequestInput { get; set; } = new();
     private bool _shouldRedirect;
+    private bool _disposed;
+
+    protected override void OnInitialized()
+    {
+        themeManager.ThemeChangeRequested += OnThemeChangedAsync;
+    }
+
+    private Task OnThemeChangedAsync(string _)
+    {
+        if (_disposed)
+            return Task.CompletedTask;
+
+        return InvokeAsync(() =>
+        {
+            if (!_disposed)
+                StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        themeManager.ThemeChangeRequested -= OnThemeChangedAsync;
+    }
 
     protected override async Task OnInitializedAsync()
     {

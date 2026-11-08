@@ -54,6 +54,50 @@ public sealed class LoginFailureRenderingTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GoogleSignInTracksThemeChangesAfterItsInitialRender(bool darkTheme)
+    {
+        await using var page = new LoginPage("", "/users", authenticated: false, darkTheme: darkTheme);
+        await page.RenderAsync();
+        await page.RunAsync(async () =>
+        {
+            RadzenButton button = page.GoogleButton;
+            TokenRequest input = page.Component.TokenRequestInput;
+            input.Email = "unfinished@example.test";
+
+            // Use the real publisher after rendering, as stored preferences and theme controls do.
+            foreach (bool nextDarkTheme in new[] { !darkTheme, darkTheme })
+            {
+                await page.Theme.SetThemePreference(nextDarkTheme
+                    ? ThemeManager.ThemePreference.Dark : ThemeManager.ThemePreference.Light);
+
+                string asset = nextDarkTheme ? "login-with-google-light.svg" : "login-with-google-dark.svg";
+                Assert.Equal(asset, page.GoogleImage.Path);
+                Assert.Contains($"src=\"{asset}\"", page.Root.ToHtmlString());
+                Assert.Contains("value=\"unfinished@example.test\"", page.Root.ToHtmlString());
+                Assert.Same(button, page.GoogleButton);
+                Assert.Same(input, page.Component.TokenRequestInput);
+                Assert.Equal("unfinished@example.test", input.Email);
+                Assert.Null(page.Navigation.Target);
+            }
+        });
+    }
+
+    [Fact]
+    public async Task ThemeChangesAfterLoginDisposalDoNotRenderOrNavigate()
+    {
+        await using var page = new LoginPage("", "/users", authenticated: false);
+        await page.RenderAsync();
+        await page.DisposeRendererAsync();
+
+        await page.Theme.SetThemePreference(ThemeManager.ThemePreference.Dark);
+        await page.Theme.SetThemePreference(ThemeManager.ThemePreference.Light);
+
+        Assert.Null(page.Navigation.Target);
+    }
+
+    [Theory]
     [InlineData("google-auth-failed", "Unable to sign in with Google. Please try again.")]
     [InlineData("invalid-google-state", "Google sign-in expired or could not be verified. Please try again.")]
     public async Task KnownOAuthErrorsRemainVisibleEvenWithAnExistingSession(string error, string message)
@@ -128,6 +172,7 @@ public sealed class LoginFailureRenderingTests
         private readonly HtmlRenderer renderer;
         private readonly Components components;
         private readonly bool authenticated;
+        private bool rendererDisposed;
         public Navigation Navigation { get; }
         public HtmlRootComponent Root { get; private set; }
 
@@ -148,13 +193,13 @@ public sealed class LoginFailureRenderingTests
             registrations.AddSingleton<Components>();
             registrations.AddSingleton<IComponentActivator>(provider => provider.GetRequiredService<Components>());
             services = registrations.BuildServiceProvider();
-            services.GetRequiredService<ThemeManager>().CurrentActive = darkTheme
-                ? ThemeManager.ThemePreference.Dark : ThemeManager.ThemePreference.Light;
+            services.GetRequiredService<ThemeService>().SetTheme(darkTheme ? "material-dark" : "material");
             components = services.GetRequiredService<Components>();
             renderer = new HtmlRenderer(services, services.GetRequiredService<ILoggerFactory>());
         }
 
         public Login Component => components.All.OfType<Login>().Single();
+        public ThemeManager Theme => services.GetRequiredService<ThemeManager>();
         public RadzenButton GoogleButton => components.All.OfType<RadzenButton>().Single(button =>
             button.Attributes?.TryGetValue("aria-label", out object? label) == true && Equals(label, "Sign in with Google"));
         public RadzenImage GoogleImage => components.All.OfType<RadzenImage>().Single();
@@ -173,9 +218,17 @@ public sealed class LoginFailureRenderingTests
                 }));
         });
 
+        public async ValueTask DisposeRendererAsync()
+        {
+            if (rendererDisposed)
+                return;
+            rendererDisposed = true;
+            await renderer.DisposeAsync();
+        }
+
         public async ValueTask DisposeAsync()
         {
-            await renderer.DisposeAsync();
+            await DisposeRendererAsync();
             await services.DisposeAsync();
         }
     }
