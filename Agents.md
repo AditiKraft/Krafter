@@ -15,39 +15,14 @@ The template project itself contains both variants. Shared business code lives i
 
 ## 2. Which Instructions to Read?
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         DECISION TREE                                │
-├──────────────────────────────────────────────────────────────────────┤
-│ What are you working on?                                             │
-│                                                                      │
-│ ├── API endpoint, Handler, Entity, Database?                        │
-│ │   └── READ: src/AditiKraft.Krafter.Backend/Agents.md              │
-│ │                                                                    │
-│ ├── Blazor page, Component, UI Service?                             │
-│ │   └── READ: src/UI/Agents.md                                      │
-│ │                                                                    │
-│ ├── Shared DTOs, Requests, Responses (Contracts)?                   │
-│ │   └── READ: src/AditiKraft.Krafter.Contracts/Agents.md            │
-│ │                                                                    │
-│ ├── Aspire orchestration, Docker, CI/CD?                            │
-│ │   └── Use patterns from aspire/ and .github/workflows/            │
-│ │                                                                    │
-│ ├── Cross-cutting (affects both Backend + UI)?                      │
-│ │   └── READ BOTH Backend + UI sub-files                            │
-│ │                                                                    │
-│ ├── Template configuration, overlay mechanism?                      │
-│ │   └── See .template.config/ (split) and .template.config-single/  │
-│ │       Single-host overlays: src-single/ and aspire-single/        │
-│ │       READ: Section 4 (Template Mechanism) below                  │
-│ │                                                                    │
-│ └── Agents.md variant files (root-level AI instructions)?           │
-│     └── Agents.md        — Template developers (this file)          │
-│         Agents.split.md  — Shipped as Agents.md in krafter output   │
-│         Agents.single.md — Shipped as Agents.md in krafter-single   │
-│         READ: Section 5 (Agents.md Variant Strategy) below          │
-└──────────────────────────────────────────────────────────────────────┘
-```
+- API endpoints, handlers, entities, or database: read [Backend instructions](src/AditiKraft.Krafter.Backend/Agents.md).
+- Blazor pages, components, or UI services: read [UI instructions](src/UI/Agents.md).
+- Shared DTOs, requests, responses, or validators: read [Contracts instructions](src/AditiKraft.Krafter.Contracts/Agents.md).
+- Cross-cutting changes: read both Backend and UI guidance, plus the applicable feature instructions.
+- Aspire, Docker, or CI/CD: follow existing `aspire/` and `.github/workflows/` patterns.
+- Template overlays: see section 4 and both `.template.config` directories.
+- Root instruction variants: see section 5 before changing `Agents.split.md` or `Agents.single.md`.
+
 
 For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
 
@@ -62,7 +37,7 @@ For URL settings, hosting-mode routing, tenant domains, CORS, or Google callback
 
 - Package versions: root `Directory.Packages.props`. Add `PackageReference` entries without a `Version` in project files.
 - `Directory.Build.props` audits direct and transitive dependencies and treats NU1901–NU1904 as errors. Fix affected parent packages or documented security floors; do not suppress advisories with `NoWarn` or `WarningsNotAsErrors`. See `docs/dependency-security.md` and verify source plus both generated hosting variants.
-- Shared server UI registration: `src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Keep host-specific authentication and endpoints in `Program.cs`.
+- Shared server UI registration: `src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Keep host-specific authentication and endpoint selection in `Program.cs`; reusable BFF mappers live in server `Infrastructure/Auth/`.
 
 - Backend operations: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`.
 - UI pages, dialogs, and API interface: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
@@ -237,114 +212,14 @@ refactor(tenants): consolidate tenant operations
 
 ## 10. Agents.md Evolution & Maintenance
 
-> **CRITICAL**: Agents.md files are LIVING DOCUMENTS that MUST evolve with the codebase.
+Keep instructions accurate and feature-specific; update examples and references when code moves.
+Read [instruction maintenance](docs/agent-instructions-maintenance.md) before changing guidance.
+Ask user approval before creating new instruction files. Prefer updating existing guidance and linking detailed docs.
 
-### 10.1 When to UPDATE Existing Agents.md
-
-| Trigger | Action |
-|---------|--------|
-| New pattern discovered in code | Add to relevant Agents.md with code example |
-| Existing pattern changes | Update the documentation immediately |
-| AI agent makes repeated mistakes | Add to "Common Mistakes" section |
-| New library/tool integrated | Document usage patterns |
-| Code review reveals undocumented convention | Add to appropriate section |
-
-### 10.2 When to CREATE New Agents.md Files
-
-| Trigger | Action |
-|---------|--------|
-| A feature grows to 5+ operations with unique patterns | Create `Features/<Feature>/Agents.md` |
-| A new infrastructure area is added (e.g., messaging, caching) | Create `Infrastructure/<Area>/Agents.md` |
-| CI/CD or deployment rules become complex | Create `.github/Agents.md` if that area needs AI-specific rules |
-| Aspire orchestration has custom rules | Create `aspire/Agents.md` if orchestration patterns become project-specific |
-| A sub-area has 3+ unique patterns not in parent | Create sub-directory Agents.md |
-
-### 10.3 When to SPLIT/BREAKDOWN Agents.md
-
-> **Split when a single Agents.md exceeds ~500 lines or covers too many concerns**
-
-```
-BEFORE (monolithic):
-src/AditiKraft.Krafter.Backend/Agents.md (800+ lines covering everything)
-
-AFTER (split by concern):
-src/AditiKraft.Krafter.Backend/Agents.md (core patterns, ~200 lines)
-├── Features/Auth/Agents.md (auth-specific patterns)
-├── Features/Tenants/Agents.md (multi-tenant patterns)
-├── Infrastructure/Persistence/Agents.md (EF Core patterns)
-└── Infrastructure/Jobs/Agents.md (TickerQ patterns)
-```
-
-### 10.4 Hierarchy & Inheritance
-
-```
-Agents.md (ROOT - global rules)
-    ↓ inherits
-src/AditiKraft.Krafter.Backend/Agents.md (backend-specific)
-    ↓ inherits
-src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md (auth-specific)
-```
-
-**Rules:**
-- Child Agents.md inherits all rules from parent
-- Child can OVERRIDE parent rules (document why)
-- Child should only contain rules SPECIFIC to that area
-- Always reference parent with the correct relative path (for example `> See also: ../../Agents.md`)
-
-### 10.5 Template for New Agents.md
-
-```markdown
-# <Area> AI Instructions
-
-> **SCOPE**: <What this file covers>
-> **PARENT**: See also: <path to parent Agents.md>
-
-## 1. Core Principles
-- <Key rule 1>
-- <Key rule 2>
-
-## 2. Decision Tree
-<Where does code go?>
-
-## 3. Code Templates
-<Copy-paste examples from ACTUAL code>
-
-## 4. Checklist
-<Step-by-step for new work>
-
-## 5. Common Mistakes
-<What AI agents get wrong>
-
-## 6. Evolution Triggers
-<When to update THIS file>
-```
-
-### 10.6 AI Agent Responsibilities
-
-**When working on code:**
-1. **Check** if current patterns match Agents.md
-2. **Flag** any discrepancies found
-3. **Suggest** updates when patterns evolve
-4. **Propose** new Agents.md when complexity warrants
-
-**When updating Agents.md:**
-1. **Verify** against actual code (not assumptions)
-2. **Include** real code snippets from codebase
-3. **Reference** actual file paths
-4. **Ask** user approval before creating new files
-
-### 10.7 Version Tracking
-
-Add to each Agents.md:
-```markdown
----
-Last Updated: YYYY-MM-DD
-Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, [list key files checked]
----
-```
+See [architecture guidelines](docs/architecture-guidelines.md) for operation cohesion, shared invariants, and validation.
 
 ---
 Last Updated: 2026-11-08
-Verified Against: aspire-single/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj, aspire-single/AditiKraft.Krafter.Aspire.AppHost/Properties/launchSettings.json, src-single/UI/AditiKraft.Krafter.UI.Web/Properties/launchSettings.json, Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, Agents.md, Agents.split.md, Agents.single.md, .template.config/template.json, .template.config-single/template.json, src/AditiKraft.Krafter.Backend/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/Agents.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/Agents.md, src/AditiKraft.Krafter.Backend/Features/Auth/Agents.md, src/AditiKraft.Krafter.Backend/Features/Users/Agents.md, src/AditiKraft.Krafter.Backend/Features/Roles/Agents.md, src/AditiKraft.Krafter.Backend/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Agents.md, src/UI/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/Agents.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Agents.md, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/ApplicationDbContext.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+Verified Against: Directory.Packages.props, AditiKraft.Krafter.Dev.slnx, .template.config/template.json, .template.config-single/template.json, docs/architecture-guidelines.md, docs/agent-instructions-maintenance.md
 ---
 

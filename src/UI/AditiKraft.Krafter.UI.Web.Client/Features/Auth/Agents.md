@@ -79,10 +79,14 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/TokenRefreshCoordinator.cs`
 
 ## Two-factor authentication
+- MFA members of authentication interfaces are mandatory contracts. Production implementations supply them; unrelated test doubles explicitly declare unsupported MFA behavior.
+- Pass caller cancellation through BFF and Refit calls. `AuthApiErrors` propagates an explicitly canceled caller token and converts dependency timeouts to an error envelope.
+- Settings actions acquire the busy guard before showing a confirmation dialog, then release it in `finally`; keep setup/recovery material transient.
 - `AuthenticationService` keeps pending challenges only in scoped flow memory. It persists tokens only after completed authentication; invalid credentials show a persistent error instead of forcing a reload.
 - `Login.razor` handles authenticator/recovery verification. The Google callback returns to this flow when local MFA is required.
 - `TwoFactorSettings.razor` uses `ITwoFactorApi` for management and holds setup/recovery responses only in transient component state. Do not prerender/persist these secrets, put them in URLs, or capture them in screenshots.
 - `AuthCookieMiddleware` distinguishes primary `LoginResponse` from completed `TokenResponse`, including `/api/two-factor/login`. Pending responses must never write authentication cookies.
+- `AuthTokenBffEndpoints` maps split-host primary proxies and shared current/logout routes; single-host selects only `MapClientSessionEndpoints` because backend operation routes are direct.
 - `TwoFactorBffEndpoints` maps the split-host management/completion routes. Shared `BlazorJwtBearerEvents` validates the exact verified token through the API in split-host mode. Single-host composition supplies an in-process `SessionValidator` callback using the already resolved tenant; do not replace it with a loopback request that derives a new tenant from the connection hostname.
 - Preserve safe local ReturnUrl values and session-bound OAuth state. Never accept arbitrary callback hosts or treat external login alone as verified local MFA.
 - Use `Common/LocalReturnUrl.Normalize()` for every post-login target and decoded Google return path. Reject raw control characters as well as protocol-relative URLs and backslashes: browser parsing strips tabs/newlines and can interpret an apparently local path as an external URL. Preserve valid local query strings and fragments.

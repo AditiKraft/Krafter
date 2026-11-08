@@ -7,7 +7,7 @@
 - Use `ITokenService` for all token issuance.
 - Validate credentials with `UserManager<ApplicationUser>`.
 - Refresh flow validates the stored `UserRefreshToken` and expiry.
-- External login creates a user if missing and assigns the Basic role.
+- External login creates a user if missing and assigns the Basic role in one relational transaction. Cancellation before commit rolls both writes back; dispose provisioning before entering the MFA transition.
 - Google login and token exchange use `AppUrls.GetGoogleRedirectUri()` from `Urls:RootUiUrl`. Register that exact callback with Google; keep one callback source for both steps.
 - Prefer `Response<T>` factory methods for errors.
 
@@ -64,6 +64,11 @@ if (basic is null)
 - `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
 
 ## Two-factor authentication
+- MFA operations use their own named `Handler : IScopedHandler` + `Route` entry point. `ValidateSession.cs` owns token validation; shared MFA HTTP policies live in `Common/TwoFactorEndpoints.cs`.
+- Shared transition logic stays in `TwoFactorService`: these operations must agree on locking, replay protection and revocation. Thin handlers are intentional; no per-handler interfaces or repository wrappers are required.
+- Propagate request cancellation through handlers, EF/Refit calls and advisory-lock waits. Identity APIs have no cancellation parameter; check cancellation around their work. Cancellation before commit rolls back; once commit starts, it finishes independently of request cancellation, with no post-commit cancellation check.
+- A transition owns its DbContext unit of work and clears tracked state after acquiring the lock. Save unrelated caller work before entering it. Return credentials only after commit.
+- `TwoFactorCleanup` is feature-owned maintenance with a new scope per iteration; its background-worker placement is an intentional exception to operation routing.
 - `Common/TwoFactorService.cs` owns enrollment, pending login, factor consumption and session revocation. Never issue tokens from a pending challenge.
 - Primary password/Google routes return `Response<LoginResponse>`; only completed login/refresh returns real `TokenResponse` credentials. `ITokenService` requires explicit MFA proof when the user is enrolled.
 - Account transitions run under PostgreSQL transaction-level advisory locks. Bind challenges and replay state to tenant/user and authentication version. Do not replace this with a process-local lock or cache get/remove.

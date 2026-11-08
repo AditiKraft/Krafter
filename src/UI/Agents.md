@@ -37,7 +37,7 @@ For URL settings, server API connections, tenant routing, or Google callbacks, r
 - Feature API interface: `Features/<Feature>/I<Feature>Api.cs`
 - Shared HTTP client registration and tenant handler: `Infrastructure/Refit/`
 - Authentication services, state provider, token storage, and auth handler: `Infrastructure/Auth/`
-- Common server UI registration: `AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Both hosting variants call `AddUiHostServices(configuration, hostingMode)` (split host is the default); keep their authentication setup and endpoint mapping in their own `Program.cs`.
+- Common server UI registration: `AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Both hosting variants call `AddUiHostServices(configuration, hostingMode)` (split host is the default); keep authentication setup and endpoint selection in each `Program.cs`. Reusable BFF mappers live in server `Infrastructure/Auth/`.
 - Server authentication implementations: `AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`
 - Shared visual components: `Common/Components/`
 - Shared UI state and models: `Common/Models/`
