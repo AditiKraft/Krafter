@@ -12,6 +12,7 @@
 - Register authenticated backend APIs with both `RefitTenantHandler` and `RefitAuthHandler`.
 - Register BFF/auth endpoints and tenant-resolved internal endpoints that do not need auth forwarding with `RefitTenantHandler` only.
 - External APIs should not use tenant/auth handlers.
+- Server Refit clients pass `IHttpContextAccessor` to `RefitTenantHandler`, which replaces forwarding headers with the trusted, resolved connection address and scheme. Browser clients do not generate forwarding headers. Configure immediate proxy trust as documented in `docs/url-configuration.md`.
 - `TenantIdentifier` uses injected `AppUrls`. Browser feature calls use the exact shared `ApiBaseUrl` in split host and the current origin in single host. Resolve tenant UI hosts from `TenantBaseDomain`, with the root UI hostname as its fallback. Server calls use the resolved internal address. Both browser and server calls forward the tenant header. Read [Configure application URLs](../../../../../docs/url-configuration.md) before changing address selection or tenant subdomains.
 
 ## Date and time JSON
@@ -79,6 +80,6 @@ services.AddRefitClient<IUsersApi>(refitSettings)
 - New API client conventions added (e.g., BFF vs direct).
 
 ---
-Last Updated: 2026-09-12
+Last Updated: 2026-11-08
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/UiDateTimeJsonConverter.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/AppInfo/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---

@@ -21,6 +21,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddUiHostServices(builder.Configuration);
 WebApplication app = builder.Build();
 
+app.UseForwardedHeaders();
 app.MapDefaultEndpoints();
 app.MapUiUrlConfiguration();
 if (app.Environment.IsDevelopment())

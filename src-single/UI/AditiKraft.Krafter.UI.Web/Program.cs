@@ -6,17 +6,8 @@ using AditiKraft.Krafter.UI.Web.Components;
 using AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Infrastructure.Hosting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpOverrides;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
-// Forwarded headers (proxy support)
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
 
 // Aspire observability + health checks
 builder.AddServiceDefaults();

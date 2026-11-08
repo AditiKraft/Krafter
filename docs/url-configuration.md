@@ -52,6 +52,20 @@ Urls__ApiBaseUrl=https://api.example.com
 
 The same values can be set in each host's `appsettings.json` under the `Urls` section. Keep the two split-host configurations in sync through shared deployment variables. Generated single-host projects have no Backend settings files; UI.Web owns all server settings.
 
+### Trusted reverse proxies and client addresses
+
+Hosts accept `X-Forwarded-For` and `X-Forwarded-Proto` from loopback by default. Configure additional immediate proxy addresses explicitly; forwarded headers from other peers are ignored. For example:
+
+```text
+ReverseProxy__KnownProxies__0=10.0.0.5
+# Alternatively, a narrowly scoped proxy network:
+ReverseProxy__KnownNetworks__0=10.5.0.0/24
+```
+
+On UI.Web, trust the public ingress proxy. On the split-host Backend, trust the UI.Web server address and any separate API ingress proxy. Configure each host for its own immediate peers. Do not trust all addresses or a network that includes untrusted clients. Trusted proxies must overwrite incoming forwarding headers and be protected from unauthorized use.
+
+UI.Web forwards its resolved client address to Backend, replacing any incoming forwarding text. This preserves per-client authentication throttling through the BFF instead of combining all users behind a UI server into one limit. The forwarding limit is one hop: each trusted proxy must supply the resolved client address. A deployment with additional proxy hops must flatten its forwarded address at that trusted boundary or explicitly configure and test the ASP.NET Core forwarding chain.
+
 When running without Aspire, these public settings are enough for URL resolution if UI.Web can reach the API at its public address. Database, authentication, and other infrastructure settings are still required.
 
 ### Internal server connections

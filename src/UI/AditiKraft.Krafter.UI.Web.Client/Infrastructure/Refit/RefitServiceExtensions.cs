@@ -9,6 +9,7 @@ using AditiKraft.Krafter.UI.Web.Client.Features.Users;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using Refit;
+using Microsoft.AspNetCore.Http;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
@@ -31,28 +32,28 @@ public static class RefitServiceExtensions
         // URL is rewritten by RefitTenantHandler to clientBaseAddress
         services.AddRefitClient<IAuthApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), true));
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), true, sp.GetService<IHttpContextAccessor>()));
 
         // Register authenticated API clients pointing to AditiKraft.Krafter.Backend directly
         // URL is rewritten by RefitTenantHandler to tenant-specific backendUrl
         services.AddRefitClient<IUsersApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false, sp.GetService<IHttpContextAccessor>()))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<IRolesApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false, sp.GetService<IHttpContextAccessor>()))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<ITenantsApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false))
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false, sp.GetService<IHttpContextAccessor>()))
             .AddHttpMessageHandler<RefitAuthHandler>();
 
         services.AddRefitClient<IAppInfoApi>(refitSettings)
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
-            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false));
+            .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), false, sp.GetService<IHttpContextAccessor>()));
 
         return services;
     }
