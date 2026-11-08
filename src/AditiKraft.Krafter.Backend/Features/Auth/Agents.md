@@ -69,6 +69,7 @@ if (basic is null)
 - Account transitions run under PostgreSQL transaction-level advisory locks. Bind challenges and replay state to tenant/user and authentication version. Do not replace this with a process-local lock or cache get/remove.
 - Preserve `auth_time` and `amr` on refresh. `SessionValidator` checks tenant, account eligibility, version and MFA assurance in access/refresh paths.
 - Refresh resolves the account and its refresh credential by the verified immutable user ID. Email changes must never select a different account or transfer authentication/MFA claims.
+- Realtime validation uses the middleware-resolved tenant in `HttpContext.Items`, then reloads tenant/account eligibility in a fresh scope. Long Polling clones the HTTP service scope; restore its validated tenant before joining the tenant group. Never use the cloned scope's root default as the resolved tenant.
 - Authenticator secrets use Data Protection. Production enrollment requires a persistent key ring and key-encryption certificate. Never log secret-bearing payloads.
 - Management endpoints require the non-simple CSRF header and exact browser origin; the split-host BFF applies the same rule.
 - Per-client throttling depends on trusted proxy configuration in shared ServiceDefaults. The split-host BFF forwards its resolved client address; configure Backend to trust that UI server. Never clear proxy trust lists or key limits directly on untrusted headers.

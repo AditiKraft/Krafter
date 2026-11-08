@@ -56,7 +56,10 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
             HttpContext? http = context.GetHttpContext();
             if (http is null || context.User is null ||
                 !long.TryParse(context.User.FindFirst("exp")?.Value, out long expires) || expires <= DateTimeOffset.UtcNow.ToUnixTimeSeconds()) return false;
-            CurrentTenantDetails original = http.RequestServices.GetRequiredService<ITenantGetterService>().Tenant;
+            // Long Polling clones HttpContext with a fresh service scope. Items retains the
+            // trusted tenant resolved by middleware; the new scoped service starts at root.
+            CurrentTenantDetails original = http.Items[CurrentTenantService.ResolvedTenantItemKey] as CurrentTenantDetails
+                ?? http.RequestServices.GetRequiredService<ITenantGetterService>().Tenant;
             using IServiceScope scope = scopes.CreateScope();
             ITenantFinderService finder = scope.ServiceProvider.GetRequiredService<ITenantFinderService>();
             var found = await finder.Find(original.Identifier);
@@ -66,7 +69,10 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
                 Id = found.Data.Id, Identifier = found.Data.Identifier, IsActive = found.Data.IsActive,
                 IsDeleted = found.Data.IsDeleted, ValidUpto = found.Data.ValidUpto, TenantLink = original.TenantLink
             });
-            return await scope.ServiceProvider.GetRequiredService<SessionValidator>().ValidateAsync(context.User);
+            if (!await scope.ServiceProvider.GetRequiredService<SessionValidator>().ValidateAsync(context.User)) return false;
+            // RealtimeHub also uses this HTTP scope when joining its tenant group.
+            http.RequestServices.GetRequiredService<ITenantSetterService>().SetTenant(original);
+            return true;
         }
         catch (Exception ex)
         {
