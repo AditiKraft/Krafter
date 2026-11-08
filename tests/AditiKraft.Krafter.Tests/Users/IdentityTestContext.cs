@@ -6,6 +6,7 @@ using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,7 @@ internal sealed class IdentityTestContext : IAsyncDisposable
             .AddEntityFrameworkStores<ApplicationDbContext>();
         services.AddSingleton<RecordingJobService>();
         services.AddSingleton<IJobService>(p => p.GetRequiredService<RecordingJobService>());
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserMutationService, UserMutationService>();
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         _scope = _provider.CreateAsyncScope();
@@ -45,6 +47,10 @@ internal sealed class IdentityTestContext : IAsyncDisposable
     public IUserMutationService Mutations => _scope.ServiceProvider.GetRequiredService<IUserMutationService>();
     public CurrentTenantService Tenant => _provider.GetRequiredService<CurrentTenantService>();
     public RecordingJobService Jobs => _provider.GetRequiredService<RecordingJobService>();
+
+    public void SignIn(ApplicationUser user)
+        => ((CurrentUser)_provider.GetRequiredService<ICurrentUser>()).SetCurrentUser(new ClaimsPrincipal(
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)], "test")));
 
     public void SetTenant(string id)
         => Tenant.SetTenant(new CurrentTenantDetails { Id = id, Name = id, TenantLink = $"https://{id}.example.com" });

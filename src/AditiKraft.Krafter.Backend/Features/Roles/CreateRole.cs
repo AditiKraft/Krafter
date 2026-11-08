@@ -26,6 +26,15 @@ public sealed class CreateRole
                 return Response.BadRequest("Not allowed to modify Permissions for this Role.");
             }
 
+            if (request.Permissions is not null)
+            {
+                Response validation = permissionService.ValidatePermissions(request.Permissions);
+                if (validation.IsError)
+                {
+                    return validation;
+                }
+            }
+
             var role = new ApplicationRole(request.Name, request.Description) { Id = Guid.NewGuid().ToString() };
 
             IdentityResult result = await roleManager.CreateAsync(role);
@@ -36,7 +45,11 @@ public sealed class CreateRole
 
             if (request.Permissions is not null)
             {
-                await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                Response permissions = await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                if (permissions.IsError)
+                {
+                    return permissions;
+                }
             }
 
             await db.SaveChangesAsync(cancellationToken);

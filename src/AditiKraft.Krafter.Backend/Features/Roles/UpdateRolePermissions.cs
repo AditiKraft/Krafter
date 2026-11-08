@@ -37,7 +37,11 @@ public sealed class UpdateRolePermissions
                 };
             }
 
-            await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+            Response permissions = await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+            if (permissions.IsError)
+            {
+                return permissions;
+            }
             await db.SaveChangesAsync(cancellationToken);
 
             return new Response { Message = "Role permissions updated successfully" };

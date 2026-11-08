@@ -100,7 +100,7 @@ public sealed class GetUsers
 - Putting DTOs in Backend instead of `src/AditiKraft.Krafter.Contracts/Contracts/`.
 - Tenant detection uses `Request.Host.Host` and `Urls:TenantBaseDomain` (the root UI hostname when unset). Known UI, API, and server connection hosts use `x-tenant-identifier`, then root. Tenant UI hosts use one valid, non-reserved label before the tenant base domain; IP addresses do not identify tenants. Unknown tenants return 404. Split-host browser clients use one shared API address and send the tenant header.
 - For URL settings, CORS, or callback changes, read [the URL configuration guide](../../docs/url-configuration.md). Validate URL settings before registering infrastructure in `Web/HostingExtensions.cs`; the standalone Backend also requires `Urls:ApiBaseUrl` in `Program.cs`.
-- Permission checks use a separate service scope for concurrent Blazor rendering. Copy the current tenant with `ITenantSetterService.SetTenant()` before resolving `IUserService` or `ApplicationDbContext`, as in `Web/Authorization/PermissionAuthorization.cs`.
+- Backend permission checks always read current database permissions in a separate service scope. Copy the current tenant with `ITenantSetterService.SetTenant()` before resolving `IUserService` or `ApplicationDbContext`, as in `Web/Authorization/PermissionAuthorization.cs`. Enforce catalog root-only permissions before reading claims or permissions. Cached claims belong to the separate `UI.Permissions.*` display policies and must not authorize backend operations.
 
 ## Evolution & Maintenance
 

@@ -25,7 +25,7 @@
 
 For tenant admin email changes, call `UpdateEmailAsync(id, email, cancellationToken)`. This preserves the user's profile and roles. Check the returned response before saving the tenant email.
 
-Role synchronization checks that requested roles belong to the current tenant. New users receive the Basic role. Existing profile-only updates preserve roles when the list is omitted or empty.
+Role synchronization checks that requested roles belong to the current tenant. New users receive the Basic role. Additional roles on create and actual membership changes on update require the current actor's live `Permissions.UserRoles.Update` permission. Changing another user's login email also requires that permission, even when the role list is omitted or unchanged, because email recovery can transfer the account's existing permissions. Compare emails using Identity normalization; self email changes and case-equivalent changes remain allowed. Profile-only updates preserve roles when the list is omitted or empty; an unchanged submitted role set is not synchronized. `UpdateEmailAsync` remains the trusted profile-only path for tenant admin synchronization.
 
 ## 4. Checklist
 1. Use `UserManager`/`RoleManager` for user and role operations.

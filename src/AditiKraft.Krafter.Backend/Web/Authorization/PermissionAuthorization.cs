@@ -22,15 +22,8 @@ internal class PermissionAuthorizationHandler(
         PermissionRequirement requirement)
     {
         string? userId = context.User?.GetUserId();
-        if (userId is null)
+        if (context.User?.Identity?.IsAuthenticated is not true || string.IsNullOrWhiteSpace(userId))
         {
-            return;
-        }
-
-        // Fast path: check permission claims enriched by BlazorJwtBearerEvents.TokenValidated (SSR)
-        if (context.User!.HasClaim(AppClaimTypes.Permission, requirement.Permission))
-        {
-            context.Succeed(requirement);
             return;
         }
 
@@ -40,6 +33,14 @@ internal class PermissionAuthorizationHandler(
             return;
         }
 
+        PermissionDefinition? permission = PermissionCatalog.All.FirstOrDefault(p => p.Name == requirement.Permission);
+        if (permission is null || (permission.IsRoot && tenant.Id != SeedDataConstants.RootTenant.Id))
+        {
+            return;
+        }
+
+        // Permission claims cached for UI display are not authority for backend operations.
+        // Re-read membership and claims so permission removal applies to cookie and bearer callers alike.
         // Concurrent Blazor authorization checks need separate DbContexts for the same tenant.
         await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         ITenantSetterService tenantSetter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
@@ -64,6 +65,7 @@ internal class PermissionPolicyProvider(IOptions<AuthorizationOptions> options) 
         if (policyName.StartsWith(AppClaimTypes.Permission, StringComparison.OrdinalIgnoreCase))
         {
             var policy = new AuthorizationPolicyBuilder();
+            policy.RequireAuthenticatedUser();
             policy.AddRequirements(new PermissionRequirement(policyName));
             return Task.FromResult<AuthorizationPolicy?>(policy.Build());
         }

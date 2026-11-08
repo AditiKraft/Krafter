@@ -7,6 +7,8 @@
 - Use `RoleManager<ApplicationRole>` for role lifecycle operations.
 - Treat permission claims as `AppClaimTypes.Permission` entries on `ApplicationRoleClaim`.
 - Admin role permissions are protected; do not allow edits for `RoleConstants.Admin`.
+- Validate requested permissions against `PermissionCatalog` before saving role metadata. Root-only permissions may be assigned only in the root tenant; backend authorization also enforces this boundary independently of stored claims.
+- Soft deletion rotates the role's `ConcurrencyStamp` in the same save as the role and claim deletion. Detach a rejected Identity update so a later save cannot restore stale role state.
 - Keep route parameter names aligned with the placeholders used by the endpoint.
 
 ## 2. Decision Tree
@@ -19,7 +21,7 @@
 ## 3. Code Templates
 
 ### Shared Permission Synchronization
-`CreateRole`, `UpdateRole`, and `UpdateRolePermissions` use `RolePermissionService.SynchronizeAsync`, then save their `ApplicationDbContext`.
+`CreateRole`, `UpdateRole`, and `UpdateRolePermissions` use `RolePermissionService.SynchronizeAsync`, check its `Response`, then save their `ApplicationDbContext`. Create and combined update also call `ValidatePermissions` before Identity saves metadata, so invalid assignments cannot leave partial role changes.
 
 The service changes only permission claims for the current tenant and role. An empty list clears permissions. Re-selected claims are restored from soft delete, and duplicate values are stored once. A null list in `UpdateRole` leaves permissions unchanged.
 
@@ -60,6 +62,6 @@ if (role.Name == RoleConstants.Admin)
 - `src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs`
 
 ---
-Last Updated: 2026-09-09
+Last Updated: 2026-11-08
 Verified Against: src/AditiKraft.Krafter.Backend/Features/Roles/Common/RolePermissionService.cs, src/AditiKraft.Krafter.Backend/Features/Roles/CreateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoles.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleById.cs, src/AditiKraft.Krafter.Backend/Features/Roles/GetRoleByIdWithPermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/UpdateRolePermissions.cs, src/AditiKraft.Krafter.Backend/Features/Roles/DeleteRole.cs, src/AditiKraft.Krafter.Backend/Features/Roles/Common/RolePermissionService.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/AppClaimTypes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
 ---

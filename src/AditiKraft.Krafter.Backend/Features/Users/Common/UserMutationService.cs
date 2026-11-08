@@ -1,4 +1,5 @@
 using AditiKraft.Krafter.Backend.Common;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
@@ -6,6 +7,7 @@ using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
 using Microsoft.AspNetCore.Identity;
@@ -19,7 +21,9 @@ public sealed class UserMutationService(
     ITenantGetterService tenantGetterService,
     TenantDbContext tenantDbContext,
     ApplicationDbContext db,
-    IJobService jobService) : IUserMutationService, IScopedService
+    IJobService jobService,
+    ICurrentUser currentUser,
+    IUserService userService) : IUserMutationService, IScopedService
 {
     public async Task<Response> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken)
     {
@@ -34,6 +38,11 @@ public sealed class UserMutationService(
         if (!await RolesExistAsync(roles, cancellationToken))
         {
             return Response.BadRequest("One or more roles were not found in the current tenant.");
+        }
+
+        if (roles.Any(roleId => roleId != basic.Id) && !await CanChangeRolesAsync(cancellationToken))
+        {
+            return Response.Forbidden("You are not authorized to change user roles.");
         }
 
         var user = new ApplicationUser
@@ -77,6 +86,31 @@ public sealed class UserMutationService(
             return Response.BadRequest("One or more roles were not found in the current tenant.");
         }
 
+        if (roles is not null)
+        {
+            List<string> currentRoles = await db.UserRoles.AsNoTracking()
+                .Where(role => role.UserId == user.Id && !role.Role.IsDeleted)
+                .Select(role => role.RoleId).ToListAsync(cancellationToken);
+            if (roles.SetEquals(currentRoles))
+            {
+                // Do not synchronize an unchanged submission: a concurrent removal must stay removed.
+                roles = null;
+            }
+            else if (!await CanChangeRolesAsync(cancellationToken))
+            {
+                return Response.Forbidden("You are not authorized to change user roles.");
+            }
+        }
+
+        bool changesLoginEmail = !string.Equals(userManager.NormalizeEmail(user.Email),
+            userManager.NormalizeEmail(request.Email), StringComparison.Ordinal);
+        if (changesLoginEmail && user.Id != currentUser.GetUserId() &&
+            !await CanChangeRolesAsync(cancellationToken))
+        {
+            // Changing another account's login email can transfer all of its existing permissions.
+            return Response.Forbidden("You are not authorized to change another user's login email.");
+        }
+
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.PhoneNumber = request.PhoneNumber;
@@ -117,6 +151,7 @@ public sealed class UserMutationService(
         IdentityResult result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
         {
+            db.Entry(user).State = EntityState.Detached;
             return Response.BadRequest(
                 $"Update profile failed: {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
@@ -138,6 +173,18 @@ public sealed class UserMutationService(
 
     private async Task<bool> RolesExistAsync(HashSet<string> roles, CancellationToken cancellationToken)
         => await db.Roles.CountAsync(role => roles.Contains(role.Id), cancellationToken) == roles.Count;
+
+    private async Task<bool> CanChangeRolesAsync(CancellationToken cancellationToken)
+    {
+        if (!currentUser.IsAuthenticated() || string.IsNullOrWhiteSpace(currentUser.GetUserId()))
+        {
+            return false;
+        }
+
+        Response<bool> permission = await userService.HasPermissionAsync(currentUser.GetUserId(),
+            PermissionDefinition.NameFor(PermissionAction.Update, PermissionResource.UserRoles), cancellationToken);
+        return !permission.IsError && permission.Data;
+    }
 
     private async Task SyncRolesAsync(string userId, HashSet<string> requestedRoles, CancellationToken cancellationToken)
     {

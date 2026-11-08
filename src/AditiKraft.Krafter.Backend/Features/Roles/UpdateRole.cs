@@ -8,6 +8,7 @@ using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Roles;
 
@@ -31,6 +32,15 @@ public sealed class UpdateRole
             if (request.Permissions is not null && role.Name == RoleConstants.Admin)
             {
                 return Response.BadRequest("Not allowed to modify Permissions for this Role.");
+            }
+
+            if (request.Permissions is not null)
+            {
+                Response validation = permissionService.ValidatePermissions(request.Permissions);
+                if (validation.IsError)
+                {
+                    return validation;
+                }
             }
 
             if (request.Name != role.Name)
@@ -57,12 +67,18 @@ public sealed class UpdateRole
             IdentityResult result = await roleManager.UpdateAsync(role);
             if (!result.Succeeded)
             {
+                // Identity leaves failed full-row updates tracked; do not let a later save retry stale state.
+                db.Entry(role).State = EntityState.Detached;
                 return Response.BadRequest($"Update role failed {result.Errors.ToString()}");
             }
 
             if (request.Permissions is not null)
             {
-                await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                Response permissions = await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                if (permissions.IsError)
+                {
+                    return permissions;
+                }
             }
 
             await db.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,7 @@
 using AditiKraft.Krafter.Backend.Features.Roles;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
+using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using AditiKraft.Krafter.Tests.Users;
 using Microsoft.EntityFrameworkCore;
@@ -133,6 +134,79 @@ public sealed class RolePermissionTests
         Assert.False(restored.IsDeleted);
         Assert.False(Assert.Single(claims, c => c.ClaimValue == "Permissions.Users.Create").IsDeleted);
         Assert.True(Assert.Single(claims, c => c.ClaimValue == "Permissions.Users.Delete").IsDeleted);
+    }
+
+    [Theory]
+    [InlineData("create", "Permissions.Tenants.Delete", 403)]
+    [InlineData("update", "Permissions.Tenants.Delete", 403)]
+    [InlineData("permissions", "Permissions.Tenants.Delete", 403)]
+    [InlineData("create", "Permissions.Unknown.Grant", 400)]
+    [InlineData("update", "Permissions.Unknown.Grant", 400)]
+    [InlineData("permissions", "Permissions.Unknown.Grant", 400)]
+    [InlineData("create", " ", 400)]
+    [InlineData("update", " ", 400)]
+    [InlineData("permissions", " ", 400)]
+    public async Task EveryRoleWriteRejectsUnauthorizedPermissionsBeforeSavingMetadata(
+        string operation, string permission, int expectedStatus)
+    {
+        await using var context = new IdentityTestContext();
+        var role = await context.AddRoleAsync("Editor");
+        context.Db.RoleClaims.Add(Claim(role.Id, AppClaimTypes.Permission, "Permissions.Users.View"));
+        await context.Db.SaveChangesAsync();
+
+        Response result = await WritePermissionsAsync(context, role.Id, operation, permission);
+
+        Assert.Equal(expectedStatus, result.StatusCode);
+        await context.Db.SaveChangesAsync();
+        context.Db.ChangeTracker.Clear();
+        Assert.Equal("Editor", (await context.Db.Roles.SingleAsync()).Name);
+        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.SingleAsync()).ClaimValue);
+    }
+
+    [Theory]
+    [InlineData("create")]
+    [InlineData("update")]
+    [InlineData("permissions")]
+    public async Task RootTenantCanAssignCatalogRootPermissions(string operation)
+    {
+        await using var context = new IdentityTestContext();
+        context.SetTenant("root");
+        var role = await context.AddRoleAsync("Editor");
+
+        Response result = await WritePermissionsAsync(context, role.Id, operation, "Permissions.Tenants.Delete");
+
+        Assert.False(result.IsError, result.Message);
+        context.Db.ChangeTracker.Clear();
+        Assert.Equal("Permissions.Tenants.Delete", (await context.Db.RoleClaims.SingleAsync()).ClaimValue);
+    }
+
+    [Fact]
+    public async Task SynchronizationItselfRejectsRootAssignmentsOutsideRootTenant()
+    {
+        await using var context = new IdentityTestContext();
+        var role = await context.AddRoleAsync("Editor");
+        var service = new RolePermissionService(context.Db, context.Tenant);
+
+        Response result = await service.SynchronizeAsync(role.Id, ["Permissions.Tenants.View"], CancellationToken.None);
+
+        Assert.Equal(403, result.StatusCode);
+        await context.Db.SaveChangesAsync();
+        Assert.Empty(await context.Db.RoleClaims.ToListAsync());
+    }
+
+    private static Task<Response> WritePermissionsAsync(IdentityTestContext context, string roleId,
+        string operation, string permission)
+    {
+        var service = new RolePermissionService(context.Db, context.Tenant);
+        return operation switch
+        {
+            "create" => new CreateRole.Handler(context.Roles, context.Db, service).CreateAsync(
+                new() { Name = "NewRole", Description = "Created", Permissions = [permission] }, CancellationToken.None),
+            "update" => new UpdateRole.Handler(context.Roles, context.Db, service).UpdateAsync(roleId,
+                new() { Name = "Renamed", Description = "Changed", Permissions = [permission] }, CancellationToken.None),
+            _ => new UpdateRolePermissions.Handler(context.Roles, context.Db, service).UpdatePermissionsAsync(
+                new() { RoleId = roleId, Permissions = [permission] }, CancellationToken.None)
+        };
     }
 
     private static ApplicationRoleClaim Claim(string roleId, string type, string value)
