@@ -1,53 +1,19 @@
 using AditiKraft.Krafter.Backend.Common.Auth;
-using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
-using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Contracts.Common;
-using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class GetUserPermissions
 {
-    internal sealed class Handler(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager,
-        ApplicationDbContext db) : IScopedHandler
+    internal sealed class Handler(IUserService userService) : IScopedHandler
     {
-        public async Task<Response<List<string>>> GetPermissionsAsync(string userId,
+        public Task<Response<List<string>>> GetPermissionsAsync(string userId,
             CancellationToken cancellationToken)
-        {
-            ApplicationUser? user = await db.Users.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
-
-            if (user is null)
-            {
-                return new Response<List<string>> { IsError = true, Message = "User Not Found", StatusCode = 404 };
-            }
-
-            IList<string> userRoles = await userManager.GetRolesAsync(user);
-            var permissions = new List<string>();
-
-            foreach (ApplicationRole role in await roleManager.Roles.AsNoTracking()
-                         .Where(r => userRoles.Contains(r.Name!) && r.IsDeleted == false)
-                         .ToListAsync(cancellationToken))
-            {
-                permissions.AddRange(await db.RoleClaims.AsNoTracking()
-                    .Where(rc =>
-                        rc.RoleId == role.Id &&
-                        rc.ClaimType == AppClaimTypes.Permission &&
-                        rc.IsDeleted == false)
-                    .Select(rc => rc.ClaimValue!)
-                    .ToListAsync(cancellationToken));
-            }
-
-            return new Response<List<string>> { Data = permissions.Distinct().ToList() };
-        }
+            => userService.GetPermissionsAsync(userId, cancellationToken);
     }
 
     public sealed class Route : IRouteRegistrar
@@ -59,10 +25,11 @@ public sealed class GetUserPermissions
 
             userGroup.MapGet($"/{RouteSegment.Permissions}", async (
                     [FromServices] Handler handler,
-                    [FromServices] ICurrentUser currentUser) =>
+                    [FromServices] ICurrentUser currentUser,
+                    CancellationToken cancellationToken) =>
                 {
                     Response<List<string>> res =
-                        await handler.GetPermissionsAsync(currentUser.GetUserId(), CancellationToken.None);
+                        await handler.GetPermissionsAsync(currentUser.GetUserId(), cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<List<string>>>()

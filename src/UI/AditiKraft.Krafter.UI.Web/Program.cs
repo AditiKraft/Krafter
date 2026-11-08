@@ -12,6 +12,9 @@ builder.AddServiceDefaults();
 builder.Services.AddOptions<JwtSettings>()
     .BindConfiguration($"SecuritySettings:{nameof(JwtSettings)}")
     .ValidateDataAnnotations()
+    .Validate<IHostEnvironment>((settings, environment) =>
+            environment.IsDevelopment() || settings.HasPrivateSigningKey(),
+        "Configure a private SecuritySettings:JwtSettings:Key of at least 32 UTF-8 bytes outside Development; the public example key is not allowed.")
     .ValidateOnStart();
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlazorJwtBearerOptions>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

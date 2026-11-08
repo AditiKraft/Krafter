@@ -114,6 +114,8 @@ public sealed class DefaultTenantStartupTests
             ["Urls:ApiBaseUrl"] = "https://api.example.com",
             ["ConnectionStrings:appDb"] = "Host=localhost;Database=unused-startup-test;Username=test;Password=test",
             ["SMTPEmailSettings:Host"] = "smtp.example.com",
+            ["TickerQBasicAuth:Username"] = "startup-test-operator",
+            ["TickerQBasicAuth:Password"] = "startup-test-private-dashboard-password",
             ["SecuritySettings:JwtSettings:Key"] = "startup-test-signing-key-at-least-32-characters",
             ["Bootstrap:RootPassword"] = BootstrapPassword,
             ["Authentication:Google:ClientId"] = "test-client",

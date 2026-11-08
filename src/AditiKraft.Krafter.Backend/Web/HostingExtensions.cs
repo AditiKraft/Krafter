@@ -91,7 +91,7 @@ public static class HostingExtensions
         builder.AddFluentValidationEndpointFilter();
         builder.Services.AddValidatorsFromAssemblyContaining<TokenRequestValidator>();
 
-        builder.Services.AddBackgroundJobs();
+        builder.Services.AddBackgroundJobs(builder.Configuration, builder.Environment);
 
         builder.Services.AddRouteDiscovery();
 

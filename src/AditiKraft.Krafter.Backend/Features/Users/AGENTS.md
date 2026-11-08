@@ -5,6 +5,8 @@
 
 ## 1. Core Principles
 - Use `UserManager<ApplicationUser>` and `RoleManager<ApplicationRole>` for all user operations.
+- Read permissions through `IUserService`. Join current-tenant memberships, roles and claims by immutable `RoleId` in one query; re-resolving role names across queries can transfer authority during concurrent renames. `GetUserPermissions` delegates to this shared invariant.
+- `GetUsersByRole` exposes both account details and memberships, so its route requires both `Users.View` and `UserRoles.View`.
 - On create, ensure the Basic role is assigned (`RoleConstants.Basic`).
 - Send account and password emails via `IJobService.EnqueueAsync(...)`.
 - HTML-encode dynamic names, tenant labels, credentials, and existing link attribute values when composing email bodies. Keep template-owned markup intact; validators that accept display names do not make those names safe HTML.
@@ -58,6 +60,8 @@ Role synchronization checks that requested roles belong to the current tenant. N
 - `src/AditiKraft.Krafter.Backend/Features/Users/ResetPassword.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/GetUserRoles.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Users/GetUserPermissions.cs`
+- `tests/AditiKraft.Krafter.Tests/Authorization/PermissionMembershipTests.cs`
+- `tests/AditiKraft.Krafter.Tests/Authorization/RoleMemberAuthorizationTests.cs`
 
 ---
 Last Updated: 2026-11-08

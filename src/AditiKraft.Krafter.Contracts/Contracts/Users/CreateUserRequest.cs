@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common.Validation;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Users;
@@ -22,22 +23,30 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
     {
         RuleFor(p => p.FirstName)
             .NotEmpty().WithMessage("First name is required")
-            .MaximumLength(100).WithMessage("First name cannot exceed 100 characters");
+            .MaximumLength(100).WithMessage("First name cannot exceed 100 characters")
+            .Must(TextValue.IsValid).WithMessage("First name must contain valid Unicode text without null characters.");
 
         RuleFor(p => p.LastName)
             .NotEmpty().WithMessage("Last name is required")
-            .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters");
+            .MaximumLength(100).WithMessage("Last name cannot exceed 100 characters")
+            .Must(TextValue.IsValid).WithMessage("Last name must contain valid Unicode text without null characters.");
 
         RuleFor(p => p.Email)
             .NotEmpty().WithMessage("Email is required")
             .EmailAddress().WithMessage("Invalid email format")
-            .MaximumLength(256).WithMessage("Email cannot exceed 256 characters");
+            .MaximumLength(256).WithMessage("Email cannot exceed 256 characters")
+            .Must(TextValue.IsValid).WithMessage("Email must contain valid Unicode text without null characters.");
 
         RuleFor(p => p.PhoneNumber)
             .MaximumLength(20).When(p => !string.IsNullOrWhiteSpace(p.PhoneNumber))
-            .WithMessage("Phone number cannot exceed 20 characters");
+            .WithMessage("Phone number cannot exceed 20 characters")
+            .Must(TextValue.IsValid).WithMessage("Phone number must contain valid Unicode text without null characters.");
 
         RuleFor(p => p.UserName)
-            .MaximumLength(256).WithMessage("Username cannot exceed 256 characters");
+            .MaximumLength(256).WithMessage("Username cannot exceed 256 characters")
+            .Must(TextValue.IsValid).WithMessage("Username must contain valid Unicode text without null characters.");
+
+        RuleForEach(p => p.Roles)
+            .Must(TextValue.IsValid).WithMessage("Role IDs must contain valid Unicode text without null characters.");
     }
 }

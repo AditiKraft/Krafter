@@ -83,6 +83,7 @@ internal partial class Build
                         "--no-update-check", "--debug:custom-hive", hive);
                     if (Directory.EnumerateFiles(output, "*.Templates.csproj").Any() ||
                         File.Exists(Path.Combine(output, "build", "UpstreamRelease.cs")) ||
+                        File.Exists(Path.Combine(output, "build", "UpstreamReleaseBranch.cs")) ||
                         File.Exists(Path.Combine(output, ".github", "workflows", "main.yml")))
                         throw new InvalidOperationException("Generated applications must not contain the upstream publisher.");
 
@@ -111,9 +112,7 @@ internal partial class Build
         .Requires(() => PAT)
         .Executes(() =>
         {
-            string branch = Repository.Branch?.Split('/').Last();
-            if (branch is not ("main" or "dev"))
-                throw new InvalidOperationException("Upstream image publication requires the main or dev branch.");
+            string imageTag = UpstreamReleaseBranch.GetImageTag(Repository.Branch);
 
             DockerTasks.DockerLogin(settings => settings.SetServer("ghcr.io").SetUsername(ContainerUser).SetPassword(PAT));
             try
@@ -127,7 +126,7 @@ internal partial class Build
                         .SetConfiguration(Configuration.Release)
                         .SetProperty("PublishProfile", "DefaultContainer")
                         .SetProperty("ContainerNamespace", ContainerNamespace)
-                        .SetProperty("ContainerImageTag", branch == "main" ? "latest" : "dev"));
+                        .SetProperty("ContainerImageTag", imageTag));
             }
             finally
             {

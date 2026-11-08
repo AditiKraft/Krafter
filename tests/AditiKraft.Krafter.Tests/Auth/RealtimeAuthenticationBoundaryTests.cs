@@ -28,7 +28,7 @@ public sealed class RealtimeAuthenticationBoundaryTests
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         { ["TickerQBasicAuth:Username"] = "test-operator", ["TickerQBasicAuth:Password"] = password });
         // Use the real production registrations, with background workers disabled in this isolated host.
-        builder.Services.AddBackgroundJobs();
+        builder.Services.AddBackgroundJobs(builder.Configuration, builder.Environment);
         builder.Services.RemoveAll<IHostedService>();
         builder.Services.AddRealtimeServices();
         builder.Services.AddScoped<CurrentTenantService>();

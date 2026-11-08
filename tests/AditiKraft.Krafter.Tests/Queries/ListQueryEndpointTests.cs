@@ -274,7 +274,7 @@ public sealed class ListQueryEndpointTests
         builder.AddFluentValidationEndpointFilter();
         builder.Services.AddAuthorization(options =>
         {
-            foreach (string resource in new[] { PermissionResource.Users, PermissionResource.Roles, PermissionResource.Tenants })
+            foreach (string resource in new[] { PermissionResource.Users, PermissionResource.UserRoles, PermissionResource.Roles, PermissionResource.Tenants })
                 options.AddPolicy(PermissionDefinition.NameFor(PermissionAction.View, resource),
                     policy => policy.RequireAssertion(_ => true));
         });

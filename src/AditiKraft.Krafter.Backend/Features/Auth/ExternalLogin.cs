@@ -9,7 +9,6 @@ using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Auth;
@@ -130,12 +129,17 @@ public sealed class ExternalAuth
                     return Response<LoginResponse>.NotFound("Basic Role Not Found.");
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
-                // Identity saves the user immediately. Keep that write and Basic-role membership
-                // atomic so cancellation cannot leave an incompletely provisioned Google account.
-                await using IDbContextTransaction? provisioning = db.Database.IsRelational()
-                    ? await db.Database.BeginTransactionAsync(cancellationToken)
-                    : null;
+                // Deleted identities retain their email/username reservations. An external
+                // sign-in must not recreate or relink an account hidden by the query filter.
+                Response validation = UserIdentityValidation.Validate(userManager, userInfo.Email, userInfo.Email);
+                if (validation.IsError)
+                    return Response<LoginResponse>.Unauthorized("Unable to sign in.");
+                string? normalizedEmail = userManager.NormalizeEmail(userInfo.Email);
+                string? normalizedName = userManager.NormalizeName(userInfo.Email);
+                if (await db.Users.IgnoreQueryFilters().AnyAsync(candidate => candidate.TenantId == basic.TenantId &&
+                    (candidate.NormalizedEmail == normalizedEmail || candidate.NormalizedUserName == normalizedName), cancellationToken))
+                    return Response<LoginResponse>.Unauthorized("Unable to sign in.");
+
                 user = new ApplicationUser
                 {
                     IsActive = true,
@@ -147,26 +151,27 @@ public sealed class ExternalAuth
                     UserName = userInfo.Email,
                     Id = Guid.NewGuid().ToString()
                 };
-                if (string.IsNullOrWhiteSpace(user.UserName))
-                {
-                    user.UserName = user.Email;
-                }
 
-                IdentityResult result = await userManager.CreateAsync(user);
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!result.Succeeded)
+                // Identity saves immediately. Roll back both account and Basic membership on
+                // failure, and clear rejected tracked state before any later caller can save it.
+                await using var provisioning = await DomainTransaction.BeginAsync(db, cancellationToken);
+                try
                 {
-                    return Response<LoginResponse>.BadRequest("An error occurred while creating user.");
-                }
+                    IdentityResult result = await userManager.CreateAsync(user);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!result.Succeeded)
+                        return Response<LoginResponse>.Unauthorized("Unable to sign in.");
 
-                db.UserRoles.Add(new ApplicationUserRole { RoleId = basic.Id, UserId = user.Id });
-                await db.SaveChangesAsync(cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
-                if (provisioning is not null)
+                    db.UserRoles.Add(new ApplicationUserRole { RoleId = basic.Id, UserId = user.Id });
+                    await db.SaveChangesAsync(cancellationToken);
+                    await provisioning.CommitAsync(cancellationToken);
+                }
+                catch (DbUpdateException exception) when (IdentityConflict.IsUser(exception))
                 {
-                    // As with MFA transitions, finish commit once it starts. This transaction is
-                    // disposed at the end of this block before TwoFactorService starts its own.
-                    await provisioning.CommitAsync(CancellationToken.None);
+                    // Two first sign-ins can pass all preflight/Identity checks together.
+                    // Preserve the verified OAuth failure destination with a normal rejection.
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return Response<LoginResponse>.Unauthorized("Unable to sign in.");
                 }
             }
 

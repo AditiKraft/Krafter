@@ -33,7 +33,7 @@ Development uses the platform's per-user Data Protection key ring. **Production 
 
 The application name is `AditiKraft.Krafter` (renamed when a template app is generated). Replicas must use the same application name, key ring and certificate access. Give only the application identity access to key storage and the certificate. Keep keys/certificate backups separate from a database-only backup; test restoration. Losing the key ring or private key can make existing authenticator enrollments unusable. Do not delete old keys during routine rotation. Certificate replacement requires retaining decryption capability for keys protected by earlier certificates; plan and test rotation with the deployment's Data Protection configuration before removing an old certificate.
 
-Use a unique, securely supplied production JWT signing key on the API and UI hosts; the checked-in example signing keys are development samples.
+Use a unique, securely generated JWT signing key on the API and UI hosts through `SecuritySettings__JwtSettings__Key`. Both split hosts must use the same key. Outside Development, startup rejects missing keys, the public development example, and keys shorter than 32 UTF-8 bytes. Sample signing keys are supplied only by Development settings.
 
 No seed, setup URI, recovery code, login challenge or credential response should be logged or sent to analytics. Secret-bearing responses use `Cache-Control: no-store`. The QR renderer runs locally and makes no external request. Use HTTPS and preserve certificate verification.
 

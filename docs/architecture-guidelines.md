@@ -23,6 +23,14 @@ Share rules with actual consumers. Handlers may delegate to a concrete feature-l
 must enforce the same invariant. `UserMutationService`, `RolePermissionService` and `TwoFactorService` have this role.
 Keep independent use-case behavior in its operation; extract shared rules when repeated behavior warrants it.
 
+Request validators for stored user, role and tenant text share `Contracts/Common/Validation/TextValue.IsValid` with
+list query validation. PostgreSQL cannot store U+0000 or encode unpaired UTF-16 surrogates; reject these at the request
+boundary before writes, while allowing valid Unicode pairs such as emoji. Required fields, length limits, email and
+tenant identifier syntax, and Identity's configured username alphabet remain separate rules. Passwords and token proofs
+retain their existing validation because their raw text is not stored as a profile value.
+`PersistedTextEndpointTests` exercises all six create/update routes, verifies rejected requests never attempt a save or
+queue an email, and reads valid Unicode back from PostgreSQL.
+
 For MFA, operation files expose authorization and contracts while `TwoFactorService` owns account locking,
 challenge binding, factor consumption and session revocation. Keep these transitions atomic. A transaction owns its
 DbContext unit of work, reloads state under the account lock, and returns credentials only after commit.

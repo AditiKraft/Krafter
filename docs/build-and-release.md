@@ -16,7 +16,7 @@ The shared server HTTP policy retries safe reads on transient failures. POST, PU
 
 ## Template-repository releases
 
-These targets live in `build/UpstreamRelease.cs`, which is excluded from generated applications along with `.github/workflows/main.yml` and the packaging project. Supply a new, normalized NuGet version explicitly; there is no default release version.
+These targets live in `build/UpstreamRelease.cs`, which is excluded from generated applications along with its branch-selector helper/tests, `.github/workflows/main.yml` and the packaging project. Supply a new, normalized NuGet version explicitly; there is no default release version.
 
 | Target | Work performed |
 | --- | --- |
@@ -42,6 +42,8 @@ dotnet run --project build/_build.csproj -- --target PublishTemplate --configura
 The `Publish template release` workflow is manual (`workflow_dispatch`) and requires a version input. It retains the existing `main.yml` filename and NuGet trusted-publisher identity; `NUGET_USER` remains its GitHub Actions secret. The publication target validates source and generated applications before pushing, and selects `AditiKraft.Krafter.Templates.<version>.nupkg` directly even if older packages exist in the output directory. Existing versions are immutable at NuGet.org; choose a new version for each release.
 
 Image publication and webhook deployment are separate explicit targets; template publication does not invoke them. Before publishing application images, set `ContainerNamespace` to the intended owner, keep the registry hostname only in `ContainerRegistry`, and use a repository such as `your-org/krafter.api`. Generated single-host applications publish only UI.Web.
+
+The upstream image targets accept only the complete `main` or `dev` branch name (or the corresponding `refs/heads/` form). Feature branches such as `feature/main`, tags and detached HEAD cannot select the release image tags.
 
 ## Packaging regression
 

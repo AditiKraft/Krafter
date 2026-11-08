@@ -6,6 +6,7 @@
 ## 1. Core Principles
 - Contracts only; no business logic.
 - Validators live in the same file as their request.
+- Persisted text and text query parameters use `Common/Validation/TextValue.IsValid` to reject U+0000 and unpaired UTF-16 surrogates before provider work. Keep required/optional, length, email, tenant identifier and configured Identity username rules separate. Do not apply this storage rule to passwords or token proofs.
 - No references to Backend or UI projects.
 - Use `default!` for non-nullable properties set by deserialization.
 - Use `CommonDtoProperty` for DTOs with audit fields.
@@ -22,6 +23,7 @@
 - Permissions: `Common/Auth/Permissions/`
 - Routes: `Common/ApiRoutes.cs`
 - Common models: `Common/Models/`
+- Shared validation predicates with multiple request consumers: `Common/Validation/`
 - Enums: `Common/Enums/`
 - Auth helpers: `Common/Auth/`
 - Shared public URL model and tenant-domain helpers: `Common/AppUrls.cs`. Server configuration binding stays in the host. Keep `ServerApiBaseUrl` excluded from JSON; browsers receive public addresses and public reserved identifiers only. Share tenant identifier rules between request validation and URL resolution. Read [Configure application URLs](../../docs/url-configuration.md) before changing this contract.
@@ -91,6 +93,6 @@ return Response<UserDto>.Success(dto);
 
 ---
 Last Updated: 2026-11-08
-Verified Against: src/AditiKraft.Krafter.Contracts/Common/Models/GetRequestInput.cs, src/AditiKraft.Krafter.Contracts/Common/Models/UserInfo.cs, tests/AditiKraft.Krafter.Tests/Queries/ListQueryEndpointTests.cs, src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionDefinition.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+Verified Against: src/AditiKraft.Krafter.Contracts/Common/Validation/TextValue.cs, src/AditiKraft.Krafter.Contracts/Common/Models/GetRequestInput.cs, src/AditiKraft.Krafter.Contracts/Common/Models/UserInfo.cs, tests/AditiKraft.Krafter.Tests/Validation/PersistedTextEndpointTests.cs, tests/AditiKraft.Krafter.Tests/Queries/ListQueryEndpointTests.cs, src/AditiKraft.Krafter.Contracts/Contracts/Users/CreateUserRequest.cs, src/AditiKraft.Krafter.Contracts/Common/Models/Response.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionCatalog.cs, src/AditiKraft.Krafter.Contracts/Common/Auth/Permissions/PermissionDefinition.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

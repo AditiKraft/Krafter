@@ -226,6 +226,8 @@ The browser loads public URLs from UI.Web automatically. For deployment examples
 
 For anything outside local development, prefer user-secrets or environment variables instead of committed values.
 
+Outside Development, startup requires a private `SecuritySettings__JwtSettings__Key` of at least 32 UTF-8 bytes on Backend and UI.Web in split mode, or UI.Web in single mode. Use the same securely generated key on both split hosts. The public example key is rejected. Backend and the combined host also require `TickerQBasicAuth__Username` and a private `TickerQBasicAuth__Password`; the public `admin` password is rejected. TickerQ keeps its separate Basic authentication. Sample credentials are supplied only by Development settings.
+
 </details>
 
 ## Two-factor authentication

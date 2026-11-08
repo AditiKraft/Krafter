@@ -52,6 +52,8 @@
             ".template.config-single/**",
             "AditiKraft.Krafter.Templates.csproj",
             "build/UpstreamRelease.cs",
+            "build/UpstreamReleaseBranch.cs",
+            "tests/AditiKraft.Krafter.Tests/Configuration/UpstreamReleaseBranchTests.cs",
             ".github/workflows/main.yml",
             "AditiKraft.Krafter.Dev.slnx",
             "pack-and-install.cmd",

@@ -53,6 +53,8 @@
             "AditiKraft.Krafter.Dev.slnx",
             "AditiKraft.Krafter.Templates.csproj",
             "build/UpstreamRelease.cs",
+            "build/UpstreamReleaseBranch.cs",
+            "tests/AditiKraft.Krafter.Tests/Configuration/UpstreamReleaseBranchTests.cs",
             ".github/workflows/main.yml",
             "pack-and-install.cmd",
             "AGENTS.md",

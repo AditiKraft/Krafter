@@ -9,6 +9,7 @@ using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Validation;
 
 namespace AditiKraft.Krafter.Backend.Features.Users;
 
@@ -27,7 +28,7 @@ public sealed class GetUsersByRole
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
-            if (!GetRequestInputValidator.IsValidText(roleId))
+            if (!TextValue.IsValid(roleId))
             {
                 return Response<PaginationResponse<UserInfo>>.BadRequest("RoleId must contain valid Unicode text without null characters.");
             }
@@ -95,7 +96,8 @@ public sealed class GetUsersByRole
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserInfo>>>()
-                .MustHavePermission(PermissionAction.View, PermissionResource.Users);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Users)
+                .MustHavePermission(PermissionAction.View, PermissionResource.UserRoles);
         }
     }
 }

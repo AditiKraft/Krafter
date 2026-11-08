@@ -41,7 +41,10 @@ ARTIFACT_NAMES = (
     "mixed.NuPkG", "mixed.SnUpKg", "nupkg/old-output.txt", "NuPkG/old-output.txt",
     "artifacts/old-output.txt", "ArTiFaCtS/old-output.txt",
 )
-UPSTREAM_FILES = ("build/UpstreamRelease.cs", ".github/workflows/main.yml")
+UPSTREAM_FILES = (
+    "build/UpstreamRelease.cs", "build/UpstreamReleaseBranch.cs", ".github/workflows/main.yml",
+    "tests/AditiKraft.Krafter.Tests/Configuration/UpstreamReleaseBranchTests.cs",
+)
 
 
 def run(command, env, cwd=None):
@@ -164,7 +167,9 @@ def verify(source, dotnet, revision, workspace):
                          "artifact_files": generated_leaks(output, ARTIFACT_MARKER),
                          "package_files": sorted(str(path.relative_to(output)) for path in output.rglob("*")
                                                  if path.is_file() and path.suffix.lower() in (".nupkg", ".snupkg")),
-                         "upstream_files": [relative for relative in UPSTREAM_FILES if (output / relative).exists()],
+                         "upstream_files": [relative for relative in
+                                            (path.replace("AditiKraft.Krafter", name) for path in UPSTREAM_FILES)
+                                            if (output / relative).exists()],
                          "missing_public_examples": [relative for relative in PUBLIC_FILES
                                                      if not (output / relative).is_file()]}
             build = (output / "build/Build.cs").read_text()

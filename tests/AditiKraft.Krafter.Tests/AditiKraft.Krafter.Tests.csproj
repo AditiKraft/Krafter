@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Compile Include="../../build/UpstreamReleaseBranch.cs" Link="Build/UpstreamReleaseBranch.cs"
+             Condition="Exists('../../build/UpstreamReleaseBranch.cs')" />
   </ItemGroup>
 
   <ItemGroup>

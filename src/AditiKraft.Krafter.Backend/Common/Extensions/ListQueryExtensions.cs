@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.Exceptions;
 using System.Linq.Expressions;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Validation;
 
 namespace AditiKraft.Krafter.Backend.Common.Extensions;
 
@@ -110,7 +111,7 @@ public static class ListQueryExtensions
         protected override Expression VisitConstant(ConstantExpression node)
         {
             // Validate the parsed literal too: an escaped character need not appear in the raw filter.
-            if (node.Value is string value && !GetRequestInputValidator.IsValidText(value))
+            if (node.Value is string value && !TextValue.IsValid(value))
                 throw new ArgumentException("Filter values must contain valid Unicode text without null characters.");
             return node;
         }
