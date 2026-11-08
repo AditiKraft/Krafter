@@ -246,8 +246,9 @@ public sealed class TenantUrlRoutingTests
     {
         public string? Identifier { get; private set; }
 
-        public Task<Response<Tenant>> Find(string? identifier)
+        public Task<Response<Tenant>> Find(string? identifier, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             Identifier = identifier;
             return Task.FromResult(Response<Tenant>.Success(new Tenant
             {

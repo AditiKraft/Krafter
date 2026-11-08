@@ -24,6 +24,7 @@ public sealed class TwoFactorRealtimeTests
         tenants.Tenants.Add(new Tenant { Id = "test", Identifier = "test", Name = "Test", AdminEmail = "owner@example.com", IsActive = true, ValidUpto = DateTime.MaxValue });
         await tenants.SaveChangesAsync();
         var user = await scope.AddUserAsync();
+        await RealtimePermissionTestData.GrantAsync(scope, user.Id);
         var login = await scope.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test");
         var http = new DefaultHttpContext { RequestServices = scope.Services };
         var context = new Caller(http, MfaHarness.Principal(login.Data!.Tokens!));

@@ -40,6 +40,7 @@ public sealed class RealtimeTransportTests
         { Id = tenantId, Identifier = identifier, Name = identifier, AdminEmail = "owner@example.com", IsActive = true, ValidUpto = DateTime.MaxValue });
         await tenants.SaveChangesAsync();
         var account = await seed.AddUserAsync();
+        await RealtimePermissionTestData.GrantAsync(seed, account.Id);
         var login = await seed.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test");
         var principal = MfaHarness.Principal(login.Data!.Tokens!);
 
@@ -102,10 +103,10 @@ public sealed class RealtimeTransportTests
 
     private sealed class HarnessTenantFinder(MfaHarness harness) : ITenantFinderService
     {
-        public async Task<Response<Tenant>> Find(string? identifier)
+        public async Task<Response<Tenant>> Find(string? identifier, CancellationToken cancellationToken = default)
         {
             using MfaScope scope = harness.Scope();
-            return await scope.Services.GetRequiredService<ITenantFinderService>().Find(identifier);
+            return await scope.Services.GetRequiredService<ITenantFinderService>().Find(identifier, cancellationToken);
         }
     }
 }

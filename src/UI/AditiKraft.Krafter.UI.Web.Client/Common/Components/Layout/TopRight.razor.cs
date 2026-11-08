@@ -4,7 +4,9 @@ namespace AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout;
 
 public partial class TopRight(
     IAuthenticationService authenticationService,
-    NavigationManager navigationManager
+    NavigationManager navigationManager,
+    AccountSecurityNavigationGuard securityNavigationGuard,
+    NotificationService notificationService
 ) : ComponentBase
 {
     [CascadingParameter] public bool IsMobileDevice { get; set; }
@@ -17,6 +19,12 @@ public partial class TopRight(
     {
         if (item is { Value: "Logout" })
         {
+            if (securityNavigationGuard.BlockingMessage is { } message)
+            {
+                notificationService.Notify(NotificationSeverity.Warning, "Stay on this page", message);
+                return;
+            }
+
             await authenticationService.LogoutAsync("SplitButtonClick 20");
             await NavigateToLogin();
         }

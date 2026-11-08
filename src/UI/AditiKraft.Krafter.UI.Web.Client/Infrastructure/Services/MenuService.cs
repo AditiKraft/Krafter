@@ -71,6 +71,18 @@ public class MenuService
             ? allMenus.Where(menu => menu.Path != ApiRoutes.Tenants)
             : allMenus;
 
+    public static bool IsVisible(Menu menu, ICollection<string>? permissions)
+    {
+        if (!string.IsNullOrWhiteSpace(menu.Permission) && permissions?.Contains(menu.Permission) != true)
+        {
+            return false;
+        }
+
+        return menu.Children?.Any() == true
+            ? menu.Children.Any(child => IsVisible(child, permissions))
+            : !string.IsNullOrWhiteSpace(menu.Path);
+    }
+
     public IEnumerable<Menu> Filter(string term)
     {
         if (string.IsNullOrEmpty(term))

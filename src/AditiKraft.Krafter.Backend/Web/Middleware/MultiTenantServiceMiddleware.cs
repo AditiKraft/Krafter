@@ -66,7 +66,7 @@ public class MultiTenantServiceMiddleware(
             return;
         }
 
-        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier);
+        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier, context.RequestAborted);
         if (tenantResponse.IsError || tenantResponse.Data is null)
         {
             context.Response.StatusCode = tenantResponse.StatusCode;

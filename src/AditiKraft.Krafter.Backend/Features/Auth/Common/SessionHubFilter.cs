@@ -1,4 +1,7 @@
+using System.Security.Claims;
 using AditiKraft.Krafter.Backend.Common.Tenants;
+using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using Microsoft.AspNetCore.SignalR;
 
@@ -10,17 +13,19 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
 
     public async ValueTask<object?> InvokeMethodAsync(HubInvocationContext context, Func<HubInvocationContext, ValueTask<object?>> next)
     {
-        if (!await ValidAsync(context.Context))
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(context.Context.ConnectionAborted, lifetime.ApplicationStopping);
+        if (!await ValidAsync(context.Context, cancellation.Token))
         {
             context.Context.Abort();
-            throw new HubException("Session expired. Sign in again.");
+            throw new HubException("Session expired or access revoked.");
         }
         return await next(context);
     }
 
     public async Task OnConnectedAsync(HubLifetimeContext context, Func<HubLifetimeContext, Task> next)
     {
-        if (!await ValidAsync(context.Context))
+        using var validationCancellation = CancellationTokenSource.CreateLinkedTokenSource(context.Context.ConnectionAborted, lifetime.ApplicationStopping);
+        if (!await ValidAsync(context.Context, validationCancellation.Token))
         {
             context.Context.Abort();
             return;
@@ -57,7 +62,7 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
         {
             while (await timer.WaitForNextTickAsync(cancellation))
             {
-                if (!await ValidAsync(context))
+                if (!await ValidAsync(context, cancellation))
                 {
                     context.Abort();
                     return;
@@ -69,10 +74,11 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
         }
     }
 
-    private async Task<bool> ValidAsync(HubCallerContext context)
+    private async Task<bool> ValidAsync(HubCallerContext context, CancellationToken cancellationToken)
     {
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             HttpContext? http = context.GetHttpContext();
             if (http is null || context.User is null ||
                 !long.TryParse(context.User.FindFirst("exp")?.Value, out long expires) || expires <= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
@@ -85,7 +91,8 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
                 ?? http.RequestServices.GetRequiredService<ITenantGetterService>().Tenant;
             using IServiceScope scope = scopes.CreateScope();
             ITenantFinderService finder = scope.ServiceProvider.GetRequiredService<ITenantFinderService>();
-            var found = await finder.Find(original.Identifier);
+            var found = await finder.Find(original.Identifier, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (found.IsError || found.Data is null || found.Data.Id != original.Id)
             {
                 return false;
@@ -100,13 +107,28 @@ public sealed class SessionHubFilter(IServiceScopeFactory scopes, IHostApplicati
                 ValidUpto = found.Data.ValidUpto,
                 TenantLink = original.TenantLink
             });
-            if (!await scope.ServiceProvider.GetRequiredService<SessionValidator>().ValidateAsync(context.User))
+            if (!await scope.ServiceProvider.GetRequiredService<SessionValidator>().ValidateAsync(context.User, cancellationToken))
+            {
+                return false;
+            }
+            // An existing socket must lose notification access when its role or permission is removed.
+            // Claims cached at connection time are only a UI hint, not current authorization.
+            string userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            Response<bool> permission = await scope.ServiceProvider.GetRequiredService<IUserService>().HasPermissionAsync(
+                userId, PermissionDefinition.NameFor(PermissionAction.View, PermissionResource.Notifications), cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (permission.IsError || !permission.Data)
             {
                 return false;
             }
             // RealtimeHub also uses this HTTP scope when joining its tenant group.
             http.RequestServices.GetRequiredService<ITenantSetterService>().SetTenant(original);
             return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Connection teardown and host shutdown are expected lifecycle events.
+            return false;
         }
         catch (Exception ex)
         {

@@ -134,6 +134,30 @@ public sealed class AuthTokenServiceTests
     }
 
     [Fact]
+    public async Task CancellationBeforeACompletedRefreshResponseCannotSaveCredentials()
+    {
+        TokenResponse original = TokenTestData.Create(expired: true);
+        var storage = new TokenStorage(original);
+        using var cancellation = new CancellationTokenSource();
+        var api = new AuthApi
+        {
+            Refresh = _ =>
+            {
+                cancellation.Cancel();
+                // WaitAsync can return an already-completed task even when its token was canceled.
+                return Task.FromResult(Response<TokenResponse>.Success(TokenTestData.Create()));
+            }
+        };
+        using var coordinator = new TokenRefreshCoordinator();
+        var service = new AuthTokenService(api, storage, coordinator);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.RefreshAsync(cancellation.Token));
+        Assert.Same(original, storage.Tokens);
+        api.Refresh = _ => Task.FromResult(Response<TokenResponse>.Success(TokenTestData.Create()));
+        Assert.True(await service.RefreshAsync().WaitAsync(Timeout));
+    }
+
+    [Fact]
     public async Task CancellingAWaitingCallerDoesNotBlockLaterCalls()
     {
         var allowRefresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

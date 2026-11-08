@@ -26,29 +26,8 @@ public sealed class TwoFactorService(
     private DateTimeOffset Now => clock.GetUtcNow();
     private string TenantId => tenant.Tenant.Id ?? throw new InvalidOperationException("Tenant context is required.");
 
-    // PostgreSQL is the supported production provider. Transaction-level advisory locks serialize
-    // every transition for an account, including its first enrollment, across API replicas.
-    private async Task<T> LockedAsync<T>(string userId, Func<Task<T>> action, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        if (!db.Database.IsRelational())
-        {
-            return await action(); // Unit tests only; concurrency guarantees require PostgreSQL tests.
-        }
-
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        string key = $"mfa:{TenantId}:{userId}";
-        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
-        // This transition owns the unit of work. Callers must save unrelated changes first.
-        db.ChangeTracker.Clear();
-        T result = await action();
-        await db.SaveChangesAsync(cancellationToken);
-        cancellationToken.ThrowIfCancellationRequested();
-        // Once commit starts, finish it independently of a disconnected caller. No credentials
-        // leave this method before commit, and no cancellation is reported after a successful commit.
-        await transaction.CommitAsync(CancellationToken.None);
-        return result;
-    }
+    private Task<T> LockedAsync<T>(string userId, Func<Task<T>> action, CancellationToken cancellationToken) =>
+        AccountAuthenticationTransaction.RunAsync(db, TenantId, userId, action, cancellationToken);
 
     private async Task<bool> EligibleAsync(ApplicationUser user, CancellationToken cancellationToken) =>
         user.IsActive && !user.IsDeleted && user.TenantId == TenantId && !await IsLockedOutAsync(user, cancellationToken) &&
