@@ -224,6 +224,10 @@ For anything outside local development, prefer user-secrets or environment varia
 
 </details>
 
+## Two-factor authentication
+
+Users can enroll an authenticator under **Account → Two-factor authentication**. Enrolled accounts require an authenticator or one-time recovery code after password or Google sign-in. Production enrollment requires persistent, certificate-protected key storage. See [two-factor authentication](docs/two-factor-authentication.md) for setup, API changes, session revocation, recovery and testing.
+
 ## 📁 Project Structure
 
 The structure below is what you get after running `dotnet new krafter -n MyApp` (split host). In single host, UI.Web owns server configuration and startup; Backend has no `Program.cs` or `appsettings*.json`.
