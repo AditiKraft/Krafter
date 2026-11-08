@@ -13,7 +13,6 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
             return;
         }
 
-        string? token = await GetCachedAuthTokenAsync();
         HttpContext context = httpContextAccessor.HttpContext;
         context.Response.Cookies.Delete(StorageConstants.Local.AuthToken);
         context.Response.Cookies.Delete(StorageConstants.Local.RefreshToken);
@@ -28,7 +27,11 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
         context.Items[StorageConstants.Local.AuthTokenExpiryDate] = DateTime.UtcNow.AddMinutes(-1);
         context.Items[StorageConstants.Local.RefreshTokenExpiryDate] = DateTime.UtcNow.AddMinutes(-1);
 
-        string? userId = ExtractUserIdFromToken(token);
+        // Cookie text may be expired or forged. Only the authenticated principal can
+        // select shared permission state; anonymous logout still clears local credentials.
+        string? userId = context.User.Identity?.IsAuthenticated == true
+            ? context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            : null;
         if (!string.IsNullOrWhiteSpace(userId))
         {
             string permissionsCacheKey = $"{StorageConstants.Local.Permissions}_{userId}";

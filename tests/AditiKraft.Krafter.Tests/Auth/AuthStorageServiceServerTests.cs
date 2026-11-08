@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 using AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
@@ -29,6 +30,8 @@ public sealed class AuthStorageServiceServerTests
             _ => tokens.Token
         };
         var context = new DefaultHttpContext();
+        if (scenario == "valid")
+            context.User = AuthenticatedUser("alice");
         context.Request.Headers.Cookie = $"{StorageConstants.Local.RefreshToken}=placeholder; " +
             $"{StorageConstants.Local.AuthTokenExpiryDate}=9223372036854775808; " +
             $"{StorageConstants.Local.RefreshTokenExpiryDate}=9223372036854775808" +
@@ -68,7 +71,7 @@ public sealed class AuthStorageServiceServerTests
     [Fact]
     public async Task LogoutRemovesFreshCredentialsAndPermissionsSavedDuringTheSameRequest()
     {
-        var context = new DefaultHttpContext();
+        var context = new DefaultHttpContext { User = AuthenticatedUser("alice") };
         TokenResponse old = TokenTestData.Create("old-user");
         TokenResponse fresh = TokenTestData.Create() with { Permissions = ["Permissions.Users.View"] };
         context.Request.Headers.Cookie = $"{StorageConstants.Local.AuthToken}={old.Token}; " +
@@ -172,6 +175,9 @@ public sealed class AuthStorageServiceServerTests
             _ => ValueTask.FromResult(original.Permissions)));
         Assert.Equal(original.Token, context.Request.Cookies[StorageConstants.Local.AuthToken]);
     }
+
+    private static ClaimsPrincipal AuthenticatedUser(string userId) => new(new ClaimsIdentity(
+        [new Claim(ClaimTypes.NameIdentifier, userId)], "validated-test-principal"));
 
     private sealed class StartedResponseFeature : HttpResponseFeature
     {

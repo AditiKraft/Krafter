@@ -14,6 +14,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -115,6 +116,46 @@ public sealed class RoleClaimAuthorizationTests
         Assert.False(db.ChangeTracker.HasChanges());
         Assert.Equal(0, await db.SaveChangesAsync());
         Assert.DoesNotContain(await db.RoleClaims.ToListAsync(), claim => claim.ClaimValue == "Permissions.Users.Delete");
+    }
+
+    [Fact]
+    public async Task MetadataAuthorityCannotRenameBasicOrGiveItsNameToAnUnassignedRole()
+    {
+        await using WebApplication app = await AppAsync("missing");
+        string basicId;
+        string privilegedId;
+        await using (var seed = app.Services.CreateAsyncScope())
+        {
+            ApplicationRole basic = await DomainTestServices.AddRoleAsync(seed.ServiceProvider, RoleConstants.Basic);
+            basicId = basic.Id;
+            basic.Description = RoleConstants.Basic;
+            privilegedId = (await DomainTestServices.AddRoleAsync(seed.ServiceProvider, "Privileged")).Id;
+            var db = seed.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.RoleClaims.Add(new ApplicationRoleClaim
+            {
+                RoleId = privilegedId, ClaimType = AppClaimTypes.Permission, ClaimValue = "Permissions.Users.Delete"
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using var client = new HttpClient { BaseAddress = new Uri(Assert.Single(app.Urls)) };
+        using HttpResponseMessage unchanged = await client.PutAsJsonAsync($"/api/roles/{basicId}",
+            new CreateOrUpdateRoleRequest { Name = RoleConstants.Basic, Description = "Basic", Permissions = null });
+        Assert.Equal(HttpStatusCode.OK, unchanged.StatusCode);
+        using HttpResponseMessage rename = await client.PutAsJsonAsync($"/api/roles/{basicId}",
+            new CreateOrUpdateRoleRequest { Name = "Temporary", Description = "Basic", Permissions = null });
+        Assert.Equal(HttpStatusCode.Forbidden, rename.StatusCode);
+        using HttpResponseMessage replace = await client.PutAsJsonAsync($"/api/roles/{privilegedId}",
+            new CreateOrUpdateRoleRequest { Name = RoleConstants.Basic, Description = "Privileged", Permissions = null });
+        Assert.Equal(HttpStatusCode.Conflict, replace.StatusCode);
+
+        await using var verify = app.Services.CreateAsyncScope();
+        var roles = verify.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        Assert.Equal(basicId, (await roles.FindByNameAsync(RoleConstants.Basic))!.Id);
+        Assert.Equal("Privileged", (await roles.FindByIdAsync(privilegedId))!.Name);
+        var verifiedDb = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await verifiedDb.RoleClaims.Where(claim => claim.RoleId == basicId).ToListAsync());
+        Assert.False(await verifiedDb.UserRoles.AnyAsync(link => link.RoleId == privilegedId));
     }
 
     private static async Task<string> RoleIdAsync(IServiceProvider provider)
