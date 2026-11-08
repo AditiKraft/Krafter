@@ -170,6 +170,8 @@ Both login initiation and Backend's code exchange derive the callback from `Urls
 
 Tenant login also returns through this root UI callback. Keep the root UI setting identical in Backend and UI.Web for split host. Google client ID and client secret settings remain separate; keep the secret on the server.
 
+Post-login return targets must be local paths. Login, MFA completion and Google callbacks share the same validation: absolute URLs, protocol-relative URLs, backslashes, control characters and login-loop targets fall back to `/`. Normal local query strings and fragments are preserved. Reject raw tabs/newlines before browser navigation, because browser URL parsing can strip them and turn an apparently local path into an external destination.
+
 ## Move from the old settings
 
 | Old setting | Replacement |

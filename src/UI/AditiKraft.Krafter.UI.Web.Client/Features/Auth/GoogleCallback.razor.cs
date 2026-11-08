@@ -1,5 +1,6 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
@@ -48,8 +49,7 @@ public partial class GoogleCallback(IAuthenticationService authenticationService
                     if (string.IsNullOrEmpty(expected) || !string.Equals(expected, actual, StringComparison.Ordinal))
                     { navigationManager.NavigateTo("/login?error=invalid-google-state"); return; }
                     await sessionStorage.RemoveItemAsync("krafter-oauth-state");
-                    if (string.IsNullOrEmpty(returnUrl) || !returnUrl.StartsWith('/') || returnUrl.StartsWith("//", StringComparison.Ordinal) || returnUrl.Contains('\\'))
-                        returnUrl = "/";
+                    returnUrl = LocalReturnUrl.Normalize(returnUrl);
                     string ReturnUrl = returnUrl;
                     LocalAppState.GoogleLoginReturnUrl = ReturnUrl;
                     bool isSuccess = await authenticationService.LoginAsync(new TokenRequest

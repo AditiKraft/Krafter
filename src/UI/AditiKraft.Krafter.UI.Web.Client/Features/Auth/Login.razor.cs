@@ -1,5 +1,6 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
@@ -62,13 +63,7 @@ public partial class Login(
         if (_shouldRedirect)
         {
             _shouldRedirect = false;
-            string finalReturnUrl = !string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/";
-            if (Uri.TryCreate(finalReturnUrl, UriKind.Absolute, out Uri? absoluteUri))
-            {
-                finalReturnUrl = absoluteUri.PathAndQuery;
-            }
-
-            navigationManager.NavigateTo(finalReturnUrl);
+            navigationManager.NavigateTo(SafeReturnUrl());
         }
     }
 
@@ -109,9 +104,7 @@ public partial class Login(
         authenticationService.CancelTwoFactor();
     }
 
-    private string SafeReturnUrl() => !string.IsNullOrEmpty(ReturnUrl) && ReturnUrl.StartsWith('/') &&
-        !ReturnUrl.StartsWith("//", StringComparison.Ordinal) && !ReturnUrl.Contains('\\') &&
-        !ReturnUrl.StartsWith("/login", StringComparison.OrdinalIgnoreCase) ? ReturnUrl : "/";
+    private string SafeReturnUrl() => LocalReturnUrl.Normalize(ReturnUrl);
 
     private async Task StartGoogleLogin()
     {
