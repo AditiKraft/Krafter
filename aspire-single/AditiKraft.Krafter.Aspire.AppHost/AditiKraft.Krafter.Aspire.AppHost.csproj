@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <!-- StreamJsonRpc still requests an older MessagePack release. -->
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <!-- Source development uses the combined host in src-single. Generated projects use src. -->

@@ -63,6 +63,8 @@
 
     <!-- Utilities -->
     <PackageReference Include="Mapster" />
+    <!-- Security floor for TickerQ Dashboard's legacy ASP.NET dependencies. -->
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
   <ItemGroup>
