@@ -7,7 +7,8 @@ public class CreateOrUpdateRoleRequest
     public string? Id { get; set; }
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
-    public List<string> Permissions { get; set; } = [];
+    // Null preserves permissions during metadata edits; an empty list explicitly clears them.
+    public List<string>? Permissions { get; set; }
 }
 
 public class CreateOrUpdateRoleRequestValidator : AbstractValidator<CreateOrUpdateRoleRequest>

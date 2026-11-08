@@ -143,10 +143,12 @@ public class ApplicationDbContext(
         modelBuilder.Entity<UserRefreshToken>(entity => { entity.HasKey(c => c.UserId); });
     }
 
-    public override int SaveChanges()
+    public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         UpdateSoftDeleteStatusesAndSetTenant();
-        return base.SaveChanges();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
@@ -180,12 +182,26 @@ public class ApplicationDbContext(
     {
         if (entry.Entity is IHistory)
         {
-            entry.CurrentValues["CreatedOn"] = DateTime.UtcNow;
-            entry.Property("CreatedOn").IsModified = true;
-            if (currentUser is not null && !string.IsNullOrWhiteSpace(currentUser.GetUserId()))
+            string? actorId = currentUser?.GetUserId();
+            if (entry.State == EntityState.Added)
             {
-                entry.CurrentValues["CreatedById"] = currentUser.GetUserId();
-                entry.Property("CreatedById").IsModified = true;
+                entry.CurrentValues[nameof(IHistory.CreatedOn)] = DateTime.UtcNow;
+                if (!string.IsNullOrWhiteSpace(actorId))
+                {
+                    entry.CurrentValues[nameof(IHistory.CreatedById)] = actorId;
+                }
+            }
+            else
+            {
+                // Identity can mark the entire entity as modified. Creation history must
+                // stay out of the UPDATE even when callers supply different values.
+                entry.Property(nameof(IHistory.CreatedOn)).IsModified = false;
+                entry.Property(nameof(IHistory.CreatedById)).IsModified = false;
+                entry.CurrentValues[nameof(IHistory.UpdatedOn)] = DateTime.UtcNow;
+                entry.Property(nameof(IHistory.UpdatedOn)).IsModified = true;
+                entry.CurrentValues[nameof(IHistory.UpdatedById)] =
+                    string.IsNullOrWhiteSpace(actorId) ? null : actorId;
+                entry.Property(nameof(IHistory.UpdatedById)).IsModified = true;
             }
         }
 

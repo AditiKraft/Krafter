@@ -25,7 +25,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
             return;
         }
 
-        byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Key);
+        byte[] key = Encoding.UTF8.GetBytes(_jwtSettings.Key);
 
         options.MapInboundClaims = false;
         options.RequireHttpsMetadata = false;

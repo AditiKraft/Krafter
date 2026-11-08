@@ -21,18 +21,19 @@ public sealed class RolePermissionTests
             Claim(role.Id, AppClaimTypes.Permission, "Permissions.Users.View"),
             Claim(role.Id, "custom", "custom-value"));
         await context.Db.SaveChangesAsync();
-        var service = new RolePermissionService(context.Db, context.Tenant);
+        await context.AuthorizeRoleClaimsAsync();
+        var service = context.RolePermissions;
 
         var result = permissionsOnly
             ? await new UpdateRolePermissions.Handler(context.Roles, context.Db, service).UpdatePermissionsAsync(
                 new UpdateRolePermissionsRequest { RoleId = role.Id, Permissions = [] }, CancellationToken.None)
-            : await new UpdateRole.Handler(context.Roles, context.Db, service).UpdateAsync(role.Id,
+            : await new UpdateRole.Handler(context.Roles, context.Db, service, context.Tenant).UpdateAsync(role.Id,
                 new CreateOrUpdateRoleRequest { Name = role.Name!, Permissions = [] }, CancellationToken.None);
 
         Assert.False(result.IsError, result.Message);
         context.Db.ChangeTracker.Clear();
-        Assert.Equal("custom", (await context.Db.RoleClaims.SingleAsync()).ClaimType);
-        Assert.True((await context.Db.RoleClaims.IgnoreQueryFilters()
+        Assert.Equal("custom", (await context.Db.RoleClaims.Where(claim => claim.RoleId != context.ActorRoleId).SingleAsync()).ClaimType);
+        Assert.True((await context.Db.RoleClaims.IgnoreQueryFilters().Where(claim => claim.RoleId != context.ActorRoleId)
             .SingleAsync(claim => claim.ClaimType == AppClaimTypes.Permission)).IsDeleted);
     }
 
@@ -44,7 +45,7 @@ public sealed class RolePermissionTests
         context.Db.RoleClaims.Add(Claim(role.Id, AppClaimTypes.Permission, "Permissions.Users.View"));
         await context.Db.SaveChangesAsync();
         var handler = new UpdateRole.Handler(context.Roles, context.Db,
-            new RolePermissionService(context.Db, context.Tenant));
+            context.RolePermissions, context.Tenant);
 
         var result = await handler.UpdateAsync(role.Id,
             new CreateOrUpdateRoleRequest { Name = role.Name!, Description = "Changed", Permissions = null! },
@@ -52,8 +53,8 @@ public sealed class RolePermissionTests
 
         Assert.False(result.IsError, result.Message);
         context.Db.ChangeTracker.Clear();
-        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.SingleAsync()).ClaimValue);
-        Assert.Equal("Changed", (await context.Db.Roles.SingleAsync()).Description);
+        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.Where(claim => claim.RoleId != context.ActorRoleId).SingleAsync()).ClaimValue);
+        Assert.Equal("Changed", (await context.Db.Roles.Where(role => role.Id != context.ActorRoleId).SingleAsync()).Description);
     }
 
     [Theory]
@@ -65,17 +66,18 @@ public sealed class RolePermissionTests
         var role = await context.AddRoleAsync(RoleConstants.Admin);
         context.Db.RoleClaims.Add(Claim(role.Id, AppClaimTypes.Permission, "Permissions.Users.View"));
         await context.Db.SaveChangesAsync();
-        var service = new RolePermissionService(context.Db, context.Tenant);
+        await context.AuthorizeRoleClaimsAsync();
+        var service = context.RolePermissions;
 
         var result = permissionsOnly
             ? await new UpdateRolePermissions.Handler(context.Roles, context.Db, service).UpdatePermissionsAsync(
                 new UpdateRolePermissionsRequest { RoleId = role.Id, Permissions = [] }, CancellationToken.None)
-            : await new UpdateRole.Handler(context.Roles, context.Db, service).UpdateAsync(role.Id,
+            : await new UpdateRole.Handler(context.Roles, context.Db, service, context.Tenant).UpdateAsync(role.Id,
                 new CreateOrUpdateRoleRequest { Name = role.Name!, Permissions = [] }, CancellationToken.None);
 
         Assert.True(result.IsError);
         context.Db.ChangeTracker.Clear();
-        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.SingleAsync()).ClaimValue);
+        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.Where(claim => claim.RoleId != context.ActorRoleId).SingleAsync()).ClaimValue);
     }
 
     [Fact]
@@ -94,13 +96,14 @@ public sealed class RolePermissionTests
         await context.Db.SaveChangesAsync();
         context.SetTenant("tenant-a");
         context.Db.ChangeTracker.Clear();
-        var service = new RolePermissionService(context.Db, context.Tenant);
+        await context.AuthorizeRoleClaimsAsync();
+        var service = context.RolePermissions;
 
         await service.SynchronizeAsync(role.Id, [], CancellationToken.None);
         await context.Db.SaveChangesAsync();
 
         context.Db.ChangeTracker.Clear();
-        var claims = await context.Db.RoleClaims.IgnoreQueryFilters().ToListAsync();
+        var claims = await context.Db.RoleClaims.IgnoreQueryFilters().Where(claim => claim.RoleId != context.ActorRoleId).ToListAsync();
         Assert.True(claims.Single(c => c.RoleId == role.Id && c.TenantId == "tenant-a" &&
                                       c.ClaimType == AppClaimTypes.Permission).IsDeleted);
         Assert.False(claims.Single(c => c.ClaimType == "custom").IsDeleted);
@@ -119,7 +122,8 @@ public sealed class RolePermissionTests
         context.Db.RoleClaims.AddRange(deleted, Claim(role.Id, AppClaimTypes.Permission, "Permissions.Users.Delete"));
         await context.Db.SaveChangesAsync();
         int deletedClaimId = deleted.Id;
-        var service = new RolePermissionService(context.Db, context.Tenant);
+        await context.AuthorizeRoleClaimsAsync();
+        var service = context.RolePermissions;
 
         await service.SynchronizeAsync(role.Id,
             ["Permissions.Users.View", "Permissions.Users.View", "Permissions.Users.Create", "Permissions.Users.Create"],
@@ -127,7 +131,7 @@ public sealed class RolePermissionTests
         await context.Db.SaveChangesAsync();
 
         context.Db.ChangeTracker.Clear();
-        var claims = await context.Db.RoleClaims.IgnoreQueryFilters().ToListAsync();
+        var claims = await context.Db.RoleClaims.IgnoreQueryFilters().Where(claim => claim.RoleId != context.ActorRoleId).ToListAsync();
         Assert.Equal(3, claims.Count);
         var restored = Assert.Single(claims, c => c.ClaimValue == "Permissions.Users.View");
         Assert.Equal(deletedClaimId, restored.Id);
@@ -159,8 +163,8 @@ public sealed class RolePermissionTests
         Assert.Equal(expectedStatus, result.StatusCode);
         await context.Db.SaveChangesAsync();
         context.Db.ChangeTracker.Clear();
-        Assert.Equal("Editor", (await context.Db.Roles.SingleAsync()).Name);
-        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.SingleAsync()).ClaimValue);
+        Assert.Equal("Editor", (await context.Db.Roles.Where(role => role.Id != context.ActorRoleId).SingleAsync()).Name);
+        Assert.Equal("Permissions.Users.View", (await context.Db.RoleClaims.Where(claim => claim.RoleId != context.ActorRoleId).SingleAsync()).ClaimValue);
     }
 
     [Theory]
@@ -177,7 +181,7 @@ public sealed class RolePermissionTests
 
         Assert.False(result.IsError, result.Message);
         context.Db.ChangeTracker.Clear();
-        Assert.Equal("Permissions.Tenants.Delete", (await context.Db.RoleClaims.SingleAsync()).ClaimValue);
+        Assert.Equal("Permissions.Tenants.Delete", (await context.Db.RoleClaims.Where(claim => claim.RoleId != context.ActorRoleId).SingleAsync()).ClaimValue);
     }
 
     [Fact]
@@ -185,28 +189,30 @@ public sealed class RolePermissionTests
     {
         await using var context = new IdentityTestContext();
         var role = await context.AddRoleAsync("Editor");
-        var service = new RolePermissionService(context.Db, context.Tenant);
+        await context.AuthorizeRoleClaimsAsync();
+        var service = context.RolePermissions;
 
         Response result = await service.SynchronizeAsync(role.Id, ["Permissions.Tenants.View"], CancellationToken.None);
 
         Assert.Equal(403, result.StatusCode);
         await context.Db.SaveChangesAsync();
-        Assert.Empty(await context.Db.RoleClaims.ToListAsync());
+        Assert.Empty(await context.Db.RoleClaims.Where(claim => claim.RoleId != context.ActorRoleId).ToListAsync());
     }
 
-    private static Task<Response> WritePermissionsAsync(IdentityTestContext context, string roleId,
+    private static async Task<Response> WritePermissionsAsync(IdentityTestContext context, string roleId,
         string operation, string permission)
     {
-        var service = new RolePermissionService(context.Db, context.Tenant);
-        return operation switch
+        await context.AuthorizeRoleClaimsAsync();
+        var service = context.RolePermissions;
+        return await (operation switch
         {
-            "create" => new CreateRole.Handler(context.Roles, context.Db, service).CreateAsync(
+            "create" => new CreateRole.Handler(context.Roles, context.Db, service, context.Tenant).CreateAsync(
                 new() { Name = "NewRole", Description = "Created", Permissions = [permission] }, CancellationToken.None),
-            "update" => new UpdateRole.Handler(context.Roles, context.Db, service).UpdateAsync(roleId,
+            "update" => new UpdateRole.Handler(context.Roles, context.Db, service, context.Tenant).UpdateAsync(roleId,
                 new() { Name = "Renamed", Description = "Changed", Permissions = [permission] }, CancellationToken.None),
             _ => new UpdateRolePermissions.Handler(context.Roles, context.Db, service).UpdatePermissionsAsync(
                 new() { RoleId = roleId, Permissions = [permission] }, CancellationToken.None)
-        };
+        });
     }
 
     private static ApplicationRoleClaim Claim(string roleId, string type, string value)

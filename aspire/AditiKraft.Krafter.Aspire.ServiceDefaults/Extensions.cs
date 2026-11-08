@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -40,8 +41,20 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default
-            http.AddStandardResilienceHandler();
+            http.AddStandardResilienceHandler(options =>
+            {
+                // One-use credentials and mutations cannot be replayed after an uncertain response.
+                // Safe reads retain the standard retry policy.
+                options.Retry.DisableForUnsafeHttpMethods();
+
+                // Per-client throttling does not mean the shared dependency is unavailable.
+                // Preserve the default handling of 408, 5xx, transport errors and timeouts.
+                var handlesDependencyFailure = options.CircuitBreaker.ShouldHandle;
+                options.CircuitBreaker.ShouldHandle = arguments =>
+                    arguments.Outcome.Result?.StatusCode == HttpStatusCode.TooManyRequests
+                        ? ValueTask.FromResult(false)
+                        : handlesDependencyFailure(arguments);
+            });
 
             // Turn on service discovery by default
             http.AddServiceDiscovery();

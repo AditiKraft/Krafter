@@ -25,7 +25,8 @@ public class CreateOrUpdateTenantRequestValidator : AbstractValidator<CreateOrUp
 
         RuleFor(p => p.AdminEmail)
             .NotEmpty().WithMessage("Admin email is required")
-            .EmailAddress().WithMessage("Invalid email format");
+            .EmailAddress().WithMessage("Invalid email format")
+            .MaximumLength(256).WithMessage("Admin email cannot exceed 256 characters");
 
         RuleFor(p => p.Identifier)
             .Cascade(CascadeMode.Stop)

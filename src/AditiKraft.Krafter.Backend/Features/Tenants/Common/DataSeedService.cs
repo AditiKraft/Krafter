@@ -1,4 +1,4 @@
-using System.Data;
+using System.Text.Encodings.Web;
 using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
@@ -19,7 +19,6 @@ public sealed class DataSeedService(
     ITenantGetterService tenantGetterService,
     IJobService jobService,
     ApplicationDbContext applicationDbContext,
-    TenantDbContext dbContext,
     RoleManager<ApplicationRole> roleManager,
     UserManager<ApplicationUser> userManager,
     IConfiguration configuration,
@@ -34,115 +33,129 @@ public sealed class DataSeedService(
         if (applicationDbContext.ChangeTracker.HasChanges())
             throw new InvalidOperationException("Save pending changes before provisioning tenant identity data.");
 
-        SendEmailRequestInput? welcome = null;
-        // Identity managers save during creation. One transaction must cover the roles, claims,
-        // owner and memberships; replicas must check for existing data only after taking the lock.
-        await using (var transaction = applicationDbContext.Database.IsRelational()
-            ? await applicationDbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken)
-            : null) // InMemory unit tests only; concurrency guarantees require PostgreSQL.
+        SendEmailRequestInput? welcome;
+        await using (var transaction = await DomainTransaction.BeginAsync(applicationDbContext, cancellationToken))
         {
-            try
+            welcome = await ProvisionAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        await QueueWelcomeAsync(welcome);
+    }
+
+    // The caller owns the registry/identity transaction and must queue the returned email after commit.
+    internal async Task<SendEmailRequestInput?> ProvisionAsync(CancellationToken cancellationToken)
+    {
+        CurrentTenantDetails tenant = tenantGetterService.Tenant;
+        cancellationToken.ThrowIfCancellationRequested();
+        if (applicationDbContext.ChangeTracker.HasChanges())
+            throw new InvalidOperationException("Save pending changes before provisioning tenant identity data.");
+        if (applicationDbContext.Database.IsRelational())
+        {
+            if (applicationDbContext.Database.CurrentTransaction is null)
+                throw new InvalidOperationException("Provisioning requires an identity transaction.");
+            string key = $"tenant-bootstrap:{tenant.Id}";
+            await applicationDbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
+        }
+        applicationDbContext.ChangeTracker.Clear();
+        SendEmailRequestInput? welcome = null;
+        // Any identity history means this is an existing or partially provisioned tenant.
+        // Include soft-deleted rows without losing tenant isolation. Never repair roles,
+        // restore removed permissions, or recreate an intentionally deleted owner.
+        if (await applicationDbContext.Users.IgnoreQueryFilters().AnyAsync(
+                user => user.TenantId == tenant.Id, cancellationToken) ||
+            await applicationDbContext.Roles.IgnoreQueryFilters().AnyAsync(
+                role => role.TenantId == tenant.Id, cancellationToken))
+            return null;
+
+        bool isRoot = tenant.Id == SeedDataConstants.RootTenant.Id;
+        string password;
+        if (isRoot)
+        {
+            string? configuredPassword = configuration["Bootstrap:RootPassword"];
+            if (!environment.IsDevelopment() &&
+                (string.IsNullOrWhiteSpace(configuredPassword) || configuredPassword == SeedDataConstants.DefaultPassword))
+                throw new InvalidOperationException("Configure Bootstrap:RootPassword with a non-default password before provisioning a new production root account.");
+            password = string.IsNullOrWhiteSpace(configuredPassword) ? SeedDataConstants.DefaultPassword : configuredPassword;
+            if (password.Length > PasswordLimits.MaximumLength)
+                throw new InvalidOperationException("Bootstrap:RootPassword exceeds the supported login password length.");
+        }
+        else
+        {
+            password = PasswordGenerator.GeneratePassword();
+        }
+        ApplicationUser owner = CreateOwner();
+        // Use Identity's configured password rules before staging any identity rows.
+        foreach (IPasswordValidator<ApplicationUser> validator in userManager.PasswordValidators)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            EnsureSucceeded(await validator.ValidateAsync(userManager, owner, password));
+        }
+        Response identityValidation = await UserIdentityValidation.ValidateAsync(userManager, owner, cancellationToken);
+        if (identityValidation.IsError)
+            throw new InvalidOperationException(identityValidation.Message);
+        ApplicationRole basic = await CreateRoleAsync(RoleConstants.Basic, PermissionCatalog.Basic, cancellationToken);
+        ApplicationRole admin = await CreateRoleAsync(RoleConstants.Admin,
+            isRoot ? PermissionCatalog.All : PermissionCatalog.Admin, cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        EnsureSucceeded(await userManager.CreateAsync(owner, password));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        foreach (ApplicationRole role in new[] { basic, admin })
+            applicationDbContext.UserRoles.Add(new ApplicationUserRole
             {
-                if (transaction is not null)
-                {
-                    string key = $"tenant-bootstrap:{tenant.Id}";
-                    await applicationDbContext.Database.ExecuteSqlInterpolatedAsync(
-                        $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
-                }
-                applicationDbContext.ChangeTracker.Clear();
+                RoleId = role.Id, UserId = owner.Id, CreatedById = owner.Id
+            });
+        await applicationDbContext.SaveChangesAsync(cancellationToken);
 
-                // Any identity history means this is an existing or partially provisioned tenant.
-                // Include soft-deleted rows without losing tenant isolation. Never repair roles,
-                // restore removed permissions, or recreate an intentionally deleted owner.
-                if (await applicationDbContext.Users.IgnoreQueryFilters().AnyAsync(
-                        user => user.TenantId == tenant.Id, cancellationToken) ||
-                    await applicationDbContext.Roles.IgnoreQueryFilters().AnyAsync(
-                        role => role.TenantId == tenant.Id, cancellationToken))
-                    return;
-
-                bool isRoot = tenant.Id == SeedDataConstants.RootTenant.Id;
-                string password;
-                if (isRoot)
-                {
-                    string? configuredPassword = configuration["Bootstrap:RootPassword"];
-                    if (!environment.IsDevelopment() &&
-                        (string.IsNullOrWhiteSpace(configuredPassword) || configuredPassword == SeedDataConstants.DefaultPassword))
-                        throw new InvalidOperationException("Configure Bootstrap:RootPassword with a non-default password before provisioning a new production root account.");
-                    password = string.IsNullOrWhiteSpace(configuredPassword) ? SeedDataConstants.DefaultPassword : configuredPassword;
-                    if (password.Length > PasswordLimits.MaximumLength)
-                        throw new InvalidOperationException("Bootstrap:RootPassword exceeds the supported login password length.");
-                }
-                else
-                {
-                    password = PasswordGenerator.GeneratePassword();
-                }
-                var owner = new ApplicationUser
-                {
-                    Id = isRoot ? SeedDataConstants.RootUser.Id : Guid.NewGuid().ToString(),
-                    FirstName = isRoot ? SeedDataConstants.RootUser.FirstName : "Admin",
-                    LastName = isRoot ? SeedDataConstants.RootUser.LastName : "User",
-                    Email = isRoot ? SeedDataConstants.RootUser.EmailAddress : tenant.AdminEmail,
-                    UserName = isRoot ? SeedDataConstants.RootUser.EmailAddress : tenant.AdminEmail,
-                    IsActive = true,
-                    IsOwner = true
-                };
-                // Use Identity's configured password rules before staging any identity rows.
-                foreach (IPasswordValidator<ApplicationUser> validator in userManager.PasswordValidators)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    EnsureSucceeded(await validator.ValidateAsync(userManager, owner, password));
-                }
-                ApplicationRole basic = await CreateRoleAsync(RoleConstants.Basic, PermissionCatalog.Basic, cancellationToken);
-                ApplicationRole admin = await CreateRoleAsync(RoleConstants.Admin,
-                    isRoot ? PermissionCatalog.All : PermissionCatalog.Admin, cancellationToken);
-
-                cancellationToken.ThrowIfCancellationRequested();
-                EnsureSucceeded(await userManager.CreateAsync(owner, password));
-                cancellationToken.ThrowIfCancellationRequested();
-
-                foreach (ApplicationRole role in new[] { basic, admin })
-                    applicationDbContext.UserRoles.Add(new ApplicationUserRole
-                    {
-                        RoleId = role.Id, UserId = owner.Id, CreatedById = owner.Id
-                    });
-                await applicationDbContext.SaveChangesAsync(cancellationToken);
-
-                if (!isRoot)
-                {
-                    Tenant registeredTenant = await dbContext.Tenants.AsNoTracking()
-                        .SingleAsync(registered => registered.Id == tenant.Id, cancellationToken);
-                    string loginUrl = $"{tenant.TenantLink}/login";
-                    welcome = new SendEmailRequestInput
-                    {
-                        Email = registeredTenant.AdminEmail,
-                        Subject = "Welcome to Krafter",
-                        HtmlMessage = $"Dear {owner.FirstName} {owner.LastName} ({owner.Email}),<br><br>" +
-                                      "Your Krafter account has been successfully created. Here are your login details:<br><br>" +
-                                      $"Username: {owner.Email}<br>" +
-                                      $"Password: {password}<br><br>" +
-                                      $"Please <a href='{loginUrl}'>click here</a> to log in.<br><br>" +
-                                      "We recommend changing your password after your first login for security reasons.<br><br>" +
-                                      "Best Regards,<br>" +
-                                      "The Krafter Team"
-                    };
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                if (transaction is not null)
-                    await transaction.CommitAsync(CancellationToken.None);
-            }
-            catch
+        if (!isRoot)
+        {
+            string loginUrl = $"{tenant.TenantLink}/login";
+            HtmlEncoder html = HtmlEncoder.Default;
+            welcome = new SendEmailRequestInput
             {
-                // A rolled-back Identity save must not leave apparently persisted tracked entities.
-                applicationDbContext.ChangeTracker.Clear();
-                throw;
-            }
+                Email = owner.Email!,
+                Subject = "Welcome to Krafter",
+                HtmlMessage = $"Dear {html.Encode(owner.FirstName ?? string.Empty)} {html.Encode(owner.LastName ?? string.Empty)} ({html.Encode(owner.Email ?? string.Empty)}),<br><br>" +
+                              "Your Krafter account has been successfully created. Here are your login details:<br><br>" +
+                              $"Username: {html.Encode(owner.Email ?? string.Empty)}<br>" +
+                              $"Password: {html.Encode(password)}<br><br>" +
+                              $"Please <a href='{html.Encode(loginUrl)}'>click here</a> to log in.<br><br>" +
+                              "We recommend changing your password after your first login for security reasons.<br><br>" +
+                              "Best Regards,<br>" +
+                              "The Krafter Team"
+            };
         }
 
-        // Send credentials only after identity provisioning commits. Complete this work even if
-        // the caller disconnects after commit; reseeding must not reset the owner's credentials.
+        return welcome;
+    }
+
+    internal async Task QueueWelcomeAsync(SendEmailRequestInput? welcome)
+    {
+        // This is a separate durable job boundary after identity commit. A failed enqueue is
+        // surfaced by IJobService; credentials are never queued for rolled-back identities.
         if (welcome is not null)
             await jobService.EnqueueAsync(welcome, nameof(Jobs.SendEmailJob), CancellationToken.None);
+    }
+
+    internal Task<Response> ValidateOwnerAsync(CancellationToken cancellationToken)
+        => UserIdentityValidation.ValidateAsync(userManager, CreateOwner(), cancellationToken);
+
+    private ApplicationUser CreateOwner()
+    {
+        bool isRoot = tenantGetterService.Tenant.Id == SeedDataConstants.RootTenant.Id;
+        string email = isRoot ? SeedDataConstants.RootUser.EmailAddress : tenantGetterService.Tenant.AdminEmail;
+        return new ApplicationUser
+        {
+            Id = isRoot ? SeedDataConstants.RootUser.Id : Guid.NewGuid().ToString(),
+            FirstName = isRoot ? SeedDataConstants.RootUser.FirstName : "Admin",
+            LastName = isRoot ? SeedDataConstants.RootUser.LastName : "User",
+            Email = email,
+            UserName = email,
+            IsActive = true,
+            IsOwner = true
+        };
     }
 
     private async Task<ApplicationRole> CreateRoleAsync(string name,

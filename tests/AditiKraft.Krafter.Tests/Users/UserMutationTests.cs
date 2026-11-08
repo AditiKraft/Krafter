@@ -138,8 +138,8 @@ public sealed class UserMutationTests
         var result = await context.Mutations.UpdateEmailAsync(user.Id, "taken@example.com", CancellationToken.None);
 
         Assert.True(result.IsError);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("taken", result.Message!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(409, result.StatusCode);
+        Assert.Contains("already in use", result.Message!, StringComparison.OrdinalIgnoreCase);
         await context.Db.SaveChangesAsync();
         context.Db.ChangeTracker.Clear();
         Assert.Equal("user@example.com", (await context.Db.Users.SingleAsync(u => u.Id == user.Id)).Email);
@@ -354,6 +354,6 @@ public sealed class UserMutationTests
     {
         const string start = "Your password is:<br/>";
         int offset = htmlMessage.IndexOf(start, StringComparison.Ordinal) + start.Length;
-        return htmlMessage[offset..htmlMessage.IndexOf("<br/>", offset, StringComparison.Ordinal)];
+        return System.Net.WebUtility.HtmlDecode(htmlMessage[offset..htmlMessage.IndexOf("<br/>", offset, StringComparison.Ordinal)]);
     }
 }

@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web;
@@ -17,7 +18,8 @@ public sealed class UpdateRole
     internal sealed class Handler(
         RoleManager<ApplicationRole> roleManager,
         ApplicationDbContext db,
-        RolePermissionService permissionService) : IScopedHandler
+        RolePermissionService permissionService,
+        ITenantGetterService tenantGetterService) : IScopedHandler
     {
         public async Task<Response> UpdateAsync(string id, CreateOrUpdateRoleRequest request,
             CancellationToken cancellationToken)
@@ -36,53 +38,60 @@ public sealed class UpdateRole
 
             if (request.Permissions is not null)
             {
-                Response validation = permissionService.ValidatePermissions(request.Permissions);
+                Response validation = await permissionService.ValidatePermissionsAsync(request.Permissions, cancellationToken);
                 if (validation.IsError)
                 {
                     return validation;
                 }
             }
 
+            if (RoleConstants.IsDefault(role.Name!) &&
+                (request.Name != role.Name || request.Description != role.Description))
+                return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
+
+            string normalizedName = roleManager.NormalizeKey(request.Name);
+            if (await db.Roles.IgnoreQueryFilters().AnyAsync(candidate => candidate.Id != role.Id &&
+                    candidate.TenantId == tenantGetterService.Tenant.Id && candidate.NormalizedName == normalizedName,
+                    cancellationToken))
+                return Response.Conflict(IdentityConflict.RoleMessage);
+
+            await using var transaction = await DomainTransaction.BeginAsync(db, cancellationToken);
             if (request.Name != role.Name)
             {
-                if (RoleConstants.IsDefault(role.Name!))
-                {
-                    return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
-                }
-
                 role.Name = request.Name;
-                role.NormalizedName = request.Name?.ToUpperInvariant();
             }
 
             if (request.Description != role.Description)
             {
-                if (RoleConstants.IsDefault(role.Name!))
-                {
-                    return Response.Forbidden($"Not allowed to modify {role.Name} Role.");
-                }
-
                 role.Description = request.Description;
             }
 
-            IdentityResult result = await roleManager.UpdateAsync(role);
-            if (!result.Succeeded)
+            try
             {
-                // Identity leaves failed full-row updates tracked; do not let a later save retry stale state.
-                db.Entry(role).State = EntityState.Detached;
-                return Response.BadRequest($"Update role failed {result.Errors.ToString()}");
-            }
-
-            if (request.Permissions is not null)
-            {
-                Response permissions = await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
-                if (permissions.IsError)
+                IdentityResult result = await roleManager.UpdateAsync(role);
+                if (!result.Succeeded)
                 {
-                    return permissions;
+                    db.Entry(role).State = EntityState.Detached;
+                    return IdentityConflict.IsDuplicate(result)
+                        ? Response.Conflict(IdentityConflict.RoleMessage)
+                        : Response.BadRequest("Update role failed: " + string.Join(" ", result.Errors.Select(error => error.Description)));
                 }
-            }
 
-            await db.SaveChangesAsync(cancellationToken);
-            return new Response();
+                if (request.Permissions is not null)
+                {
+                    Response permissions = await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                    if (permissions.IsError)
+                        return permissions;
+                }
+
+                await db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return Response.Success();
+            }
+            catch (DbUpdateException exception) when (IdentityConflict.IsRole(exception))
+            {
+                return Response.Conflict(IdentityConflict.RoleMessage);
+            }
         }
 
     }

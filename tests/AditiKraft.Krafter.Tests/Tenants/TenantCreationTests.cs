@@ -30,10 +30,8 @@ public sealed class TenantCreationTests
         ReservedTenantIdentifiers = ["status"]
     };
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task CreatingTenantPersistsAndProvisionsEvenWhenCanceledAfterRegistryCommit(bool cancelAfterRegistrySave)
+    [Fact]
+    public async Task CreatingTenantPersistsAndProvisionsItsOwner()
     {
         using var cancellation = new CancellationTokenSource();
         var services = new ServiceCollection();
@@ -42,11 +40,11 @@ public sealed class TenantCreationTests
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
         services.AddSingleton<IHostEnvironment>(new HostingEnvironment { EnvironmentName = Environments.Production });
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<ICurrentUserInitializer>(p => (ICurrentUserInitializer)p.GetRequiredService<ICurrentUser>());
         services.AddTenantServices();
         services.AddDbContext<TenantDbContext>(options =>
         {
             options.UseInMemoryDatabase(databaseName);
-            if (cancelAfterRegistrySave) options.AddInterceptors(new CancelAfterRegistrySave(cancellation));
         });
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase($"{databaseName}-identity"));
         services.AddIdentityCore<ApplicationUser>()
@@ -80,7 +78,7 @@ public sealed class TenantCreationTests
         DateTime after = DateTime.UtcNow;
 
         Assert.False(created.IsError, created.Message);
-        Assert.Equal(cancelAfterRegistrySave, cancellation.IsCancellationRequested);
+        Assert.False(cancellation.IsCancellationRequested);
         db.ChangeTracker.Clear();
         Tenant saved = await db.Tenants.AsNoTracking().SingleAsync();
         Assert.InRange(saved.CreatedOn, before, after);
@@ -108,7 +106,7 @@ public sealed class TenantCreationTests
         Assert.Contains("https://example.getkrafter.dev/login", welcome.HtmlMessage);
 
         request.Name = "Updated tenant";
-        var update = new UpdateTenant.Handler(db, provider, Urls);
+        var update = new UpdateTenant.Handler(db, provider, Urls, currentUser);
         Response updated = await update.UpdateAsync(saved.Id!, request, CancellationToken.None);
 
         Assert.False(updated.IsError, updated.Message);
@@ -182,7 +180,7 @@ public sealed class TenantCreationTests
         await using TenantDbContext db = CreateDb();
         db.Tenants.AddRange(ExistingTenant("existing", "Blue"), ExistingTenant("edited", "green"));
         await db.SaveChangesAsync();
-        var handler = new UpdateTenant.Handler(db, null!, Urls);
+        var handler = new UpdateTenant.Handler(db, null!, Urls, new CurrentUser());
 
         Response response = await handler.UpdateAsync("edited", ValidRequest("blue"), CancellationToken.None);
 
@@ -204,7 +202,7 @@ public sealed class TenantCreationTests
         await db.SaveChangesAsync();
         CreateOrUpdateTenantRequest request = ValidRequest(identifier);
         request.Id = "root";
-        var handler = new UpdateTenant.Handler(db, null!, Urls);
+        var handler = new UpdateTenant.Handler(db, null!, Urls, new CurrentUser());
 
         Response response = await handler.UpdateAsync("edited", request, CancellationToken.None);
 
@@ -222,7 +220,7 @@ public sealed class TenantCreationTests
         CreateOrUpdateTenantRequest request = ValidRequest(DefaultTenantConstants.Identifier);
         request.Name = "Updated root";
         request.ValidUpto = root.ValidUpto;
-        var handler = new UpdateTenant.Handler(db, null!, Urls);
+        var handler = new UpdateTenant.Handler(db, null!, Urls, new CurrentUser());
 
         Response response = await handler.UpdateAsync(root.Id!, request, CancellationToken.None);
 
@@ -234,36 +232,25 @@ public sealed class TenantCreationTests
     private static TenantDbContext CreateDb() => new(new DbContextOptionsBuilder<TenantDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ConcurrentIdentifierConflictReturnsConflict(bool updating)
+    [Fact]
+    public async Task ConcurrentIdentifierConflictReturnsConflictForUpdate()
     {
         var conflict = new IdentifierConflictInterceptor();
         var options = new DbContextOptionsBuilder<TenantDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).AddInterceptors(conflict).Options;
         await using var db = new TenantDbContext(options);
-        if (updating)
-        {
-            db.Tenants.Add(ExistingTenant("edited", "green"));
-            await db.SaveChangesAsync();
-        }
+        db.Tenants.Add(ExistingTenant("edited", "green"));
+        await db.SaveChangesAsync();
         conflict.RejectSave = true;
 
-        Response response = updating
-            ? await new UpdateTenant.Handler(db, null!, Urls).UpdateAsync("edited", ValidRequest("blue"), CancellationToken.None)
-            : await new CreateTenant.Handler(db, null!, new CurrentUser(), Urls).CreateAsync(ValidRequest("blue"), CancellationToken.None);
+        Response response = await new UpdateTenant.Handler(db, null!, Urls, new CurrentUser())
+            .UpdateAsync("edited", ValidRequest("blue"), CancellationToken.None);
 
         Assert.Equal(409, response.StatusCode);
+        conflict.RejectSave = false;
+        await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
-        if (updating)
-        {
-            Assert.Equal("green", (await db.Tenants.SingleAsync()).Identifier);
-        }
-        else
-        {
-            Assert.Empty(await db.Tenants.ToListAsync());
-        }
+        Assert.Equal("green", (await db.Tenants.SingleAsync()).Identifier);
     }
 
     private sealed class IdentifierConflictInterceptor : SaveChangesInterceptor
@@ -315,13 +302,4 @@ public sealed class TenantCreationTests
         }
     }
 
-    private sealed class CancelAfterRegistrySave(CancellationTokenSource cancellation) : SaveChangesInterceptor
-    {
-        public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result,
-            CancellationToken cancellationToken = default)
-        {
-            cancellation.Cancel();
-            return ValueTask.FromResult(result);
-        }
-    }
 }

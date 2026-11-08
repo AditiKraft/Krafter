@@ -36,5 +36,8 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
         RuleFor(p => p.PhoneNumber)
             .MaximumLength(20).When(p => !string.IsNullOrWhiteSpace(p.PhoneNumber))
             .WithMessage("Phone number cannot exceed 20 characters");
+
+        RuleFor(p => p.UserName)
+            .MaximumLength(256).WithMessage("Username cannot exceed 256 characters");
     }
 }

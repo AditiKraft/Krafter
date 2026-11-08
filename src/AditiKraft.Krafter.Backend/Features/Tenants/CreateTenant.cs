@@ -1,6 +1,7 @@
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Web.Authorization;
@@ -56,18 +57,10 @@ public sealed class CreateTenant
             entity.CreatedOn = DateTime.UtcNow;
             entity.CreatedById = currentUser.GetUserId();
 
-            dbContext.Tenants.Add(entity);
-            try
-            {
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateException exception) when (exception.InnerException is PostgresException
-                   { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: TenantDbContext.TenantIdentifierIndexName })
-            {
-                return Response.Conflict("Identifier already exists, please try a different identifier.");
-            }
-
             using IServiceScope scope = serviceProvider.CreateScope();
+            if (!string.IsNullOrWhiteSpace(currentUser.GetUserId()))
+                scope.ServiceProvider.GetRequiredService<ICurrentUserInitializer>()
+                    .SetCurrentUserId(currentUser.GetUserId());
             ITenantSetterService tenantSetter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
             CurrentTenantDetails currentTenantDetails = entity.Adapt<CurrentTenantDetails>();
             currentTenantDetails.TenantLink =
@@ -75,9 +68,28 @@ public sealed class CreateTenant
             tenantSetter.SetTenant(currentTenantDetails);
 
             DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
-            // The tenant registry is committed. Finish its mandatory identity provisioning even
-            // if the caller disconnects, so cancellation cannot strand an unusable tenant.
-            await seedService.SeedAsync(CancellationToken.None);
+            Response identityValidation = await seedService.ValidateOwnerAsync(cancellationToken);
+            if (identityValidation.IsError)
+                return identityValidation;
+
+            ApplicationDbContext identity = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            SendEmailRequestInput? welcome;
+            await using (var transaction = await DomainTransaction.BeginAsync(dbContext, cancellationToken, identity))
+            {
+                dbContext.Tenants.Add(entity);
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                    welcome = await seedService.ProvisionAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                }
+                catch (DbUpdateException exception) when (exception.InnerException is PostgresException
+                       { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: TenantDbContext.TenantIdentifierIndexName })
+                {
+                    return Response.Conflict("Identifier already exists, please try a different identifier.");
+                }
+            }
+            await seedService.QueueWelcomeAsync(welcome);
 
             return new Response();
         }

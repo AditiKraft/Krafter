@@ -64,7 +64,7 @@ public sealed class UpdateRolePermissions
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response>()
-                .MustHavePermission(PermissionAction.Update, PermissionResource.Roles);
+                .MustHavePermission(PermissionAction.Update, PermissionResource.RoleClaims);
         }
     }
 }

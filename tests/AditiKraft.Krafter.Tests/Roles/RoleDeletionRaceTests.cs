@@ -35,6 +35,7 @@ public sealed class RoleDeletionRaceTests
         seed.Db.RoleClaims.Add(new ApplicationRoleClaim
         { RoleId = role.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = "Permissions.Users.View" });
         await seed.Db.SaveChangesAsync();
+        ApplicationUser manager = await RoleAuthority.CreateManagerAsync(seed);
         bool deletionObserved = false;
 
         interceptor.BeforeNextSave = async () =>
@@ -47,7 +48,7 @@ public sealed class RoleDeletionRaceTests
         };
         using MfaScope editing = harness.Scope(tenantId);
         var handler = new UpdateRole.Handler(editing.Services.GetRequiredService<RoleManager<ApplicationRole>>(), editing.Db,
-            new RolePermissionService(editing.Db, editing.Services.GetRequiredService<ITenantGetterService>()));
+            RoleAuthority.Service(editing, manager), editing.Services.GetRequiredService<ITenantGetterService>());
         var rejected = await handler.UpdateAsync(role.Id,
             new() { Name = "Operator", Description = "Concurrent edit", Permissions = ["Permissions.Users.View"] },
             CancellationToken.None);

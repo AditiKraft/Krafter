@@ -8,6 +8,7 @@ using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.Tests.Auth;
+using AditiKraft.Krafter.Tests.Roles;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
 using AditiKraft.Krafter.UI.Web.Client.Common.Permissions;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
@@ -46,6 +47,7 @@ public sealed class PermissionRevocationTests
         seed.Db.RoleClaims.Add(new ApplicationRoleClaim
         { RoleId = role.Id, ClaimType = AppClaimTypes.Permission, ClaimValue = Permission });
         await seed.Db.SaveChangesAsync();
+        ApplicationUser manager = await RoleAuthority.CreateManagerAsync(seed);
         TokenResponse token = (await seed.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test")).Data!.Tokens!;
 
         var accessor = new HttpContextAccessor();
@@ -80,7 +82,7 @@ public sealed class PermissionRevocationTests
             }
             else
             {
-                var permissions = new RolePermissionService(admin.Db, admin.Services.GetRequiredService<ITenantGetterService>());
+                var permissions = RoleAuthority.Service(admin, manager);
                 Assert.False((await permissions.SynchronizeAsync(role.Id, [], CancellationToken.None)).IsError);
                 await admin.Db.SaveChangesAsync();
             }

@@ -1,8 +1,11 @@
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
+using AditiKraft.Krafter.Tests.UI;
 using AditiKraft.Krafter.UI.Web.Client.Features.Roles;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.HtmlRendering;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +58,7 @@ public sealed class RoleEditorTests
         });
 
         CreateOrUpdateRoleRequest update = Assert.Single(api.Updates);
-        Assert.Equal(new[] { "Permissions.Users.View" }, update.Permissions);
+        Assert.Null(update.Permissions);
         Assert.Equal(2, api.LoadCount);
     }
 
@@ -111,7 +114,11 @@ public sealed class RoleEditorTests
             await editor.Form.Submit.InvokeAsync(editor.Form.Data);
         });
 
-        Assert.Empty(Assert.Single(api.Updates).Permissions);
+        CreateOrUpdateRoleRequest saved = Assert.Single(api.Updates);
+        if (initiallyEmpty)
+            Assert.Null(saved.Permissions);
+        else
+            Assert.Empty(Assert.IsType<List<string>>(saved.Permissions));
     }
 
     [Fact]
@@ -129,8 +136,81 @@ public sealed class RoleEditorTests
         });
 
         Assert.Equal(0, api.LoadCount);
-        Assert.Single(api.Creates);
+        Assert.Null(Assert.Single(api.Creates).Permissions);
         Assert.Empty(api.Updates);
+    }
+
+    [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(true, false, true)]
+    public async Task MetadataSaveOmitsClaimsWithoutPermissionToEditThem(bool canView, bool canUpdate, bool isNew)
+    {
+        var api = new RolesApi { Load = () => Task.FromResult(Permissions("Permissions.Users.View")) };
+        string[] permissions =
+        [
+            .. canView ? new[] { "Permissions.RoleClaims.View" } : [],
+            .. canUpdate ? new[] { "Permissions.RoleClaims.Update" } : []
+        ];
+        await using var editor = new Editor(api, permissions);
+        RoleDto role = ExistingRole();
+        if (isNew) role.Id = null!;
+        HtmlRootComponent root = await editor.RenderAsync(role);
+        await root.QuiescenceTask;
+        await editor.RunAsync(async () =>
+        {
+            Assert.Equal(canView, editor.HasPermissionSelector);
+            if (canView) Assert.True(editor.Permissions.Disabled);
+            Assert.False(editor.Button("Save").Disabled);
+            editor.Form.Data.Description = "Metadata only";
+            // The outgoing boundary must also ignore a queued/tampered value without edit access.
+            editor.Form.Data.Permissions = ["Permissions.Users.Delete"];
+            await editor.Form.Submit.InvokeAsync(editor.Form.Data);
+        });
+        CreateOrUpdateRoleRequest saved = Assert.Single(isNew ? api.Creates : api.Updates);
+        Assert.Null(saved.Permissions);
+        Assert.Equal("Metadata only", saved.Description);
+        Assert.Equal(canView && !isNew ? 1 : 0, api.LoadCount);
+    }
+
+    [Fact]
+    public async Task ViewOnlyPermissionFailureAllowsMetadataSaveWithNullClaims()
+    {
+        var api = new RolesApi { Load = () => Task.FromResult(new Response<RoleDto> { IsError = true, StatusCode = 503 }) };
+        await using var editor = new Editor(api, ["Permissions.RoleClaims.View"]);
+        HtmlRootComponent root = await editor.RenderAsync(ExistingRole());
+        await root.QuiescenceTask;
+        await editor.RunAsync(async () =>
+        {
+            Assert.Contains("Could not load role permissions", root.ToHtmlString());
+            Assert.True(editor.Permissions.Disabled);
+            Assert.False(editor.Button("Save").Disabled);
+            await editor.Form.Submit.InvokeAsync(editor.Form.Data);
+        });
+        Assert.Null(Assert.Single(api.Updates).Permissions);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AuthorizedChangedSelectionIsSentForExistingAndNewRoles(bool isNew)
+    {
+        var api = new RolesApi { Load = () => Task.FromResult(Permissions("Permissions.Users.View")) };
+        await using var editor = new Editor(api);
+        RoleDto role = ExistingRole();
+        if (isNew) role.Id = null!;
+        HtmlRootComponent root = await editor.RenderAsync(role);
+        await root.QuiescenceTask;
+        await editor.RunAsync(async () =>
+        {
+            Assert.False(editor.Permissions.Disabled);
+            await editor.Permissions.ValueChanged.InvokeAsync(["Permissions.Users.View", "Permissions.Users.Update"]);
+            await editor.Form.Submit.InvokeAsync(editor.Form.Data);
+        });
+        Assert.Equal(new[] { "Permissions.Users.View", "Permissions.Users.Update" },
+            Assert.Single(isNew ? api.Creates : api.Updates).Permissions);
     }
 
     private static RoleDto ExistingRole() => new() { Id = "editor", Name = "Editor", Description = "Original" };
@@ -144,7 +224,7 @@ public sealed class RoleEditorTests
         private readonly CapturingActivator components;
         private readonly HtmlRenderer renderer;
 
-        public Editor(RolesApi api)
+        public Editor(RolesApi api, string[]? permissions = null)
         {
             var registrations = new ServiceCollection();
             registrations.AddLogging();
@@ -153,6 +233,9 @@ public sealed class RoleEditorTests
             registrations.AddSingleton<DialogService>();
             registrations.AddSingleton<NotificationService>();
             registrations.AddSingleton<ApiCallService>();
+            registrations.AddAuthorizationCore(PermissionRegistration.RegisterPermissionClaims);
+            registrations.AddSingleton<AuthenticationStateProvider>(new EditorAuthenticationState(
+                permissions ?? ["Permissions.RoleClaims.View", "Permissions.RoleClaims.Update"]));
             registrations.AddSingleton<IRolesApi>(api);
             registrations.AddSingleton<CapturingActivator>();
             registrations.AddSingleton<IComponentActivator>(provider => provider.GetRequiredService<CapturingActivator>());
@@ -166,6 +249,8 @@ public sealed class RoleEditorTests
 
         public RadzenDropDown<List<string>> Permissions =>
             components.All.OfType<RadzenDropDown<List<string>>>().Single();
+
+        public bool HasPermissionSelector => components.All.OfType<RadzenDropDown<List<string>>>().Any();
 
         public RadzenButton Button(string text) => components.All.OfType<RadzenButton>().Single(button => button.Text == text);
 

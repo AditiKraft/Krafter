@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
@@ -40,7 +41,8 @@ public sealed class ChangePassword
             }
 
             string emailSubject = "Password Changed";
-            string userName = $"{user.FirstName} {user.LastName}";
+            HtmlEncoder html = HtmlEncoder.Default;
+            string userName = html.Encode($"{user.FirstName} {user.LastName}");
             string emailBody = $@"
 <html>
 <head>
@@ -54,7 +56,7 @@ public sealed class ChangePassword
         <li>Never share your password with anyone.</li>
     </ul>
     <p>Best regards,</p>
-    <p>{tenantGetterService.Tenant.Name} Team</p>
+    <p>{html.Encode(tenantGetterService.Tenant.Name ?? string.Empty)} Team</p>
 </body>
 </html>";
             if (!string.IsNullOrWhiteSpace(user.Email))

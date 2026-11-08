@@ -1,6 +1,8 @@
-<RadzenTemplateForm TItem="CreateOrUpdateTenantRequest" Data="@CreateRequest" Submit="@SubmitAsync">
+@inherits AditiKraft.Krafter.UI.Web.Client.Common.Components.Dialogs.EditorDialogBase
+<RadzenTemplateForm TItem="CreateOrUpdateTenantRequest" Data="@CreateRequest" Submit="@SubmitAsync" @onkeydown="OnEditorKeyDown">
 
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())" />
+    <fieldset disabled="@IsSaving" class="kr-editor-fields">
     <RadzenStack>
 
         <RadzenRow AlignItems="AlignItems.Center">
@@ -61,15 +63,16 @@
             <ValidationMessage For="@(() => CreateRequest.IsActive)" />
         </RadzenRow>
     </RadzenStack>
+    </fieldset>
     @if (dateError is not null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false">@dateError</RadzenAlert>
     }
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="0.5rem"
                  Class="rz-mt-4 rz-mb-2">
-        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="isBusy" Disabled="@(dateError is not null)"
+        <RadzenButton ButtonType="ButtonType.Submit" IsBusy="IsSaving" Disabled="@(IsSaving || dateError is not null)"
                       Size="ButtonSize.Small" Icon="save" Text="Save" />
         <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" Icon="cancel"
-                      Text="Cancel" Click="@Cancel" />
+                      Text="Cancel" Disabled="@IsSaving" Click="@Cancel" />
     </RadzenStack>
 </RadzenTemplateForm>

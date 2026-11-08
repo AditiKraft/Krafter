@@ -105,7 +105,6 @@ public sealed class DataSeedPostgresTests
         ITenantGetterService tenant = scope.Services.GetRequiredService<ITenantGetterService>();
         tenant.Tenant.AdminEmail = email;
         return new DataSeedService(tenant, jobs, scope.Db,
-            scope.Services.GetRequiredService<TenantDbContext>(),
             scope.Services.GetRequiredService<RoleManager<ApplicationRole>>(), scope.Users,
             new ConfigurationBuilder().Build(), new HostingEnvironment { EnvironmentName = Environments.Production });
     }

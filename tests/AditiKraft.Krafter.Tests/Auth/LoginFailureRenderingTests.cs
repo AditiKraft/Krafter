@@ -21,6 +21,39 @@ namespace AditiKraft.Krafter.Tests.Auth;
 public sealed class LoginFailureRenderingTests
 {
     [Theory]
+    [InlineData(false, "login-with-google-dark.svg")]
+    [InlineData(true, "login-with-google-light.svg")]
+    public async Task GoogleSignInRendersNamedButtonWithDecorativeThemeAsset(bool darkTheme, string asset)
+    {
+        await using var page = new LoginPage("", "/users", authenticated: false, darkTheme: darkTheme);
+        await page.RenderAsync();
+        await page.RunAsync(() =>
+        {
+            Assert.Equal(ButtonType.Button, page.GoogleButton.ButtonType);
+            Assert.True(page.GoogleButton.Click.HasDelegate);
+            Assert.False(page.GoogleButton.Disabled);
+            Assert.Equal("Sign in with Google", page.GoogleButton.Attributes["aria-label"]);
+            Assert.Equal(asset, page.GoogleImage.Path);
+            Assert.Equal("", page.GoogleImage.AlternateText);
+            Assert.False(page.GoogleImage.Click.HasDelegate);
+
+            // Inspect actual Razor/Radzen output; browser Tab/Enter/Space validation is separate.
+            string html = page.Root.ToHtmlString();
+            int label = html.IndexOf("aria-label=\"Sign in with Google\"", StringComparison.Ordinal);
+            Assert.True(label >= 0);
+            int opening = html.LastIndexOf("<button", label, StringComparison.Ordinal);
+            int closing = html.IndexOf("</button>", label, StringComparison.Ordinal);
+            Assert.True(opening >= 0 && closing > label);
+            string buttonHtml = html[opening..closing];
+            Assert.Contains("type=\"button\"", buttonHtml);
+            Assert.Contains($"src=\"{asset}\"", buttonHtml);
+            Assert.Contains("alt=\"\"", buttonHtml);
+            Assert.Contains("aria-hidden=\"true\"", buttonHtml);
+            return Task.CompletedTask;
+        });
+    }
+
+    [Theory]
     [InlineData("google-auth-failed", "Unable to sign in with Google. Please try again.")]
     [InlineData("invalid-google-state", "Google sign-in expired or could not be verified. Please try again.")]
     public async Task KnownOAuthErrorsRemainVisibleEvenWithAnExistingSession(string error, string message)
@@ -98,7 +131,7 @@ public sealed class LoginFailureRenderingTests
         public Navigation Navigation { get; }
         public HtmlRootComponent Root { get; private set; }
 
-        public LoginPage(string error, string returnUrl, bool authenticated)
+        public LoginPage(string error, string returnUrl, bool authenticated, bool darkTheme = false)
         {
             this.authenticated = authenticated;
             Navigation = new Navigation(QueryHelpers.AddQueryString("https://blue.example.test/login",
@@ -115,12 +148,16 @@ public sealed class LoginFailureRenderingTests
             registrations.AddSingleton<Components>();
             registrations.AddSingleton<IComponentActivator>(provider => provider.GetRequiredService<Components>());
             services = registrations.BuildServiceProvider();
+            services.GetRequiredService<ThemeManager>().CurrentActive = darkTheme
+                ? ThemeManager.ThemePreference.Dark : ThemeManager.ThemePreference.Light;
             components = services.GetRequiredService<Components>();
             renderer = new HtmlRenderer(services, services.GetRequiredService<ILoggerFactory>());
         }
 
         public Login Component => components.All.OfType<Login>().Single();
-        public RadzenImage GoogleButton => components.All.OfType<RadzenImage>().Single();
+        public RadzenButton GoogleButton => components.All.OfType<RadzenButton>().Single(button =>
+            button.Attributes?.TryGetValue("aria-label", out object? label) == true && Equals(label, "Sign in with Google"));
+        public RadzenImage GoogleImage => components.All.OfType<RadzenImage>().Single();
         public RadzenTemplateForm<TokenRequest> Form => components.All.OfType<RadzenTemplateForm<TokenRequest>>().Single();
         public Task RunAsync(Func<Task> action) => renderer.Dispatcher.InvokeAsync(action);
 

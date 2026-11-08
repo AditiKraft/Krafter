@@ -21,23 +21,11 @@
             </RadzenText>
 
             <RadzenStack JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-                @if (themeManager.CurrentActive == ThemeManager.ThemePreference.Light)
-                {
-                    <RadzenImage Path="login-with-google-dark.svg"
-                                 Click="@StartGoogleLogin"
-                                 class="google-login-button"
-                                 Style="cursor: pointer; transition: transform 0.2s ease-in-out;">
-                    </RadzenImage>
-                }
-                else
-                {
-                    <RadzenImage Path="login-with-google-light.svg"
-                                 Click="@StartGoogleLogin"
-                                 class="google-login-button"
-                                 Style="cursor: pointer; transition: transform 0.2s ease-in-out;">
-                    </RadzenImage>
-                }
-
+                <RadzenButton ButtonType="ButtonType.Button" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat"
+                              class="google-login-button" aria-label="Sign in with Google" Click="@StartGoogleLogin">
+                    <RadzenImage Path="@(themeManager.CurrentActive == ThemeManager.ThemePreference.Light ? "login-with-google-dark.svg" : "login-with-google-light.svg")"
+                                 AlternateText="" aria-hidden="true" />
+                </RadzenButton>
             </RadzenStack>
 
             <RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body1" Class="rz-my-2">

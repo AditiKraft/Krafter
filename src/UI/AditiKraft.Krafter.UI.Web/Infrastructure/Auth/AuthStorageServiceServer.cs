@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 
@@ -12,32 +13,35 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
             return;
         }
 
-        string? userId = ExtractUserIdFromToken(await GetCachedAuthTokenAsync());
-        httpContextAccessor.HttpContext.Response.Cookies.Delete(StorageConstants.Local.AuthToken);
-        httpContextAccessor.HttpContext.Response.Cookies.Delete(StorageConstants.Local.RefreshToken);
-        httpContextAccessor.HttpContext.Response.Cookies.Delete(StorageConstants.Local.Permissions);
-        httpContextAccessor.HttpContext.Response.Cookies.Delete(StorageConstants.Local.AuthTokenExpiryDate);
-        httpContextAccessor.HttpContext.Response.Cookies.Delete(StorageConstants.Local.RefreshTokenExpiryDate);
+        string? token = await GetCachedAuthTokenAsync();
+        HttpContext context = httpContextAccessor.HttpContext;
+        context.Response.Cookies.Delete(StorageConstants.Local.AuthToken);
+        context.Response.Cookies.Delete(StorageConstants.Local.RefreshToken);
+        context.Response.Cookies.Delete(StorageConstants.Local.Permissions);
+        context.Response.Cookies.Delete(StorageConstants.Local.AuthTokenExpiryDate);
+        context.Response.Cookies.Delete(StorageConstants.Local.RefreshTokenExpiryDate);
+
+        // The request cookies still contain the old credentials after response-cookie deletion.
+        context.Items[StorageConstants.Local.AuthToken] = null;
+        context.Items[StorageConstants.Local.RefreshToken] = null;
+        context.Items[StorageConstants.Local.Permissions] = new List<string>();
+        context.Items[StorageConstants.Local.AuthTokenExpiryDate] = DateTime.UtcNow.AddMinutes(-1);
+        context.Items[StorageConstants.Local.RefreshTokenExpiryDate] = DateTime.UtcNow.AddMinutes(-1);
+
+        string? userId = ExtractUserIdFromToken(token);
         if (!string.IsNullOrWhiteSpace(userId))
         {
             string permissionsCacheKey = $"{StorageConstants.Local.Permissions}_{userId}";
-            if (!string.IsNullOrEmpty(permissionsCacheKey))
-            {
-                await cache.RemoveAsync(permissionsCacheKey);
-            }
+            await cache.RemoveAsync(permissionsCacheKey);
         }
     }
 
     public async ValueTask<string?> GetCachedAuthTokenAsync()
     {
         if (httpContextAccessor.HttpContext?.Items.TryGetValue(StorageConstants.Local.AuthToken,
-                out object? freshData) == true
-            && freshData is string freshDataString)
+                out object? freshData) == true)
         {
-            if (!string.IsNullOrWhiteSpace(freshDataString))
-            {
-                return freshDataString;
-            }
+            return freshData as string;
         }
 
         if (httpContextAccessor.HttpContext?.Request is null)
@@ -57,13 +61,9 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
     public async ValueTask<string?> GetCachedRefreshTokenAsync()
     {
         if (httpContextAccessor.HttpContext?.Items.TryGetValue(StorageConstants.Local.RefreshToken,
-                out object? freshData) == true
-            && freshData is string freshDataString)
+                out object? freshData) == true)
         {
-            if (!string.IsNullOrWhiteSpace(freshDataString))
-            {
-                return freshDataString;
-            }
+            return freshData as string;
         }
 
         if (httpContextAccessor.HttpContext?.Request is null)
@@ -102,7 +102,7 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
         return null;
     }
 
-    private string? ExtractUserIdFromToken(string? token)
+    private static string? ExtractUserIdFromToken(string? token)
     {
         if (string.IsNullOrEmpty(token))
         {
@@ -110,17 +110,29 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
         }
 
         var handler = new JwtSecurityTokenHandler();
+        if (!handler.CanReadToken(token))
+        {
+            return null;
+        }
 
-        // Read token without validation (we just need to extract the claims)
-        JwtSecurityToken? jwtToken = handler.ReadJwtToken(token);
-
-        // Try to get the user ID from standard claims
-        string? userId = jwtToken.Claims.FirstOrDefault(c =>
-            c.Type == "sub" ||
-            c.Type == "nameid" ||
-            c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" ||
-            c.Type == "uid")?.Value;
-        return userId;
+        try
+        {
+            // This is best-effort cache-key extraction, never proof of authentication.
+            JwtSecurityToken jwtToken = handler.ReadJwtToken(token);
+            return jwtToken.Claims.FirstOrDefault(c =>
+                c.Type == "sub" ||
+                c.Type == "nameid" ||
+                c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" ||
+                c.Type == "uid")?.Value;
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+        catch (SecurityTokenException)
+        {
+            return null;
+        }
     }
 
     public async ValueTask CacheAuthTokens(TokenResponse tokenResponse)
@@ -207,25 +219,10 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
         string? authTokenExpiryDateString =
             httpContextAccessor.HttpContext.Request.Cookies[StorageConstants.Local.AuthTokenExpiryDate];
 
-        if (!string.IsNullOrEmpty(authTokenExpiryDateString))
+        if (long.TryParse(authTokenExpiryDateString, out long ticks) &&
+            ticks >= DateTime.MinValue.Ticks && ticks <= DateTime.MaxValue.Ticks)
         {
-            try
-            {
-                // Convert to long
-                long ticks = long.Parse(authTokenExpiryDateString);
-                var dateTime = new DateTime(ticks, DateTimeKind.Utc);
-                return await ValueTask.FromResult(dateTime);
-            }
-            catch (FormatException)
-            {
-                // Cookie was corrupted, return default
-                return DateTime.UtcNow.AddMinutes(-1);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // Invalid DateTime ticks, return default
-                return DateTime.UtcNow.AddMinutes(-1);
-            }
+            return await ValueTask.FromResult(new DateTime(ticks, DateTimeKind.Utc));
         }
 
         // No cookie found, return expired time
@@ -252,25 +249,10 @@ public class AuthStorageServiceServer(IHttpContextAccessor httpContextAccessor, 
         string? refreshTokenExpiryDateString =
             httpContextAccessor.HttpContext.Request.Cookies[StorageConstants.Local.RefreshTokenExpiryDate];
 
-        if (!string.IsNullOrEmpty(refreshTokenExpiryDateString))
+        if (long.TryParse(refreshTokenExpiryDateString, out long ticks) &&
+            ticks >= DateTime.MinValue.Ticks && ticks <= DateTime.MaxValue.Ticks)
         {
-            try
-            {
-                // Convert to long
-                long ticks = long.Parse(refreshTokenExpiryDateString);
-                var dateTime = new DateTime(ticks, DateTimeKind.Utc);
-                return await ValueTask.FromResult(dateTime);
-            }
-            catch (FormatException)
-            {
-                // Cookie was corrupted, return default
-                return DateTime.UtcNow.AddMinutes(-1);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // Invalid DateTime ticks, return default
-                return DateTime.UtcNow.AddMinutes(-1);
-            }
+            return await ValueTask.FromResult(new DateTime(ticks, DateTimeKind.Utc));
         }
 
         // No cookie found, return expired time

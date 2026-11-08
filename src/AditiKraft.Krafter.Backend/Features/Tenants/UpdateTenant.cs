@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
@@ -21,7 +22,8 @@ public sealed class UpdateTenant
     internal sealed class Handler(
         TenantDbContext dbContext,
         IServiceProvider serviceProvider,
-        AppUrls urls) : IScopedHandler
+        AppUrls urls,
+        ICurrentUser currentUser) : IScopedHandler
     {
         public async Task<Response> UpdateAsync(string id, CreateOrUpdateTenantRequest request,
             CancellationToken cancellationToken)
@@ -75,56 +77,52 @@ public sealed class UpdateTenant
                 return Response.Conflict("Identifier already exists, please try a different identifier.");
             }
 
-            if (request.Name != tenant.Name)
+            bool changesAdminEmail = request.AdminEmail != tenant.AdminEmail;
+            using IServiceScope? scope = changesAdminEmail ? serviceProvider.CreateScope() : null;
+            ApplicationDbContext? identity = null;
+            IUserMutationService? userService = null;
+            string? ownerId = null;
+            if (scope is not null)
             {
-                tenant.Name = request.Name;
-            }
-
-            if (request.Identifier != tenant.Identifier)
-            {
-                tenant.Identifier = request.Identifier;
-            }
-
-            if (request.AdminEmail != tenant.AdminEmail)
-            {
-                using IServiceScope scope = serviceProvider.CreateScope();
-
+                if (!string.IsNullOrWhiteSpace(currentUser.GetUserId()))
+                    scope.ServiceProvider.GetRequiredService<ICurrentUserInitializer>().SetCurrentUserId(currentUser.GetUserId());
                 ITenantSetterService tenantSetter = scope.ServiceProvider.GetRequiredService<ITenantSetterService>();
                 CurrentTenantDetails currentTenantDetails = tenant.Adapt<CurrentTenantDetails>();
-                currentTenantDetails.TenantLink =
-                    TenantLinkBuilder.GetTenantLink(urls, request.Identifier);
+                currentTenantDetails.TenantLink = TenantLinkBuilder.GetTenantLink(urls, request.Identifier);
                 tenantSetter.SetTenant(currentTenantDetails);
-
+                identity = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 UserManager<ApplicationUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                IUserMutationService userService = scope.ServiceProvider.GetRequiredService<IUserMutationService>();
+                Response identityValidation = UserIdentityValidation.Validate(userManager, request.AdminEmail, request.AdminEmail);
+                if (identityValidation.IsError)
+                    return identityValidation;
 
-                ApplicationUser? user = await userManager.Users.AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.NormalizedEmail == tenant.AdminEmail.ToUpper(), cancellationToken);
-                if (user is not null)
-                {
-                    Response userResult = await userService.UpdateEmailAsync(user.Id, request.AdminEmail, cancellationToken);
-                    if (userResult.IsError)
-                    {
-                        return userResult;
-                    }
-                }
-
-                tenant.AdminEmail = request.AdminEmail;
+                // The immutable owner account identifies the target even if an older failed update
+                // left the registry email stale. Missing or ambiguous ownership must not report success.
+                List<string> ownerIds = await userManager.Users.AsNoTracking().Where(user => user.IsOwner)
+                    .Select(user => user.Id).Take(2).ToListAsync(cancellationToken);
+                if (ownerIds.Count != 1)
+                    return Response.Conflict("The tenant must have exactly one owner before its admin email can be changed.");
+                ownerId = ownerIds[0];
+                userService = scope.ServiceProvider.GetRequiredService<IUserMutationService>();
             }
 
-            if (request.IsActive != tenant.IsActive)
-            {
-                tenant.IsActive = request.IsActive ?? tenant.IsActive;
-            }
-
-            if (request.ValidUpto != tenant.ValidUpto)
-            {
-                tenant.ValidUpto = request.ValidUpto!.Value;
-            }
-
+            await using var transaction = await DomainTransaction.BeginAsync(dbContext, cancellationToken, identity);
             try
             {
+                if (changesAdminEmail)
+                {
+                    Response userResult = await userService!.UpdateEmailAsync(ownerId!, request.AdminEmail, cancellationToken);
+                    if (userResult.IsError)
+                        return userResult;
+                }
+
+                tenant.Name = request.Name;
+                tenant.Identifier = request.Identifier;
+                tenant.AdminEmail = request.AdminEmail;
+                tenant.IsActive = request.IsActive ?? tenant.IsActive;
+                tenant.ValidUpto = request.ValidUpto!.Value;
                 await dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
             }
             catch (DbUpdateException exception) when (exception.InnerException is PostgresException
                    { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: TenantDbContext.TenantIdentifierIndexName })

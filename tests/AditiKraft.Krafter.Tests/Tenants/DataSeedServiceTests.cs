@@ -196,7 +196,7 @@ public sealed class DataSeedServiceTests
 
     private static DataSeedService Seed(IdentityTestContext fixture, string environment = "Development",
         string? password = null) => new(
-        fixture.Tenant, fixture.Jobs, fixture.Db, fixture.TenantDb, fixture.Roles, fixture.Users,
+        fixture.Tenant, fixture.Jobs, fixture.Db, fixture.Roles, fixture.Users,
         new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Bootstrap:RootPassword"] = password
