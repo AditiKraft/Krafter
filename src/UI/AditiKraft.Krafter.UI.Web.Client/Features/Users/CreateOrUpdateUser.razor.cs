@@ -16,6 +16,7 @@ public partial class CreateOrUpdateUser(
 
     private CreateUserRequest CreateUserRequest = new();
     private List<UserRoleDto> userRoles = [];
+    private List<RoleDto> roleSelectionData = [];
     private HashSet<string> originalRoles = [];
     private bool permissionsChecked;
     private bool canViewRoles;
@@ -68,6 +69,9 @@ public partial class CreateOrUpdateUser(
             }
 
             userRoles = response.Data;
+            roleSelectionData = userRoles.Where(role => !string.IsNullOrEmpty(role.RoleId))
+                .Select(role => new RoleDto { Id = role.RoleId!, Name = role.RoleName ?? role.RoleId })
+                .ToList();
             CreateUserRequest.Roles = userRoles.Where(role => role.Enabled && !string.IsNullOrEmpty(role.RoleId))
                 .Select(role => role.RoleId!).Distinct(StringComparer.Ordinal).ToList();
             originalRoles = new HashSet<string>(CreateUserRequest.Roles, StringComparer.Ordinal);

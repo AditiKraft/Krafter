@@ -58,7 +58,7 @@
                 <RadzenColumn Size="12" SizeMD="10">
                     @if (canUpdateRoles)
                     {
-                        <MultiSelectRoleDropDownDataGrid Value="@CreateUserRequest.Roles" ValueChanged="@ChangeRoles" Disabled="@(!CanEditRoles)" />
+                        <MultiSelectRoleDropDownDataGrid Value="@CreateUserRequest.Roles" ValueChanged="@ChangeRoles" SelectionData="@roleSelectionData" Disabled="@(!CanEditRoles)" />
                     }
                     else if (rolesLoaded)
                     {

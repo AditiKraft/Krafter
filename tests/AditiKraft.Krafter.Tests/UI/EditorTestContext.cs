@@ -109,6 +109,14 @@ internal sealed class EditorAuthenticationState(string[] permissions) : Authenti
 internal sealed class ControlledRolesApi : IRolesApi
 {
     public List<CreateOrUpdateRoleRequest> Updates { get; } = [];
+    public int LoadCount { get; private set; }
+    public Func<GetRequestInput, Task<Response<PaginationResponse<RoleDto>>>>? Load { get; set; }
+    public List<RoleDto> Items { get; set; } =
+    [
+        new RoleDto { Id = "existing-a", Name = "ExistingA" },
+        new RoleDto { Id = "existing-b", Name = "ExistingB" },
+        new RoleDto { Id = "added-c", Name = "AddedC" }
+    ];
     public Func<string, CreateOrUpdateRoleRequest, Task<Response>> Save { get; set; } = (_, _) => Task.FromResult(Response.Success());
     public Task<Response<RoleDto>> GetRolePermissionsAsync(string roleId, CancellationToken cancellationToken = default) =>
         Task.FromResult(Response<RoleDto>.Success(new RoleDto { Id = roleId, Permissions = ["Permissions.Users.View"] }));
@@ -117,13 +125,13 @@ internal sealed class ControlledRolesApi : IRolesApi
         Updates.Add(request);
         return Save(id, request);
     }
-    public Task<Response<PaginationResponse<RoleDto>>> GetRolesAsync(GetRequestInput request, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Response<PaginationResponse<RoleDto>>.Success(new PaginationResponse<RoleDto>(
-        [
-            new RoleDto { Id = "existing-a", Name = "ExistingA" },
-            new RoleDto { Id = "existing-b", Name = "ExistingB" },
-            new RoleDto { Id = "added-c", Name = "AddedC" }
-        ], 3, 0, 10)));
+    public Task<Response<PaginationResponse<RoleDto>>> GetRolesAsync(GetRequestInput request, CancellationToken cancellationToken = default)
+    {
+        LoadCount++;
+        return Load?.Invoke(request) ?? Task.FromResult(Response<PaginationResponse<RoleDto>>.Success(new PaginationResponse<RoleDto>(
+            Items.Skip(request.SkipCount).Take(request.MaxResultCount).ToList(),
+            Items.Count, request.SkipCount, request.MaxResultCount)));
+    }
     public Task<Response> CreateRoleAsync(CreateOrUpdateRoleRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public Task<Response> DeleteRoleAsync(string id, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public Task<Response> UpdateRolePermissionsAsync(UpdateRolePermissionsRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
