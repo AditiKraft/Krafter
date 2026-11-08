@@ -5,10 +5,10 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 public interface IAuthenticationService
 {
     public event Action<string?>? LoginChange;
-    TwoFactorChallengeResponse? PendingChallenge => null;
-    string? ErrorMessage => null;
-    Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => Task.FromResult(false);
-    void CancelTwoFactor() { }
+    TwoFactorChallengeResponse? PendingChallenge { get; }
+    string? ErrorMessage { get; }
+    Task<bool> VerifyTwoFactorAsync(string code, bool recovery);
+    void CancelTwoFactor();
 
 
     public Task<bool> LoginAsync(TokenRequest model);

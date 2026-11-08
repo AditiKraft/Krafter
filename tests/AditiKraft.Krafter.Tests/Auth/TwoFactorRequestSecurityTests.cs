@@ -1,4 +1,4 @@
-using AditiKraft.Krafter.Backend.Features.Auth;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace AditiKraft.Krafter.Tests.Auth;
@@ -17,7 +17,7 @@ public sealed class TwoFactorRequestSecurityTests
         context.Request.Host = new HostString("app.example.com");
         context.Request.Headers.Origin = origin;
         context.Request.Headers["X-Krafter-Mfa"] = header;
-        Assert.Equal(accepted, TwoFactor.IsSafeRequest(context));
+        Assert.Equal(accepted, TwoFactorEndpoints.IsSafeRequest(context));
     }
 
     [Theory]

@@ -9,6 +9,3 @@ public sealed record LoginResponse(TokenResponse? Tokens, TwoFactorChallengeResp
 }
 
 public sealed record TwoFactorChallengeResponse(string Id, DateTimeOffset ExpiresAt);
-public sealed record TwoFactorStatusResponse(bool IsEnabled, int RecoveryCodesRemaining, bool HasPassword);
-public sealed record TwoFactorSetupResponse(string EnrollmentId, string SharedKey, string QrCodeSvg, DateTimeOffset ExpiresAt);
-public sealed record RecoveryCodesResponse(IReadOnlyList<string> Codes);

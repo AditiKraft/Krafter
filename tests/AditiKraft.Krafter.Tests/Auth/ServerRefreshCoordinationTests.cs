@@ -12,8 +12,8 @@ using AditiKraft.Krafter.UI.Web.Infrastructure.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AditiKraft.Krafter.Tests.Auth;
 
@@ -266,6 +266,13 @@ public sealed class ServerRefreshCoordinationTests
     private sealed class ForwardingAuthenticationService(AuthTokenService tokens, RefreshObservations observations)
         : IAuthenticationService
     {
+        public TwoFactorChallengeResponse? PendingChallenge => null;
+        public string? ErrorMessage => null;
+        public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+        public void CancelTwoFactor() =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         public event Action<string?>? LoginChange { add { } remove { } }
 
         public Task<bool> RefreshAsync()

@@ -21,8 +21,8 @@
         <p>Each code can be used once in place of your authenticator. Store them somewhere safe. These codes will not be shown again.</p>
         <p>Your previous sessions have been revoked. After saving these codes, sign in again.</p>
         <ul>@foreach (string recoveryCode in recoveryCodes) { <li><code>@recoveryCode</code></li> }</ul>
-        <RadzenButton Text="Download recovery codes" Click="@DownloadCodes" />
-        <RadzenButton Text="I saved my codes — sign in again" Click="@SignInAgain" ButtonStyle="ButtonStyle.Light" />
+        <RadzenButton Text="Download recovery codes" Click="@DownloadCodesAsync" />
+        <RadzenButton Text="I saved my codes — sign in again" Click="@SignInAgainAsync" ButtonStyle="ButtonStyle.Light" />
     }
     else if (setup is not null)
     {
@@ -30,7 +30,7 @@
         <p>Scan this QR code in your authenticator app, or enter the setup key manually.</p>
         <img src="@QrImage" alt="Authenticator enrollment QR code" width="240" height="240" />
         <p>Setup key: <code>@setup.SharedKey</code></p>
-        <RadzenTemplateForm Data="@confirmation" Submit="@((TwoFactorRequest request) => ConfirmSetup(request))">
+        <RadzenTemplateForm Data="@confirmation" Submit="@((TwoFactorRequest request) => ConfirmSetupAsync(request))">
             <RadzenLabel Text="Six-digit authenticator code" Component="EnrollmentCode" />
             <RadzenTextBox Name="EnrollmentCode" @bind-Value="confirmation.Code" autocomplete="one-time-code" Style="width:100%" />
             <RadzenButton ButtonType="ButtonType.Submit" Text="Verify and enable" IsBusy="busy" class="rz-mt-3" />
@@ -51,9 +51,9 @@
             <RadzenLabel Text="Authenticator or recovery code" Component="ManagementCode" />
             <RadzenTextBox Name="ManagementCode" @bind-Value="proof.Code" autocomplete="one-time-code" Style="width:100%" />
             <div class="rz-my-3"><RadzenCheckBox @bind-Value="proof.UseRecoveryCode" Name="ManagementRecovery" /><RadzenLabel Component="ManagementRecovery" Text="Use a recovery code" /></div>
-            <RadzenButton Text="Replace authenticator" Click="@BeginSetup" IsBusy="busy" />
-            <RadzenButton Text="Generate new recovery codes" Click="@RegenerateCodes" Disabled="busy" class="rz-m-2" />
-            <RadzenButton Text="Disable two-factor authentication" Click="@Disable" Disabled="busy" ButtonStyle="ButtonStyle.Danger" />
+            <RadzenButton Text="Replace authenticator" Click="@BeginSetupAsync" IsBusy="busy" />
+            <RadzenButton Text="Generate new recovery codes" Click="@RegenerateCodesAsync" Disabled="busy" class="rz-m-2" />
+            <RadzenButton Text="Disable two-factor authentication" Click="@DisableAsync" Disabled="busy" ButtonStyle="ButtonStyle.Danger" />
         }
         else
         {
@@ -67,12 +67,13 @@
             {
                 <p>For a Google-only account, sign in with Google again before setup. Your primary sign-in must be within the last five minutes.</p>
             }
-            <RadzenButton Text="Set up authenticator" Click="@BeginSetup" IsBusy="busy" class="rz-mt-3" />
+            <RadzenButton Text="Set up authenticator" Click="@BeginSetupAsync" IsBusy="busy" class="rz-mt-3" />
         }
     }
 </RadzenCard>
 
-@code {
+@code
+{
     private TwoFactorStatusResponse? status;
     private TwoFactorSetupResponse? setup;
     private IReadOnlyList<string>? recoveryCodes;
@@ -90,63 +91,151 @@
         {
             Response<TwoFactorStatusResponse> result = await AuthApiErrors.CallAsync(() => Api.StatusAsync());
             status = result.Data;
-            if (result.IsError) error = result.Message;
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
         }
     }
 
-    private async Task BeginSetup()
+    private async Task BeginSetupAsync()
     {
-        if (busy) return;
-        busy = true; error = null;
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        error = null;
         try
         {
             Response<TwoFactorSetupResponse> result = await AuthApiErrors.CallAsync(() => Api.SetupAsync(proof));
-            if (result.IsError) error = result.Message;
-            else { setup = result.Data; confirmation.ChallengeId = setup!.EnrollmentId; }
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                setup = result.Data;
+                confirmation.ChallengeId = setup!.EnrollmentId;
+            }
         }
-        finally { ClearProof(); busy = false; }
+        finally
+        {
+            ClearProof();
+            busy = false;
+        }
     }
 
-    private async Task ConfirmSetup(TwoFactorRequest _)
+    private async Task ConfirmSetupAsync(TwoFactorRequest _)
     {
-        busy = true; error = null;
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        error = null;
         try
         {
             Response<RecoveryCodesResponse> result = await AuthApiErrors.CallAsync(() => Api.ConfirmAsync(confirmation));
-            if (result.IsError) error = result.Message;
-            else { recoveryCodes = result.Data!.Codes; setup = null; }
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                recoveryCodes = result.Data!.Codes;
+                setup = null;
+            }
         }
-        finally { confirmation.Code = string.Empty; busy = false; }
+        finally
+        {
+            confirmation.Code = string.Empty;
+            busy = false;
+        }
     }
 
-    private async Task RegenerateCodes()
+    private async Task RegenerateCodesAsync()
     {
-        if (await Dialogs.Confirm("This invalidates every previous recovery code and session. Continue?", "Replace recovery codes") != true) return;
-        busy = true; error = null;
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        error = null;
         try
         {
+            if (await Dialogs.Confirm("This invalidates every previous recovery code and session. Continue?", "Replace recovery codes") != true)
+            {
+                return;
+            }
             Response<RecoveryCodesResponse> result = await AuthApiErrors.CallAsync(() => Api.RegenerateAsync(proof));
-            if (result.IsError) error = result.Message;
-            else recoveryCodes = result.Data!.Codes;
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                recoveryCodes = result.Data!.Codes;
+            }
         }
-        finally { ClearProof(); busy = false; }
+        finally
+        {
+            ClearProof();
+            busy = false;
+        }
     }
 
-    private async Task Disable()
+    private async Task DisableAsync()
     {
-        if (await Dialogs.Confirm("Disable two-factor authentication and revoke your previous sessions?", "Disable two-factor authentication") != true) return;
-        busy = true; error = null;
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        error = null;
         try
         {
+            if (await Dialogs.Confirm("Disable two-factor authentication and revoke your previous sessions?", "Disable two-factor authentication") != true)
+            {
+                return;
+            }
             Response result = await AuthApiErrors.CallAsync(() => Api.DisableAsync(proof));
-            if (result.IsError) error = result.Message;
-            else await SignInAgain();
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                await SignInAgainAsync();
+            }
         }
-        finally { ClearProof(); busy = false; }
+        finally
+        {
+            ClearProof();
+            busy = false;
+        }
     }
 
-    private void CancelSetup() { setup = null; confirmation.Code = string.Empty; confirmation.ChallengeId = string.Empty; }
-    private void ClearProof() { proof.Password = string.Empty; proof.Code = string.Empty; }
-    private async Task DownloadCodes() => await Js.InvokeVoidAsync("krafterDownloadRecoveryCodes", string.Join(Environment.NewLine, recoveryCodes!));
-    private async Task SignInAgain() { recoveryCodes = null; setup = null; await Authentication.LogoutAsync("MFA settings changed"); }
+    private void CancelSetup()
+    {
+        if (busy)
+        {
+            return;
+        }
+        setup = null;
+        confirmation.Code = string.Empty;
+        confirmation.ChallengeId = string.Empty;
+    }
+    private void ClearProof()
+    {
+        proof.Password = string.Empty;
+        proof.Code = string.Empty;
+    }
+    private async Task DownloadCodesAsync() => await Js.InvokeVoidAsync("krafterDownloadRecoveryCodes", string.Join(Environment.NewLine, recoveryCodes!));
+    private async Task SignInAgainAsync()
+    {
+        recoveryCodes = null;
+        setup = null;
+        await Authentication.LogoutAsync("MFA settings changed");
+    }
 }

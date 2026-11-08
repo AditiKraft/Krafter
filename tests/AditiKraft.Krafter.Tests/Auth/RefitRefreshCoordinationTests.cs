@@ -1,16 +1,16 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client;
 using AditiKraft.Krafter.UI.Web.Client.Features.Roles;
 using AditiKraft.Krafter.UI.Web.Client.Features.Users;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
+using AditiKraft.Krafter.UI.Web.Client;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -97,6 +97,13 @@ public sealed class RefitRefreshCoordinationTests
         AuthTokenService tokens,
         RefreshObservations observations) : IAuthenticationService
     {
+        public TwoFactorChallengeResponse? PendingChallenge => null;
+        public string? ErrorMessage => null;
+        public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+        public void CancelTwoFactor() =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         public event Action<string?>? LoginChange { add { } remove { } }
 
         public Task<bool> RefreshAsync()
@@ -130,6 +137,9 @@ public sealed class RefitRefreshCoordinationTests
 
     private sealed class BlockingAuthApi(TokenResponse refreshed) : IAuthApiService
     {
+        public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         private int _refreshCount;
         public int RefreshCount => _refreshCount;
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

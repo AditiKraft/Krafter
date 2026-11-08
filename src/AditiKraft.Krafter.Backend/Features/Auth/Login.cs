@@ -1,7 +1,7 @@
-using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
-using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 
 namespace AditiKraft.Krafter.Backend.Features.Auth;
@@ -11,7 +11,7 @@ public sealed class Login
     internal sealed class Handler(TwoFactorService twoFactor) : IScopedHandler
     {
         public Task<Response<LoginResponse>> LoginAsync(TokenRequest request, string ipAddress, CancellationToken cancellationToken) =>
-            twoFactor.PasswordLoginAsync(request, ipAddress);
+            twoFactor.PasswordLoginAsync(request, ipAddress, cancellationToken);
     }
 
     public sealed class Route : IRouteRegistrar

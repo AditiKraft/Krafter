@@ -20,8 +20,14 @@ public sealed class TwoFactorCleanup(IServiceScopeFactory scopes, TimeProvider c
                 await db.TwoFactorChallenges.IgnoreQueryFilters().Where(x => x.ExpiresAt < cutoff).ExecuteDeleteAsync(stoppingToken);
                 await db.TwoFactorRecoveryCodes.IgnoreQueryFilters().Where(x => x.IsDeleted).ExecuteDeleteAsync(stoppingToken);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) { logger.LogError(ex, "Unable to clean up expired two-factor state."); }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unable to clean up expired two-factor state.");
+            }
         }
     }
 }

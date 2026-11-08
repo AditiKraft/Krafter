@@ -11,10 +11,10 @@ public class ClientAuthApiService(
     ILogger<ClientAuthApiService> logger) : IAuthApiService
 {
     public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
-        AuthApiErrors.CallAsync(() => authApi.CompleteTwoFactorAsync(request, cancellation));
+        AuthApiErrors.CallAsync(() => authApi.CompleteTwoFactorAsync(request, cancellation), cancellation);
 
     public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) =>
-        AuthApiErrors.CallAsync(() => authApi.CreateTokenAsync(request, cancellation));
+        AuthApiErrors.CallAsync(() => authApi.CreateTokenAsync(request, cancellation), cancellation);
 
     public async Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
         CancellationToken cancellationToken)
@@ -47,7 +47,7 @@ public class ClientAuthApiService(
     }
 
     public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) =>
-        AuthApiErrors.CallAsync(() => authApi.GoogleAuthAsync(new GoogleAuthRequest { Code = request.Code ?? string.Empty }, cancellation));
+        AuthApiErrors.CallAsync(() => authApi.GoogleAuthAsync(new GoogleAuthRequest { Code = request.Code ?? string.Empty }, cancellation), cancellation);
 
     public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellationToken)
     {

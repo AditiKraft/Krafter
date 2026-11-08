@@ -1,14 +1,16 @@
-using Microsoft.AspNetCore.Identity;
 using System.Text.Json.Serialization;
-using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Auth;
 
@@ -42,7 +44,7 @@ public sealed class ExternalAuth
             _logger = logger;
         }
 
-        public async Task<GoogleTokens?> ExchangeCodeForTokensAsync(string code)
+        public async Task<GoogleTokens?> ExchangeCodeForTokensAsync(string code, CancellationToken cancellationToken = default)
         {
             string? clientId = _configuration["Authentication:Google:ClientId"];
             string? clientSecret = _configuration["Authentication:Google:ClientSecret"];
@@ -60,7 +62,7 @@ public sealed class ExternalAuth
 
             HttpResponseMessage response = await _httpClient.PostAsync(
                 "https://oauth2.googleapis.com/token",
-                new FormUrlEncodedContent(tokenRequestParams!));
+                new FormUrlEncodedContent(tokenRequestParams!), cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -72,23 +74,23 @@ public sealed class ExternalAuth
                 return null;
             }
 
-            return await response.Content.ReadFromJsonAsync<GoogleTokens>();
+            return await response.Content.ReadFromJsonAsync<GoogleTokens>(cancellationToken);
         }
 
-        public async Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken)
+        public async Task<GoogleUserInfo?> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken = default)
         {
             var requestMessage =
                 new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
             requestMessage.Headers.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-            HttpResponseMessage response = await _httpClient.SendAsync(requestMessage);
+            HttpResponseMessage response = await _httpClient.SendAsync(requestMessage, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
-            return await response.Content.ReadFromJsonAsync<GoogleUserInfo>();
+            return await response.Content.ReadFromJsonAsync<GoogleUserInfo>(cancellationToken);
         }
     }
 
@@ -104,7 +106,7 @@ public sealed class ExternalAuth
             CancellationToken cancellationToken)
         {
             // Get the auth info using the code
-            GoogleAuthClient.GoogleTokens? tokens = await googleAuthClient.ExchangeCodeForTokensAsync(request.Code);
+            GoogleAuthClient.GoogleTokens? tokens = await googleAuthClient.ExchangeCodeForTokensAsync(request.Code, cancellationToken);
 
             if (tokens == null)
             {
@@ -112,7 +114,7 @@ public sealed class ExternalAuth
             }
 
             // Get user info from Google
-            GoogleAuthClient.GoogleUserInfo? userInfo = await googleAuthClient.GetUserInfoAsync(tokens.AccessToken);
+            GoogleAuthClient.GoogleUserInfo? userInfo = await googleAuthClient.GetUserInfoAsync(tokens.AccessToken, cancellationToken);
             if (userInfo is null || !userInfo.VerifiedEmail || string.IsNullOrWhiteSpace(userInfo.Email))
             {
                 return Response<LoginResponse>.Unauthorized("Invalid user info");
@@ -128,6 +130,12 @@ public sealed class ExternalAuth
                     return Response<LoginResponse>.NotFound("Basic Role Not Found.");
                 }
 
+                cancellationToken.ThrowIfCancellationRequested();
+                // Identity saves the user immediately. Keep that write and Basic-role membership
+                // atomic so cancellation cannot leave an incompletely provisioned Google account.
+                await using IDbContextTransaction? provisioning = db.Database.IsRelational()
+                    ? await db.Database.BeginTransactionAsync(cancellationToken)
+                    : null;
                 user = new ApplicationUser
                 {
                     IsActive = true,
@@ -145,6 +153,7 @@ public sealed class ExternalAuth
                 }
 
                 IdentityResult result = await userManager.CreateAsync(user);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!result.Succeeded)
                 {
                     return Response<LoginResponse>.BadRequest("An error occurred while creating user.");
@@ -152,9 +161,16 @@ public sealed class ExternalAuth
 
                 db.UserRoles.Add(new ApplicationUserRole { RoleId = basic.Id, UserId = user.Id });
                 await db.SaveChangesAsync(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (provisioning is not null)
+                {
+                    // As with MFA transitions, finish commit once it starts. This transaction is
+                    // disposed at the end of this block before TwoFactorService starts its own.
+                    await provisioning.CommitAsync(CancellationToken.None);
+                }
             }
 
-            Response<LoginResponse> res = await twoFactor.ExternalLoginAsync(user.Id, string.Empty);
+            Response<LoginResponse> res = await twoFactor.ExternalLoginAsync(user.Id, string.Empty, cancellationToken);
             return res;
         }
     }
@@ -174,7 +190,7 @@ public sealed class ExternalAuth
                 UserManager<ApplicationUser> userManager,
                 RoleManager<ApplicationRole> roleManager) =>
             {
-                Response<LoginResponse> res = await externalAuthService.GetTokenAsync(request, CancellationToken.None);
+                Response<LoginResponse> res = await externalAuthService.GetTokenAsync(request, context.RequestAborted);
                 return Results.Json(res, statusCode: res.StatusCode);
             }).AllowAnonymous().RequireRateLimiting("authentication");
         }

@@ -1,10 +1,10 @@
 using System.Security.Claims;
-using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using System.Text;
 using AditiKraft.Krafter.Backend.Errors;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Realtime;
-using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
+using AditiKraft.Krafter.Contracts.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
@@ -48,7 +48,7 @@ public class ConfigureJwtBearerOptions(IOptions<JwtSettings> jwtSettings) : ICon
             OnTokenValidated = async context =>
             {
                 SessionValidator validator = context.HttpContext.RequestServices.GetRequiredService<SessionValidator>();
-                if (context.Principal is null || !await validator.ValidateAsync(context.Principal))
+                if (context.Principal is null || !await validator.ValidateAsync(context.Principal, context.HttpContext.RequestAborted))
                     context.Fail("Session expired. Sign in again.");
             },
             OnChallenge = context =>

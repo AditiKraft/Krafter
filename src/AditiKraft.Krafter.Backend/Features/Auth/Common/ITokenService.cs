@@ -6,8 +6,8 @@ namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 
 public interface ITokenService
 {
-    public Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false);
-    public Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false);
+    public Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default);
+    public Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default);
 }
 
 

@@ -72,6 +72,11 @@ public sealed class ReturnUrlTests
 
     private sealed class CompletedAuthentication : IAuthenticationService
     {
+        public TwoFactorChallengeResponse? PendingChallenge => null;
+        public string? ErrorMessage => null;
+        public void CancelTwoFactor() =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         public event Action<string?>? LoginChange { add { } remove { } }
         public Task<bool> LoginAsync(TokenRequest model) => Task.FromResult(true);
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => Task.FromResult(true);

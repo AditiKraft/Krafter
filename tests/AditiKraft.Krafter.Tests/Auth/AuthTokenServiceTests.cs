@@ -248,6 +248,9 @@ public sealed class AuthTokenServiceTests
 
     private sealed class AuthApi : IAuthApiService
     {
+        public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         public int RefreshCount { get; private set; }
         public Func<RefreshTokenRequest, Task<Response<TokenResponse>>> Refresh { get; set; } = _ => throw new NotSupportedException();
         public Func<Task<Response<TokenResponse>>> Current { get; init; } = () => throw new NotSupportedException();

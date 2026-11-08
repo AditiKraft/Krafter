@@ -1,13 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AditiKraft.Krafter.Backend.Web;
-using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
-using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Backend.Web;
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -35,10 +35,15 @@ public sealed class RefreshToken
             CancellationToken cancellationToken)
         {
             ClaimsPrincipal? userPrincipal;
-            try { userPrincipal = GetPrincipalFromExpiredToken(request.Token); }
+            try
+            {
+                userPrincipal = GetPrincipalFromExpiredToken(request.Token);
+            }
             catch (Exception ex) when (ex is SecurityTokenException or ArgumentException)
-            { return Response<TokenResponse>.Unauthorized("Invalid token."); }
-            if (userPrincipal is null || !await sessions.ValidateAsync(userPrincipal))
+            {
+                return Response<TokenResponse>.Unauthorized("Invalid token.");
+            }
+            if (userPrincipal is null || !await sessions.ValidateAsync(userPrincipal, cancellationToken))
             {
                 return Response<TokenResponse>.Unauthorized("Invalid token.");
             }
@@ -69,7 +74,7 @@ public sealed class RefreshToken
             return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress,
                 long.Parse(userPrincipal.FindFirstValue(AppClaimTypes.AuthenticationTime)!, System.Globalization.CultureInfo.InvariantCulture),
                 userPrincipal.FindFirstValue(AppClaimTypes.AuthenticationMethod) ?? "pwd",
-                mfaVerified: userPrincipal.FindFirstValue(AppClaimTypes.Mfa) == "true"));
+                mfaVerified: userPrincipal.FindFirstValue(AppClaimTypes.Mfa) == "true", cancellationToken: cancellationToken));
         }
 
         private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)

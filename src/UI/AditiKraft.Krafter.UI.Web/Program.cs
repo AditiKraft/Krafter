@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddOptions<JwtSettings>()
@@ -51,43 +50,7 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(
         typeof(AditiKraft.Krafter.UI.Web.Client._Imports).Assembly);
 
-MapAuthTokenEndpoints(app);
+app.MapAuthTokenBffEndpoints();
 app.MapTwoFactorBffEndpoints();
 
 app.Run();
-
-static void MapAuthTokenEndpoints(WebApplication app)
-{
-    app.MapGet($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
-    {
-        Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
-        return Results.Json(res, statusCode: res.StatusCode);
-    }).RequireAuthorization();
-
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}", async ([FromBody] TokenRequest request, IAuthApiService apiService,
-        [FromServices] IHttpClientFactory clientFactory) =>
-    {
-        Response<LoginResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
-        return Results.Json(res, statusCode: res.StatusCode);
-    });
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request,
-        IAuthApiService apiService,
-        [FromServices] IHttpClientFactory clientFactory) =>
-    {
-        Response<TokenResponse> tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
-        return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
-    });
-
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
-        async ([FromBody] TokenRequest request, IAuthApiService apiService) =>
-        {
-            Response<LoginResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
-            return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
-        });
-
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
-    {
-        await apiService.LogoutAsync(CancellationToken.None);
-        return Results.Ok();
-    });
-}

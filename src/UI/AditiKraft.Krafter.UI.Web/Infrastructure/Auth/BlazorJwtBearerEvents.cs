@@ -1,10 +1,10 @@
-using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
-using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
-using AditiKraft.Krafter.Contracts.Common;
+using System.Security.Claims;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Constants;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -137,7 +137,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
             {
                 IAuthApi api = context.HttpContext.RequestServices.GetRequiredService<IAuthApi>();
                 Response<bool> result = await ServerAuthApiErrors.CallAsync(() =>
-                    api.ValidateSessionAsync($"Bearer {verifiedToken}", context.HttpContext.RequestAborted));
+                    api.ValidateSessionAsync($"Bearer {verifiedToken}", context.HttpContext.RequestAborted), context.HttpContext.RequestAborted);
                 if (result.IsError || !result.Data) { context.Fail("Session revoked."); return; }
             }
             catch (Exception ex) when (ex is Refit.ApiException or HttpRequestException)
