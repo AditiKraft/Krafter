@@ -52,5 +52,6 @@ app.MapRazorComponents<App>()
 
 app.MapAuthTokenBffEndpoints();
 app.MapTwoFactorBffEndpoints();
+app.MapGoogleOAuthEndpoints();
 
 app.Run();

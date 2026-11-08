@@ -74,5 +74,6 @@ app.MapRazorComponents<App>()
 // Login, refresh, and external auth are handled by backend routes (MapDiscoveredRoutes).
 // Only cookie-specific endpoints (get current token, logout) need BFF mapping.
 app.MapClientSessionEndpoints();
+app.MapGoogleOAuthEndpoints();
 
 app.Run();

@@ -198,14 +198,14 @@ public sealed class TwoFactorPostgresTests
         var google = new ExternalAuth.GoogleAuthClient(http, configuration, NullLogger<ExternalAuth.GoogleAuthClient>.Instance);
         var handler = new ExternalAuth.Handler(operation.Mfa, operation.Db, operation.Users,
             operation.Services.GetRequiredService<RoleManager<ApplicationRole>>(), google);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => handler.GetTokenAsync(new() { Code = "test-code" }, cancellation.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => handler.AuthenticateCodeAsync("test-code", new string('v', 43), cancellation.Token));
         Assert.True(interceptor.CanceledAfterSave);
         using MfaScope check = harness.Scope(tenantId);
         Assert.Equal(0, await check.Db.Users.CountAsync(user => user.Email == GoogleTransport.Email));
         Assert.Equal(0, await check.Db.UserRoles.CountAsync(link => link.RoleId == basic.Id));
         var retry = new ExternalAuth.Handler(check.Mfa, check.Db, check.Users,
             check.Services.GetRequiredService<RoleManager<ApplicationRole>>(), google);
-        var result = await retry.GetTokenAsync(new() { Code = "test-code" }, CancellationToken.None);
+        var result = await retry.AuthenticateCodeAsync("test-code", new string('v', 43), CancellationToken.None);
         Assert.False(result.IsError);
         var created = await check.Db.Users.SingleAsync(user => user.Email == GoogleTransport.Email);
         Assert.True(await check.Db.UserRoles.AnyAsync(link => link.UserId == created.Id && link.RoleId == basic.Id));

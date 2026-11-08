@@ -24,9 +24,10 @@ public static class AuthTokenBffEndpoints
             return Results.Json(result, statusCode: result.StatusCode);
         });
         app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}", async (
-            TokenRequest request, IAuthApiService api, CancellationToken cancellationToken) =>
+            GoogleAuthRequest request, IAuthApiService api, CancellationToken cancellationToken) =>
         {
-            Response<LoginResponse> result = await api.ExternalAuthAsync(request, cancellationToken);
+            Response<LoginResponse> result = await api.ExternalAuthAsync(new TokenRequest
+            { IsExternalLogin = true, GoogleHandoff = request.Handoff, GoogleBrowserNonce = request.BrowserNonce }, cancellationToken);
             return Results.Json(result, statusCode: result.StatusCode);
         });
     }
@@ -35,8 +36,9 @@ public static class AuthTokenBffEndpoints
     public static void MapClientSessionEndpoints(this WebApplication app)
     {
         app.MapGet($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}", async (
-            IAuthApiService api, CancellationToken cancellationToken) =>
+            HttpContext context, IAuthApiService api, CancellationToken cancellationToken) =>
         {
+            context.Response.Headers.CacheControl = "no-store";
             Response<TokenResponse> result = await api.GetCurrentTokenAsync(cancellationToken);
             return Results.Json(result, statusCode: result.StatusCode);
         }).RequireAuthorization();

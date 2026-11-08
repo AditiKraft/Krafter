@@ -44,8 +44,10 @@ public sealed class ExternalAuth
             _logger = logger;
         }
 
-        public async Task<GoogleTokens?> ExchangeCodeForTokensAsync(string code, CancellationToken cancellationToken = default)
+        public async Task<GoogleTokens?> ExchangeCodeForTokensAsync(string code, string codeVerifier, CancellationToken cancellationToken = default)
         {
+            if (codeVerifier.Length is < 43 or > 128 || !codeVerifier.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
+                return null;
             string? clientId = _configuration["Authentication:Google:ClientId"];
             string? clientSecret = _configuration["Authentication:Google:ClientSecret"];
             AppUrls urls = _configuration.GetSection(AppUrls.SectionName).Get<AppUrls>() ?? new AppUrls();
@@ -57,7 +59,8 @@ public sealed class ExternalAuth
                 ["client_secret"] = clientSecret,
                 ["code"] = code,
                 ["grant_type"] = "authorization_code",
-                ["redirect_uri"] = redirectUri
+                ["redirect_uri"] = redirectUri,
+                ["code_verifier"] = codeVerifier
             };
 
             HttpResponseMessage response = await _httpClient.PostAsync(
@@ -68,9 +71,6 @@ public sealed class ExternalAuth
             {
                 _logger.LogError("Error exchanging code for tokens: {StatusCode} {ReasonPhrase}",
                     response.StatusCode, response.ReasonPhrase);
-                _logger.LogError("Response: {ResponseContent}",
-                    await response.Content.ReadAsStringAsync());
-
                 return null;
             }
 
@@ -101,12 +101,12 @@ public sealed class ExternalAuth
         RoleManager<ApplicationRole> roleManager,
         GoogleAuthClient googleAuthClient) : IScopedHandler
     {
-        public async Task<Response<LoginResponse>> GetTokenAsync(
-            GoogleAuthRequest request,
+        public async Task<Response<LoginResponse>> AuthenticateCodeAsync(
+            string code, string codeVerifier,
             CancellationToken cancellationToken)
         {
             // Get the auth info using the code
-            GoogleAuthClient.GoogleTokens? tokens = await googleAuthClient.ExchangeCodeForTokensAsync(request.Code, cancellationToken);
+            GoogleAuthClient.GoogleTokens? tokens = await googleAuthClient.ExchangeCodeForTokensAsync(code, codeVerifier, cancellationToken);
 
             if (tokens == null)
             {
@@ -185,12 +185,11 @@ public sealed class ExternalAuth
             productGroup.MapPost($"/{RouteSegment.Google}", async (
                 HttpContext context,
                 GoogleAuthRequest request,
-                Handler externalAuthService,
-                ApplicationDbContext db,
-                UserManager<ApplicationUser> userManager,
-                RoleManager<ApplicationRole> roleManager) =>
+                GoogleOAuthFlow flow,
+                AditiKraft.Krafter.Backend.Common.Tenants.ITenantGetterService tenant) =>
             {
-                Response<LoginResponse> res = await externalAuthService.GetTokenAsync(request, context.RequestAborted);
+                context.Response.Headers.CacheControl = "no-store";
+                Response<LoginResponse> res = await flow.CompleteAsync(request, tenant.Tenant.Id ?? string.Empty, context.RequestAborted);
                 return Results.Json(res, statusCode: res.StatusCode);
             }).AllowAnonymous().RequireRateLimiting("authentication");
         }

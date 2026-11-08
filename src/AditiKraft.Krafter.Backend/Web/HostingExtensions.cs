@@ -42,6 +42,9 @@ public static class HostingExtensions
         builder.Services.AddDatabaseConfiguration(builder.Configuration);
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddScoped<TwoFactorService>();
+        builder.Services.AddScoped<IGoogleLoginTransactionStore, GoogleLoginTransactionStore>();
+        builder.Services.AddScoped<IGoogleAccountAuthenticator, GoogleAccountAuthenticator>();
+        builder.Services.AddScoped<GoogleOAuthFlow>();
         builder.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

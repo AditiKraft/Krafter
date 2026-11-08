@@ -1,6 +1,7 @@
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using Microsoft.EntityFrameworkCore;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
 
 namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 
@@ -11,10 +12,12 @@ public class TenantDbContext(DbContextOptions<TenantDbContext> options)
     public const string TenantIdentifierIndexName = "IX_Tenant_Identifier_Lower";
 
     public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<GoogleLoginTransaction> GoogleLoginTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfiguration(new GoogleLoginTransactionConfiguration());
 
         modelBuilder.Entity<Tenant>(entity =>
         {

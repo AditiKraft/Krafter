@@ -80,7 +80,8 @@ public class ServerAuthApiService(
     }
 
     public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) =>
-        ServerAuthApiErrors.CallAsync(() => authApi.GoogleAuthAsync(new GoogleAuthRequest { Code = request.Code ?? string.Empty }, cancellation), cancellation);
+        ServerAuthApiErrors.CallAsync(() => authApi.GoogleAuthAsync(new GoogleAuthRequest
+        { Handoff = request.GoogleHandoff ?? string.Empty, BrowserNonce = request.GoogleBrowserNonce ?? string.Empty }, cancellation), cancellation);
 
     public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation)
     {

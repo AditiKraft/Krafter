@@ -14,7 +14,7 @@
 ## 2. Decision Tree
 - Standard login? Use `Login` with `TokenRequest`.
 - Refresh token? Use `RefreshToken` with `RefreshTokenRequest` and stored refresh token.
-- Google login? Use `ExternalAuth` with `GoogleAuthRequest` and `GoogleAuthClient`.
+- Google login? `StartGoogleLogin` and `CompleteGoogleCallback` use `GoogleOAuthFlow`; `ExternalAuth` redeems a one-use `GoogleAuthRequest` handoff and nonce. Provider code exchange is internal and requires the stored PKCE verifier.
 
 ## 3. Code Templates
 
@@ -54,6 +54,12 @@ if (basic is null)
 ## 6. Evolution Triggers
 - Token service or JWT settings change.
 - External provider flow changes.
+
+## Google OAuth state
+- `GoogleOAuthFlow` validates the exact canonical origin against the tenant registry before consent and again at callback. Never relay provider codes or accept a DNS suffix as proof of tenant registration.
+- `GoogleLoginTransactionStore` uses global `TenantDbContext` orchestration state because the root callback precedes tenant restoration. Proof/tenant/expiry checks and the conditional SQL delete enforce one-use consumption across replicas. Do not replace them with cache get/remove or a process-local lock.
+- Protect verifier/handoff payloads with Data Protection purposes bound to purpose, tenant and row ID. Wrong proof or tenant must not consume a valid transaction. Replica key rings must be shared and persistent.
+- Restore the recorded tenant in a fresh service scope before resolving Identity/application data. `GoogleAccountAuthenticator` owns this boundary; preserve the existing user/Basic-role provisioning transaction and local MFA transition.
 - Refresh token storage schema changes.
 
 ## References (real code)
@@ -66,6 +72,7 @@ if (basic is null)
 ## Two-factor authentication
 - MFA operations use their own named `Handler : IScopedHandler` + `Route` entry point. `ValidateSession.cs` owns token validation; shared MFA HTTP policies live in `Common/TwoFactorEndpoints.cs`.
 - Shared transition logic stays in `TwoFactorService`: these operations must agree on locking, replay protection and revocation. Thin handlers are intentional; no per-handler interfaces or repository wrappers are required.
+- `AccountAuthenticationTransaction` shares the PostgreSQL account lock, tracked-state reload and commit boundary across MFA, login and refresh. Refresh revalidates the original claims and stored refresh credential under that lock before rotation. `TwoFactorService` delegates transaction behavior to this helper while retaining factor-transition rules.
 - Propagate request cancellation through handlers, EF/Refit calls and advisory-lock waits. Identity APIs have no cancellation parameter; check cancellation around their work. Cancellation before commit rolls back; once commit starts, it finishes independently of request cancellation, with no post-commit cancellation check.
 - A transition owns its DbContext unit of work and clears tracked state after acquiring the lock. Save unrelated caller work before entering it. Return credentials only after commit.
 - `TwoFactorCleanup` is feature-owned maintenance with a new scope per iteration; its background-worker placement is an intentional exception to operation routing.
@@ -76,6 +83,7 @@ if (basic is null)
 - Preserve `auth_time` and `amr` on refresh. `SessionValidator` checks tenant, account eligibility, version and MFA assurance in access/refresh paths.
 - Refresh resolves the account and its refresh credential by the verified immutable user ID. Email changes must never select a different account or transfer authentication/MFA claims.
 - Realtime validation uses the middleware-resolved tenant in `HttpContext.Items`, then reloads tenant/account eligibility in a fresh scope. Long Polling clones the HTTP service scope; restore its validated tenant before joining the tenant group. Never use the cloned scope's root default as the resolved tenant.
+- Forward the linked connection/shutdown token through realtime tenant lookup and session validation; expected teardown must not log a validation warning. Recheck `Notifications.View` from current role membership on connection, invocation and each monitor tick. Identity calls without a cancellation parameter remain bounded by explicit cancellation checks.
 - `Infrastructure/Realtime/RealtimeServiceRegistration.cs` attaches `SessionHubFilter` with `AddHubOptions<RealtimeHub>`. Keep it scoped to app-owned hubs. TickerQ's dashboard retains its separate Basic authentication; do not apply the Krafter JWT/MFA filter globally.
 - Authenticator secrets use Data Protection. Production enrollment requires a persistent key ring and key-encryption certificate. Never log secret-bearing payloads.
 - Management endpoints require the non-simple CSRF header and exact browser origin; the split-host BFF applies the same rule.

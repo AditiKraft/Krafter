@@ -11,7 +11,6 @@ public partial class Login(
     AuthTokenService tokenService,
     NavigationManager navigationManager,
     ThemeManager themeManager,
-    IConfiguration configuration,
     AppUrls appUrls,
     Blazored.SessionStorage.ISessionStorageService sessionStorage
 ) : ComponentBase
@@ -114,28 +113,12 @@ public partial class Login(
             ReturnUrl = uri.PathAndQuery;
         }
 
-        string returnUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "";
-
-        string host = new Uri(navigationManager.BaseUri).Host;
-
-        string clientId = configuration["Authentication:Google:ClientId"] ?? "";
-        string redirectUri = appUrls.GetGoogleRedirectUri().AbsoluteUri;
-
-        string scope = "email profile";
-        string responseType = "code";
         string nonce = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-        string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(SafeReturnUrl())}|||{nonce}";
-        await sessionStorage.SetItemAsStringAsync("krafter-oauth-state", state);
-        string encodedState = Uri.EscapeDataString(state);
-
-        string authUrl = $"https://accounts.google.com/o/oauth2/v2/auth?" +
-                         $"client_id={Uri.EscapeDataString(clientId)}&" +
-                         $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
-                         $"response_type={responseType}&" +
-                         $"scope={Uri.EscapeDataString(scope)}&" +
-                         $"state={encodedState}&" +
-                         $"access_type=offline";
-
-        navigationManager.NavigateTo(authUrl, true);
+        await sessionStorage.SetItemAsStringAsync("krafter-google-browser-nonce", nonce);
+        string nonceHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(nonce)));
+        string origin = new Uri(navigationManager.BaseUri).GetLeftPart(UriPartial.Authority);
+        string start = new Uri(appUrls.GetRootUiUri(), "/authentication/google/start").AbsoluteUri;
+        navigationManager.NavigateTo(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(start,
+            new Dictionary<string, string?> { ["origin"] = origin, ["returnUrl"] = SafeReturnUrl(), ["nonceHash"] = nonceHash }), true);
     }
 }

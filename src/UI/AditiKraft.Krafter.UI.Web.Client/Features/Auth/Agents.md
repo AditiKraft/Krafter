@@ -5,7 +5,7 @@
 
 ## 1. Core Principles
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
-- `AuthTokenService` owns expiry checks, refresh, and initial token synchronization. Use `NeedsRefresh` for the shared one-minute refresh window.
+- `AuthTokenService` owns expiry checks, refresh, and initial token synchronization. Use `NeedsRefresh` for the shared one-minute refresh window. Check caller cancellation before saving a refresh response, including when an API implementation returns after cancellation.
 - Keep token reads, refresh, and storage writes inside `TokenRefreshCoordinator`. It is shared across browser API clients and scoped on the server.
 - Server HTTP-client scopes do not share that coordinator. `ServerAuthApiService` uses the shared `HybridCache` to combine refresh calls for the exact access/refresh token pair. Successful responses stay in local memory for five seconds so each request can save the same new cookies. Cache keys contain a hash, not credentials; refresh results never go to the distributed cache.
 - Different token pairs refresh independently. Failed responses are not cached, and canceling one waiter does not cancel another waiting request. This coordination is within one UI server process; it is not a distributed lock.
@@ -19,31 +19,20 @@
 - Login/logout orchestration, refresh, or token storage? Use `../../Infrastructure/Auth/`.
 - Server cookies or JWT events? Use `../../../AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`.
 - Standard login? Use `AuthenticationService.LoginAsync(TokenRequest)`.
-- Google login? Redirect to Google OAuth URL and handle `/google-callback`.
+- Google login? Navigate through the root UI's `/authentication/google/start`; the server owns `/google-callback`. The browser redeems the proof-bound handoff at `/google-complete`.
 - Already authenticated? Redirect to `ReturnUrl` or `/`.
 
 ## 3. Code Templates
 
 ### Start Google Login
 ```csharp
-string clientId = configuration["Authentication:Google:ClientId"] ?? "";
-string redirectUri = appUrls.GetGoogleRedirectUri().AbsoluteUri;
-string scope = "email profile";
-string responseType = "code";
 string nonce = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(SafeReturnUrl())}|||{nonce}";
-await sessionStorage.SetItemAsStringAsync("krafter-oauth-state", state);
-string encodedState = Uri.EscapeDataString(state);
-
-string authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" +
-                 $"client_id={Uri.EscapeDataString(clientId)}&" +
-                 $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
-                 $"response_type={responseType}&" +
-                 $"scope={Uri.EscapeDataString(scope)}&" +
-                 $"state={encodedState}&" +
-                 $"access_type=offline";
-
-navigationManager.NavigateTo(authUrl, true);
+await sessionStorage.SetItemAsStringAsync("krafter-google-browser-nonce", nonce);
+string nonceHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(nonce)));
+string origin = new Uri(navigationManager.BaseUri).GetLeftPart(UriPartial.Authority);
+string start = new Uri(appUrls.GetRootUiUri(), "/authentication/google/start").AbsoluteUri;
+navigationManager.NavigateTo(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(start,
+    new Dictionary<string, string?> { ["origin"] = origin, ["returnUrl"] = SafeReturnUrl(), ["nonceHash"] = nonceHash }), true);
 ```
 
 ### Google Callback Login
@@ -51,7 +40,8 @@ navigationManager.NavigateTo(authUrl, true);
 bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 {
     IsExternalLogin = true,
-    Code = code.ToString()
+    GoogleHandoff = handoff,
+    GoogleBrowserNonce = nonce
 });
 ```
 
@@ -87,6 +77,10 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `TwoFactorSettings.razor` uses `ITwoFactorApi` for management and holds setup/recovery responses only in transient component state. Do not prerender/persist these secrets, put them in URLs, or capture them in screenshots.
 - `AuthCookieMiddleware` distinguishes primary `LoginResponse` from completed `TokenResponse`, including `/api/two-factor/login`. Pending responses must never write authentication cookies.
 - `AuthTokenBffEndpoints` maps split-host primary proxies and shared current/logout routes; single-host selects only `MapClientSessionEndpoints` because backend operation routes are direct.
+- Current-token GET responses contain credentials: set `Cache-Control: no-store` before reading storage, including error/challenge responses, even when no fresh cookie is written.
+- Realtime notifications are optional. The client connects only for an authenticated display principal with `Notifications.View`; the hub still checks current database permissions. Keep startup failures contained, cancel superseded starts, release old connections, and unsubscribe login callbacks on component disposal. Transport logs must omit exception messages and URLs that may contain access tokens.
+- Realtime uses `AuthTokenService` directly for cancellable refresh and must never trigger global logout on failure: that can discard pending or unsaved recovery material. Each connection owns a lifetime token used by startup and reconnect token acquisition; each acquisition also has a deadline and cancellable waits around storage/refresh APIs. SignalR's `StartAsync` token alone does not cancel its access-token callback. Cancel the connection lifetime before awaiting its disposal.
+- `GoogleOAuthBffEndpoints` maps root start/callback in both hosts. The root correlation cookie is HttpOnly, Secure, host-only and SameSite Lax for the provider return. Backend owns shared expiring one-use state and enforced S256 PKCE. `/google-complete` receives only a short-lived handoff fragment; redemption also requires the initiating tab's nonce. Never move a raw Google code between hosts.
 - `TwoFactorBffEndpoints` maps the split-host management/completion routes. Shared `BlazorJwtBearerEvents` validates the exact verified token through the API in split-host mode. Single-host composition supplies an in-process `SessionValidator` callback using the already resolved tenant; do not replace it with a loopback request that derives a new tenant from the connection hostname.
 - Preserve safe local ReturnUrl values and session-bound OAuth state. Never accept arbitrary callback hosts or treat external login alone as verified local MFA.
 - Use `Common/LocalReturnUrl.Normalize()` for every post-login target and decoded Google return path. Reject raw control characters as well as protocol-relative URLs and backslashes: browser parsing strips tabs/newlines and can interpret an apparently local path as an external URL. Preserve valid local query strings and fragments.

@@ -34,7 +34,7 @@ public sealed class ReturnUrlTests
         {
             var navigation = new RecordingNavigation();
             var page = new Login(new CompletedAuthentication(), null!, navigation, null!,
-                new ConfigurationBuilder().Build(), new AppUrls { RootUiUrl = "https://app.example" }, null!);
+                new AppUrls { RootUiUrl = "https://app.example" }, null!);
             typeof(Login).GetProperty(nameof(Login.ReturnUrl))!.SetValue(page, returnUrl);
             if (flow == "already-authenticated")
             {

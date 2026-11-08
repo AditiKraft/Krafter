@@ -5,6 +5,7 @@ using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Infrastructure.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using Refit;
 
 namespace AditiKraft.Krafter.UI.Web.Infrastructure.Hosting;
 
@@ -41,6 +42,14 @@ public static class UiHostServiceRegistration
         services.AddRadzenComponents();
         services.AddScoped<TenantIdentifier>();
         services.AddApiRefitClients();
+        IHttpClientBuilder googleClient = services.AddRefitClient<IGoogleOAuthApi>()
+            .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://placeholder.local"));
+        // This per-client API is experimental. Global retry defaults cannot repeat one-use OAuth consumption.
+#pragma warning disable EXTEXP0001
+        googleClient.RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
+        googleClient.AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(),
+                httpContextAccessor: sp.GetRequiredService<IHttpContextAccessor>()));
         return services;
     }
 }

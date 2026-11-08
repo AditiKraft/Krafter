@@ -182,6 +182,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
 
         if (IsApiRequest(context.Request))
         {
+            PreventCurrentTokenCaching(context.HttpContext);
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
             return context.Response.WriteAsJsonAsync(new { message = "Authentication Failed." });
@@ -205,6 +206,7 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
 
         if (IsApiRequest(context.Request))
         {
+            PreventCurrentTokenCaching(context.HttpContext);
             context.Response.StatusCode = 403;
             context.Response.ContentType = "application/json";
             return context.Response.WriteAsJsonAsync(
@@ -216,6 +218,15 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
 
     private static bool IsAuthEndpoint(PathString path) =>
         AuthEndpointSegments.Any(segment => path.StartsWithSegments(segment));
+
+    private static void PreventCurrentTokenCaching(HttpContext context)
+    {
+        if (string.Equals(context.Request.Path.Value?.TrimEnd('/'),
+            $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.Headers.CacheControl = "no-store";
+        }
+    }
 
     private static bool IsApiRequest(HttpRequest request) =>
         request.Path.StartsWithSegments($"/{ApiRoutes.ApiPrefix}") ||

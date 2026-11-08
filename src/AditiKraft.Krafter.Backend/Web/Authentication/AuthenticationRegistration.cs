@@ -69,12 +69,16 @@ public static class AuthenticationRegistration
             .AddDefaultTokenProviders();
         services.Configure<SecuritySettings>(config.GetSection(nameof(SecuritySettings)));
         services.AddScoped<RolePermissionService>();
-        services.AddHttpClient<ExternalAuth.GoogleAuthClient>(client =>
+        IHttpClientBuilder googleClient = services.AddHttpClient<ExternalAuth.GoogleAuthClient>(client =>
         {
             client.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
             client.Timeout = TimeSpan.FromSeconds(30);
         });
+        // Authorization codes are one-use. A retry after a lost response cannot repeat the exchange safely.
+#pragma warning disable EXTEXP0001
+        googleClient.RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
         return services.AddJwtAuth(config);
     }
 

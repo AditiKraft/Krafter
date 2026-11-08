@@ -5,11 +5,12 @@
 
 ## 1. Core Principles
 - Use `ApplicationDbContext` for tenant-scoped data; use `TenantDbContext` for tenant admin data.
+- Exception: feature-owned `GoogleLoginTransaction` uses `TenantDbContext` for shared root-to-tenant OAuth orchestration. Its payload is protected; one-use consumption is an atomic conditional SQL delete matching browser proof, tenant and expiry, not a tracked soft delete.
 - Tenant-scoped entities require query filters on `TenantId` + `IsDeleted`.
 - `ApplicationDbContext` uses soft delete; do not remove entities directly.
 - Keep `ApplyCommonConfigureAcrossEntity()` in `OnModelCreating`.
 - Runtime migration execution belongs in `src/AditiKraft.Krafter.Backend.Migrator/`; `aspire/` should orchestrate it as an executable resource and gate the API with `WaitForCompletion(...)`.
-- For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` or put `ConnectionStrings:AppDbMigration` in an optional `appsettings.Local.json` in the current directory. A placeholder PostgreSQL connection string is enough to generate migration files.
+- For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` or copy `appsettings.Local.json.example` to the ignored `appsettings.Local.json` in the current directory and set `ConnectionStrings:AppDbMigration`. Local settings are excluded from template packages and generated applications. A placeholder PostgreSQL connection string is enough to generate migration files.
 - Single-host output excludes backend settings files. Use the environment variable for design-time commands.
 
 ## 2. Decision Tree
