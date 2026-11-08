@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.DataProtection;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.SignalR;
 using System.Threading.RateLimiting;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
@@ -91,7 +90,7 @@ public static class HostingExtensions
 
         builder.Services.AddRouteDiscovery();
 
-        builder.Services.AddSignalR(options => options.AddFilter<SessionHubFilter>());
+        builder.Services.AddRealtimeServices();
 
         builder.Services.AddResponseCompression(opts =>
         {

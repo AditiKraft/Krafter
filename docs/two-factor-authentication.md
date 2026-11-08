@@ -55,6 +55,8 @@ Cached server permissions are attached only when their credential matches the ex
 
 Deleting a non-owner account advances its authentication version and rotates its Identity concurrency/security stamps together with the soft deletion. In-flight Identity updates cannot restore the deleted row. Rejected failure-count updates are detached before the MFA transaction finishes; a failed failure-count reset cannot issue credentials.
 
+Krafter's realtime session validation is scoped to its application `RealtimeHub`. TickerQ's dashboard and notification hub retain their existing, separate Basic authentication and configured dashboard credentials.
+
 Consumed recovery records are purged hourly. Challenges older than one day past expiry are purged hourly. Cleanup explicitly bypasses tracked soft-delete handling only for expired/consumed MFA state and never deletes active authenticator credentials.
 
 ## Lost authenticator and all recovery codes
