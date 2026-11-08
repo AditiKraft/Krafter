@@ -74,10 +74,14 @@ The template cannot establish a real person's identity for an operator; each dep
 
 ## Verification commands
 
+For an application generated from either template, run:
+
 ```bash
-dotnet build AditiKraft.Krafter.Dev.slnx
+dotnet build AditiKraft.Krafter.slnx
 dotnet test tests/AditiKraft.Krafter.Tests/AditiKraft.Krafter.Tests.csproj
 ```
+
+When working in the template source repository, use `dotnet build AditiKraft.Krafter.Dev.slnx` to build both source hosting variants. That solution is source-only and is not included in generated applications.
 
 The normal suite includes MFA behavior and cookie-contract tests. Real PostgreSQL concurrency tests run when `KRAFTER_TEST_POSTGRES` points to a **dedicated test database**, never an application's database. They apply application migrations and create isolated tenant users. Keep that connection string in local/CI secret configuration. Without it, those tests are explicitly skipped rather than being reported as executed.
 
