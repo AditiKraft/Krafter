@@ -5,6 +5,7 @@ using AditiKraft.Krafter.Backend.Features.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
@@ -12,6 +13,9 @@ using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Npgsql;
 
 namespace AditiKraft.Krafter.Tests.Tenants;
@@ -26,15 +30,24 @@ public sealed class TenantCreationTests
         ReservedTenantIdentifiers = ["status"]
     };
 
-    [Fact]
-    public async Task CreatingTenantPersistsUtcCreationTimeAndUpdatingPreservesIt()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CreatingTenantPersistsAndProvisionsEvenWhenCanceledAfterRegistryCommit(bool cancelAfterRegistrySave)
     {
+        using var cancellation = new CancellationTokenSource();
         var services = new ServiceCollection();
         string databaseName = Guid.NewGuid().ToString();
         services.AddLogging();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.AddSingleton<IHostEnvironment>(new HostingEnvironment { EnvironmentName = Environments.Production });
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddTenantServices();
-        services.AddDbContext<TenantDbContext>(options => options.UseInMemoryDatabase(databaseName));
+        services.AddDbContext<TenantDbContext>(options =>
+        {
+            options.UseInMemoryDatabase(databaseName);
+            if (cancelAfterRegistrySave) options.AddInterceptors(new CancelAfterRegistrySave(cancellation));
+        });
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase($"{databaseName}-identity"));
         services.AddIdentityCore<ApplicationUser>()
             .AddRoles<ApplicationRole>()
@@ -63,10 +76,11 @@ public sealed class TenantCreationTests
         var create = new CreateTenant.Handler(db, provider, currentUser, Urls);
 
         DateTime before = DateTime.UtcNow;
-        Response created = await create.CreateAsync(request, CancellationToken.None);
+        Response created = await create.CreateAsync(request, cancellation.Token);
         DateTime after = DateTime.UtcNow;
 
         Assert.False(created.IsError, created.Message);
+        Assert.Equal(cancelAfterRegistrySave, cancellation.IsCancellationRequested);
         db.ChangeTracker.Clear();
         Tenant saved = await db.Tenants.AsNoTracking().SingleAsync();
         Assert.InRange(saved.CreatedOn, before, after);
@@ -74,6 +88,24 @@ public sealed class TenantCreationTests
         Assert.Equal("creator", saved.CreatedById);
         Assert.Equal(request.ValidUpto, saved.ValidUpto);
         Assert.Equal(DateTimeKind.Utc, saved.ValidUpto.Kind);
+
+        await using (AsyncServiceScope tenantScope = provider.CreateAsyncScope())
+        {
+            tenantScope.ServiceProvider.GetRequiredService<ITenantSetterService>().SetTenant(new CurrentTenantDetails
+            {
+                Id = saved.Id, TenantLink = "https://example.getkrafter.dev"
+            });
+            ApplicationDbContext identity = tenantScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            ApplicationUser owner = await identity.Users.SingleAsync();
+            Assert.Equal(saved.AdminEmail, owner.Email);
+            Assert.True(owner.IsOwner && owner.IsActive);
+            Assert.Equal(2, await identity.Roles.CountAsync());
+            Assert.Equal(2, await identity.UserRoles.CountAsync());
+        }
+        var jobs = (NoExternalJobs)provider.GetRequiredService<IJobService>();
+        SendEmailRequestInput welcome = Assert.Single(jobs.Emails);
+        Assert.Equal(saved.AdminEmail, welcome.Email);
+        Assert.Contains("https://example.getkrafter.dev/login", welcome.HtmlMessage);
 
         request.Name = "Updated tenant";
         var update = new UpdateTenant.Handler(db, provider, Urls);
@@ -273,7 +305,23 @@ public sealed class TenantCreationTests
 
     private sealed class NoExternalJobs : IJobService
     {
-        public Task EnqueueAsync<T>(T requestInput, string methodName, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+        public List<SendEmailRequestInput> Emails { get; } = [];
+
+        public Task EnqueueAsync<T>(T requestInput, string methodName, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Emails.Add(Assert.IsType<SendEmailRequestInput>(requestInput));
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class CancelAfterRegistrySave(CancellationTokenSource cancellation) : SaveChangesInterceptor
+    {
+        public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result,
+            CancellationToken cancellationToken = default)
+        {
+            cancellation.Cancel();
+            return ValueTask.FromResult(result);
+        }
     }
 }

@@ -1,5 +1,6 @@
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using Microsoft.AspNetCore.DataProtection;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
@@ -40,6 +41,7 @@ public static class HostingExtensions
         builder.Services.AddSingleton(urls);
 
         builder.Services.AddDatabaseConfiguration(builder.Configuration);
+        builder.Services.AddHostedService<DefaultTenantInitializer>();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddScoped<TwoFactorService>();
         builder.Services.AddScoped<IGoogleLoginTransactionStore, GoogleLoginTransactionStore>();

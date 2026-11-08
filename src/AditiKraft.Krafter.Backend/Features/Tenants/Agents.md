@@ -6,6 +6,11 @@
 ## 1. Core Principles
 - Use `TenantDbContext` for tenant data; use `ApplicationDbContext` for identity-side updates.
 - Creating a tenant triggers data seeding in a scoped tenant context.
+- `DefaultTenantInitializer.StartAsync` provisions the root identity before either web host accepts requests. The shared `AddBackendServices` registration owns this awaited startup step; the migrator remains responsible for schema migrations.
+- Only trusted startup and `CreateTenant.Handler` call `DataSeedService.SeedAsync`. There is no HTTP or UI seeding path. After the tenant registry commits, finish tenant provisioning independently of request cancellation and queue the welcome email after identity commit.
+- Provision only tenants with no user or role history. Check both tables with `IgnoreQueryFilters()` and an explicit `TenantId` predicate so soft-deleted and partial identity state cannot trigger repair or recreate an owner. Existing roles never regain removed permission claims on restart.
+- Serialize bootstrap with the PostgreSQL tenant advisory transaction lock; keep all Identity saves, role claims, and memberships atomic. Reject pending tracked changes, clear stale state under the lock, and clear tracked state after rollback.
+- For a genuinely empty root outside Development, require `Bootstrap:RootPassword` from private configuration, reject the public Development password, enforce the shared `PasswordLimits.MaximumLength`, and validate through Identity before staging rows. Existing identity history returns before accessing this setting. See the startup guidance in README.md.
 - `CreateTenant.Handler` sets `CreatedOn` to UTC before saving. `TenantDbContext` does not set audit timestamps. Updates must preserve the creation time.
 - `ValidUpto` is an exact UTC expiry timestamp. The UI converts browser-local input to UTC before sending it. Validate UTC in backend handlers, after shared form validation, and preserve the time on create and update; truncating it to midnight changes the expiry. Preserve the root tenant's protected validity value.
 - Root tenant cannot be deleted.
@@ -19,7 +24,8 @@
 - Update tenant? Use `UpdateTenant` (handles tenant updates and admin sync).
 - Get tenants? Use `Get` with `GetRequestInput` (supports current and deleted tenants; history requests return BadRequest).
 - Delete tenant? Use `DeleteTenant` with `RouteSegment.ById`.
-- Seed tenant data? Use `SeedBasicData` route with `RouteSegment.SeedData`.
+- Provision root identity? Use the awaited `DefaultTenantInitializer` in shared backend startup.
+- Provision new tenant identity? Use `DataSeedService.SeedAsync` from `CreateTenant` after committing the registry entry; never expose it as an HTTP endpoint.
 
 ## 3. Code Templates
 
@@ -44,7 +50,8 @@ currentTenantDetails.TenantLink =
 tenantSetter.SetTenant(currentTenantDetails);
 
 DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
-await seedService.SeedBasicData(new SeedDataRequest());
+// The tenant registry has committed, so finish mandatory provisioning after a disconnect.
+await seedService.SeedAsync(CancellationToken.None);
 ```
 
 ## 4. Checklist
@@ -69,12 +76,12 @@ await seedService.SeedBasicData(new SeedDataRequest());
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs`
-- `src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DefaultTenantInitializer.cs`
 - `src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs`
 
 ---
-Last Updated: 2026-09-12
-Verified Against: docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Contracts/Contracts/Tenants/CreateOrUpdateTenantRequest.cs, tests/AditiKraft.Krafter.Tests/Tenants/TenantCreationTests.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/SeedBasicData.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
+Last Updated: 2026-11-08
+Verified Against: README.md, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Contracts/Contracts/Tenants/CreateOrUpdateTenantRequest.cs, tests/AditiKraft.Krafter.Tests/Tenants/TenantCreationTests.cs, tests/AditiKraft.Krafter.Tests/Tenants/DataSeedServiceTests.cs, tests/AditiKraft.Krafter.Tests/Tenants/DataSeedPostgresTests.cs, tests/AditiKraft.Krafter.Tests/Tenants/DefaultTenantStartupTests.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/CreateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/UpdateTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/GetTenants.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/DeleteTenant.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DefaultTenantInitializer.cs, src/AditiKraft.Krafter.Backend/Features/Tenants/Common/DataSeedService.cs, src/AditiKraft.Krafter.Backend/Web/HostingExtensions.cs, src/AditiKraft.Krafter.Backend/Features/Users/Common/UserService.cs
 ---
 
 

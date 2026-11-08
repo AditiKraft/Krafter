@@ -38,6 +38,4 @@ public static class RouteSegment
     public const string ForgotPassword = "forgot-password";
 
     public const string ResetPassword = "reset-password";
-
-    public const string SeedData = "seed-data";
 }

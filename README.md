@@ -154,13 +154,15 @@ The diagrams below reflect the template structure and are useful before you gene
    - **Scalar API Reference** (split host only): https://localhost:5199/scalar/v1
    - **Blazor UI**: https://localhost:7291
 
-5. Sign in with the seeded admin account
+5. In Development, sign in with the seeded admin account
    - Email: `admin@example.com`
    - Password: `123Pa$$word!`
 
    Alternatively, log in with Google, which will create a new account.
 
-> ⚠️ Change the default password immediately in production.
+Backend startup provisions the root account before serving requests in both hosting variants. For a fresh database outside Development, supply a private `Bootstrap:RootPassword` setting (environment variable `Bootstrap__RootPassword`) to the Backend host in split mode or the combined UI host in single mode. It must satisfy the configured Identity password rules, fit the shared login password length limit, and differ from the public Development password above; missing or invalid configuration stops startup without creating identity data. Supply it through your deployment secret configuration, and remove it after successful initial provisioning if desired.
+
+Bootstrap runs only when that tenant has no user or role history, including soft-deleted records. Existing identities, passwords, role memberships, and removed permissions remain unchanged on restart; partial or deleted identity data requires deliberate operator recovery. New tenants are still provisioned by the authorized tenant-creation operation, with their welcome email queued after identity data commits. There is no HTTP seeding endpoint or UI-triggered seeding.
 
 <details>
 <summary><strong>Database migrations workflow</strong></summary>
@@ -398,6 +400,8 @@ The source single-host AppHost selects `src-single/UI/AditiKraft.Krafter.UI.Web`
 ### Test Template Output Locally
 
 Template packages and generated applications exclude local settings, environment files, Data Protection key files, and private-key formats (`.pfx`, `.p12`, `.pem`, `.key`). Keep deployment secrets outside the template tree. Use `.cer` or `.crt` for intentionally public certificate examples and `.json.example` for sample local settings.
+
+These exclusions inspect source entry filenames; package and generate only from a trusted tree without symlink or junction aliases to private files, because renaming or aliasing private content is not detected.
 
 The isolated packaging regression check uses only harmless sentinel files in a temporary template fixture: `python3 tests/operations/verify-template-private-files.py`. It checks both the NuGet archive and generation from package/source installs without changing your installed templates.
 

@@ -75,7 +75,9 @@ public sealed class CreateTenant
             tenantSetter.SetTenant(currentTenantDetails);
 
             DataSeedService seedService = scope.ServiceProvider.GetRequiredService<DataSeedService>();
-            await seedService.SeedBasicData(new SeedDataRequest());
+            // The tenant registry is committed. Finish its mandatory identity provisioning even
+            // if the caller disconnects, so cancellation cannot strand an unusable tenant.
+            await seedService.SeedAsync(CancellationToken.None);
 
             return new Response();
         }
