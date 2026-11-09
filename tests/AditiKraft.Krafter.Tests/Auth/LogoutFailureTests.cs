@@ -284,7 +284,7 @@ public sealed class LogoutFailureTests
     private static AuthenticationService Authentication(IAuthApiService api, Storage storage,
         TokenRefreshCoordinator coordinator, Navigation navigation, string formFactor) =>
         new(api, new AuthTokenService(api, storage, coordinator), coordinator, new LayoutService(), storage, navigation,
-            new HttpContextAccessor(), new FormFactor(formFactor), NullLogger<AuthenticationService>.Instance);
+            new HttpContextAccessor(), new FormFactor(formFactor), new AccountSecurityNavigationGuard(), NullLogger<AuthenticationService>.Instance);
 
     private sealed class LogoutMenu : IAsyncDisposable
     {

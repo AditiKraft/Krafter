@@ -73,9 +73,8 @@ public partial class Login(
         {
             // A local JWT can remain unexpired after another tab/device revokes its session.
             // Revalidate at the login boundary before redirecting an apparently signed-in user.
-            if (OperatingSystem.IsBrowser() && !await tokenService.SynchronizeFromServerAsync())
+            if (OperatingSystem.IsBrowser() && !await ValidateExistingSessionAsync())
             {
-                await authenticationService.LogoutAsync("Session no longer valid");
                 return;
             }
 
@@ -95,6 +94,19 @@ public partial class Login(
 
             _shouldRedirect = true;
         }
+    }
+
+    private async Task<bool> ValidateExistingSessionAsync()
+    {
+        long sessionVersion = tokenService.SessionVersion;
+        if (!await tokenService.SynchronizeFromServerAsync())
+        {
+            await authenticationService.LogoutAsync("Session no longer valid", sessionVersion);
+            return false;
+        }
+
+        return tokenService.SessionVersion == sessionVersion &&
+            authenticationService.PendingChallenge is null && DisplayError is null;
     }
 
     protected override void OnAfterRender(bool firstRender)

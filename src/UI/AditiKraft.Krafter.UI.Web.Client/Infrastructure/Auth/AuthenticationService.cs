@@ -12,39 +12,59 @@ public class AuthenticationService(
     NavigationManager navigationManager,
     IHttpContextAccessor httpContextAccessor,
     IFormFactor formFactor,
+    AccountSecurityNavigationGuard securityNavigationGuard,
     ILogger<AuthenticationService> logger
 )
     : IAuthenticationService
 {
     public event Action<string?>? LoginChange;
 
-    public async Task<bool> LogoutAsync(string methodName)
+    public async Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null)
     {
-        ErrorMessage = null;
         logger.LogInformation("Logging out user via method: {MethodName}", methodName);
-        try
+        long? notificationVersion = null;
+        bool success = await coordinator.ExecuteAsync(async () =>
         {
-            await coordinator.ExecuteAsync(async () =>
+            if (!CanClearSession(expectedSessionVersion))
+            {
+                return false;
+            }
+            if (expectedSessionVersion is null) ErrorMessage = null;
+            try
             {
                 // Finish in-flight refresh/current-token writes before clearing cookies and storage.
                 // A failed BFF call must leave the current UI session available for a retry.
                 await apiService.LogoutAsync(CancellationToken.None);
+                if (!CanClearSession(expectedSessionVersion)) return false;
                 if (formFactor.GetFormFactor() is "WebAssembly")
                 {
                     await localStorage.ClearCacheAsync();
                 }
+                if (!CanClearSession(expectedSessionVersion)) return false;
+                if (expectedSessionVersion is { } version)
+                {
+                    if (!coordinator.TryAdvanceSessionVersion(version)) return false;
+                    notificationVersion = version + 1;
+                }
+                else
+                {
+                    coordinator.AdvanceSessionVersion();
+                }
+                CancelTwoFactor();
                 return true;
-            });
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning("Unable to complete sign-out ({FailureType}).", exception.GetType().Name);
-            ErrorMessage = "Unable to sign out. Please try again.";
-            return false;
-        }
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning("Unable to complete sign-out ({FailureType}).", exception.GetType().Name);
+                if (!CanClearSession(expectedSessionVersion)) return false;
+                ErrorMessage = "Unable to sign out. Please try again.";
+                return false;
+            }
+        });
+        if (!success || !CanClearSession(notificationVersion)) return false;
 
-        CancelTwoFactor();
         LoginChange?.Invoke(null);
+        if (!CanClearSession(notificationVersion)) return false;
         HandleNavigationToLogin(true);
         return true;
     }
@@ -54,51 +74,75 @@ public class AuthenticationService(
 
     public async Task<bool> LoginAsync(TokenRequest model)
     {
-        ErrorMessage = null;
-        PendingChallenge = null;
-        Response<LoginResponse> response = model.IsExternalLogin
-            ? await apiService.ExternalAuthAsync(model, CancellationToken.None)
-            : await apiService.CreateTokenAsync(model, CancellationToken.None);
-        if (response.IsError || response.Data is null)
+        coordinator.AdvanceSessionVersion();
+        bool success = await coordinator.ExecuteAsync(async () =>
         {
-            ErrorMessage = response.Message ?? "Unable to sign in.";
-            return false;
-        }
-        if (!response.Data.IsCompleted && !response.Data.RequiresTwoFactor)
-        { ErrorMessage = "Invalid sign-in response."; return false; }
-        if (response.Data.RequiresTwoFactor)
+            ErrorMessage = null;
+            PendingChallenge = null;
+            // The exchange itself can write server cookies, so serialize it with refresh and logout too.
+            Response<LoginResponse> response = model.IsExternalLogin
+                ? await apiService.ExternalAuthAsync(model, CancellationToken.None)
+                : await apiService.CreateTokenAsync(model, CancellationToken.None);
+            if (response.IsError || response.Data is null)
+            {
+                ErrorMessage = response.Message ?? "Unable to sign in.";
+                return false;
+            }
+            if (!response.Data.IsCompleted && !response.Data.RequiresTwoFactor)
+            { ErrorMessage = "Invalid sign-in response."; return false; }
+            if (response.Data.RequiresTwoFactor)
+            {
+                PendingChallenge = response.Data.Challenge;
+                return false;
+            }
+            return await SaveTokensAsync(response.Data.Tokens);
+        });
+        if (success)
         {
-            PendingChallenge = response.Data.Challenge;
-            return false;
+            // Subscribers can request tokens again; never notify while holding the coordinator.
+            LoginChange?.Invoke("");
+            layoutService.UpdateHeading(EventArgs.Empty);
         }
-        return await CompleteAsync(response.Data.Tokens);
+        return success;
     }
 
     public async Task<bool> VerifyTwoFactorAsync(string code, bool recovery)
     {
-        ErrorMessage = null;
-        if (PendingChallenge is null) { ErrorMessage = "Start sign-in again."; return false; }
-        Response<TokenResponse> response = await apiService.CompleteTwoFactorAsync(new TwoFactorRequest
-        { ChallengeId = PendingChallenge.Id, Code = code, UseRecoveryCode = recovery }, CancellationToken.None);
-        if (response.IsError || response.Data is null)
+        coordinator.AdvanceSessionVersion();
+        bool success = await coordinator.ExecuteAsync(async () =>
         {
-            ErrorMessage = response.Message ?? "Unable to verify this code.";
-            return false;
+            ErrorMessage = null;
+            if (PendingChallenge is null) { ErrorMessage = "Start sign-in again."; return false; }
+            Response<TokenResponse> response = await apiService.CompleteTwoFactorAsync(new TwoFactorRequest
+            { ChallengeId = PendingChallenge.Id, Code = code, UseRecoveryCode = recovery }, CancellationToken.None);
+            if (response.IsError || response.Data is null)
+            {
+                ErrorMessage = response.Message ?? "Unable to verify this code.";
+                return false;
+            }
+            bool completed = await SaveTokensAsync(response.Data);
+            if (completed) PendingChallenge = null;
+            return completed;
+        });
+        if (success)
+        {
+            LoginChange?.Invoke("");
+            layoutService.UpdateHeading(EventArgs.Empty);
         }
-        bool success = await CompleteAsync(response.Data);
-        if (success) PendingChallenge = null;
         return success;
     }
 
     public void CancelTwoFactor() { PendingChallenge = null; ErrorMessage = null; }
 
-    private async Task<bool> CompleteAsync(TokenResponse? token)
+    private bool CanClearSession(long? expectedSessionVersion) => expectedSessionVersion is null ||
+        (coordinator.SessionVersion == expectedSessionVersion && PendingChallenge is null &&
+            securityNavigationGuard.BlockingMessage is null);
+
+    private async Task<bool> SaveTokensAsync(TokenResponse? token)
     {
         if (token is null || string.IsNullOrWhiteSpace(token.Token) || string.IsNullOrWhiteSpace(token.RefreshToken))
         { ErrorMessage = "Invalid sign-in response."; return false; }
         if (formFactor.GetFormFactor() is "WebAssembly") await localStorage.CacheAuthTokens(token);
-        LoginChange?.Invoke("");
-        layoutService.UpdateHeading(EventArgs.Empty);
         return true;
     }
 

@@ -348,7 +348,7 @@ public sealed class LoginFailureRenderingTests
         public bool VerifiedWithRecoveryCode { get; private set; }
         public event Action<string?>? LoginChange { add { } remove { } }
         public Task<bool> LoginAsync(TokenRequest model) => Task.FromResult(true);
-        public Task<bool> LogoutAsync(string methodName) => Task.FromResult(true);
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) => Task.FromResult(true);
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery)
         {
             Assert.NotNull(PendingChallenge);

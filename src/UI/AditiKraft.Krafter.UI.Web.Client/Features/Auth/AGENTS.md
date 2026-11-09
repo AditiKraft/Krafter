@@ -7,6 +7,8 @@
 - Use `IAuthenticationService` for login/logout/refresh; do not call `IAuthApi` directly.
 - `AuthTokenService` owns expiry checks, refresh, and initial token synchronization. Use `NeedsRefresh` for the shared one-minute refresh window. Check caller cancellation before saving a refresh response, including when an API implementation returns after cancellation.
 - Keep token reads, refresh, and storage writes inside `TokenRefreshCoordinator`. It is shared across browser API clients and scoped on the server.
+- Primary, Google and MFA sign-in exchanges also hold that coordinator through cookie processing and local credential persistence. Notify login/heading subscribers only after releasing it, because subscribers can request tokens again.
+- Automatic cleanup after failed refresh or synchronization passes the observed `AuthTokenService.SessionVersion` to `LogoutAsync`. This local generation tracks newer sign-in intent; it is separate from the backend authentication version. Cleanup must preserve newer flows, pending MFA and material protected by `AccountSecurityNavigationGuard`. Explicit sign-out omits the expected version and retains its existing caller confirmation rules.
 - Server HTTP-client scopes do not share that coordinator. `ServerAuthApiService` uses the shared `HybridCache` to combine refresh calls for the exact access/refresh token pair. Successful responses stay in local memory for five seconds so each request can save the same new cookies. Cache keys contain a hash, not credentials; refresh results never go to the distributed cache.
 - Different token pairs refresh independently. Failed responses are not cached, and canceling one waiter does not cancel another waiting request. This coordination is within one UI server process; it is not a distributed lock.
 - `AuthStorageService` saves browser tokens. `AuthStorageServiceServer` saves cookies and makes fresh values available to the current HTTP request.
@@ -23,7 +25,7 @@
 - Server cookies or JWT events? Use `../../../AditiKraft.Krafter.UI.Web/Infrastructure/Auth/`.
 - Standard login? Use `AuthenticationService.LoginAsync(TokenRequest)`.
 - Google login? Navigate through the root UI's `/authentication/google/start`; the server owns `/google-callback`. The browser redeems the proof-bound handoff at `/google-complete`.
-- Already authenticated? Redirect to `ReturnUrl` or `/`.
+- Already authenticated? Preserve a pending sign-in or current error; otherwise revalidate and redirect to the safe `ReturnUrl` or `/`.
 
 ## 3. Code Templates
 
@@ -93,7 +95,7 @@ bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
 - `AuthApiErrors` normalizes missing/invalid response envelopes and transport failures for generic and non-generic management responses. Use it for every management call, including disabling MFA. `ServerAuthApiErrors` additionally handles standard server resilience rejections without adding those dependencies to WebAssembly.
 
 ---
-Last Updated: 2026-11-08
+Last Updated: 2026-11-09
 Verified Against: src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Auth/ServerAuthApiService.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/Login.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/GoogleCallback.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Auth/AuthenticationService.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, src-single/UI/AditiKraft.Krafter.UI.Web.Client/wwwroot/appsettings.json, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
 ---
 

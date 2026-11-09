@@ -114,7 +114,7 @@ public sealed class ErrorPageRenderingTests
         public string? ErrorMessage => null;
         public event Action<string?>? LoginChange { add { } remove { } }
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
-        public Task<bool> LogoutAsync(string methodName) => throw new NotSupportedException();
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) => throw new NotSupportedException();
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => throw new NotSupportedException();
         public Task<bool> RefreshAsync() => throw new NotSupportedException();
         public void CancelTwoFactor() => throw new NotSupportedException();

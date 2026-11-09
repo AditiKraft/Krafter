@@ -91,7 +91,7 @@ public sealed class PasswordLogoutFailureTests
         public TwoFactorChallengeResponse? PendingChallenge => null;
         public string? ErrorMessage => FailLogout ? "Unable to sign out. Please try again." : null;
         public event Action<string?>? LoginChange { add { } remove { } }
-        public Task<bool> LogoutAsync(string methodName) { Logouts++; return Task.FromResult(!FailLogout); }
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) { Logouts++; return Task.FromResult(!FailLogout); }
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => throw new NotSupportedException();
         public Task<bool> RefreshAsync() => throw new NotSupportedException();

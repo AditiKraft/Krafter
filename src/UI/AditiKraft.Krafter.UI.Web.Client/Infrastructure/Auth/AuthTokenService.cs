@@ -9,6 +9,8 @@ public sealed class AuthTokenService(
     IAuthStorageService storage,
     TokenRefreshCoordinator coordinator)
 {
+    public long SessionVersion => coordinator.SessionVersion;
+
     public static bool NeedsRefresh(string? token)
     {
         if (string.IsNullOrWhiteSpace(token))

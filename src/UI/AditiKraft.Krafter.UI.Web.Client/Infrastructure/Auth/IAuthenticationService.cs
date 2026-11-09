@@ -13,7 +13,8 @@ public interface IAuthenticationService
 
     public Task<bool> LoginAsync(TokenRequest model);
 
-    public Task<bool> LogoutAsync(string methodName);
+    // A supplied version makes automatic cleanup conditional; false can mean a newer flow was preserved.
+    public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null);
 
     public Task<bool> RefreshAsync();
 }

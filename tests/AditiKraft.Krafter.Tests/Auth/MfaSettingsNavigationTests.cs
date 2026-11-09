@@ -556,7 +556,7 @@ public sealed class MfaSettingsNavigationTests
         public TwoFactorChallengeResponse? PendingChallenge => null;
         public string? ErrorMessage => FailLogout ? "Unable to sign out. Please try again." : null;
         public event Action<string?>? LoginChange { add { } remove { } }
-        public Task<bool> LogoutAsync(string methodName)
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null)
         {
             LogoutCount++;
             LoggedOutWhileBlocked |= guard.BlockingMessage is not null;

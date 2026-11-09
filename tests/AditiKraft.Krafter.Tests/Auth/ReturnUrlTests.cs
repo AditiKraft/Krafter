@@ -80,7 +80,7 @@ public sealed class ReturnUrlTests
         public event Action<string?>? LoginChange { add { } remove { } }
         public Task<bool> LoginAsync(TokenRequest model) => Task.FromResult(true);
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => Task.FromResult(true);
-        public Task<bool> LogoutAsync(string methodName) => Task.FromResult(true);
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) => Task.FromResult(true);
         public Task<bool> RefreshAsync() => Task.FromResult(false);
     }
 }

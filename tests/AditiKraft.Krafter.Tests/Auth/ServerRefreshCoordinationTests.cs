@@ -282,7 +282,7 @@ public sealed class ServerRefreshCoordinationTests
         }
 
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
-        public Task<bool> LogoutAsync(string methodName) => throw new NotSupportedException();
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) => throw new NotSupportedException();
     }
 
     private sealed class RecordingTransport(ConcurrentBag<string?> sentTokens) : HttpMessageHandler
