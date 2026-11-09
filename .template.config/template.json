@@ -28,8 +28,22 @@
             ".idea/**",
             "**/bin/**",
             "**/obj/**",
+            "**/*.[nN][uU][pP][kK][gG]",
+            "**/*.[sS][nN][uU][pP][kK][gG]",
+            "**/[nN][uU][pP][kK][gG]/**",
+            "**/[aA][rR][tT][iI][fF][aA][cC][tT][sS]/**",
             "**/*.user",
             "**/.DS_Store",
+            "**/*.[pP][fF][xX]",
+            "**/*.[pP]12",
+            "**/*.[pP][eE][mM]",
+            "**/*.[kK][eE][yY]",
+            "**/[kK][eE][yY]-*.[xX][mM][lL]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].[lL][oO][cC][aA][lL]*.[jJ][sS][oO][nN]",
+            "**/[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].*.[lL][oO][cC][aA][lL].[jJ][sS][oO][nN]",
+            "**/.[eE][nN][vV]",
+            "**/.[eE][nN][vV].*",
+            "**/[sS][eE][cC][rR][eE][tT][sS].[jJ][sS][oO][nN]",
             ".fallout/temp/**",
             ".template.config/**",
             ".template.config-single/**",
@@ -38,14 +52,18 @@
             "AditiKraft.Krafter.Single.slnx",
             "AditiKraft.Krafter.Dev.slnx",
             "AditiKraft.Krafter.Templates.csproj",
+            "build/UpstreamRelease.cs",
+            "build/UpstreamReleaseBranch.cs",
+            "tests/AditiKraft.Krafter.Tests/Configuration/UpstreamReleaseBranchTests.cs",
+            ".github/workflows/main.yml",
             "pack-and-install.cmd",
-            "Agents.md",
-            "Agents.single.md"
+            "AGENTS.md",
+            "AGENTS.single.md"
           ]
         }
       ],
       "rename": {
-        "Agents.split.md": "Agents.md"
+        "AGENTS.split.md": "AGENTS.md"
       }
     }
   ],

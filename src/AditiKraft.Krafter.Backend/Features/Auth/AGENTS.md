@@ -1,0 +1,100 @@
+# Auth Feature AI Instructions
+
+> **SCOPE**: Token issuance, refresh tokens, and external login.
+> **PARENT**: See also: ../../AGENTS.md
+
+## 1. Core Principles
+- Use `ITokenService` for all token issuance.
+- Encode `JwtSettings.Key` as UTF-8 for issuance, refresh validation, and both hosts' access-token validation. Accepted non-ASCII configuration keys must produce identical key bytes throughout the flow.
+- Validate credentials with `UserManager<ApplicationUser>`.
+- Refresh flow validates the stored `UserRefreshToken` and expiry.
+- External login creates a user if missing and assigns the Basic role in one relational transaction. Cancellation before commit rolls both writes back; dispose provisioning before entering the MFA transition.
+- Google login and token exchange use `AppUrls.GetGoogleRedirectUri()` from `Urls:RootUiUrl`. Register that exact callback with Google; keep one callback source for both steps.
+- Prefer `Response<T>` factory methods for errors.
+
+## 2. Decision Tree
+- Standard login? Use `Login` with `TokenRequest`.
+- Refresh token? Use `RefreshToken` with `RefreshTokenRequest` and stored refresh token.
+- Google login? `StartGoogleLogin` and `CompleteGoogleCallback` use `GoogleOAuthFlow`; `ExternalAuth` redeems a one-use `GoogleAuthRequest` handoff and nonce. Provider code exchange is internal and requires the stored PKCE verifier.
+
+## 3. Code Templates
+
+### Refresh Token Validation
+```csharp
+UserRefreshToken? refreshToken = await applicationDbContext.UserRefreshTokens
+    .FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
+
+if (refreshToken is null ||
+    refreshToken.RefreshToken != request.RefreshToken ||
+    refreshToken.RefreshTokenExpiryTime <= DateTime.UtcNow)
+{
+    return Response<TokenResponse>.Unauthorized("Invalid or expired refresh token.");
+}
+```
+
+### External Auth: Ensure Basic Role
+```csharp
+ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
+if (basic is null)
+{
+    return Response<TokenResponse>.NotFound("Basic Role Not Found.");
+}
+```
+
+## 4. Checklist
+1. Use `ApiRoutes.Tokens` for token endpoints.
+2. Use `RouteSegment.Refresh` for refresh.
+3. Use `ApiRoutes.ExternalAuth` + `RouteSegment.Google` for Google login.
+4. Use `HttpContext.Connection.RemoteIpAddress` after trusted forwarded-header middleware. Never trust raw client-supplied forwarding text.
+
+## 5. Common Mistakes
+- Issuing tokens without validating user activation or confirmed email settings.
+- Skipping refresh token expiry checks.
+- Creating external-login users without assigning the Basic role.
+
+## 6. Evolution Triggers
+- Token service or JWT settings change.
+- External provider flow changes.
+
+## Google OAuth state
+- `GoogleOAuthFlow` validates the exact canonical origin against the tenant registry before consent and again at callback. Never relay provider codes or accept a DNS suffix as proof of tenant registration.
+- `GoogleLoginTransactionStore` uses global `TenantDbContext` orchestration state because the root callback precedes tenant restoration. Proof/tenant/expiry checks and the conditional SQL delete enforce one-use consumption across replicas. Do not replace them with cache get/remove or a process-local lock.
+- Protect verifier/handoff payloads with Data Protection purposes bound to purpose, tenant and row ID. Wrong proof or tenant must not consume a valid transaction. Replica key rings must be shared and persistent.
+- Restore the recorded tenant in a fresh service scope before resolving Identity/application data. `GoogleAccountAuthenticator` owns this boundary; preserve the existing user/Basic-role provisioning transaction and local MFA transition.
+- Refresh token storage schema changes.
+
+## References (real code)
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs`
+- `src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs`
+
+## Two-factor authentication
+- MFA operations use their own named `Handler : IScopedHandler` + `Route` entry point. `ValidateSession.cs` owns token validation; shared MFA HTTP policies live in `Common/TwoFactorEndpoints.cs`.
+- Shared transition logic stays in `TwoFactorService`: these operations must agree on locking, replay protection and revocation. Thin handlers are intentional; no per-handler interfaces or repository wrappers are required.
+- `AccountAuthenticationTransaction` shares the PostgreSQL account lock, tracked-state reload and commit boundary across MFA, login and refresh. Refresh revalidates the original claims and stored refresh credential under that lock before rotation. `TwoFactorService` delegates transaction behavior to this helper while retaining factor-transition rules.
+- Propagate request cancellation through handlers, EF/Refit calls and advisory-lock waits. Identity APIs have no cancellation parameter; check cancellation around their work. Cancellation before commit rolls back; once commit starts, it finishes independently of request cancellation, with no post-commit cancellation check.
+- A transition owns its DbContext unit of work and clears tracked state after acquiring the lock. Save unrelated caller work before entering it. Return credentials only after commit.
+- Every MFA management transition, including enrollment confirmation, revalidates the original caller's user, tenant, session version and MFA assurance under that account lock before consuming proof or changing state. HTTP middleware authentication may predate a concurrent revocation and is insufficient by itself.
+- `TwoFactorCleanup` is feature-owned maintenance with a new scope per iteration; its background-worker placement is an intentional exception to operation routing.
+- `Common/TwoFactorService.cs` owns enrollment, pending login, factor consumption and session revocation. Never issue tokens from a pending challenge.
+- Primary password/Google routes return `Response<LoginResponse>`; only completed login/refresh returns real `TokenResponse` credentials. `ITokenService` requires explicit MFA proof when the user is enrolled.
+- Account transitions run under PostgreSQL transaction-level advisory locks. Bind challenges and replay state to tenant/user and authentication version. Do not replace this with a process-local lock or cache get/remove.
+- Check Identity failure-count/reset results. Detach a rejected user update before the MFA transaction's final save, and reject login if resetting the failure count failed. Never retry stale account state after a concurrent deletion or security change.
+- Preserve `auth_time` and `amr` on refresh. `SessionValidator` checks tenant, account eligibility, version and MFA assurance in access/refresh paths.
+- Refresh resolves the account and its refresh credential by the verified immutable user ID. Email changes must never select a different account or transfer authentication/MFA claims.
+- Realtime validation uses the middleware-resolved tenant in `HttpContext.Items`, then reloads tenant/account eligibility in a fresh scope. Long Polling clones the HTTP service scope; restore its validated tenant before joining the tenant group. Never use the cloned scope's root default as the resolved tenant.
+- Forward the linked connection/shutdown token through realtime tenant lookup and session validation; expected teardown must not log a validation warning. Recheck `Notifications.View` from current role membership on connection, invocation and each monitor tick. Identity calls without a cancellation parameter remain bounded by explicit cancellation checks.
+- `Infrastructure/Realtime/RealtimeServiceRegistration.cs` attaches `SessionHubFilter` with `AddHubOptions<RealtimeHub>`. Keep it scoped to app-owned hubs. TickerQ's dashboard retains its separate Basic authentication; do not apply the Krafter JWT/MFA filter globally.
+- Authenticator secrets use Data Protection. Production enrollment requires a persistent key ring and key-encryption certificate. Never log secret-bearing payloads.
+- Management endpoints require the non-simple CSRF header and exact browser origin; the split-host BFF applies the same rule.
+- Per-client throttling depends on trusted proxy configuration in shared ServiceDefaults. The split-host BFF forwards its resolved client address; configure Backend to trust that UI server. Never clear proxy trust lists or key limits directly on untrusted headers.
+- See `docs/two-factor-authentication.md` for key storage, recovery, API compatibility and test requirements. Passkeys are outside this feature's scope.
+
+---
+Last Updated: 2026-11-08
+Verified Against: src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, tests/AditiKraft.Krafter.Tests/Configuration/GoogleCallbackTests.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Login.cs, src/AditiKraft.Krafter.Backend/Features/Auth/RefreshToken.cs, src/AditiKraft.Krafter.Backend/Features/Auth/ExternalLogin.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/TokenService.cs, src/AditiKraft.Krafter.Backend/Features/Auth/Common/UserRefreshToken.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, src/AditiKraft.Krafter.Contracts/Contracts/Roles/RoleConstants.cs
+---
+
+

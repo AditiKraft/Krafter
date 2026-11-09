@@ -10,15 +10,16 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
 
 public class TenantFinderService(TenantDbContext tenantDbContext) : ITenantFinderService
 {
-    public async Task<Response<Tenant>> Find(string? identifier)
+    public async Task<Response<Tenant>> Find(string? identifier, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(identifier) || TenantSettings.TenancyMode == TenancyMode.Single)
         {
             return Response<Tenant>.Success(SeedDataConstants.DefaultTenant);
         }
 
         Tenant? tenant = await tenantDbContext.Tenants.AsNoTracking()
-            .SingleOrDefaultAsync(c => c.Identifier.ToLower() == identifier.ToLower());
+            .SingleOrDefaultAsync(c => c.Identifier.ToLower() == identifier.ToLower(), cancellationToken);
         if (tenant is null)
         {
             return identifier.Equals(DefaultTenantConstants.Identifier, StringComparison.OrdinalIgnoreCase)

@@ -1,0 +1,85 @@
+# UI Refit AI Instructions
+
+> **SCOPE**: Shared Refit transport and registration. Also read this file when adding or changing a feature API interface.
+> **PARENT**: See also: ../../../AGENTS.md
+
+## 1. Core Principles
+- Keep API interfaces in `Features/<Feature>/I<Feature>Api.cs`, beside their feature pages.
+- Keep shared registration and tenant forwarding in this folder. `RefitAuthHandler` lives in `Infrastructure/Auth/` with token management.
+- Use literal route strings in Refit, especially when parameters are present.
+- Route parameter names must match method parameter names.
+- Use `[Query] GetRequestInput` for list endpoints.
+- Register authenticated backend APIs with both `RefitTenantHandler` and `RefitAuthHandler`.
+- Register BFF/auth endpoints and tenant-resolved internal endpoints that do not need auth forwarding with `RefitTenantHandler` only.
+- External APIs should not use tenant/auth handlers.
+- Server Refit clients pass `IHttpContextAccessor` to `RefitTenantHandler`, which replaces forwarding headers with the trusted, resolved connection address and scheme. Browser clients do not generate forwarding headers. Configure immediate proxy trust as documented in `docs/url-configuration.md`.
+- `TenantIdentifier` uses injected `AppUrls`. Browser feature calls use the exact shared `ApiBaseUrl` in split host and the current origin in single host. Resolve tenant UI hosts from `TenantBaseDomain`, with the root UI hostname as its fallback. Server calls use the resolved internal address. Both browser and server calls forward the tenant header. Read [Configure application URLs](../../../../../docs/url-configuration.md) before changing address selection or tenant subdomains.
+
+## Date and time JSON
+
+- `UiDateTimeJsonConverter` converts outgoing `DateTime` values (including nullable values) to UTC. Unspecified picker input means local time. Incoming timestamps become local time only in WebAssembly; server clients retain UTC. API timestamps without an offset are treated as UTC.
+- Bind browser UI fields directly to response values. Hide local timestamps during server prerendering. Revisit this policy before switching to Interactive Server, which cannot use the browser time zone.
+- Use `DateOnly` for calendar dates. Minimum and maximum date sentinels retain their values.
+- JSON conversion does not cover query parameters, grid filter strings, multipart forms, or raw HTTP calls. Handle timestamps explicitly in those paths.
+- Keep UTC validation in backend handlers; shared form validators run before serialization.
+
+## 2. Decision Tree
+- Authenticated backend API? Register with both handlers.
+- BFF/auth endpoint or internal tenant-resolved endpoint without auth forwarding? Register with `RefitTenantHandler` only.
+- External API? Register without tenant/auth handlers.
+- Endpoint with `{id}` or `{roleId}`? Use a literal route string.
+
+## 3. Code Templates
+
+### Interface Example (Users)
+```csharp
+public interface IUsersApi
+{
+    [Get("/users")]
+    Task<Response<PaginationResponse<UserDto>>> GetUsersAsync(
+        [Query] GetRequestInput request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/users")]
+    Task<Response> CreateUserAsync([Body] CreateUserRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Put("/users/{id}")]
+    Task<Response> UpdateUserAsync(string id, [Body] CreateUserRequest request,
+        CancellationToken cancellationToken = default);
+
+    [Delete("/users/{id}")]
+    Task<Response> DeleteUserAsync(string id,
+        CancellationToken cancellationToken = default);
+}
+```
+
+### Registration Example
+```csharp
+services.AddRefitClient<IUsersApi>(refitSettings)
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri(placeholderUrl))
+    .AddHttpMessageHandler(sp => new RefitTenantHandler(sp.GetRequiredService<TenantIdentifier>(), isBffClient: false))
+    .AddHttpMessageHandler<RefitAuthHandler>();
+```
+
+## 4. Checklist
+1. Create the interface in `Features/<Feature>/` and match its namespace to that folder.
+2. Use literal routes in attributes (`[Get("/users/{id}")]`).
+3. Add `[Query] GetRequestInput` for list endpoints.
+4. Register the Refit client in `RefitServiceExtensions.cs` with the correct handler chain for that API.
+5. Call through `ApiCallService` from UI components, except auth flows that go through `IAuthenticationService` / `IAuthApiService`.
+
+## 5. Common Mistakes
+- Using `ApiRoutes` or `RouteSegment` constants in Refit routes with parameters.
+- Parameter name mismatch (e.g., `{id}` requires `id`).
+- Adding `RefitAuthHandler` to tenant-resolved APIs that currently do not use auth forwarding (`IAuthApi`, `IAppInfoApi`).
+- Using raw `HttpClient` instead of Refit + `ApiCallService`.
+
+## 6. Evolution Triggers
+- Refit registration or handler chain changes.
+- New API client conventions added (e.g., BFF vs direct).
+
+---
+Last Updated: 2026-11-08
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/UiDateTimeJsonConverter.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/IUsersApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/IRolesApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/ITenantsApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/IAuthApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/AppInfo/IAppInfoApi.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/RefitServiceExtensions.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+---

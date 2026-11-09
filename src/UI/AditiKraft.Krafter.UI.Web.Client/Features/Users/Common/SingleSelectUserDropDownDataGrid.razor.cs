@@ -24,7 +24,7 @@ public partial class SingleSelectUserDropDownDataGrid(
         await Task.Yield();
         GetRequestInput.SkipCount = args.Skip ?? 0;
         GetRequestInput.MaxResultCount = args.Top ?? 10;
-        GetRequestInput.Filter = args.Filter;
+        GetRequestInput.Query = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
         if (!string.IsNullOrWhiteSpace(RoleId))

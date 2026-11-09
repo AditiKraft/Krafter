@@ -42,6 +42,7 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             return new AuthenticationState(claimsPrincipal);
         }
 
+        long sessionVersion = _tokenService.SessionVersion;
         string? cachedToken = await _localStorage.GetCachedAuthTokenAsync();
         if (string.IsNullOrWhiteSpace(cachedToken))
         {
@@ -53,12 +54,13 @@ public class UIAuthenticationStateProvider : AuthenticationStateProvider
             bool refreshResult = await _authenticationService.RefreshAsync();
             if (!refreshResult)
             {
-                await _authenticationService.LogoutAsync("AuthenticationService Refresh Token 116");
-                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+                await _authenticationService.LogoutAsync("AuthenticationService Refresh Token 116", sessionVersion);
             }
 
             string? newCachedToken = await _localStorage.GetCachedAuthTokenAsync();
-            if (string.IsNullOrWhiteSpace(newCachedToken))
+            // A newer completed sign-in can supersede the failed check. Read it once; an unchanged
+            // expired session or a pending sign-in must not trigger an endless refresh/cleanup loop.
+            if (string.IsNullOrWhiteSpace(newCachedToken) || (!refreshResult && AuthTokenService.NeedsRefresh(newCachedToken)))
             {
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }

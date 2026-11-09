@@ -4,7 +4,7 @@
 @attribute [MustHavePermission(PermissionAction.View, PermissionResource.Tenants)]
 
 
-<AuthorizeView Policy="@(PermissionDefinition.NameFor(PermissionAction.Create, PermissionResource.Tenants))">
+<AuthorizeView Policy="@(UiPermissionPolicy.NameFor(PermissionAction.Create, PermissionResource.Tenants))">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                  JustifyContent="JustifyContent.End" class="mt-1 mb-2">
         <RadzenButton Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Icon="add_circle_outline" Text="Tenant"
@@ -71,11 +71,11 @@
                                    Icon="settings_applications" Style="margin-right: 4px">
                     <ChildContent>
                         <AuthorizeView
-                            Policy="@(PermissionDefinition.NameFor(PermissionAction.Update, PermissionResource.Tenants))">
+                            Policy="@(UiPermissionPolicy.NameFor(PermissionAction.Update, PermissionResource.Tenants))">
                             <RadzenSplitButtonItem Text="Edit" Value="@PermissionAction.Update" Icon="edit" />
                         </AuthorizeView>
                         <AuthorizeView
-                            Policy="@(PermissionDefinition.NameFor(PermissionAction.Delete, PermissionResource.Tenants))">
+                            Policy="@(UiPermissionPolicy.NameFor(PermissionAction.Delete, PermissionResource.Tenants))">
                             <RadzenSplitButtonItem Text="Delete" Value="@PermissionAction.Delete" Icon="delete" />
                         </AuthorizeView>
                     </ChildContent>

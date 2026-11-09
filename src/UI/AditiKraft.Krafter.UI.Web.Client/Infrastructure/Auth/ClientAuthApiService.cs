@@ -7,38 +7,13 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public class ClientAuthApiService(
     IAuthApi authApi,
-    IAuthStorageService localStorage,
     ILogger<ClientAuthApiService> logger) : IAuthApiService
 {
-    public async Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            Response<TokenResponse> response = await authApi.CreateTokenAsync(request, cancellationToken);
-            return response;
-        }
-        catch (ApiException ex)
-        {
-            logger.LogError(ex, "Error during client-side token creation");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to create token. Please log in again.",
-                StatusCode = (int)ex.StatusCode
-            };
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during client-side token creation");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to create token. Please log in again.",
-                StatusCode = (int)HttpStatusCode.InternalServerError
-            };
-        }
-    }
+    public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
+        AuthApiErrors.CallAsync(() => authApi.CompleteTwoFactorAsync(request, cancellation), cancellation);
+
+    public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) =>
+        AuthApiErrors.CallAsync(() => authApi.CreateTokenAsync(request, cancellation), cancellation);
 
     public async Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
         CancellationToken cancellationToken)
@@ -70,36 +45,9 @@ public class ClientAuthApiService(
         }
     }
 
-    public async Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var googleRequest = new GoogleAuthRequest { Code = request.Code ?? string.Empty };
-            Response<TokenResponse> response = await authApi.GoogleAuthAsync(googleRequest, cancellationToken);
-            return response;
-        }
-        catch (ApiException ex)
-        {
-            logger.LogError(ex, "Error during client-side external auth");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to authenticate. Please try again.",
-                StatusCode = (int)ex.StatusCode
-            };
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during client-side external auth");
-            return new Response<TokenResponse>
-            {
-                IsError = true,
-                Message = "Failed to authenticate. Please try again.",
-                StatusCode = (int)HttpStatusCode.InternalServerError
-            };
-        }
-    }
+    public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) =>
+        AuthApiErrors.CallAsync(() => authApi.GoogleAuthAsync(new GoogleAuthRequest
+        { Handoff = request.GoogleHandoff ?? string.Empty, BrowserNonce = request.GoogleBrowserNonce ?? string.Empty }, cancellation), cancellation);
 
     public async Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellationToken)
     {
@@ -130,19 +78,7 @@ public class ClientAuthApiService(
         }
     }
 
-    public async Task LogoutAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Call BFF to clear HttpOnly cookies on the server
-            await authApi.LogoutAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error calling logout endpoint");
-        }
-
-        // Clear local storage regardless of BFF call result
-        await localStorage.ClearCacheAsync();
-    }
+    // A transport failure leaves the HttpOnly session cookie intact. The caller must
+    // observe that failure before clearing browser state or navigating to login.
+    public Task LogoutAsync(CancellationToken cancellationToken) => authApi.LogoutAsync(cancellationToken);
 }

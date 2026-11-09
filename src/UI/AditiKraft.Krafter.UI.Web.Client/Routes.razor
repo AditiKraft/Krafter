@@ -1,9 +1,7 @@
 @using AditiKraft.Krafter.UI.Web.Client.Common.Components.Layout
 @using AditiKraft.Krafter.UI.Web.Client.Features.Auth
-@using AditiKraft.Krafter.UI.Web.Client.Features.Tenants
 @inject IJSRuntime jsRuntime
 @inject ThemeManager themeManager
-@inject ITenantsApi tenantsApi
 @implements IDisposable
 <RadzenComponents/>
 
@@ -89,8 +87,6 @@
         {
             Console.WriteLine($"Error in OnAfterRenderAsync: {ex}");
         }
-
-        await tenantsApi.SeedDataAsync(new SeedDataRequest(), CancellationToken.None);
     }
 
     [JSInvokable]

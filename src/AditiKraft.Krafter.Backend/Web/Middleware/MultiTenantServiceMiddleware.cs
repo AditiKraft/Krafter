@@ -27,6 +27,7 @@ public class MultiTenantServiceMiddleware(
             currentTenantDetails.UserId = currentUser.GetUserId();
             currentTenantDetails.Host = $"https://{context.Request.Host.Value}";
             tenantSetterService.SetTenant(currentTenantDetails);
+            context.Items[CurrentTenantService.ResolvedTenantItemKey] = currentTenantDetails;
 
             await next(context);
             return;
@@ -65,7 +66,7 @@ public class MultiTenantServiceMiddleware(
             return;
         }
 
-        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier);
+        Response<Tenant> tenantResponse = await tenantFinderService.Find(tenantIdentifier, context.RequestAborted);
         if (tenantResponse.IsError || tenantResponse.Data is null)
         {
             context.Response.StatusCode = tenantResponse.StatusCode;
@@ -81,6 +82,7 @@ public class MultiTenantServiceMiddleware(
         currentTenant.UserId = currentUser.GetUserId();
         currentTenant.Host = $"https://{context.Request.Host.Value}";
         tenantSetterService.SetTenant(currentTenant);
+        context.Items[CurrentTenantService.ResolvedTenantItemKey] = currentTenant;
         await next(context);
     }
 

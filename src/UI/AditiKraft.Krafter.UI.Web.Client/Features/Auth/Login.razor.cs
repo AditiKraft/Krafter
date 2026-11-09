@@ -1,5 +1,6 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
@@ -7,28 +8,76 @@ namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
 public partial class Login(
     IAuthenticationService authenticationService,
+    AuthTokenService tokenService,
     NavigationManager navigationManager,
     ThemeManager themeManager,
-    IConfiguration configuration,
-    AppUrls appUrls
-) : ComponentBase
+    AppUrls appUrls,
+    Blazored.SessionStorage.ISessionStorageService sessionStorage
+) : ComponentBase, IDisposable
 {
     [CascadingParameter] public Task<AuthenticationState> AuthState { get; set; } = default!;
 
     [SupplyParameterFromQuery(Name = "ReturnUrl")]
     public string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    private string? QueryErrorMessage => Error switch
+    {
+        "google-auth-failed" => "Unable to sign in with Google. Please try again.",
+        "invalid-google-state" => "Google sign-in expired or could not be verified. Please try again.",
+        _ => null
+    };
+    private string? DisplayError => authenticationService.ErrorMessage ?? QueryErrorMessage;
+
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
     public bool isBusy { get; set; }
     public TokenRequest TokenRequestInput { get; set; } = new();
     private bool _shouldRedirect;
+    private bool _disposed;
+
+    protected override void OnInitialized()
+    {
+        themeManager.ThemeChangeRequested += OnThemeChangedAsync;
+    }
+
+    private Task OnThemeChangedAsync(string _)
+    {
+        if (_disposed)
+            return Task.CompletedTask;
+
+        return InvokeAsync(() =>
+        {
+            if (!_disposed)
+                StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        themeManager.ThemeChangeRequested -= OnThemeChangedAsync;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthState;
+        if (authenticationService.PendingChallenge is not null || DisplayError is not null)
+        {
+            // Keep the current sign-in challenge or failure visible even if another session exists.
+            return;
+        }
         if (authState.User.Identity?.IsAuthenticated is true)
         {
+            // A local JWT can remain unexpired after another tab/device revokes its session.
+            // Revalidate at the login boundary before redirecting an apparently signed-in user.
+            if (OperatingSystem.IsBrowser() && !await ValidateExistingSessionAsync())
+            {
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(LocalAppState.GoogleLoginReturnUrl) &&
                 (string.IsNullOrWhiteSpace(ReturnUrl) || ReturnUrl == "/"))
             {
@@ -47,22 +96,31 @@ public partial class Login(
         }
     }
 
+    private async Task<bool> ValidateExistingSessionAsync()
+    {
+        long sessionVersion = tokenService.SessionVersion;
+        if (!await tokenService.SynchronizeFromServerAsync())
+        {
+            await authenticationService.LogoutAsync("Session no longer valid", sessionVersion);
+            return false;
+        }
+
+        return tokenService.SessionVersion == sessionVersion &&
+            authenticationService.PendingChallenge is null && DisplayError is null;
+    }
+
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender && _shouldRedirect)
+        if (_shouldRedirect)
         {
-            string finalReturnUrl = !string.IsNullOrWhiteSpace(ReturnUrl) ? ReturnUrl : "/";
-            if (Uri.TryCreate(finalReturnUrl, UriKind.Absolute, out Uri? absoluteUri))
-            {
-                finalReturnUrl = absoluteUri.PathAndQuery;
-            }
-
-            navigationManager.NavigateTo(finalReturnUrl);
+            _shouldRedirect = false;
+            navigationManager.NavigateTo(SafeReturnUrl());
         }
     }
 
     private async Task CreateToken(TokenRequest loginArgs)
     {
+        Error = null;
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = new Uri(navigationManager.Uri);
@@ -73,48 +131,49 @@ public partial class Login(
         bool isSuccess = await authenticationService.LoginAsync(loginArgs);
         if (isSuccess)
         {
-            if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
-                !ReturnUrl.Contains("/login", StringComparison.InvariantCultureIgnoreCase))
-            {
-                navigationManager.NavigateTo(ReturnUrl);
-            }
-            else
-            {
-                navigationManager.NavigateTo("/");
-            }
+            navigationManager.NavigateTo(SafeReturnUrl());
         }
 
         isBusy = false;
     }
 
-    private void StartGoogleLogin()
+    private readonly TwoFactorRequest verification = new();
+
+    private async Task VerifyTwoFactor(TwoFactorRequest _)
     {
+        Error = null;
+        isBusy = true;
+        try
+        {
+            if (await authenticationService.VerifyTwoFactorAsync(verification.Code, verification.UseRecoveryCode))
+                navigationManager.NavigateTo(SafeReturnUrl());
+        }
+        finally { verification.Code = string.Empty; isBusy = false; }
+    }
+
+    private void CancelVerification()
+    {
+        verification.Code = string.Empty;
+        authenticationService.CancelTwoFactor();
+    }
+
+    private string SafeReturnUrl() => LocalReturnUrl.Normalize(ReturnUrl);
+
+    private async Task StartGoogleLogin()
+    {
+        Error = null;
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = new Uri(navigationManager.Uri);
             ReturnUrl = uri.PathAndQuery;
         }
 
-        string returnUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "";
-
-        string host = new Uri(navigationManager.BaseUri).Host;
-
-        string clientId = configuration["Authentication:Google:ClientId"] ?? "";
-        string redirectUri = appUrls.GetGoogleRedirectUri().AbsoluteUri;
-
-        string scope = "email profile";
-        string responseType = "code";
-        string state = $"{Uri.EscapeDataString(host)}|||{Uri.EscapeDataString(returnUrl)}";
-        string encodedState = Uri.EscapeDataString(state);
-
-        string authUrl = $"https://accounts.google.com/o/oauth2/v2/auth?" +
-                         $"client_id={Uri.EscapeDataString(clientId)}&" +
-                         $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
-                         $"response_type={responseType}&" +
-                         $"scope={Uri.EscapeDataString(scope)}&" +
-                         $"state={encodedState}&" +
-                         $"access_type=offline";
-
-        navigationManager.NavigateTo(authUrl, true);
+        string nonce = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        await sessionStorage.SetItemAsStringAsync("krafter-google-browser-nonce", nonce);
+        string nonceHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(nonce)));
+        string origin = new Uri(navigationManager.BaseUri).GetLeftPart(UriPartial.Authority);
+        string start = new Uri(appUrls.GetRootUiUri(), "/authentication/google/start").AbsoluteUri;
+        navigationManager.NavigateTo(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(start,
+            new Dictionary<string, string?> { ["origin"] = origin, ["returnUrl"] = SafeReturnUrl(), ["nonceHash"] = nonceHash }), true);
     }
 }

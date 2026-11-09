@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -29,6 +29,8 @@
     <PackageReference Include="TickerQ.EntityFrameworkCore" />
 
     <!-- Authentication & Identity -->
+    <PackageReference Include="Otp.NET" />
+    <PackageReference Include="QRCoder" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
@@ -61,6 +63,8 @@
 
     <!-- Utilities -->
     <PackageReference Include="Mapster" />
+    <!-- Security floor for TickerQ Dashboard's legacy ASP.NET dependencies. -->
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -82,8 +86,8 @@
   <PropertyGroup>
     <ContainerFamily>noble</ContainerFamily>
     <ContainerRuntimeIdentifiers>linux-x64;linux-arm64</ContainerRuntimeIdentifiers>
-    <ContainerRepository>ghcr.io/aditikraft/krafter.api</ContainerRepository>
-    <ContainerRegistry>ghcr.io</ContainerRegistry>
+    <ContainerRepository Condition="'$(ContainerRepository)' == ''">$(ContainerNamespace)/krafter.api</ContainerRepository>
+    <ContainerRegistry Condition="'$(ContainerRegistry)' == ''">ghcr.io</ContainerRegistry>
   </PropertyGroup>
 
   <ItemGroup>

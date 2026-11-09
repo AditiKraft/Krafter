@@ -3,7 +3,6 @@ using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
@@ -18,6 +17,13 @@ public sealed class GetRoles
 {
     internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
+        private static readonly HashSet<string> QueryProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            nameof(RoleDto.Id), nameof(RoleDto.Name), nameof(RoleDto.Description), nameof(RoleDto.CreatedOn),
+            nameof(RoleDto.CreatedById), nameof(RoleDto.UpdatedOn), nameof(RoleDto.UpdatedById),
+            nameof(RoleDto.IsDeleted), nameof(RoleDto.DeleteReason)
+        };
+
         public async Task<Response<PaginationResponse<RoleDto>>> GetListAsync(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
@@ -46,6 +52,7 @@ public sealed class GetRoles
                                 Id = x.CreatedBy.Id,
                                 FirstName = x.CreatedBy.FirstName,
                                 LastName = x.CreatedBy.LastName,
+                                Email = x.CreatedBy.Email ?? string.Empty,
                                 CreatedOn = x.CreatedBy.CreatedOn
                             }
                             : null,
@@ -55,6 +62,7 @@ public sealed class GetRoles
                             Id = x.UpdatedBy.Id,
                             FirstName = x.UpdatedBy.FirstName,
                             LastName = x.UpdatedBy.LastName,
+                            Email = x.UpdatedBy.Email ?? string.Empty,
                             CreatedOn = x.UpdatedBy.CreatedOn
                         }
                         : null,
@@ -63,30 +71,15 @@ public sealed class GetRoles
                     DeleteReason = x.DeleteReason
                 });
 
-            // Apply filters
-            if (!string.IsNullOrEmpty(requestInput.Filter))
+            if (!query.TryApplyListQuery(requestInput, QueryProperties, out query, out string error))
             {
-                if (requestInput.Filter.Contains("!=") ||
-                    requestInput.Filter.Contains("==") ||
-                    requestInput.Filter.Contains(".Contains(") ||
-                    requestInput.Filter.Contains(".StartsWith(") ||
-                    requestInput.Filter.Contains(".EndsWith(") ||
-                    requestInput.Filter.Contains("np("))
-                {
-                    query = query.Where(requestInput.Filter);
-                }
-                else
-                {
-                    string filter = requestInput.Filter.ToLower();
-                    query = query.Where(c =>
-                        (c.Name ?? "").ToLower().Contains(filter));
-                }
+                return Response<PaginationResponse<RoleDto>>.BadRequest(error);
             }
 
-            // Apply sorting
-            if (!string.IsNullOrEmpty(requestInput.OrderBy))
+            if (!string.IsNullOrWhiteSpace(requestInput.Query))
             {
-                query = query.OrderBy(requestInput.OrderBy);
+                string search = requestInput.Query.ToLowerInvariant();
+                query = query.Where(c => (c.Name ?? "").ToLower().Contains(search));
             }
 
             List<RoleDto> items = await query

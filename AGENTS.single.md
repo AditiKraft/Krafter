@@ -1,0 +1,175 @@
+# Krafter AI Agent Instructions (Single-Host Mode)
+
+> **READ THIS FIRST**: This is the entry point for AI agents working on the Krafter project.
+
+## 1. Overview
+Krafter is a .NET 10 full-stack application with combined Backend API and Blazor UI in a single process:
+- **Backend**: ASP.NET Core Minimal APIs + Vertical Slice Architecture (VSA) — runs as an in-process library
+- **UI**: Hybrid Blazor (WebAssembly + Server) + Radzen Components — hosts the combined app
+- **Infrastructure**: .NET Aspire, OpenTelemetry, PostgreSQL
+
+> **Single-Host Mode**: Backend and UI run in ONE process. The UI.Web project references the Backend project and is the only executable entry point. Aspire orchestrates a single combined app resource.
+
+## 1.1 Hosting Architecture
+
+This project uses a **single-host topology** — everything runs in ONE process.
+
+- **UI.Web is the ONLY entry point** — it hosts both the Blazor UI and all Backend API endpoints
+- **Backend is a class library** that exposes features and infrastructure via `HostingExtensions`. It has no `Program.cs` in single-host mode — **UI.Web is the only entry point**.
+- **UI.Web's `Program.cs`** wires up the backend by calling:
+  - `builder.AddBackendServices()` — registers all backend DI services (persistence, auth, jobs, etc.)
+  - `app.UseBackendMiddleware()` — adds backend middleware (error handling, auth, etc.)
+  - `app.MapBackendEndpoints()` — maps all API route groups under `/api`
+- **WASM client** makes API calls to the **same origin** (self) via the `/api` prefix using Refit
+- **All API routes** are prefixed with `/api`
+- **Auth cookies** (`HttpOnly`, `Secure`, `SameSite=Strict`) are shared naturally since Backend and UI share the same origin
+- **`AuthCookieMiddleware`** handles cookie persistence for auth endpoints
+- **UI.Web-owned endpoints** include current-token, logout, and public URL configuration; all other auth/CRUD routes are served directly by the backend
+
+## 2. Which Instructions to Read?
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DECISION TREE                            │
+├─────────────────────────────────────────────────────────────┤
+│ What are you working on?                                    │
+│                                                             │
+│ ├── API endpoint, Handler, Entity, Database?               │
+│ │   └── READ: src/AditiKraft.Krafter.Backend/AGENTS.md                        │
+│ │                                                           │
+│ ├── Blazor page, Component, UI Service?                    │
+│ │   └── READ: src/UI/AGENTS.md                             │
+│ │                                                           │
+│ ├── Shared DTOs, Requests, Responses (Contracts)?          │
+│ │   └── READ: src/AditiKraft.Krafter.Contracts/AGENTS.md                 │
+│ │                                                           │
+│ ├── Aspire orchestration, Docker, CI/CD?                   │
+│ │   └── Use patterns from aspire/ and .github/workflows/   │
+│ │                                                           │
+│ └── Cross-cutting (affects both Backend + UI)?             │
+│     └── READ BOTH Backend + UI sub-files                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+For URL settings, hosting-mode routing, tenant domains, CORS, or Google callbacks, read [Configure application URLs](docs/url-configuration.md) before changing code or configuration.
+
+## 2.1 New Feature Flow (Short Version)
+1. If a feature-level `AGENTS.md` exists, read it first.
+2. Add contracts + validators in `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
+3. Add permissions/routes in `src/AditiKraft.Krafter.Contracts/Common/`.
+4. Add Backend operations in `src/AditiKraft.Krafter.Backend/Features/<Feature>/`.
+5. Add UI pages and `I<Feature>Api.cs` together in `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+
+## File Placement
+
+- Package versions: root `Directory.Packages.props`. Add `PackageReference` entries without a `Version` in project files.
+- Shared server UI registration: `src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs`. Keep host-specific authentication and endpoint selection in `Program.cs`; reusable BFF mappers live in server `Infrastructure/Auth/`.
+
+- Backend operations: `src/AditiKraft.Krafter.Backend/Features/<Feature>/<Operation>.cs`.
+- UI pages, dialogs, and API interface: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/<Feature>/`.
+- Shared requests, responses, and validators: `src/AditiKraft.Krafter.Contracts/Contracts/<Feature>/`.
+- Follow `src/AditiKraft.Krafter.Backend/AGENTS.md` and `src/UI/AGENTS.md` for infrastructure placement.
+- Match file names to their main types and namespaces to folders. Keep each operation's Handler + Route together and each request's validator with its request.
+- After moving files, update imports, file links, and instruction references. Template developers must also verify the `src-single` file links and both generated hosting variants.
+
+## 2.2 Deep Dives
+- Backend persistence: `src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/AGENTS.md`
+- Backend background jobs: `src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/AGENTS.md`
+- Backend auth: `src/AditiKraft.Krafter.Backend/Features/Auth/AGENTS.md`
+- Backend Users feature: `src/AditiKraft.Krafter.Backend/Features/Users/AGENTS.md`
+- Backend roles: `src/AditiKraft.Krafter.Backend/Features/Roles/AGENTS.md`
+- Backend tenants: `src/AditiKraft.Krafter.Backend/Features/Tenants/AGENTS.md`
+- UI Refit: `src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/AGENTS.md`
+- UI auth: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/AGENTS.md`
+- UI users: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/AGENTS.md`
+- UI roles: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/AGENTS.md`
+- UI tenants: `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/AGENTS.md`
+
+## 2.3 Bugfix Fast Path
+1. Locate the closest matching feature `AGENTS.md` and read it.
+2. Find the exact operation file (one file per operation) and trace request/response types in Shared.
+3. Apply minimal diff; verify response shape and route/permission usage.
+
+## 3. Solution Structure
+```
+AditiKraft.Krafter/
+├── AGENTS.md                    ← YOU ARE HERE
+├── aspire/                      # Aspire orchestration (1 combined resource)
+│   ├── AditiKraft.Krafter.Aspire.AppHost/
+│   └── AditiKraft.Krafter.Aspire.ServiceDefaults/
+├── src/
+│   ├── AditiKraft.Krafter.Contracts/          # Shared contracts library
+│   │   ├── AGENTS.md
+│   │   ├── Contracts/           # API DTOs, Requests, Responses
+│   │   └── Common/              # Shared utilities, models
+│   ├── AditiKraft.Krafter.Backend/                 # Backend library (referenced by UI.Web)
+│   │   ├── AGENTS.md
+│   │   ├── Web/                 # HTTP pipeline, HostingExtensions
+│   │   ├── Features/            # Vertical slices (business logic)
+│   │   ├── Infrastructure/      # Persistence, jobs, notifications, realtime
+│   │   ├── Common/              # Auth, tenants, entities, extensions
+│   │   ├── Errors/              # Exception types
+│   │   └── Migrations/          # EF Core migrations
+│   ├── AditiKraft.Krafter.Backend.Migrator/        # Short-lived EF migration runner
+│   └── UI/                      # Blazor (See src/UI/AGENTS.md)
+│       ├── AGENTS.md
+│       ├── AditiKraft.Krafter.UI.Web.Client/  # WASM client
+│       └── AditiKraft.Krafter.UI.Web/         # Combined host (API + Blazor)
+```
+
+> **Key difference from split-host**: Backend has no `Program.cs` — it is a class library. `UI.Web` is the only entry point, hosting both the Blazor UI and all backend API endpoints in a single process.
+
+## 4. Global Coding Conventions
+| Rule | Requirement |
+|------|-------------|
+| **Nullable** | Enabled. Use `default!` for non-nullable properties. |
+| **Async** | Use `Async` suffix. No `async void` except event handlers. |
+| **DI** | Primary constructors preferred. |
+| **Secrets** | NEVER commit. Use `dotnet user-secrets` locally. |
+| **Namespaces** | File-scoped. Match folder structure. |
+
+## 5. Development Commands
+```bash
+# Run via Aspire (recommended — starts combined app + infrastructure)
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
+
+# Run combined app directly
+dotnet run --project src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj
+
+# Database migrations
+dotnet ef migrations add <Name> --project src/AditiKraft.Krafter.Backend --context ApplicationDbContext
+dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter.Aspire.AppHost.csproj
+
+# Build solution
+dotnet build AditiKraft.Krafter.slnx
+```
+
+## 6. Commit Convention
+```
+type(scope): summary
+
+feat(users): add user creation endpoint
+feat(ui-users): add user management page
+fix(auth): resolve token refresh issue
+refactor(tenants): consolidate tenant operations
+```
+
+## 7. AI Agent Rules (CRITICAL)
+1. **Restate Assumptions**: Before coding, confirm feature requirements.
+2. **Search First**: Look at `Features/Users` or `Features/Roles` for patterns.
+3. **Follow Existing Patterns**: Copy structure from similar features.
+4. **Minimal Diffs**: Only modify what is strictly necessary.
+5. **Test Build**: Always verify `dotnet build` succeeds.
+
+## 8. AGENTS.md Evolution & Maintenance
+
+Keep instructions accurate and feature-specific; update examples and references when code moves.
+Read [instruction maintenance](docs/agent-instructions-maintenance.md) before changing guidance.
+Ask user approval before creating new instruction files. Prefer updating existing guidance and linking detailed docs.
+
+See [architecture guidelines](docs/architecture-guidelines.md) for operation cohesion, shared invariants, and validation.
+
+---
+Last Updated: 2026-09-12
+Verified Against: Directory.Packages.props, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiHostServiceRegistration.cs, AGENTS.single.md, src/AditiKraft.Krafter.Backend/AGENTS.md, src/AditiKraft.Krafter.Backend/Infrastructure/Persistence/AGENTS.md, src/AditiKraft.Krafter.Backend/Infrastructure/Jobs/AGENTS.md, src/AditiKraft.Krafter.Backend/Features/Auth/AGENTS.md, src/AditiKraft.Krafter.Backend/Features/Users/AGENTS.md, src/AditiKraft.Krafter.Backend/Features/Roles/AGENTS.md, src/AditiKraft.Krafter.Backend/Features/Tenants/AGENTS.md, src/AditiKraft.Krafter.Contracts/AGENTS.md, src/UI/AGENTS.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Infrastructure/Refit/AGENTS.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Auth/AGENTS.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Users/AGENTS.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Roles/AGENTS.md, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/AGENTS.md, docs/url-configuration.md, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/UI/AditiKraft.Krafter.UI.Web/Infrastructure/Hosting/UiUrlConfiguration.cs
+---

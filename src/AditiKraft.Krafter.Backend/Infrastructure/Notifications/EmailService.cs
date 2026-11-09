@@ -13,7 +13,7 @@ public class EmailService(SmtpClient smtpClient, SMTPEmailSettings smtpEmailSett
         message.Subject = subject;
         message.Body = htmlMessage;
         message.IsBodyHtml = true;
-        await smtpClient.SendMailAsync(message);
+        await smtpClient.SendMailAsync(message, cancellationToken);
     }
 }
 

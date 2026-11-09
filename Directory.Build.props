@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <RuntimeFrameworkVersion>10.0.14</RuntimeFrameworkVersion>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsAsErrors>
+    <!-- Set your own registry namespace here or pass -p:ContainerNamespace=your-org. -->
+    <ContainerNamespace Condition="'$(ContainerNamespace)' == ''">aditikraft</ContainerNamespace>
+  </PropertyGroup>
+</Project>

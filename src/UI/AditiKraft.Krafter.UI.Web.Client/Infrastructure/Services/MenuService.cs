@@ -26,6 +26,14 @@ public class MenuService
             {
                 new Menu
                 {
+                    Name = "Two-factor authentication",
+                    Path = "account/two-factor",
+                    Icon = "security",
+                    Title = "Account security",
+                    Tags = new[] { "security", "2fa", "authenticator" }
+                },
+                new Menu
+                {
                     Name = "Users",
                     Path = ApiRoutes.Users,
                     Title = "User Management",
@@ -62,6 +70,18 @@ public class MenuService
         TenantSettings.TenancyMode == TenancyMode.Single
             ? allMenus.Where(menu => menu.Path != ApiRoutes.Tenants)
             : allMenus;
+
+    public static bool IsVisible(Menu menu, ICollection<string>? permissions)
+    {
+        if (!string.IsNullOrWhiteSpace(menu.Permission) && permissions?.Contains(menu.Permission) != true)
+        {
+            return false;
+        }
+
+        return menu.Children?.Any() == true
+            ? menu.Children.Any(child => IsVisible(child, permissions))
+            : !string.IsNullOrWhiteSpace(menu.Path);
+    }
 
     public IEnumerable<Menu> Filter(string term)
     {

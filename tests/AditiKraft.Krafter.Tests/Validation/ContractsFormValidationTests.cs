@@ -1,11 +1,14 @@
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using AditiKraft.Krafter.Contracts.Contracts.Tenants;
+using AditiKraft.Krafter.Tests.UI;
 using AditiKraft.Krafter.UI.Web.Client.Features.Roles;
 using AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
 using Blazored.FluentValidation;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.HtmlRendering;
 using Microsoft.Extensions.DependencyInjection;
@@ -129,6 +132,8 @@ public sealed class ContractsFormValidationTests
             registrations.AddSingleton<DialogService>();
             registrations.AddSingleton<NotificationService>();
             registrations.AddSingleton<ApiCallService>();
+            registrations.AddAuthorizationCore(PermissionRegistration.RegisterPermissionClaims);
+            registrations.AddSingleton<AuthenticationStateProvider>(new EditorAuthenticationState([]));
             registrations.AddSingleton(_ => new HttpClient(new NoApiRequests()) { BaseAddress = new Uri("https://localhost/") });
             registrations.AddSingleton(provider => RestService.For<IRolesApi>(provider.GetRequiredService<HttpClient>()));
             registrations.AddSingleton(provider => RestService.For<ITenantsApi>(provider.GetRequiredService<HttpClient>()));

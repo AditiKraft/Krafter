@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web;
@@ -8,6 +9,7 @@ using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Roles;
 
@@ -16,7 +18,8 @@ public sealed class CreateRole
     internal sealed class Handler(
         RoleManager<ApplicationRole> roleManager,
         ApplicationDbContext db,
-        RolePermissionService permissionService) : IScopedHandler
+        RolePermissionService permissionService,
+        ITenantGetterService tenantGetterService) : IScopedHandler
     {
         public async Task<Response> CreateAsync(CreateOrUpdateRoleRequest request, CancellationToken cancellationToken)
         {
@@ -26,21 +29,46 @@ public sealed class CreateRole
                 return Response.BadRequest("Not allowed to modify Permissions for this Role.");
             }
 
-            var role = new ApplicationRole(request.Name, request.Description) { Id = Guid.NewGuid().ToString() };
-
-            IdentityResult result = await roleManager.CreateAsync(role);
-            if (!result.Succeeded)
-            {
-                return Response.BadRequest($"Register role failed {result.Errors.ToString()}");
-            }
-
             if (request.Permissions is not null)
             {
-                await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                Response validation = await permissionService.ValidatePermissionsAsync(request.Permissions, cancellationToken);
+                if (validation.IsError)
+                {
+                    return validation;
+                }
             }
 
-            await db.SaveChangesAsync(cancellationToken);
-            return new Response();
+            string normalizedName = roleManager.NormalizeKey(request.Name);
+            if (await db.Roles.IgnoreQueryFilters().AnyAsync(role =>
+                    role.TenantId == tenantGetterService.Tenant.Id && role.NormalizedName == normalizedName,
+                    cancellationToken))
+                return Response.Conflict(IdentityConflict.RoleMessage);
+
+            var role = new ApplicationRole(request.Name, request.Description) { Id = Guid.NewGuid().ToString() };
+            await using var transaction = await DomainTransaction.BeginAsync(db, cancellationToken);
+            try
+            {
+                IdentityResult result = await roleManager.CreateAsync(role);
+                if (!result.Succeeded)
+                    return IdentityConflict.IsDuplicate(result)
+                        ? Response.Conflict(IdentityConflict.RoleMessage)
+                        : Response.BadRequest("Register role failed: " + string.Join(" ", result.Errors.Select(error => error.Description)));
+
+                if (request.Permissions is not null)
+                {
+                    Response permissions = await permissionService.SynchronizeAsync(role.Id, request.Permissions, cancellationToken);
+                    if (permissions.IsError)
+                        return permissions;
+                }
+
+                await db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return Response.Success();
+            }
+            catch (DbUpdateException exception) when (IdentityConflict.IsRole(exception))
+            {
+                return Response.Conflict(IdentityConflict.RoleMessage);
+            }
         }
 
     }

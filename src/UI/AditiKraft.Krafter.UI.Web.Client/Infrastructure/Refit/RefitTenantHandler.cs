@@ -1,10 +1,12 @@
 using System.Globalization;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 
-public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffClient = false) : DelegatingHandler
+public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffClient = false,
+    IHttpContextAccessor? httpContextAccessor = null) : DelegatingHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
@@ -26,6 +28,19 @@ public class RefitTenantHandler(TenantIdentifier tenantIdentifier, bool isBffCli
         // Inject culture header
         request.Headers.AcceptLanguage.Clear();
         request.Headers.AcceptLanguage.ParseAdd(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+
+        if (tenantInfo.isServerSide)
+        {
+            // Forward only the connection resolved by trusted proxy middleware, never incoming header text.
+            request.Headers.Remove("X-Forwarded-For");
+            request.Headers.Remove("X-Forwarded-Proto");
+            HttpContext? context = httpContextAccessor?.HttpContext;
+            if (context?.Connection.RemoteIpAddress is { } address)
+            {
+                request.Headers.TryAddWithoutValidation("X-Forwarded-For", address.ToString());
+                request.Headers.TryAddWithoutValidation("X-Forwarded-Proto", context.Request.Scheme);
+            }
+        }
 
         // Rewrite URL based on client type and tenant
         // Server-side: Always use backendUrl (no BFF needed, server manages cookies directly)

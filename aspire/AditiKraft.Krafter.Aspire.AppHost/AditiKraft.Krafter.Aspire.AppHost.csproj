@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
 
 
 
@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <!-- StreamJsonRpc still requests an older MessagePack release. -->
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

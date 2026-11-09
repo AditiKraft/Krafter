@@ -1,5 +1,6 @@
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
@@ -10,31 +11,32 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class ResetPassword
 {
-    internal sealed class Handler(UserManager<ApplicationUser> userManager) : IScopedHandler
+    internal sealed class Handler(UserManager<ApplicationUser> userManager, ApplicationDbContext db) : IScopedHandler
     {
-        public async Task<Response> ResetPasswordAsync(ResetPasswordRequest request)
+        public async Task<Response> ResetPasswordAsync(ResetPasswordRequest request,
+            CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ApplicationUser? user = await userManager.FindByEmailAsync(request.Email?.Normalize()!);
-            if (user is null)
+            cancellationToken.ThrowIfCancellationRequested();
+            const string message = "The password reset link is invalid or expired. Request a new link and try again.";
+            if (user is not { IsActive: true, IsDeleted: false })
             {
-                return new Response
-                {
-                    Message = "If the email is registered, you will receive a password reset link.",
-                    StatusCode = 200,
-                    IsError = false
-                };
+                return Response.BadRequest(message);
             }
 
+            // Identity saves the password, security stamp and session version in one update.
+            user.AuthenticationVersion++;
             IdentityResult result = await userManager.ResetPasswordAsync(user, request.Token!, request.Password!);
             if (!result.Succeeded)
             {
-                return new Response
-                {
-                    Message = "An error occurred while resetting password", StatusCode = 400, IsError = true
-                };
+                db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                cancellationToken.ThrowIfCancellationRequested();
+                return Response.BadRequest(message);
             }
 
-            return new Response();
+            // Identity has committed the password and version; cancellation cannot undo that update.
+            return Response.Success();
         }
     }
 
@@ -47,12 +49,14 @@ public sealed class ResetPassword
 
             userGroup.MapPost($"/{RouteSegment.ResetPassword}", async (
                     [FromBody] ResetPasswordRequest request,
-                    [FromServices] Handler handler) =>
+                    [FromServices] Handler handler,
+                    CancellationToken cancellationToken) =>
                 {
-                    Response res = await handler.ResetPasswordAsync(request);
+                    Response res = await handler.ResetPasswordAsync(request, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Response>();
+                .Produces<Response>()
+                .RequireRateLimiting("authentication");
         }
     }
 }

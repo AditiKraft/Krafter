@@ -9,6 +9,8 @@ public sealed class AuthTokenService(
     IAuthStorageService storage,
     TokenRefreshCoordinator coordinator)
 {
+    public long SessionVersion => coordinator.SessionVersion;
+
     public static bool NeedsRefresh(string? token)
     {
         if (string.IsNullOrWhiteSpace(token))
@@ -30,21 +32,26 @@ public sealed class AuthTokenService(
     public Task<bool> RefreshAsync(CancellationToken cancellationToken = default) =>
         coordinator.ExecuteAsync(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // Read again after waiting: another caller may have saved a refreshed token.
-            string? token = await storage.GetCachedAuthTokenAsync();
+            string? token = await storage.GetCachedAuthTokenAsync().AsTask().WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (!NeedsRefresh(token))
             {
                 return true;
             }
 
-            string? refreshToken = await storage.GetCachedRefreshTokenAsync();
+            string? refreshToken = await storage.GetCachedRefreshTokenAsync().AsTask().WaitAsync(cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(refreshToken))
             {
                 return false;
             }
 
             var request = new RefreshTokenRequest { Token = token, RefreshToken = refreshToken };
-            Response<TokenResponse> response = await apiService.RefreshTokenAsync(request, cancellationToken);
+            Response<TokenResponse> response = await apiService.RefreshTokenAsync(request, cancellationToken).WaitAsync(cancellationToken);
+            // An implementation may ignore cancellation and return late. Never save that response.
+            cancellationToken.ThrowIfCancellationRequested();
             return await SaveTokensAsync(response);
         }, cancellationToken);
 

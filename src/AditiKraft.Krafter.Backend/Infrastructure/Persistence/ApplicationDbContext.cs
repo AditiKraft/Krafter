@@ -23,6 +23,10 @@ public class ApplicationDbContext(
 #pragma warning restore CS0108, CS0114
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
+    public DbSet<TwoFactorCredential> TwoFactorCredentials => Set<TwoFactorCredential>();
+    public DbSet<TwoFactorChallenge> TwoFactorChallenges => Set<TwoFactorChallenge>();
+    public DbSet<TwoFactorRecoveryCode> TwoFactorRecoveryCodes => Set<TwoFactorRecoveryCode>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -107,15 +111,44 @@ public class ApplicationDbContext(
                 .HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
         });
 
+        modelBuilder.Entity<TwoFactorCredential>(entity =>
+        {
+            entity.HasKey(x => x.UserId);
+            entity.Property(x => x.UserId).HasMaxLength(36);
+            entity.HasQueryFilter(x => !x.IsDeleted && x.TenantId == tenantGetterService.Tenant.Id);
+            entity.HasOne<ApplicationUser>().WithOne().HasForeignKey<TwoFactorCredential>(x => x.UserId);
+        });
+        modelBuilder.Entity<TwoFactorChallenge>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasMaxLength(64);
+            entity.Property(x => x.UserId).HasMaxLength(36);
+            entity.Property(x => x.Purpose).HasMaxLength(16);
+            entity.Property(x => x.PrimaryMethod).HasMaxLength(16);
+            entity.HasIndex(x => new { x.TenantId, x.UserId });
+            entity.HasIndex(x => x.ExpiresAt);
+            entity.HasQueryFilter(x => !x.IsDeleted && x.TenantId == tenantGetterService.Tenant.Id);
+        });
+        modelBuilder.Entity<TwoFactorRecoveryCode>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasMaxLength(36);
+            entity.Property(x => x.UserId).HasMaxLength(36);
+            entity.Property(x => x.CodeHash).HasMaxLength(64);
+            entity.HasIndex(x => new { x.TenantId, x.UserId });
+            entity.HasQueryFilter(x => !x.IsDeleted && x.TenantId == tenantGetterService.Tenant.Id);
+        });
         modelBuilder.ApplyCommonConfigureAcrossEntity();
 
         modelBuilder.Entity<UserRefreshToken>(entity => { entity.HasKey(c => c.UserId); });
     }
 
-    public override int SaveChanges()
+    public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         UpdateSoftDeleteStatusesAndSetTenant();
-        return base.SaveChanges();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
@@ -149,12 +182,26 @@ public class ApplicationDbContext(
     {
         if (entry.Entity is IHistory)
         {
-            entry.CurrentValues["CreatedOn"] = DateTime.UtcNow;
-            entry.Property("CreatedOn").IsModified = true;
-            if (currentUser is not null && !string.IsNullOrWhiteSpace(currentUser.GetUserId()))
+            string? actorId = currentUser?.GetUserId();
+            if (entry.State == EntityState.Added)
             {
-                entry.CurrentValues["CreatedById"] = currentUser.GetUserId();
-                entry.Property("CreatedById").IsModified = true;
+                entry.CurrentValues[nameof(IHistory.CreatedOn)] = DateTime.UtcNow;
+                if (!string.IsNullOrWhiteSpace(actorId))
+                {
+                    entry.CurrentValues[nameof(IHistory.CreatedById)] = actorId;
+                }
+            }
+            else
+            {
+                // Identity can mark the entire entity as modified. Creation history must
+                // stay out of the UPDATE even when callers supply different values.
+                entry.Property(nameof(IHistory.CreatedOn)).IsModified = false;
+                entry.Property(nameof(IHistory.CreatedById)).IsModified = false;
+                entry.CurrentValues[nameof(IHistory.UpdatedOn)] = DateTime.UtcNow;
+                entry.Property(nameof(IHistory.UpdatedOn)).IsModified = true;
+                entry.CurrentValues[nameof(IHistory.UpdatedById)] =
+                    string.IsNullOrWhiteSpace(actorId) ? null : actorId;
+                entry.Property(nameof(IHistory.UpdatedById)).IsModified = true;
             }
         }
 

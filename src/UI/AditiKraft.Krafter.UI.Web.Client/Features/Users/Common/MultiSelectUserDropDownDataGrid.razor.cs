@@ -33,7 +33,7 @@ public partial class MultiSelectUserDropDownDataGrid(
         await Task.Yield();
         GetRequestInput.SkipCount = args.Skip ?? 0;
         GetRequestInput.MaxResultCount = args.Top ?? 10;
-        GetRequestInput.Filter = args.Filter;
+        GetRequestInput.Query = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
         _isLoading = true;
 

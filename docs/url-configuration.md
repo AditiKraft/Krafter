@@ -52,6 +52,20 @@ Urls__ApiBaseUrl=https://api.example.com
 
 The same values can be set in each host's `appsettings.json` under the `Urls` section. Keep the two split-host configurations in sync through shared deployment variables. Generated single-host projects have no Backend settings files; UI.Web owns all server settings.
 
+### Trusted reverse proxies and client addresses
+
+Hosts accept `X-Forwarded-For` and `X-Forwarded-Proto` from loopback by default. Configure additional immediate proxy addresses explicitly; forwarded headers from other peers are ignored. For example:
+
+```text
+ReverseProxy__KnownProxies__0=10.0.0.5
+# Alternatively, a narrowly scoped proxy network:
+ReverseProxy__KnownNetworks__0=10.5.0.0/24
+```
+
+On UI.Web, trust the public ingress proxy. On the split-host Backend, trust the UI.Web server address and any separate API ingress proxy. Configure each host for its own immediate peers. Do not trust all addresses or a network that includes untrusted clients. Trusted proxies must overwrite incoming forwarding headers and be protected from unauthorized use.
+
+UI.Web forwards its resolved client address to Backend, replacing any incoming forwarding text. This preserves per-client authentication throttling through the BFF instead of combining all users behind a UI server into one limit. The forwarding limit is one hop: each trusted proxy must supply the resolved client address. A deployment with additional proxy hops must flatten its forwarded address at that trusted boundary or explicitly configure and test the ASP.NET Core forwarding chain.
+
 When running without Aspire, these public settings are enough for URL resolution if UI.Web can reach the API at its public address. Database, authentication, and other infrastructure settings are still required.
 
 ### Internal server connections
@@ -155,6 +169,16 @@ Both login initiation and Backend's code exchange derive the callback from `Urls
 - Deployment example: `https://app.example.com/google-callback`
 
 Tenant login also returns through this root UI callback. Keep the root UI setting identical in Backend and UI.Web for split host. Google client ID and client secret settings remain separate; keep the secret on the server.
+
+The browser starts at the root UI's `/authentication/google/start`. Backend verifies the exact requested UI origin against the registered, active tenant and the canonical address derived from these settings; an unknown sibling hostname is not a valid destination. In single-tenant mode only the root origin is accepted. The root host sets a short-lived, host-only HttpOnly correlation cookie and Backend creates a five-minute login transaction with an S256 PKCE verifier. `/google-callback` is a server endpoint: it verifies that cookie and atomically consumes the stored transaction before exchanging Google's code with the stored verifier. Google codes are never forwarded to tenant hosts.
+
+After exchange, the root callback redirects to the approved tenant's `/google-complete` with a fresh one-minute handoff in the URL fragment. Redemption also requires the private nonce retained in the initiating tab's session storage, and the resolved tenant must match the transaction. The handoff is consumed once. A new tab, an expired flow, a missing cookie, or a lost session-storage nonce requires starting Google login again. Enrolled accounts still enter the normal local MFA step after this handoff.
+
+OAuth transactions are stored centrally in the `GoogleLoginTransactions` table managed by `TenantDbContext`; apply its migration through the normal migrator. Verifiers and completed handoffs are encrypted with Backend Data Protection, with separate purposes bound to each transaction and tenant. Backend replicas must use the same persistent Data Protection key ring, application name, and key-encryption certificate configuration. The existing `TwoFactor:KeyRingPath` and `TwoFactor:KeyEncryptionCertificatePath` settings configure that backend key ring; see [secure key storage](two-factor-authentication.md). Retain older decryption keys during rotation. Missing keys or expired transactions fail closed and require a new login. UI replicas need no sticky session: the root correlation cookie and shared Backend state support replica changes.
+
+Keep `/authentication/google/start`, `/google-callback`, and `/google-complete` available on UI.Web. `/google-callback` is accepted only at the configured root origin. The internal API routes `/api/external-auth/google/start` and `/api/external-auth/google/callback` support the server exchange. `/api/external-auth/google` now accepts a one-use `handoff` plus `browserNonce`; the former raw `{ "code": "..." }` contract is rejected. Do not log OAuth query values, cookies, handoff fragments, or request bodies containing proofs.
+
+Post-login return targets must be local paths. Login, MFA completion and Google callbacks share the same validation: absolute URLs, protocol-relative URLs, backslashes, control characters and login-loop targets fall back to `/`. Normal local query strings and fragments are preserved. Reject raw tabs/newlines before browser navigation, because browser URL parsing can strip them and turn an apparently local path into an external destination.
 
 ## Move from the old settings
 

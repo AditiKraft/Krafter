@@ -1,6 +1,7 @@
 @using AditiKraft.Krafter.UI.Web.Client
 @{
-    IComponentRenderMode renderMode = new InteractiveWebAssemblyRenderMode(true);
+    IComponentRenderMode? renderMode = HttpContext?.AcceptsInteractiveRouting() == false
+        ? null : new InteractiveWebAssemblyRenderMode(true);
 }
 
 <!DOCTYPE html>
@@ -26,13 +27,16 @@
 <body>
 <Routes @rendermode="@renderMode"/>
 
-<script src="@Assets["_framework/blazor.web.js"]"></script>
-<script src="@Assets["_content/Radzen.Blazor/Radzen.Blazor.js"]"></script>
-<script src="@Assets["js/helper.js"]"></script>
-<div id="webassembly-loading-spinner" class="app-loading-container">
-    <img src="@Assets["brand/loading-indicators/loading-indicator-m.svg"]" alt="loading"/>
-</div>
-<script src="@Assets["_content/Bit.BlazorUI.Extras/scripts/bit.blazorui.extras.js"]"></script>
+@if (renderMode is not null)
+{
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["_content/Radzen.Blazor/Radzen.Blazor.js"]"></script>
+    <script src="@Assets["js/helper.js"]"></script>
+    <div id="webassembly-loading-spinner" class="app-loading-container">
+        <img src="@Assets["brand/loading-indicators/loading-indicator-m.svg"]" alt="loading"/>
+    </div>
+    <script src="@Assets["_content/Bit.BlazorUI.Extras/scripts/bit.blazorui.extras.js"]"></script>
+}
 </body>
 
 </html>

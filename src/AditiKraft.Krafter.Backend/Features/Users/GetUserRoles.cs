@@ -1,12 +1,10 @@
 using AditiKraft.Krafter.Backend.Web;
-using AditiKraft.Krafter.Backend.Features.Roles.Common;
-using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Backend.Web.Authorization;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Users;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,40 +12,29 @@ namespace AditiKraft.Krafter.Backend.Features.Users;
 
 public sealed class GetUserRoles
 {
-    internal sealed class Handler(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager) : IScopedHandler
+    internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
         public async Task<Response<List<UserRoleDto>>> GetRolesAsync(
             string userId, CancellationToken cancellationToken)
         {
-            ApplicationUser? user = await userManager.FindByIdAsync(userId);
-            if (user is null)
+            if (!await db.Users.AsNoTracking().AnyAsync(user => user.Id == userId, cancellationToken))
             {
                 return new Response<List<UserRoleDto>> { IsError = true, Message = "User Not Found", StatusCode = 404 };
             }
 
-            IList<string> userRoleNames = await userManager.GetRolesAsync(user);
-            List<ApplicationRole>? roles = await roleManager.Roles
-                .Where(c => c.Name != null && userRoleNames.Contains(c.Name))
-                .ToListAsync(cancellationToken);
-
-            if (roles is null || !roles.Any())
-            {
-                return new Response<List<UserRoleDto>> { Data = new List<UserRoleDto>() };
-            }
-
-            var userRoles = new List<UserRoleDto>();
-            foreach (ApplicationRole role in roles)
-            {
-                userRoles.Add(new UserRoleDto
+            // A role rename must not remove its membership from the editor's baseline.
+            // Resolve IDs and display fields in one tenant-filtered snapshot.
+            List<UserRoleDto> userRoles = await (
+                from membership in db.UserRoles.AsNoTracking()
+                join role in db.Roles on membership.RoleId equals role.Id
+                where membership.UserId == userId
+                select new UserRoleDto
                 {
                     RoleId = role.Id,
                     RoleName = role.Name,
                     Description = role.Description,
-                    Enabled = await userManager.IsInRoleAsync(user, role.Name!)
-                });
-            }
+                    Enabled = true
+                }).ToListAsync(cancellationToken);
 
             return new Response<List<UserRoleDto>> { Data = userRoles };
         }

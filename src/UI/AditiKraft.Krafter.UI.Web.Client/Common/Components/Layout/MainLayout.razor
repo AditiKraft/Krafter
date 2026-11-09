@@ -45,45 +45,7 @@
                 </div>
                 <div style="flex: 1; overflow: auto">
                     <RadzenPanelMenu>
-                        @foreach (var category in menus)
-                        {
-                            if (category.Children != null && category.Children.Count() > 0 && (HasChildPermission(category)))
-                            {
-                                <NavigationItem @key=category @bind-Expanded=@category.Expanded Example=@category>
-
-
-                                    @if (category.Children != null && category.Children.Count() > 0)
-                                    {
-                                        @foreach (var menu in category.Children)
-                                        {
-                                            if (menu.Children != null && menu.Children.Count() > 0 && HasChildPermission(menu))
-                                            {
-                                                <NavigationItem @key=menu @bind-Expanded=@menu.Expanded Example=@menu>
-                                                    @foreach (var child in menu.Children)
-                                                    {
-                                                        if (HasPermission(menu))
-                                                        {
-                                                            <NavigationItem @key=child @bind-Expanded=@child.Expanded Example=@child/>
-                                                        }
-                                                    }
-                                                </NavigationItem>
-                                            }
-                                            else if (HasPermission(menu))
-                                            {
-                                                <NavigationItem @key=menu @bind-Expanded=@menu.Expanded Example=@menu/>
-                                            }
-                                        }
-                                    }
-
-                                </NavigationItem>
-                            }
-                            else if (HasPermission(category))
-                            {
-                                <NavigationItem @key=category @bind-Expanded=@category.Expanded Example=@category>
-
-                                </NavigationItem>
-                            }
-                        }
+                        <NavigationMenuItems Items="menus" Permissions="cachedPermissionsAsync" />
                     </RadzenPanelMenu>
                 </div>
             </Authorized>

@@ -34,6 +34,8 @@ public sealed class DeleteRole
             }
 
             role.IsDeleted = true;
+            // An edit loaded before deletion must fail Identity's full-row concurrency check.
+            role.ConcurrencyStamp = Guid.NewGuid().ToString();
             db.Roles.Update(role);
 
             List<ApplicationRoleClaim> krafterRoleClaims = await db.RoleClaims

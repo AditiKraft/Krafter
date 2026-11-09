@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
@@ -17,38 +18,60 @@ public sealed class ForgotPassword
     internal sealed class Handler(
         UserManager<ApplicationUser> userManager,
         ITenantGetterService tenantGetterService,
-        IJobService jobService) : IScopedHandler
+        IJobService jobService,
+        ILogger<ForgotPassword> logger) : IScopedHandler
     {
-        public async Task<Response> ForgotPasswordAsync(ForgotPasswordRequest request)
+        public async Task<Response> ForgotPasswordAsync(ForgotPasswordRequest request,
+            CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ApplicationUser? user = await userManager.FindByEmailAsync(request.Email.Normalize());
-            if (user is null)
+            cancellationToken.ThrowIfCancellationRequested();
+            const string message = "If the account is eligible, you will receive a password reset link.";
+            if (user is not { IsActive: true, IsDeleted: false })
             {
-                return new Response { IsError = true, Message = "User Not Found", StatusCode = 404 };
+                return Response.Success(message);
             }
 
             string code = await userManager.GeneratePasswordResetTokenAsync(user);
+            cancellationToken.ThrowIfCancellationRequested();
             const string route = "account/reset-password";
             var endpointUri = new Uri(string.Concat($"{tenantGetterService.Tenant.TenantLink}/", route));
             string passwordResetUrl = QueryHelpers.AddQueryString(endpointUri.ToString(), "Token", code);
 
             string emailSubject = "Reset Password";
-            string emailBody = $"Hello {user.FirstName} {user.LastName},<br/><br/>" +
+            HtmlEncoder html = HtmlEncoder.Default;
+            string emailBody = $"Hello {html.Encode(user.FirstName ?? string.Empty)} {html.Encode(user.LastName ?? string.Empty)},<br/><br/>" +
                                "We received a request to reset your password. " +
                                "Please reset your password by clicking the link below:<br/><br/>" +
-                               $"<a href='{passwordResetUrl}'>Reset Password</a><br/><br/>" +
+                               $"<a href='{html.Encode(passwordResetUrl)}'>Reset Password</a><br/><br/>" +
                                "If you did not request a password reset, please ignore this email.<br/><br/>" +
-                               $"Regards,<br/>{tenantGetterService.Tenant.Name} Team";
+                               $"Regards,<br/>{html.Encode(tenantGetterService.Tenant.Name ?? string.Empty)} Team";
 
             if (!string.IsNullOrWhiteSpace(user.Email))
             {
-                await jobService.EnqueueAsync(
-                    new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
-                    nameof(Jobs.SendEmailJob),
-                    CancellationToken.None);
+                try
+                {
+                    await jobService.EnqueueAsync(
+                        new SendEmailRequestInput { Email = user.Email, Subject = emailSubject, HtmlMessage = emailBody },
+                        nameof(Jobs.SendEmailJob),
+                        cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    // Queue availability must not reveal whether this anonymous request found an account.
+                    // Exception messages/payloads can contain email addresses and reset credentials.
+                    logger.LogWarning("Password reset email could not be queued. Failure type: {FailureType}.",
+                        exception.GetType().Name);
+                }
             }
 
-            return new Response();
+            return Response.Success(message);
         }
     }
 
@@ -61,12 +84,14 @@ public sealed class ForgotPassword
 
             userGroup.MapPost($"/{RouteSegment.ForgotPassword}", async (
                     [FromBody] ForgotPasswordRequest request,
-                    [FromServices] Handler handler) =>
+                    [FromServices] Handler handler,
+                    CancellationToken cancellationToken) =>
                 {
-                    Response res = await handler.ForgotPasswordAsync(request);
+                    Response res = await handler.ForgotPasswordAsync(request, cancellationToken);
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
-                .Produces<Response>();
+                .Produces<Response>()
+                .RequireRateLimiting("authentication");
         }
     }
 }

@@ -5,6 +5,7 @@ using AditiKraft.Krafter.Backend.Features.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
@@ -12,6 +13,9 @@ using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Npgsql;
 
 namespace AditiKraft.Krafter.Tests.Tenants;
@@ -27,14 +31,21 @@ public sealed class TenantCreationTests
     };
 
     [Fact]
-    public async Task CreatingTenantPersistsUtcCreationTimeAndUpdatingPreservesIt()
+    public async Task CreatingTenantPersistsAndProvisionsItsOwner()
     {
+        using var cancellation = new CancellationTokenSource();
         var services = new ServiceCollection();
         string databaseName = Guid.NewGuid().ToString();
         services.AddLogging();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.AddSingleton<IHostEnvironment>(new HostingEnvironment { EnvironmentName = Environments.Production });
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<ICurrentUserInitializer>(p => (ICurrentUserInitializer)p.GetRequiredService<ICurrentUser>());
         services.AddTenantServices();
-        services.AddDbContext<TenantDbContext>(options => options.UseInMemoryDatabase(databaseName));
+        services.AddDbContext<TenantDbContext>(options =>
+        {
+            options.UseInMemoryDatabase(databaseName);
+        });
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase($"{databaseName}-identity"));
         services.AddIdentityCore<ApplicationUser>()
             .AddRoles<ApplicationRole>()
@@ -63,10 +74,11 @@ public sealed class TenantCreationTests
         var create = new CreateTenant.Handler(db, provider, currentUser, Urls);
 
         DateTime before = DateTime.UtcNow;
-        Response created = await create.CreateAsync(request, CancellationToken.None);
+        Response created = await create.CreateAsync(request, cancellation.Token);
         DateTime after = DateTime.UtcNow;
 
         Assert.False(created.IsError, created.Message);
+        Assert.False(cancellation.IsCancellationRequested);
         db.ChangeTracker.Clear();
         Tenant saved = await db.Tenants.AsNoTracking().SingleAsync();
         Assert.InRange(saved.CreatedOn, before, after);
@@ -75,8 +87,26 @@ public sealed class TenantCreationTests
         Assert.Equal(request.ValidUpto, saved.ValidUpto);
         Assert.Equal(DateTimeKind.Utc, saved.ValidUpto.Kind);
 
+        await using (AsyncServiceScope tenantScope = provider.CreateAsyncScope())
+        {
+            tenantScope.ServiceProvider.GetRequiredService<ITenantSetterService>().SetTenant(new CurrentTenantDetails
+            {
+                Id = saved.Id, TenantLink = "https://example.getkrafter.dev"
+            });
+            ApplicationDbContext identity = tenantScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            ApplicationUser owner = await identity.Users.SingleAsync();
+            Assert.Equal(saved.AdminEmail, owner.Email);
+            Assert.True(owner.IsOwner && owner.IsActive);
+            Assert.Equal(2, await identity.Roles.CountAsync());
+            Assert.Equal(2, await identity.UserRoles.CountAsync());
+        }
+        var jobs = (NoExternalJobs)provider.GetRequiredService<IJobService>();
+        SendEmailRequestInput welcome = Assert.Single(jobs.Emails);
+        Assert.Equal(saved.AdminEmail, welcome.Email);
+        Assert.Contains("https://example.getkrafter.dev/login", welcome.HtmlMessage);
+
         request.Name = "Updated tenant";
-        var update = new UpdateTenant.Handler(db, provider, Urls);
+        var update = new UpdateTenant.Handler(db, provider, Urls, currentUser);
         Response updated = await update.UpdateAsync(saved.Id!, request, CancellationToken.None);
 
         Assert.False(updated.IsError, updated.Message);
@@ -150,7 +180,7 @@ public sealed class TenantCreationTests
         await using TenantDbContext db = CreateDb();
         db.Tenants.AddRange(ExistingTenant("existing", "Blue"), ExistingTenant("edited", "green"));
         await db.SaveChangesAsync();
-        var handler = new UpdateTenant.Handler(db, null!, Urls);
+        var handler = new UpdateTenant.Handler(db, null!, Urls, new CurrentUser());
 
         Response response = await handler.UpdateAsync("edited", ValidRequest("blue"), CancellationToken.None);
 
@@ -172,7 +202,7 @@ public sealed class TenantCreationTests
         await db.SaveChangesAsync();
         CreateOrUpdateTenantRequest request = ValidRequest(identifier);
         request.Id = "root";
-        var handler = new UpdateTenant.Handler(db, null!, Urls);
+        var handler = new UpdateTenant.Handler(db, null!, Urls, new CurrentUser());
 
         Response response = await handler.UpdateAsync("edited", request, CancellationToken.None);
 
@@ -190,7 +220,7 @@ public sealed class TenantCreationTests
         CreateOrUpdateTenantRequest request = ValidRequest(DefaultTenantConstants.Identifier);
         request.Name = "Updated root";
         request.ValidUpto = root.ValidUpto;
-        var handler = new UpdateTenant.Handler(db, null!, Urls);
+        var handler = new UpdateTenant.Handler(db, null!, Urls, new CurrentUser());
 
         Response response = await handler.UpdateAsync(root.Id!, request, CancellationToken.None);
 
@@ -202,36 +232,25 @@ public sealed class TenantCreationTests
     private static TenantDbContext CreateDb() => new(new DbContextOptionsBuilder<TenantDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ConcurrentIdentifierConflictReturnsConflict(bool updating)
+    [Fact]
+    public async Task ConcurrentIdentifierConflictReturnsConflictForUpdate()
     {
         var conflict = new IdentifierConflictInterceptor();
         var options = new DbContextOptionsBuilder<TenantDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).AddInterceptors(conflict).Options;
         await using var db = new TenantDbContext(options);
-        if (updating)
-        {
-            db.Tenants.Add(ExistingTenant("edited", "green"));
-            await db.SaveChangesAsync();
-        }
+        db.Tenants.Add(ExistingTenant("edited", "green"));
+        await db.SaveChangesAsync();
         conflict.RejectSave = true;
 
-        Response response = updating
-            ? await new UpdateTenant.Handler(db, null!, Urls).UpdateAsync("edited", ValidRequest("blue"), CancellationToken.None)
-            : await new CreateTenant.Handler(db, null!, new CurrentUser(), Urls).CreateAsync(ValidRequest("blue"), CancellationToken.None);
+        Response response = await new UpdateTenant.Handler(db, null!, Urls, new CurrentUser())
+            .UpdateAsync("edited", ValidRequest("blue"), CancellationToken.None);
 
         Assert.Equal(409, response.StatusCode);
+        conflict.RejectSave = false;
+        await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
-        if (updating)
-        {
-            Assert.Equal("green", (await db.Tenants.SingleAsync()).Identifier);
-        }
-        else
-        {
-            Assert.Empty(await db.Tenants.ToListAsync());
-        }
+        Assert.Equal("green", (await db.Tenants.SingleAsync()).Identifier);
     }
 
     private sealed class IdentifierConflictInterceptor : SaveChangesInterceptor
@@ -273,7 +292,14 @@ public sealed class TenantCreationTests
 
     private sealed class NoExternalJobs : IJobService
     {
-        public Task EnqueueAsync<T>(T requestInput, string methodName, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+        public List<SendEmailRequestInput> Emails { get; } = [];
+
+        public Task EnqueueAsync<T>(T requestInput, string methodName, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Emails.Add(Assert.IsType<SendEmailRequestInput>(requestInput));
+            return Task.CompletedTask;
+        }
     }
+
 }

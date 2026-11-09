@@ -3,7 +3,6 @@ using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
@@ -18,6 +17,14 @@ public sealed class GetUsers
 {
     internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
+        private static readonly HashSet<string> QueryProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            nameof(UserDto.Id), nameof(UserDto.UserName), nameof(UserDto.FirstName), nameof(UserDto.LastName),
+            nameof(UserDto.Email), nameof(UserDto.IsActive), nameof(UserDto.EmailConfirmed), nameof(UserDto.PhoneNumber),
+            nameof(UserDto.CreatedOn), nameof(UserDto.CreatedById), nameof(UserDto.UpdatedOn), nameof(UserDto.UpdatedById),
+            nameof(UserDto.IsDeleted), nameof(UserDto.DeleteReason)
+        };
+
         public async Task<Response<PaginationResponse<UserDto>>> GetAsync(
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
@@ -52,6 +59,7 @@ public sealed class GetUsers
                                 Id = x.CreatedBy.Id,
                                 FirstName = x.CreatedBy.FirstName,
                                 LastName = x.CreatedBy.LastName,
+                                Email = x.CreatedBy.Email ?? string.Empty,
                                 CreatedOn = x.CreatedBy.CreatedOn
                             }
                             : null,
@@ -62,37 +70,24 @@ public sealed class GetUsers
                             Id = x.UpdatedBy.Id,
                             FirstName = x.UpdatedBy.FirstName,
                             LastName = x.UpdatedBy.LastName,
+                            Email = x.UpdatedBy.Email ?? string.Empty,
                             CreatedOn = x.UpdatedBy.CreatedOn
                         }
                         : null,
                     UpdatedById = x.UpdatedById
                 });
 
-            // Apply filters
-            if (!string.IsNullOrEmpty(requestInput.Filter))
+            if (!query.TryApplyListQuery(requestInput, QueryProperties, out query, out string error))
             {
-                if (requestInput.Filter.Contains("!=") ||
-                    requestInput.Filter.Contains("==") ||
-                    requestInput.Filter.Contains(".Contains(") ||
-                    requestInput.Filter.Contains(".StartsWith(") ||
-                    requestInput.Filter.Contains(".EndsWith(") ||
-                    requestInput.Filter.Contains("np("))
-                {
-                    query = query.Where(requestInput.Filter);
-                }
-                else
-                {
-                    string filter = requestInput.Filter.ToLower();
-                    query = query.Where(c =>
-                        (c.FirstName ?? "").ToLower().Contains(filter) ||
-                        (c.LastName ?? "").ToLower().Contains(filter));
-                }
+                return Response<PaginationResponse<UserDto>>.BadRequest(error);
             }
 
-            // Apply sorting
-            if (!string.IsNullOrEmpty(requestInput.OrderBy))
+            if (!string.IsNullOrWhiteSpace(requestInput.Query))
             {
-                query = query.OrderBy(requestInput.OrderBy);
+                string search = requestInput.Query.ToLowerInvariant();
+                query = query.Where(c =>
+                    (c.FirstName ?? "").ToLower().Contains(search) ||
+                    (c.LastName ?? "").ToLower().Contains(search));
             }
 
             List<UserDto> items = await query

@@ -1,0 +1,382 @@
+@page "/account/two-factor"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth
+@using AditiKraft.Krafter.UI.Web.Client.Common.Models
+@using AditiKraft.Krafter.Contracts.Contracts.Auth
+@inject ITwoFactorApi Api
+@inject IAuthenticationService Authentication
+@inject AccountSecurityNavigationGuard SecurityNavigationGuard
+@inject DialogService Dialogs
+@inject IJSRuntime Js
+@implements IDisposable
+
+<PageTitle>Two-factor authentication</PageTitle>
+<NavigationLock ConfirmExternalNavigation="GuardNavigation" OnBeforeInternalNavigation="PreventRecoveryCodeLoss" />
+<RadzenCard Style="max-width:48rem; margin:1rem auto">
+    <h1>Two-factor authentication</h1>
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" AllowClose="false" role="alert">@error</RadzenAlert>
+    }
+    @if (!string.IsNullOrEmpty(navigationWarning))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false" role="alert">@navigationWarning</RadzenAlert>
+    }
+    @if (recoveryCodes is not null)
+    {
+        <h2>Save your recovery codes</h2>
+        <p>Each code can be used once in place of your authenticator. Store them somewhere safe. These codes will not be shown again.</p>
+        <p>Your previous sessions have been revoked. After saving these codes, sign in again.</p>
+        <ul>@foreach (string recoveryCode in recoveryCodes) { <li><code>@recoveryCode</code></li> }</ul>
+        <RadzenButton Text="Download recovery codes" Click="@DownloadCodesAsync" IsBusy="downloadingCodes" Disabled="signingOut" />
+        @if (downloadRequested)
+        {
+            <p role="status">Download requested. Check that the file was saved before confirming below.</p>
+        }
+        <div class="rz-my-3">
+            <RadzenCheckBox TValue="bool" Name="RecoveryCodesSaved" Value="recoveryCodesSaved" ValueChanged="@AcknowledgeSavedCodes" Disabled="@(downloadingCodes || signingOut)" />
+            <RadzenLabel Component="RecoveryCodesSaved" Text="I have saved these recovery codes in a safe place." />
+        </div>
+        <RadzenButton Text="I saved my codes — sign in again" Click="@SignInAgainAsync" IsBusy="signingOut" Disabled="@(!recoveryCodesSaved || downloadingCodes)" ButtonStyle="ButtonStyle.Light" />
+    }
+    else if (setup is not null)
+    {
+        <h2>Scan with your authenticator</h2>
+        <p>Scan this QR code in your authenticator app, or enter the setup key manually.</p>
+        <img src="@QrImage" alt="Authenticator enrollment QR code" width="240" height="240" />
+        <p>Setup key: <code>@setup.SharedKey</code></p>
+        <RadzenTemplateForm Data="@confirmation" Submit="@((TwoFactorRequest request) => ConfirmSetupAsync(request))">
+            <RadzenLabel Text="Six-digit authenticator code" Component="EnrollmentCode" />
+            <RadzenTextBox Name="EnrollmentCode" @bind-Value="confirmation.Code" autocomplete="one-time-code" Style="width:100%" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Verify and enable" IsBusy="busy" class="rz-mt-3" />
+            <RadzenButton Text="Cancel setup" Click="@CancelSetupAsync" Disabled="busy" ButtonStyle="ButtonStyle.Light" />
+        </RadzenTemplateForm>
+    }
+    else if (signInRequired)
+    {
+        <p>Two-factor authentication has been disabled. Sign in again to continue.</p>
+        <RadzenButton Text="Sign in again" Click="@SignInAgainAsync" IsBusy="signingOut" />
+    }
+    else if (status is null)
+    {
+        <p>@(string.IsNullOrEmpty(error) ? "Loading account security…" : "Account security is unavailable. Reload this page to try again.")</p>
+    }
+    else
+    {
+        <p>Status: <strong>@(status.IsEnabled ? "Enabled" : "Not enabled")</strong></p>
+        @if (status.IsEnabled)
+        {
+            <p>Recovery codes remaining: @status.RecoveryCodesRemaining</p>
+            <p>Verify an unused authenticator code or a recovery code before changing these settings. If you just used a code, wait for the next code.</p>
+            <RadzenLabel Text="Authenticator or recovery code" Component="ManagementCode" />
+            <RadzenTextBox Name="ManagementCode" @bind-Value="proof.Code" autocomplete="one-time-code" Style="width:100%" />
+            <div class="rz-my-3"><RadzenCheckBox @bind-Value="proof.UseRecoveryCode" Name="ManagementRecovery" /><RadzenLabel Component="ManagementRecovery" Text="Use a recovery code" /></div>
+            <RadzenButton Text="Replace authenticator" Click="@BeginSetupAsync" IsBusy="busy" />
+            <RadzenButton Text="Generate new recovery codes" Click="@RegenerateCodesAsync" Disabled="busy" class="rz-m-2" />
+            <RadzenButton Text="Disable two-factor authentication" Click="@DisableAsync" Disabled="busy" ButtonStyle="ButtonStyle.Danger" />
+        }
+        else
+        {
+            <p>Add an authenticator app to protect your account with a second verification step.</p>
+            @if (status.HasPassword)
+            {
+                <RadzenLabel Text="Current password" Component="EnrollmentPassword" />
+                <RadzenPassword Name="EnrollmentPassword" @bind-Value="proof.Password" autocomplete="current-password" Style="width:100%" />
+            }
+            else
+            {
+                <p>For a Google-only account, sign in with Google again before setup. Your primary sign-in must be within the last five minutes.</p>
+            }
+            <RadzenButton Text="Set up authenticator" Click="@BeginSetupAsync" IsBusy="busy" class="rz-mt-3" />
+        }
+    }
+</RadzenCard>
+
+@code
+{
+    private TwoFactorStatusResponse? status;
+    private TwoFactorSetupResponse? setup;
+    private IReadOnlyList<string>? recoveryCodes;
+    private readonly TwoFactorManagementRequest proof = new();
+    private readonly TwoFactorRequest confirmation = new();
+    private string? error;
+    private string? navigationWarning;
+    private bool busy;
+    private bool secretRequestPending;
+    private bool recoveryCodesSaved;
+    private bool downloadingCodes;
+    private bool downloadRequested;
+    private bool signingOut;
+    private bool signInRequired;
+    private IDisposable? navigationGuardRegistration;
+    private string? NavigationBlockingMessage => secretRequestPending
+        ? "Please wait for the account security request to finish before leaving this page."
+        : recoveryCodes is not null && !recoveryCodesSaved
+            ? "Save your recovery codes and confirm that you have saved them before leaving this page."
+            : null;
+    private bool GuardNavigation => NavigationBlockingMessage is not null;
+    private string QrImage => "data:image/svg+xml;base64," + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(setup!.QrCodeSvg));
+
+    protected override async Task OnInitializedAsync()
+    {
+        navigationGuardRegistration = SecurityNavigationGuard.Register(() => NavigationBlockingMessage);
+        LocalAppState.CurrentPageTitle = "Two-factor authentication";
+        // Secret-bearing setup and recovery responses never participate in SSR persistence.
+        if (OperatingSystem.IsBrowser())
+        {
+            await LoadStatusAsync();
+        }
+    }
+
+    private async Task LoadStatusAsync()
+    {
+        status = null;
+        error = null;
+        Response<TwoFactorStatusResponse> result = await AuthApiErrors.CallAsync(() => Api.StatusAsync());
+        if (result.IsError)
+        {
+            error = result.Message;
+        }
+        else
+        {
+            status = result.Data;
+        }
+    }
+
+    private async Task BeginSetupAsync()
+    {
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        secretRequestPending = true;
+        error = null;
+        navigationWarning = null;
+        try
+        {
+            Response<TwoFactorSetupResponse> result = await AuthApiErrors.CallAsync(() => Api.SetupAsync(proof));
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                setup = result.Data;
+                confirmation.ChallengeId = setup!.EnrollmentId;
+            }
+        }
+        finally
+        {
+            ClearProof();
+            secretRequestPending = false;
+            navigationWarning = null;
+            busy = false;
+        }
+    }
+
+    private async Task ConfirmSetupAsync(TwoFactorRequest _)
+    {
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        secretRequestPending = true;
+        error = null;
+        navigationWarning = null;
+        try
+        {
+            Response<RecoveryCodesResponse> result = await AuthApiErrors.CallAsync(() => Api.ConfirmAsync(confirmation));
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                recoveryCodes = result.Data!.Codes;
+                recoveryCodesSaved = false;
+                downloadRequested = false;
+                setup = null;
+            }
+        }
+        finally
+        {
+            confirmation.Code = string.Empty;
+            secretRequestPending = false;
+            navigationWarning = null;
+            busy = false;
+        }
+    }
+
+    private async Task RegenerateCodesAsync()
+    {
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        // Keep the page until the result arrives: canceling an HTTP request cannot undo a committed replacement.
+        secretRequestPending = true;
+        error = null;
+        navigationWarning = null;
+        try
+        {
+            if (await Dialogs.Confirm("This invalidates every previous recovery code and session. Continue?", "Replace recovery codes") != true)
+            {
+                return;
+            }
+            Response<RecoveryCodesResponse> result = await AuthApiErrors.CallAsync(() => Api.RegenerateAsync(proof));
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                recoveryCodes = result.Data!.Codes;
+                recoveryCodesSaved = false;
+                downloadRequested = false;
+            }
+        }
+        finally
+        {
+            ClearProof();
+            secretRequestPending = false;
+            navigationWarning = null;
+            busy = false;
+        }
+    }
+
+    private async Task DisableAsync()
+    {
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        error = null;
+        try
+        {
+            if (await Dialogs.Confirm("Disable two-factor authentication and revoke your previous sessions?", "Disable two-factor authentication") != true)
+            {
+                return;
+            }
+            Response result = await AuthApiErrors.CallAsync(() => Api.DisableAsync(proof));
+            if (result.IsError)
+            {
+                error = result.Message;
+            }
+            else
+            {
+                signInRequired = true;
+                await SignInAgainAsync();
+            }
+        }
+        finally
+        {
+            ClearProof();
+            busy = false;
+        }
+    }
+
+    private async Task CancelSetupAsync()
+    {
+        if (busy)
+        {
+            return;
+        }
+        busy = true;
+        try
+        {
+            setup = null;
+            confirmation.Code = string.Empty;
+            confirmation.ChallengeId = string.Empty;
+            // A recovery code used to start replacement has already been consumed.
+            await LoadStatusAsync();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+    private void ClearProof()
+    {
+        proof.Password = string.Empty;
+        proof.Code = string.Empty;
+    }
+    private void PreventRecoveryCodeLoss(LocationChangingContext context)
+    {
+        if (NavigationBlockingMessage is not { } message)
+        {
+            return;
+        }
+
+        context.PreventNavigation();
+        navigationWarning = message;
+    }
+
+    private void AcknowledgeSavedCodes(bool saved)
+    {
+        if (recoveryCodes is null || downloadingCodes || signingOut)
+        {
+            return;
+        }
+
+        recoveryCodesSaved = saved;
+        navigationWarning = null;
+    }
+
+    private async Task DownloadCodesAsync()
+    {
+        if (recoveryCodes is null || downloadingCodes || signingOut)
+        {
+            return;
+        }
+
+        downloadingCodes = true;
+        error = null;
+        try
+        {
+            await Js.InvokeVoidAsync("krafterDownloadRecoveryCodes", string.Join(Environment.NewLine, recoveryCodes));
+            // Starting a browser download does not prove the user saved the file.
+            downloadRequested = true;
+        }
+        catch (JSException)
+        {
+            error = "Unable to start the download. Copy the recovery codes above to a safe place, then confirm that you saved them.";
+        }
+        finally
+        {
+            downloadingCodes = false;
+        }
+    }
+
+    private async Task SignInAgainAsync()
+    {
+        if (signingOut || secretRequestPending || downloadingCodes || (recoveryCodes is not null && !recoveryCodesSaved))
+        {
+            return;
+        }
+
+        signingOut = true;
+        error = null;
+        try
+        {
+            if (await Authentication.LogoutAsync("MFA settings changed"))
+            {
+                recoveryCodes = null;
+                setup = null;
+            }
+            else
+            {
+                error = Authentication.ErrorMessage;
+            }
+        }
+        finally
+        {
+            signingOut = false;
+        }
+    }
+
+    public void Dispose() => navigationGuardRegistration?.Dispose();
+}

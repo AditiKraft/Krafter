@@ -4,11 +4,13 @@ namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 public interface IAuthApiService
 {
-    public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation);
+    Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation);
+
+    public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation);
 
     public Task<Response<TokenResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellation);
 
-    public Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation);
+    public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation);
 
     public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation);
 

@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddOptions<JwtSettings>()
     .BindConfiguration($"SecuritySettings:{nameof(JwtSettings)}")
     .ValidateDataAnnotations()
+    .Validate<IHostEnvironment>((settings, environment) =>
+            environment.IsDevelopment() || settings.HasPrivateSigningKey(),
+        "Configure a private SecuritySettings:JwtSettings:Key of at least 32 UTF-8 bytes outside Development; the public example key is not allowed.")
     .ValidateOnStart();
 builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, ConfigureBlazorJwtBearerOptions>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -21,6 +23,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddUiHostServices(builder.Configuration);
 WebApplication app = builder.Build();
 
+app.UseForwardedHeaders();
 app.MapDefaultEndpoints();
 app.MapUiUrlConfiguration();
 if (app.Environment.IsDevelopment())
@@ -50,42 +53,8 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(
         typeof(AditiKraft.Krafter.UI.Web.Client._Imports).Assembly);
 
-MapAuthTokenEndpoints(app);
+app.MapAuthTokenBffEndpoints();
+app.MapTwoFactorBffEndpoints();
+app.MapGoogleOAuthEndpoints();
 
 app.Run();
-
-static void MapAuthTokenEndpoints(WebApplication app)
-{
-    app.MapGet($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Current}", async (IAuthApiService apiService) =>
-    {
-        Response<TokenResponse> res = await apiService.GetCurrentTokenAsync(CancellationToken.None);
-        return Results.Json(res, statusCode: res.StatusCode);
-    }).RequireAuthorization();
-
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}", async ([FromBody] TokenRequest request, IAuthApiService apiService,
-        [FromServices] IHttpClientFactory clientFactory) =>
-    {
-        Response<TokenResponse> res = await apiService.CreateTokenAsync(request, CancellationToken.None);
-        return Results.Json(res, statusCode: res.StatusCode);
-    });
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}", async ([FromBody] RefreshTokenRequest request,
-        IAuthApiService apiService,
-        [FromServices] IHttpClientFactory clientFactory) =>
-    {
-        Response<TokenResponse> tokenResponse = await apiService.RefreshTokenAsync(request, CancellationToken.None);
-        return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
-    });
-
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
-        async ([FromBody] TokenRequest request, IAuthApiService apiService) =>
-        {
-            Response<TokenResponse> tokenResponse = await apiService.ExternalAuthAsync(request, CancellationToken.None);
-            return Results.Json(tokenResponse, statusCode: tokenResponse.StatusCode);
-        });
-
-    app.MapPost($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}", async (IAuthApiService apiService) =>
-    {
-        await apiService.LogoutAsync(CancellationToken.None);
-        return Results.Ok();
-    });
-}

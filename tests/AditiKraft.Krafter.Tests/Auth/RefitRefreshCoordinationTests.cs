@@ -1,16 +1,16 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
-using AditiKraft.Krafter.UI.Web.Client;
 using AditiKraft.Krafter.UI.Web.Client.Features.Roles;
 using AditiKraft.Krafter.UI.Web.Client.Features.Users;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Http;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Refit;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Services;
+using AditiKraft.Krafter.UI.Web.Client;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -97,6 +97,13 @@ public sealed class RefitRefreshCoordinationTests
         AuthTokenService tokens,
         RefreshObservations observations) : IAuthenticationService
     {
+        public TwoFactorChallengeResponse? PendingChallenge => null;
+        public string? ErrorMessage => null;
+        public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+        public void CancelTwoFactor() =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         public event Action<string?>? LoginChange { add { } remove { } }
 
         public Task<bool> RefreshAsync()
@@ -106,7 +113,7 @@ public sealed class RefitRefreshCoordinationTests
         }
 
         public Task<bool> LoginAsync(TokenRequest model) => throw new NotSupportedException();
-        public Task LogoutAsync(string methodName) => throw new NotSupportedException();
+        public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) => throw new NotSupportedException();
     }
 
     private sealed class BrowserNavigationManager : NavigationManager
@@ -130,6 +137,9 @@ public sealed class RefitRefreshCoordinationTests
 
     private sealed class BlockingAuthApi(TokenResponse refreshed) : IAuthApiService
     {
+        public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         private int _refreshCount;
         public int RefreshCount => _refreshCount;
         public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -143,8 +153,8 @@ public sealed class RefitRefreshCoordinationTests
             return Response<TokenResponse>.Success(refreshed);
         }
 
-        public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
-        public Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
         public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation) => throw new NotSupportedException();
         public Task LogoutAsync(CancellationToken cancellation) => throw new NotSupportedException();
     }

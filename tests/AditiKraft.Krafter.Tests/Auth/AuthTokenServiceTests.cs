@@ -134,6 +134,30 @@ public sealed class AuthTokenServiceTests
     }
 
     [Fact]
+    public async Task CancellationBeforeACompletedRefreshResponseCannotSaveCredentials()
+    {
+        TokenResponse original = TokenTestData.Create(expired: true);
+        var storage = new TokenStorage(original);
+        using var cancellation = new CancellationTokenSource();
+        var api = new AuthApi
+        {
+            Refresh = _ =>
+            {
+                cancellation.Cancel();
+                // WaitAsync can return an already-completed task even when its token was canceled.
+                return Task.FromResult(Response<TokenResponse>.Success(TokenTestData.Create()));
+            }
+        };
+        using var coordinator = new TokenRefreshCoordinator();
+        var service = new AuthTokenService(api, storage, coordinator);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.RefreshAsync(cancellation.Token));
+        Assert.Same(original, storage.Tokens);
+        api.Refresh = _ => Task.FromResult(Response<TokenResponse>.Success(TokenTestData.Create()));
+        Assert.True(await service.RefreshAsync().WaitAsync(Timeout));
+    }
+
+    [Fact]
     public async Task CancellingAWaitingCallerDoesNotBlockLaterCalls()
     {
         var allowRefresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -248,6 +272,9 @@ public sealed class AuthTokenServiceTests
 
     private sealed class AuthApi : IAuthApiService
     {
+        public Task<Response<TokenResponse>> CompleteTwoFactorAsync(TwoFactorRequest request, CancellationToken cancellation) =>
+            throw new NotSupportedException("This test double does not exercise MFA.");
+
         public int RefreshCount { get; private set; }
         public Func<RefreshTokenRequest, Task<Response<TokenResponse>>> Refresh { get; set; } = _ => throw new NotSupportedException();
         public Func<Task<Response<TokenResponse>>> Current { get; init; } = () => throw new NotSupportedException();
@@ -259,8 +286,8 @@ public sealed class AuthTokenServiceTests
         }
 
         public Task<Response<TokenResponse>> GetCurrentTokenAsync(CancellationToken cancellation) => Current();
-        public Task<Response<TokenResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
-        public Task<Response<TokenResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> CreateTokenAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
+        public Task<Response<LoginResponse>> ExternalAuthAsync(TokenRequest request, CancellationToken cancellation) => throw new NotSupportedException();
         public Task LogoutAsync(CancellationToken cancellation) => throw new NotSupportedException();
     }
 }

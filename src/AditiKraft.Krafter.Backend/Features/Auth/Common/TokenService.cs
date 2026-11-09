@@ -28,23 +28,31 @@ public class TokenService(
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
 
-    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress)
+    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await userManager.FindByIdAsync(userId);
+        cancellationToken.ThrowIfCancellationRequested();
         if (user is null)
         {
             return Response<TokenResponse>.Unauthorized("Authentication Failed.");
         }
 
-        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress));
+        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress, authenticatedAt, method, mfaVerified, cancellationToken));
     }
 
-    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress)
+    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default)
     {
-        string token = GenerateJwt(user, ipAddress);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (user.TwoFactorEnabled && !mfaVerified)
+        {
+            throw new InvalidOperationException("MFA proof is required before token issuance.");
+        }
+
+        string token = GenerateJwt(user, ipAddress, authenticatedAt, method, mfaVerified);
         bool newTone = false;
         UserRefreshToken? tokenResponse =
-            await applicationDbContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id);
+            await applicationDbContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
         if (tokenResponse is null)
         {
             newTone = true;
@@ -66,19 +74,24 @@ public class TokenService(
             applicationDbContext.UserRefreshTokens.Update(tokenResponse);
         }
 
-        Response<List<string>>? permissions = await userService.GetPermissionsAsync(user.Id, CancellationToken.None);
-        await applicationDbContext.SaveChangesAsync();
+        Response<List<string>>? permissions = await userService.GetPermissionsAsync(user.Id, cancellationToken);
+        await applicationDbContext.SaveChangesAsync(cancellationToken);
         return new TokenResponse(token, tokenResponse.RefreshToken, tokenResponse.RefreshTokenExpiryTime,
             tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
     }
 
-    private string GenerateJwt(ApplicationUser user, string ipAddress) =>
-        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress));
+    private string GenerateJwt(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false) =>
+        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress, authenticatedAt, method, mfaVerified));
 
-    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress) =>
+    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false) =>
         new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
+            new(AppClaimTypes.TenantId, user.TenantId),
+            new(AppClaimTypes.AuthenticationVersion, user.AuthenticationVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new(AppClaimTypes.AuthenticationTime, (authenticatedAt ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()).ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new(AppClaimTypes.AuthenticationMethod, method),
+            new(AppClaimTypes.Mfa, mfaVerified ? "true" : "false"),
             new(ClaimTypes.Email, user.Email!),
             new(AppClaimTypes.Fullname, $"{user.FirstName} {user.LastName}"),
             new(ClaimTypes.Name, user.FirstName ?? string.Empty),

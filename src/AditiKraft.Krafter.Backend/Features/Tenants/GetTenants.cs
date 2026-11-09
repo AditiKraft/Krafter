@@ -2,7 +2,6 @@ using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
@@ -18,6 +17,13 @@ public sealed class GetTenants
 {
     internal sealed class Handler(TenantDbContext dbContext) : IScopedHandler
     {
+        private static readonly HashSet<string> QueryProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            nameof(TenantDto.Id), nameof(TenantDto.Name), nameof(TenantDto.Identifier), nameof(TenantDto.AdminEmail),
+            nameof(TenantDto.ValidUpto), nameof(TenantDto.IsActive), nameof(TenantDto.CreatedOn),
+            nameof(TenantDto.CreatedById), nameof(TenantDto.IsDeleted), nameof(TenantDto.DeleteReason)
+        };
+
         public async Task<Response<PaginationResponse<TenantDto>>> GetAsync(
             GetRequestInput requestInput,
             CancellationToken cancellationToken)
@@ -51,14 +57,16 @@ public sealed class GetTenants
                 DeleteReason = tenant.DeleteReason
             });
 
-            if (!string.IsNullOrEmpty(requestInput.Filter))
+            if (!query.TryApplyListQuery(requestInput, QueryProperties, out query, out string error))
             {
-                query = query.Where(requestInput.Filter);
+                return Response<PaginationResponse<TenantDto>>.BadRequest(error);
             }
 
-            if (!string.IsNullOrEmpty(requestInput.OrderBy))
+            if (!string.IsNullOrWhiteSpace(requestInput.Query))
             {
-                query = query.OrderBy(requestInput.OrderBy);
+                string search = requestInput.Query.ToLowerInvariant();
+                query = query.Where(tenant => (tenant.Name ?? "").ToLower().Contains(search) ||
+                    (tenant.Identifier ?? "").ToLower().Contains(search));
             }
 
             List<TenantDto> res =

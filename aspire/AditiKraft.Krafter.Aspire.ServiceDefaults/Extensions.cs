@@ -1,14 +1,18 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using System.Net;
 
 namespace AditiKraft.Krafter.Aspire.ServiceDefaults;
 
@@ -19,6 +23,16 @@ public static class Extensions
 {
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            // Retain the framework's loopback defaults. Trust additional immediate proxy hops explicitly.
+            foreach (string address in builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
+                options.KnownProxies.Add(IPAddress.Parse(address));
+            foreach (string network in builder.Configuration.GetSection("ReverseProxy:KnownNetworks").Get<string[]>() ?? [])
+                options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+        });
+
         builder.ConfigureOpenTelemetry();
 
         builder.AddDefaultHealthChecks();
@@ -27,8 +41,20 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default
-            http.AddStandardResilienceHandler();
+            http.AddStandardResilienceHandler(options =>
+            {
+                // One-use credentials and mutations cannot be replayed after an uncertain response.
+                // Safe reads retain the standard retry policy.
+                options.Retry.DisableForUnsafeHttpMethods();
+
+                // Per-client throttling does not mean the shared dependency is unavailable.
+                // Preserve the default handling of 408, 5xx, transport errors and timeouts.
+                var handlesDependencyFailure = options.CircuitBreaker.ShouldHandle;
+                options.CircuitBreaker.ShouldHandle = arguments =>
+                    arguments.Outcome.Result?.StatusCode == HttpStatusCode.TooManyRequests
+                        ? ValueTask.FromResult(false)
+                        : handlesDependencyFailure(arguments);
+            });
 
             // Turn on service discovery by default
             http.AddServiceDiscovery();

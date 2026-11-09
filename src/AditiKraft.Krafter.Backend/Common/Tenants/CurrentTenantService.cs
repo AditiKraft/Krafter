@@ -7,6 +7,8 @@ namespace AditiKraft.Krafter.Backend.Common.Tenants;
 
 public class CurrentTenantService : ITenantGetterService, ITenantSetterService
 {
+    public const string ResolvedTenantItemKey = "Krafter.ResolvedTenant";
+
     public CurrentTenantDetails Tenant { get; private set; } =
         SeedDataConstants.DefaultTenant.Adapt<CurrentTenantDetails>();
 
