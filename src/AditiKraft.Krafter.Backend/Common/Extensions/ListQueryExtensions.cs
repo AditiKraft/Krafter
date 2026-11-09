@@ -34,7 +34,8 @@ public static class ListQueryExtensions
             {
                 Expression<Func<T, bool>> filter = DynamicExpressionParser.ParseLambda<T, bool>(
                     Parsing, false, request.Filter);
-                new FilterValidator(filter.Parameters[0], properties).Visit(filter.Body);
+                filter = filter.Update(new FilterValidator(filter.Parameters[0], properties).Visit(filter.Body)!,
+                    filter.Parameters);
                 query = query.Where(filter);
             }
 
@@ -73,6 +74,7 @@ public static class ListQueryExtensions
     {
         private int nodes;
         private int classifiedNodes;
+        private bool visitingNullGuard;
         private readonly Dictionary<Expression, TextKind> textKinds = [];
         private readonly Dictionary<Expression, bool> nullGuards = [];
 
@@ -96,16 +98,67 @@ public static class ListQueryExtensions
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (node != parameter)
-                throw new ArgumentException("Unsupported filter parameter.");
-            return node;
+            // A projected DTO is only a receiver for an allowed property. Comparing
+            // the entire DTO (even with null or itself) cannot be translated by EF.
+            throw new ArgumentException("Unsupported filter parameter.");
         }
 
         protected override Expression VisitMember(MemberExpression node)
         {
             if (node.Expression != parameter || !properties.Contains(node.Member.Name))
                 throw new ArgumentException("Unsupported filter property.");
-            return base.VisitMember(node);
+            return node;
+        }
+
+        protected override Expression VisitBinary(BinaryExpression node)
+        {
+            if (visitingNullGuard && (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual) &&
+                ((node.Left == parameter && node.Right is ConstantExpression { Value: null }) ||
+                 (node.Right == parameter && node.Left is ConstantExpression { Value: null })))
+            {
+                // np(...) guards both the row and its property. These list queries
+                // construct a non-null DTO for every row, so fold just that guard.
+                return Expression.Constant(node.NodeType == ExpressionType.NotEqual);
+            }
+            var visited = (BinaryExpression)base.VisitBinary(node);
+            if (!visitingNullGuard) return visited;
+
+            // Visit both operands first so folding a guard cannot bypass validation.
+            return visited switch
+            {
+                { NodeType: ExpressionType.AndAlso, Left: ConstantExpression { Value: true } } => visited.Right,
+                { NodeType: ExpressionType.AndAlso, Left: ConstantExpression { Value: false } } => visited.Left,
+                { NodeType: ExpressionType.AndAlso, Right: ConstantExpression { Value: true } } => visited.Left,
+                { NodeType: ExpressionType.AndAlso, Right: ConstantExpression { Value: false } } => visited.Right,
+                { NodeType: ExpressionType.OrElse, Left: ConstantExpression { Value: true } } => visited.Left,
+                { NodeType: ExpressionType.OrElse, Left: ConstantExpression { Value: false } } => visited.Right,
+                { NodeType: ExpressionType.OrElse, Right: ConstantExpression { Value: true } } => visited.Right,
+                { NodeType: ExpressionType.OrElse, Right: ConstantExpression { Value: false } } => visited.Left,
+                _ => visited
+            };
+        }
+
+        protected override Expression VisitConditional(ConditionalExpression node)
+        {
+            if (!IsRowText(node)) return base.VisitConditional(node);
+
+            bool previous = visitingNullGuard;
+            Expression test;
+            visitingNullGuard = true;
+            try
+            {
+                test = Visit(node.Test)!;
+            }
+            finally
+            {
+                visitingNullGuard = previous;
+            }
+            Expression ifTrue = Visit(node.IfTrue)!;
+            Expression ifFalse = Visit(node.IfFalse)!;
+            // Validate both branches before choosing the normalized guard's result.
+            return test is ConstantExpression { Value: bool condition }
+                ? condition ? ifTrue : ifFalse
+                : node.Update(test, ifTrue, ifFalse);
         }
 
         protected override Expression VisitConstant(ConstantExpression node)
@@ -125,13 +178,16 @@ public static class ListQueryExtensions
                                     node.Arguments.Count == 1 && IsLiteralText(node.Arguments[0]);
             bool nullCheck = (node.Method.Name is nameof(string.IsNullOrEmpty) or nameof(string.IsNullOrWhiteSpace)) &&
                              node.Object is null && node.Arguments.Count == 1 && node.Arguments[0].Type == typeof(string);
+            // A root null guard can reduce a row-text receiver to null. Classify the
+            // rewritten receiver before EF can evaluate a now-constant method call.
+            node = (MethodCallExpression)base.VisitMethodCall(node);
             if (node.Method.DeclaringType != typeof(string) ||
                 (!nullCheck && (node.Object is null || (!IsRowText(node.Object) && !IsLiteralText(node.Object)) ||
                                 (!caseConversion && !stringComparison))))
             {
                 throw new ArgumentException("Unsupported filter method.");
             }
-            return base.VisitMethodCall(node);
+            return node;
         }
 
         private bool IsLiteralText(Expression node) => ClassifyText(node) == TextKind.Literal;

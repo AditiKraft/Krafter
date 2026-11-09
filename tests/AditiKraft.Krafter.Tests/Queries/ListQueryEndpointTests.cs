@@ -5,6 +5,7 @@ using AditiKraft.Krafter.Backend.Features.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Features.Users;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
+using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
@@ -31,6 +32,17 @@ public sealed class ListQueryEndpointTests
     [InlineData("Filter", "Id ==")]
     [InlineData("Filter", "Id.PadLeft(100) == \"x\"")]
     [InlineData("Filter", "Id.get_Length() > 0")]
+    [InlineData("Filter", "it == null")]
+    [InlineData("Filter", "it != null")]
+    [InlineData("Filter", "it == it")]
+    [InlineData("Filter", "it != it")]
+    [InlineData("Filter", "(Id != null ? it : null) != null")]
+    [InlineData("Filter", "(it == null ? Id : null).ToLower() == \"x\"")]
+    [InlineData("Filter", "(it != null ? null : Id).Contains(\"x\")")]
+    [InlineData("Filter", "(it == null && Id != null ? Id : null).ToLower() == \"x\"")]
+    [InlineData("Filter", "(it != null || Id != null ? null : Id).ToLower() == \"x\"")]
+    [InlineData("Filter", "(it != null ? Id : \"a\\u0000b\").ToLower() == \"x\"")]
+    [InlineData("Filter", "(it == null ? Id.PadLeft(100) : Id).ToLower() == \"x\"")]
     [InlineData("Query", "a\0b")]
     [InlineData("Id", "a\0b")]
     [InlineData("Filter", "Id == \"a\0b\"")]
@@ -243,8 +255,13 @@ public sealed class ListQueryEndpointTests
         }
     }
 
-    [Fact]
-    public async Task NullPropagationFilterKeepsItsMeaning()
+    [Theory]
+    [InlineData("np(FirstName, \"\").ToLower().Contains(\"alice\")")]
+    [InlineData("(FirstName != null ? FirstName : \"\").ToLower().Contains(\"alice\")")]
+    [InlineData("(it != null && FirstName != null ? FirstName : \"\").ToLower().Contains(\"alice\")")]
+    [InlineData("(it == null ? \"\" : FirstName).ToLower().Contains(\"alice\")")]
+    [InlineData("(it != null ? FirstName : null).ToLower().Contains(\"alice\")")]
+    public async Task NullPropagationFilterKeepsItsMeaning(string filter)
     {
         await using var context = new IdentityTestContext();
         var user = await context.AddUserAsync("literal@example.test");
@@ -252,8 +269,8 @@ public sealed class ListQueryEndpointTests
         await context.Db.SaveChangesAsync();
         await using WebApplication app = await CreateAppAsync(context);
         using var client = Client(app);
-        string filter = Uri.EscapeDataString("np(FirstName, \"\").ToLower().Contains(\"alice\")");
-        var response = await client.GetFromJsonAsync<Response<PaginationResponse<UserDto>>>("/users/?Filter=" + filter);
+        var response = await client.GetFromJsonAsync<Response<PaginationResponse<UserDto>>>(
+            "/users/?Filter=" + Uri.EscapeDataString(filter));
         Assert.Equal(user.Id, Assert.Single(response!.Data!.Items).Id);
     }
 
@@ -261,11 +278,14 @@ public sealed class ListQueryEndpointTests
 
     private static HttpClient Client(WebApplication app) => new() { BaseAddress = new Uri(Assert.Single(app.Urls)) };
 
-    private static async Task<WebApplication> CreateAppAsync(IdentityTestContext context)
+    private static Task<WebApplication> CreateAppAsync(IdentityTestContext context) =>
+        CreateAppAsync(context.Db, context.TenantDb);
+
+    internal static async Task<WebApplication> CreateAppAsync(ApplicationDbContext db, TenantDbContext tenantDb)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
-        builder.Services.AddSingleton(context.Db);
-        builder.Services.AddSingleton(context.TenantDb);
+        builder.Services.AddSingleton(db);
+        builder.Services.AddSingleton(tenantDb);
         builder.Services.AddScoped<GetUsers.Handler>();
         builder.Services.AddScoped<GetUsersByRole.Handler>();
         builder.Services.AddScoped<GetRoles.Handler>();
