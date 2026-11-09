@@ -49,7 +49,7 @@
             <RadzenLabel Text="Six-digit authenticator code" Component="EnrollmentCode" />
             <RadzenTextBox Name="EnrollmentCode" @bind-Value="confirmation.Code" autocomplete="one-time-code" Style="width:100%" />
             <RadzenButton ButtonType="ButtonType.Submit" Text="Verify and enable" IsBusy="busy" class="rz-mt-3" />
-            <RadzenButton Text="Cancel setup" Click="@CancelSetup" Disabled="busy" ButtonStyle="ButtonStyle.Light" />
+            <RadzenButton Text="Cancel setup" Click="@CancelSetupAsync" Disabled="busy" ButtonStyle="ButtonStyle.Light" />
         </RadzenTemplateForm>
     }
     else if (signInRequired)
@@ -59,7 +59,7 @@
     }
     else if (status is null)
     {
-        <p>Loading account security…</p>
+        <p>@(string.IsNullOrEmpty(error) ? "Loading account security…" : "Account security is unavailable. Reload this page to try again.")</p>
     }
     else
     {
@@ -124,12 +124,22 @@
         // Secret-bearing setup and recovery responses never participate in SSR persistence.
         if (OperatingSystem.IsBrowser())
         {
-            Response<TwoFactorStatusResponse> result = await AuthApiErrors.CallAsync(() => Api.StatusAsync());
+            await LoadStatusAsync();
+        }
+    }
+
+    private async Task LoadStatusAsync()
+    {
+        status = null;
+        error = null;
+        Response<TwoFactorStatusResponse> result = await AuthApiErrors.CallAsync(() => Api.StatusAsync());
+        if (result.IsError)
+        {
+            error = result.Message;
+        }
+        else
+        {
             status = result.Data;
-            if (result.IsError)
-            {
-                error = result.Message;
-            }
         }
     }
 
@@ -269,15 +279,25 @@
         }
     }
 
-    private void CancelSetup()
+    private async Task CancelSetupAsync()
     {
         if (busy)
         {
             return;
         }
-        setup = null;
-        confirmation.Code = string.Empty;
-        confirmation.ChallengeId = string.Empty;
+        busy = true;
+        try
+        {
+            setup = null;
+            confirmation.Code = string.Empty;
+            confirmation.ChallengeId = string.Empty;
+            // A recovery code used to start replacement has already been consumed.
+            await LoadStatusAsync();
+        }
+        finally
+        {
+            busy = false;
+        }
     }
     private void ClearProof()
     {

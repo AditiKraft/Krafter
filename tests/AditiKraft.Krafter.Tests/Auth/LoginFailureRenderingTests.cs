@@ -116,6 +116,78 @@ public sealed class LoginFailureRenderingTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AnExistingSessionKeepsAnotherAccountsChallengeUntilVerificationOrCancellation(bool cancel)
+    {
+        await using var page = new LoginPage("", "/account/two-factor?tab=codes#help", authenticated: true);
+        page.Authentication.PendingChallenge = new("account-b-challenge", DateTimeOffset.UtcNow.AddMinutes(5));
+        await page.RenderAsync();
+
+        await page.RunAsync(async () =>
+        {
+            await ((IHandleAfterRender)page.Component).OnAfterRenderAsync();
+            Assert.Null(page.Navigation.Target);
+            Assert.Contains("Two-factor verification", page.Root.ToHtmlString());
+            Assert.Contains("name=\"VerificationCode\"", page.Root.ToHtmlString());
+            Assert.DoesNotContain("name=\"Email\"", page.Root.ToHtmlString());
+
+            if (cancel)
+            {
+                await page.CancelVerificationButton.Click.InvokeAsync(new MouseEventArgs());
+                await ((IHandleAfterRender)page.Component).OnAfterRenderAsync();
+                Assert.Null(page.Navigation.Target);
+                Assert.Contains("name=\"Email\"", page.Root.ToHtmlString());
+                Assert.DoesNotContain("Two-factor verification", page.Root.ToHtmlString());
+            }
+            else
+            {
+                TwoFactorRequest request = page.VerificationForm.Data;
+                request.Code = "test-recovery-code";
+                request.UseRecoveryCode = true;
+                await page.VerificationForm.Submit.InvokeAsync(request);
+                Assert.Equal("test-recovery-code", page.Authentication.VerifiedCode);
+                Assert.True(page.Authentication.VerifiedWithRecoveryCode);
+                Assert.Empty(request.Code);
+                Assert.Equal("/account/two-factor?tab=codes#help", page.Navigation.Target);
+            }
+            Assert.Null(page.Authentication.PendingChallenge);
+        });
+    }
+
+    [Fact]
+    public async Task ACurrentHandoffFailureRemainsVisibleEvenWithAnExistingSession()
+    {
+        const string message = "Unable to complete authentication. Please try again.";
+        await using var page = new LoginPage("", "/users", authenticated: true);
+        page.Authentication.ErrorMessage = message;
+        await page.RenderAsync();
+
+        await page.RunAsync(async () =>
+        {
+            await ((IHandleAfterRender)page.Component).OnAfterRenderAsync();
+            Assert.Contains("role=\"alert\"", page.Root.ToHtmlString());
+            Assert.Contains(message, page.Root.ToHtmlString());
+            Assert.Contains("name=\"Email\"", page.Root.ToHtmlString());
+            Assert.Null(page.Navigation.Target);
+        });
+    }
+
+    [Theory]
+    [InlineData("/account/two-factor?tab=codes#help", "/account/two-factor?tab=codes#help")]
+    [InlineData("//outside.example.test", "/")]
+    [InlineData("/Account/Login?ReturnUrl=/users", "/")]
+    public async Task AnExistingSessionWithoutASignInChallengeOrErrorUsesASafeDestination(string returnUrl, string expected)
+    {
+        await using var page = new LoginPage("", returnUrl, authenticated: true);
+        await page.RenderAsync();
+        await page.RunAsync(() => ((IHandleAfterRender)page.Component).OnAfterRenderAsync());
+
+        Assert.Equal(expected, page.Navigation.Target);
+        Assert.False(page.Navigation.ForceLoad);
+    }
+
+    [Theory]
     [InlineData("private-provider-response")]
     [InlineData("<script>private-provider-response</script>")]
     [InlineData("google-auth-failed:private-provider-response")]
@@ -174,6 +246,7 @@ public sealed class LoginFailureRenderingTests
         private readonly bool authenticated;
         private bool rendererDisposed;
         public Navigation Navigation { get; }
+        public CompletedAuthentication Authentication { get; } = new();
         public HtmlRootComponent Root { get; private set; }
 
         public LoginPage(string error, string returnUrl, bool authenticated, bool darkTheme = false)
@@ -185,7 +258,7 @@ public sealed class LoginFailureRenderingTests
             registrations.AddLogging();
             registrations.AddSingleton<NavigationManager>(Navigation);
             registrations.AddSingleton<IJSRuntime, NoJavaScript>();
-            registrations.AddSingleton<IAuthenticationService, CompletedAuthentication>();
+            registrations.AddSingleton<IAuthenticationService>(Authentication);
             registrations.AddSingleton<ThemeService>();
             registrations.AddSingleton<ThemeManager>();
             registrations.AddBlazoredSessionStorage();
@@ -204,6 +277,8 @@ public sealed class LoginFailureRenderingTests
             button.Attributes?.TryGetValue("aria-label", out object? label) == true && Equals(label, "Sign in with Google"));
         public RadzenImage GoogleImage => components.All.OfType<RadzenImage>().Single();
         public RadzenTemplateForm<TokenRequest> Form => components.All.OfType<RadzenTemplateForm<TokenRequest>>().Single();
+        public RadzenTemplateForm<TwoFactorRequest> VerificationForm => components.All.OfType<RadzenTemplateForm<TwoFactorRequest>>().Single();
+        public RadzenButton CancelVerificationButton => components.All.OfType<RadzenButton>().Single(button => button.Text == "Cancel");
         public Task RunAsync(Func<Task> action) => renderer.Dispatcher.InvokeAsync(action);
 
         public Task RenderAsync() => RunAsync(async () =>
@@ -267,14 +342,23 @@ public sealed class LoginFailureRenderingTests
 
     private sealed class CompletedAuthentication : IAuthenticationService
     {
-        public TwoFactorChallengeResponse? PendingChallenge => null;
-        public string? ErrorMessage => null;
+        public TwoFactorChallengeResponse? PendingChallenge { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? VerifiedCode { get; private set; }
+        public bool VerifiedWithRecoveryCode { get; private set; }
         public event Action<string?>? LoginChange { add { } remove { } }
         public Task<bool> LoginAsync(TokenRequest model) => Task.FromResult(true);
         public Task<bool> LogoutAsync(string methodName) => Task.FromResult(true);
-        public Task<bool> VerifyTwoFactorAsync(string code, bool recovery) => throw new NotSupportedException();
+        public Task<bool> VerifyTwoFactorAsync(string code, bool recovery)
+        {
+            Assert.NotNull(PendingChallenge);
+            VerifiedCode = code;
+            VerifiedWithRecoveryCode = recovery;
+            PendingChallenge = null;
+            return Task.FromResult(true);
+        }
         public Task<bool> RefreshAsync() => throw new NotSupportedException();
-        public void CancelTwoFactor() => throw new NotSupportedException();
+        public void CancelTwoFactor() { PendingChallenge = null; ErrorMessage = null; }
     }
 
     private sealed class NoJavaScript : IJSRuntime

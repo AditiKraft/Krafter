@@ -115,6 +115,97 @@ public sealed class MfaSettingsNavigationTests
         Assert.Null(page.Guard.BlockingMessage);
     }
 
+    [Fact]
+    public async Task CancelingReplacementReloadsTheCountAfterUsingTheLastRecoveryCode()
+    {
+        await using var page = new SettingsPage(enabled: true);
+        await page.RenderAsync();
+        await page.RunAsync(async () =>
+        {
+            Assert.Contains("Recovery codes remaining: 1", page.Root.ToHtmlString());
+            await page.TextBox("ManagementCode").ValueChanged.InvokeAsync("test-final-recovery-code");
+            await page.CheckBox("ManagementRecovery").ValueChanged.InvokeAsync(true);
+        });
+
+        await page.ClickAsync("Replace authenticator");
+        Assert.True(page.Api.UsedRecoveryCode);
+        Assert.Equal("test-final-recovery-code", page.Api.ManagementCode);
+        Assert.Equal(0, page.Api.RemainingRecoveryCodes);
+        await page.RunAsync(() =>
+        {
+            Assert.Contains("Scan with your authenticator", page.Root.ToHtmlString());
+            return Task.CompletedTask;
+        });
+
+        await page.ClickAsync("Cancel setup");
+
+        Assert.Equal(1, page.Api.StatusCount);
+        await page.RunAsync(() =>
+        {
+            Assert.Contains("Recovery codes remaining: 0", page.Root.ToHtmlString());
+            Assert.DoesNotContain("Recovery codes remaining: 1", page.Root.ToHtmlString());
+            Assert.DoesNotContain("Scan with your authenticator", page.Root.ToHtmlString());
+            Assert.Empty(page.TextBox("ManagementCode").Value);
+            Assert.False(page.Button("Replace authenticator").IsBusy);
+            return Task.CompletedTask;
+        });
+        Assert.True(await page.CanNavigateAsync());
+    }
+
+    [Fact]
+    public async Task FailedStatusRefreshAfterCancelDoesNotRestoreTheConsumedRecoveryCodeCount()
+    {
+        await using var page = new SettingsPage(enabled: true);
+        await page.RenderAsync();
+        await page.RunAsync(async () =>
+        {
+            await page.TextBox("ManagementCode").ValueChanged.InvokeAsync("test-final-recovery-code");
+            await page.CheckBox("ManagementRecovery").ValueChanged.InvokeAsync(true);
+        });
+        await page.ClickAsync("Replace authenticator");
+        Assert.Equal(0, page.Api.RemainingRecoveryCodes);
+        var response = new TaskCompletionSource<Response<TwoFactorStatusResponse>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        page.Api.StatusResponse = () => response.Task;
+        Task pending = await page.StartAsync(() => page.Button("Cancel setup").Click.InvokeAsync(new MouseEventArgs()));
+
+        try
+        {
+            await page.RunAsync(async () =>
+            {
+                Assert.DoesNotContain("Recovery codes remaining:", page.Root.ToHtmlString());
+                Assert.DoesNotContain("Scan with your authenticator", page.Root.ToHtmlString());
+                // Repeated callbacks cannot issue a second refresh while cancellation is busy.
+                await page.Button("Cancel setup").Click.InvokeAsync(new MouseEventArgs());
+            });
+            Assert.Equal(1, page.Api.StatusCount);
+            Assert.True(await page.CanNavigateAsync());
+        }
+        finally
+        {
+            response.TrySetResult(new Response<TwoFactorStatusResponse>
+            {
+                IsError = true,
+                StatusCode = 503,
+                Message = "Unable to load account security. Please try again.",
+                Data = new(true, 1, true)
+            });
+            await pending.WaitAsync(Timeout);
+        }
+
+        await page.RunAsync(() =>
+        {
+            Assert.Contains("role=\"alert\"", page.Root.ToHtmlString());
+            Assert.Contains("Unable to load account security. Please try again.", page.Root.ToHtmlString());
+            Assert.Contains("Account security is unavailable. Reload this page to try again.", page.Root.ToHtmlString());
+            Assert.DoesNotContain("Loading account security", page.Root.ToHtmlString());
+            Assert.DoesNotContain("Recovery codes remaining:", page.Root.ToHtmlString());
+            Assert.DoesNotContain("Scan with your authenticator", page.Root.ToHtmlString());
+            return Task.CompletedTask;
+        });
+        Assert.Null(page.Guard.BlockingMessage);
+        Assert.True(await page.CanNavigateAsync());
+    }
+
     [Theory]
     [InlineData("setup")]
     [InlineData("confirm")]
@@ -485,12 +576,30 @@ public sealed class MfaSettingsNavigationTests
         public Func<Task<Response<TwoFactorSetupResponse>>> SetupResponse { get; set; } = () => Task.FromResult(
             Response<TwoFactorSetupResponse>.Success(new("test-enrollment", "test-key", "<svg xmlns='http://www.w3.org/2000/svg'/>", DateTimeOffset.UtcNow.AddMinutes(5))));
         public Func<Task<Response<RecoveryCodesResponse>>> SecretResponse { get; set; } = () => Task.FromResult(Response<RecoveryCodesResponse>.Success(new(TestCodes)));
+        public Func<Task<Response<TwoFactorStatusResponse>>>? StatusResponse { get; set; }
         public int RegenerationCount { get; private set; }
         public int DisableCount { get; private set; }
+        public int StatusCount { get; private set; }
+        public int RemainingRecoveryCodes { get; private set; } = 1;
         public bool UsedRecoveryCode { get; private set; }
         public string? ManagementCode { get; private set; }
-        public Task<Response<TwoFactorStatusResponse>> StatusAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<Response<TwoFactorSetupResponse>> SetupAsync(TwoFactorManagementRequest request, CancellationToken cancellationToken = default) => SetupResponse();
+        public Task<Response<TwoFactorStatusResponse>> StatusAsync(CancellationToken cancellationToken = default)
+        {
+            StatusCount++;
+            return StatusResponse?.Invoke() ?? Task.FromResult(Response<TwoFactorStatusResponse>.Success(new(true, RemainingRecoveryCodes, true)));
+        }
+        public async Task<Response<TwoFactorSetupResponse>> SetupAsync(TwoFactorManagementRequest request, CancellationToken cancellationToken = default)
+        {
+            UsedRecoveryCode = request.UseRecoveryCode;
+            ManagementCode = request.Code;
+            Response<TwoFactorSetupResponse> response = await SetupResponse();
+            if (!response.IsError && request.UseRecoveryCode)
+            {
+                // Model the server consuming successful recovery proof before returning enrollment material.
+                RemainingRecoveryCodes--;
+            }
+            return response;
+        }
         public Task<Response<RecoveryCodesResponse>> ConfirmAsync(TwoFactorRequest request, CancellationToken cancellationToken = default)
         {
             SecretRequestStarted.TrySetResult();

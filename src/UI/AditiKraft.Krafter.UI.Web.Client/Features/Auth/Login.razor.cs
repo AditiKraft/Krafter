@@ -64,9 +64,9 @@ public partial class Login(
     protected override async Task OnInitializedAsync()
     {
         AuthenticationState authState = await AuthState;
-        if (QueryErrorMessage is not null)
+        if (authenticationService.PendingChallenge is not null || DisplayError is not null)
         {
-            // A failed provider round-trip must remain visible even if another session exists.
+            // Keep the current sign-in challenge or failure visible even if another session exists.
             return;
         }
         if (authState.User.Identity?.IsAuthenticated is true)
