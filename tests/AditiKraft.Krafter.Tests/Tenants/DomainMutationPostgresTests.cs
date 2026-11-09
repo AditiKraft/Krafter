@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace AditiKraft.Krafter.Tests.Tenants;
 
@@ -202,17 +203,68 @@ public sealed class DomainMutationPostgresTests
         fault.BeforeSave = _ => throw new InvalidOperationException("Injected registry failure.");
         await using (var scope = provider.CreateAsyncScope())
         {
+            var registry = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            string applicationName = "registry-rollback-" + Guid.NewGuid().ToString("N");
+            registry.Database.SetConnectionString(new NpgsqlConnectionStringBuilder(Connection)
+            { ApplicationName = applicationName }.ConnectionString);
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
                 scope.ServiceProvider.GetRequiredService<IUserMutationService>().UpdateAsync(actorId,
-                    new CreateUserRequest { FirstName = "Changed", LastName = "Profile", Email = "changed@example.com" }, CancellationToken.None));
+                    new CreateUserRequest
+                    { FirstName = "Changed", LastName = "Profile", Email = "changed@example.com", UpdateTenantEmail = true }, CancellationToken.None));
             Assert.Empty(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().ChangeTracker.Entries());
-            Assert.Empty(scope.ServiceProvider.GetRequiredService<TenantDbContext>().ChangeTracker.Entries());
-            // The participant has its own connection again and cannot reuse the rolled-back transaction.
-            await scope.ServiceProvider.GetRequiredService<TenantDbContext>().SaveChangesAsync();
+            Assert.Empty(registry.ChangeTracker.Entries());
+            Assert.Null(fault.BeforeSave);
+            Assert.Equal(applicationName, await registry.Database
+                .SqlQueryRaw<string>("SELECT current_setting('application_name') AS \"Value\"").SingleAsync());
+            Tenant retained = await registry.Tenants.SingleAsync(tenant => tenant.Id == tenantId);
+            Assert.Equal("owner@example.com", retained.AdminEmail);
+            retained.Name = "Reused after rollback";
+            Assert.Equal(1, await registry.SaveChangesAsync());
         }
         await AssertEmailsAsync(provider, tenantId, "owner@example.com");
         await using var verify = provider.CreateAsyncScope();
         Assert.Equal("First", (await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users.SingleAsync()).FirstName);
+        Assert.Equal("Reused after rollback", (await verify.ServiceProvider.GetRequiredService<TenantDbContext>().Tenants
+            .SingleAsync(tenant => tenant.Id == tenantId)).Name);
+    }
+
+    [PostgresMfaFact]
+    public async Task UserDrivenOwnerEmailCommitRestoresParticipantConnectionForIndependentWrites()
+    {
+        string tenantId = Guid.NewGuid().ToString();
+        string actorId = Guid.NewGuid().ToString();
+        await using var provider = DomainTestServices.Provider(tenantId, actorId, Connection);
+        await DomainTestServices.MigrateAsync(provider);
+        await using (var seed = provider.CreateAsyncScope())
+        {
+            await DomainTestServices.AddUserAsync(seed.ServiceProvider, "owner@example.com", actorId, owner: true);
+            var registry = seed.ServiceProvider.GetRequiredService<TenantDbContext>();
+            registry.Tenants.Add(new Tenant
+            { Id = tenantId, Identifier = Identifier(), AdminEmail = "owner@example.com" });
+            await registry.SaveChangesAsync();
+        }
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var registry = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+            string applicationName = "registry-commit-" + Guid.NewGuid().ToString("N");
+            registry.Database.SetConnectionString(new NpgsqlConnectionStringBuilder(Connection)
+            { ApplicationName = applicationName }.ConnectionString);
+            Assert.False((await scope.ServiceProvider.GetRequiredService<IUserMutationService>().UpdateAsync(actorId,
+                new CreateUserRequest
+                { FirstName = "Changed", LastName = "Profile", Email = "changed@example.com", UpdateTenantEmail = true },
+                CancellationToken.None)).IsError);
+            Assert.Equal(applicationName, await registry.Database
+                .SqlQueryRaw<string>("SELECT current_setting('application_name') AS \"Value\"").SingleAsync());
+            Tenant committed = await registry.Tenants.SingleAsync(tenant => tenant.Id == tenantId);
+            Assert.Equal("changed@example.com", committed.AdminEmail);
+            committed.Name = "Reused after commit";
+            Assert.Equal(1, await registry.SaveChangesAsync());
+        }
+        await AssertEmailsAsync(provider, tenantId, "changed@example.com");
+        await using var verify = provider.CreateAsyncScope();
+        Assert.Equal("Changed", (await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users.SingleAsync()).FirstName);
+        Assert.Equal("Reused after commit", (await verify.ServiceProvider.GetRequiredService<TenantDbContext>().Tenants
+            .SingleAsync(tenant => tenant.Id == tenantId)).Name);
     }
 
     [PostgresMfaFact]

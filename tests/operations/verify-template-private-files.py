@@ -61,6 +61,12 @@ def fixture_bytes(source, relative, revision):
             return subprocess.check_output(["git", "show", f"{revision}:{relative}"], cwd=source,
                                            stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
+            # Older revisions predate the shared build properties. Preserve that
+            # absence as an empty props file without substituting current policy.
+            if relative == "Directory.Build.props":
+                subprocess.check_call(["git", "rev-parse", "--verify", f"{revision}^{{commit}}"],
+                                      cwd=source, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return b"<Project />\n"
             # Before the workflow split, main.yml was also the default application CI.
             if relative == ".github/workflows/validation.yml":
                 return subprocess.check_output(["git", "show", f"{revision}:.github/workflows/main.yml"], cwd=source)

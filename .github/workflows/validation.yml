@@ -7,11 +7,30 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: krafter_test
+          POSTGRES_PASSWORD: krafter_ci_only
+          POSTGRES_DB: krafter_mfa_tests
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U krafter_test -d krafter_mfa_tests"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      KRAFTER_TEST_POSTGRES: Host=localhost;Port=5432;Database=krafter_mfa_tests;Username=krafter_test;Password=krafter_ci_only
+      KRAFTER_TEST_OAUTH_POSTGRES: Host=localhost;Port=5432;Database=krafter_oauth_tests;Username=krafter_test;Password=krafter_ci_only
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Create dedicated OAuth test database
+        run: docker exec "${{ job.services.postgres.id }}" createdb --username krafter_test krafter_oauth_tests
       - name: Restore, build and test
         run: dotnet run --project ./build/_build.csproj -- --target Validate --configuration Release
