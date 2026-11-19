@@ -107,8 +107,13 @@ public sealed class GoogleProvisioningPostgresTests
         using var client = new HttpClient(transport);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         barrier.Enabled = true;
-        Task<Response<LoginResponse>> one = Handler(first, client).AuthenticateCodeAsync("first-code", new string('v', 43), deadline.Token);
-        Task<Response<LoginResponse>> two = Handler(second, client).AuthenticateCodeAsync("second-code", new string('w', 43), deadline.Token);
+        var firstHandler = Handler(first, client);
+        var secondHandler = Handler(second, client);
+        var firstProof = await firstHandler.VerifyCodeAsync("first-code", new string('v', 43), deadline.Token);
+        var secondProof = await secondHandler.VerifyCodeAsync("second-code", new string('w', 43), deadline.Token);
+        Assert.Equal(0, await setup.Db.Users.CountAsync());
+        Task<Response<LoginResponse>> one = firstHandler.RedeemAsync(firstProof.Data!, deadline.Token);
+        Task<Response<LoginResponse>> two = secondHandler.RedeemAsync(secondProof.Data!, deadline.Token);
         Response<LoginResponse>[] results;
         try
         {
@@ -145,6 +150,78 @@ public sealed class GoogleProvisioningPostgresTests
             (await check.Db.UserRefreshTokens.SingleAsync(token => token.UserId == created.Id)).RefreshToken);
     }
 
+    [Fact]
+    public async Task CallbackRetainsCurrentRefreshCredentialUntilRedemptionAsync()
+    {
+        using var harness = new MfaHarness();
+        using MfaScope account = harness.Scope();
+        var user = new ApplicationUser { Id = Guid.NewGuid().ToString(), Email = Email, UserName = Email, IsActive = true };
+        Assert.True((await account.Users.CreateAsync(user, MfaHarness.Password)).Succeeded);
+        var signedIn = await account.Mfa.PasswordLoginAsync(new() { Email = Email, Password = MfaHarness.Password }, "test");
+        string current = signedIn.Data!.Tokens!.RefreshToken;
+        using var client = new HttpClient(new GoogleTransport());
+        using MfaScope callback = harness.Scope();
+        var proof = await Handler(callback, client).VerifyCodeAsync("code", new string('v', 43), default);
+
+        Assert.Equal(user.Id, proof.Data!.UserId);
+        Assert.Equal(current, (await callback.Db.UserRefreshTokens.AsNoTracking().SingleAsync()).RefreshToken);
+        using MfaScope redemption = harness.Scope();
+        var result = await Handler(redemption, client).RedeemAsync(proof.Data, default);
+        Assert.NotEqual(current, result.Data!.Tokens!.RefreshToken);
+        Assert.Equal(result.Data.Tokens.RefreshToken,
+            (await redemption.Db.UserRefreshTokens.AsNoTracking().SingleAsync()).RefreshToken);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ExistingAccountHandoffCannotFollowReassignedEmailOrSurviveRevocationAsync(bool transferEmail)
+    {
+        using var harness = new MfaHarness();
+        using MfaScope account = harness.Scope();
+        var user = new ApplicationUser { Id = Guid.NewGuid().ToString(), Email = Email, UserName = Email, IsActive = true };
+        Assert.True((await account.Users.CreateAsync(user)).Succeeded);
+        using var client = new HttpClient(new GoogleTransport());
+        using MfaScope callback = harness.Scope();
+        var proof = await Handler(callback, client).VerifyCodeAsync("code", new string('v', 43), default);
+        if (transferEmail)
+        {
+            user.Email = user.UserName = "new-address@example.test";
+            Assert.True((await account.Users.UpdateAsync(user)).Succeeded);
+            var replacement = new ApplicationUser { Id = Guid.NewGuid().ToString(), Email = Email, UserName = Email, IsActive = true };
+            Assert.True((await account.Users.CreateAsync(replacement)).Succeeded);
+        }
+        else
+        {
+            user.AuthenticationVersion++;
+            Assert.True((await account.Users.UpdateAsync(user)).Succeeded);
+        }
+        using MfaScope redemption = harness.Scope();
+        var result = await Handler(redemption, client).RedeemAsync(proof.Data!, default);
+        Assert.Equal(401, result.StatusCode);
+        Assert.Empty(await redemption.Db.UserRefreshTokens.ToListAsync());
+    }
+
+    [Fact]
+    public async Task FirstSignInHandoffCannotClaimAnAccountCreatedBeforeRedemptionAsync()
+    {
+        using var harness = new MfaHarness();
+        using MfaScope account = harness.Scope();
+        await AddBasicRoleAsync(account);
+        using var client = new HttpClient(new GoogleTransport());
+        using MfaScope callback = harness.Scope();
+        var proof = await Handler(callback, client).VerifyCodeAsync("code", new string('v', 43), default);
+        Assert.Null(proof.Data!.UserId);
+        Assert.Empty(await callback.Db.Users.ToListAsync());
+
+        var created = new ApplicationUser { Id = Guid.NewGuid().ToString(), Email = Email, UserName = Email, IsActive = true };
+        Assert.True((await account.Users.CreateAsync(created)).Succeeded);
+        using MfaScope redemption = harness.Scope();
+        var result = await Handler(redemption, client).RedeemAsync(proof.Data, default);
+        Assert.Equal(401, result.StatusCode);
+        Assert.Empty(await redemption.Db.UserRefreshTokens.ToListAsync());
+    }
+
     private static async Task<ApplicationRole> AddBasicRoleAsync(MfaScope scope)
     {
         var role = new ApplicationRole { Id = Guid.NewGuid().ToString(), Name = RoleConstants.Basic };
@@ -154,7 +231,7 @@ public sealed class GoogleProvisioningPostgresTests
 
     private static ExternalAuth.Handler Handler(MfaScope scope, HttpClient client) => new(scope.Mfa, scope.Db, scope.Users,
         scope.Services.GetRequiredService<RoleManager<ApplicationRole>>(), new ExternalAuth.GoogleAuthClient(client,
-            Configuration(), NullLogger<ExternalAuth.GoogleAuthClient>.Instance));
+            Configuration(), NullLogger<ExternalAuth.GoogleAuthClient>.Instance), scope.Services.GetRequiredService<TimeProvider>());
 
     private static IConfiguration Configuration() => new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
     {
@@ -196,12 +273,15 @@ public sealed class GoogleProvisioningPostgresTests
 
     private sealed class ProvisioningAuthenticator(ExternalAuth.Handler handler) : IGoogleAccountAuthenticator
     {
-        public Response<LoginResponse>? Result { get; private set; }
-        public async Task<Response<LoginResponse>> AuthenticateAsync(GoogleLoginState state, string code, CancellationToken cancellationToken)
+        public Response<GoogleAccountProof>? Result { get; private set; }
+        public async Task<Response<GoogleAccountProof>> VerifyAsync(GoogleLoginState state, string code, CancellationToken cancellationToken)
         {
-            Result = await handler.AuthenticateCodeAsync(code, state.CodeVerifier, cancellationToken);
+            Result = await handler.VerifyCodeAsync(code, state.CodeVerifier, cancellationToken);
             return Result;
         }
+
+        public Task<Response<LoginResponse>> RedeemAsync(GoogleHandoff handoff, CancellationToken cancellationToken) =>
+            handler.RedeemAsync(handoff.Account, cancellationToken);
     }
 
     private sealed class Registry(string tenantId) : ITenantFinderService

@@ -61,18 +61,30 @@ public sealed class TwoFactorTests
     }
 
     [Fact]
-    public async Task GoogleOnlyEnrollmentRequiresRecentPrimaryAuthentication()
+    public async Task GoogleOnlyEnrollmentRequiresASingleUseEmailCodeFromTheInitiatingTab()
     {
         using var harness = new MfaHarness();
         using MfaScope scope = harness.Scope();
         var user = await scope.AddUserAsync();
         Assert.True((await scope.Users.RemovePasswordAsync(user)).Succeeded);
-        Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), new())).IsError);
-        var login = await scope.Mfa.ExternalLoginAsync(user.Id, "test");
+        var login = await scope.GoogleLoginAsync(user.Id);
         ClaimsPrincipal principal = MfaHarness.Principal(login.Data!.Tokens!);
-        Assert.False((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), principal)).IsError);
-        harness.Clock.Advance(TimeSpan.FromMinutes(6));
         Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), principal)).IsError);
+
+        var proof = await harness.EnrollmentEmailProofAsync(scope, user.Id, principal);
+        Assert.Equal(429, (await scope.Mfa.PrepareEnrollmentEmailAsync(user.Id, principal, default)).StatusCode);
+        Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { Code = proof.Code }, principal)).IsError);
+        Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new() { EnrollmentEmailId = proof.EnrollmentEmailId, Code = "wrong" }, principal)).IsError);
+        var secondLogin = await scope.GoogleLoginAsync(user.Id);
+        var otherSession = MfaHarness.Principal(secondLogin.Data!.Tokens!);
+        Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, proof, otherSession)).IsError);
+        Assert.False((await scope.Mfa.BeginEnrollmentAsync(user.Id, proof, principal)).IsError);
+        Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, proof, principal)).IsError);
+
+        harness.Clock.Advance(TimeSpan.FromMinutes(1));
+        var expires = await harness.EnrollmentEmailProofAsync(scope, user.Id, principal);
+        harness.Clock.Advance(TimeSpan.FromMinutes(5));
+        Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, expires, principal)).IsError);
     }
 
     [Fact]
@@ -175,7 +187,7 @@ public sealed class TwoFactorTests
         using MfaScope scope = harness.Scope();
         ApplicationUser user = await scope.AddUserAsync();
         (_, IReadOnlyList<string> codes) = await harness.EnrollAsync(scope, user);
-        Assert.True((await scope.Mfa.ExternalLoginAsync(user.Id, "test")).Data!.RequiresTwoFactor);
+        Assert.True((await scope.GoogleLoginAsync(user.Id)).Data!.RequiresTwoFactor);
         ClaimsPrincipal principal = await harness.ManagementPrincipalAsync(scope, user.Id);
         Assert.True((await scope.Mfa.DisableAsync(user.Id, new() { Password = MfaHarness.Password }, principal)).IsError);
         Assert.False((await scope.Mfa.DisableAsync(user.Id, new() { Code = codes[0], UseRecoveryCode = true }, principal)).IsError);
@@ -196,6 +208,8 @@ internal sealed class MfaHarness : IDisposable
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+        services.AddKeyedSingleton<IDataProtectionProvider>(TwoFactorProtectionOptions.ProviderKey,
+            (services, _) => services.GetRequiredService<IDataProtectionProvider>());
         services.AddSingleton<TimeProvider>(Clock);
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<CurrentTenantService>();
@@ -248,6 +262,12 @@ internal sealed class MfaHarness : IDisposable
         Assert.False(confirmed.IsError);
         return (setup.Data.SharedKey, confirmed.Data!.Codes);
     }
+    public async Task<TwoFactorManagementRequest> EnrollmentEmailProofAsync(MfaScope scope, string userId, ClaimsPrincipal principal)
+    {
+        var delivery = await scope.Mfa.PrepareEnrollmentEmailAsync(userId, principal, default);
+        Assert.False(delivery.IsError, delivery.Message);
+        return new() { EnrollmentEmailId = delivery.Data!.Challenge.Id, Code = delivery.Data.Code };
+    }
     public static TokenRequest PasswordRequest() => new() { Email = "user@example.com", Password = Password };
     public static ClaimsPrincipal Principal(TokenResponse response) => new(new ClaimsIdentity(new JwtSecurityTokenHandler().ReadJwtToken(response.Token).Claims, "test"));
     public void Dispose() => provider.Dispose();
@@ -268,6 +288,13 @@ internal sealed class MfaScope : IDisposable
     public TwoFactorService Mfa => scope.ServiceProvider.GetRequiredService<TwoFactorService>();
     public ITokenService Tokens => scope.ServiceProvider.GetRequiredService<ITokenService>();
     public SessionValidator Sessions => scope.ServiceProvider.GetRequiredService<SessionValidator>();
+    public async Task<Response<LoginResponse>> GoogleLoginAsync(string userId)
+    {
+        ApplicationUser user = await Db.Users.AsNoTracking().SingleAsync(account => account.Id == userId);
+        return await Mfa.ExternalLoginAsync(user.Id, "test", CancellationToken.None,
+            Services.GetRequiredService<TimeProvider>().GetUtcNow().ToUnixTimeSeconds(), user.Email!, user.AuthenticationVersion);
+    }
+
     public async Task<ApplicationUser> AddUserAsync()
     {
         var user = new ApplicationUser { Id = Guid.NewGuid().ToString(), UserName = "user@example.com", Email = "user@example.com", IsActive = true };

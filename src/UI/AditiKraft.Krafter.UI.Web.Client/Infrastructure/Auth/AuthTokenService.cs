@@ -4,12 +4,19 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
+internal enum CurrentSessionStatus { Valid, Rejected, Unavailable, Superseded }
+
 public sealed class AuthTokenService(
     IAuthApiService apiService,
     IAuthStorageService storage,
     TokenRefreshCoordinator coordinator)
 {
     public long SessionVersion => coordinator.SessionVersion;
+
+    // Rejection belongs to this tab's checked credential. Cookies and local storage are shared by all tabs.
+    private string? rejectedToken;
+    internal bool IsRejected(string? token) => token is not null && token == rejectedToken;
+    internal event Action? CurrentSessionRejected;
 
     public static bool NeedsRefresh(string? token)
     {
@@ -30,6 +37,12 @@ public sealed class AuthTokenService(
     }
 
     public Task<bool> RefreshAsync(CancellationToken cancellationToken = default) =>
+        RefreshAsync(cancellationToken, finishRotation: false);
+
+    public Task<bool> RefreshForRealtimeAsync(CancellationToken connectionCancellation) =>
+        RefreshAsync(connectionCancellation, finishRotation: true).WaitAsync(connectionCancellation);
+
+    private Task<bool> RefreshAsync(CancellationToken cancellationToken, bool finishRotation) =>
         coordinator.ExecuteAsync(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -49,20 +62,44 @@ public sealed class AuthTokenService(
             }
 
             var request = new RefreshTokenRequest { Token = token, RefreshToken = refreshToken };
-            Response<TokenResponse> response = await apiService.RefreshTokenAsync(request, cancellationToken).WaitAsync(cancellationToken);
-            // An implementation may ignore cancellation and return late. Never save that response.
-            cancellationToken.ThrowIfCancellationRequested();
+            // Once sent, a browser refresh can rotate the only valid proof. A realtime connection
+            // may stop waiting, but its teardown must not abandon the shared session's rotation.
+            using var deadline = finishRotation ? new CancellationTokenSource(TimeSpan.FromSeconds(100)) : null;
+            CancellationToken exchangeCancellation = deadline?.Token ?? cancellationToken;
+            Response<TokenResponse> response = await apiService.RefreshTokenAsync(request, exchangeCancellation)
+                .WaitAsync(exchangeCancellation);
+            exchangeCancellation.ThrowIfCancellationRequested();
             return await SaveTokensAsync(response);
         }, cancellationToken);
 
-    public Task<bool> SynchronizeFromServerAsync(CancellationToken cancellationToken = default) =>
+    public async Task<bool> SynchronizeFromServerAsync(CancellationToken cancellationToken = default) =>
+        await CheckCurrentSessionAsync(cancellationToken) == CurrentSessionStatus.Valid;
+
+    internal Task<CurrentSessionStatus> CheckCurrentSessionAsync(CancellationToken cancellationToken = default) =>
         coordinator.ExecuteAsync(async () =>
         {
-            Response<TokenResponse> response = await apiService.GetCurrentTokenAsync(cancellationToken);
-            return await SaveTokensAsync(response);
+            string? previous = await storage.GetCachedAuthTokenAsync();
+            long version = SessionVersion;
+            Response<TokenResponse>? response = await apiService.GetCurrentTokenAsync(cancellationToken);
+            if (await storage.GetCachedAuthTokenAsync() != previous ||
+                (response?.IsError == true && SessionVersion != version))
+            {
+                return CurrentSessionStatus.Superseded;
+            }
+
+            if (response is { IsError: true, StatusCode: 401 })
+            {
+                rejectedToken = previous;
+                if (previous is not null) CurrentSessionRejected?.Invoke();
+                return CurrentSessionStatus.Rejected;
+            }
+
+            if (!await SaveTokensAsync(response)) return CurrentSessionStatus.Unavailable;
+            rejectedToken = null;
+            return CurrentSessionStatus.Valid;
         }, cancellationToken);
 
-    private async Task<bool> SaveTokensAsync(Response<TokenResponse> response)
+    private async Task<bool> SaveTokensAsync(Response<TokenResponse>? response)
     {
         if (response is not { IsError: false, Data: not null } ||
             string.IsNullOrWhiteSpace(response.Data.Token) ||

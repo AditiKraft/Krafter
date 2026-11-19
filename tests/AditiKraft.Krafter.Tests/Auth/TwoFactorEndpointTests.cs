@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Auth;
 using AditiKraft.Krafter.Backend.Web.Configuration;
+using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Features.Auth;
@@ -38,13 +39,14 @@ public sealed class TwoFactorEndpointTests
         builder.Services.AddApplicationServices().AddRouteDiscovery();
         builder.Services.AddScoped(_ => scope.Mfa);
         builder.Services.AddScoped(_ => scope.Sessions);
+        builder.Services.AddScoped<IEmailService, CapturingEmail>();
         builder.Services.AddRateLimiter(options => options.AddFixedWindowLimiter("authentication", limiter =>
         {
             limiter.PermitLimit = 100;
             limiter.Window = TimeSpan.FromMinutes(1);
         }));
         Type[] operations = [typeof(CompleteTwoFactorLogin), typeof(GetTwoFactorStatus),
-            typeof(BeginTwoFactorEnrollment), typeof(ConfirmTwoFactorEnrollment), typeof(DisableTwoFactor),
+            typeof(BeginTwoFactorEnrollment), typeof(RequestEnrollmentEmail), typeof(ConfirmTwoFactorEnrollment), typeof(DisableTwoFactor),
             typeof(RegenerateRecoveryCodes), typeof(ValidateSession)];
         await using WebApplication app = builder.Build();
         app.UseAuthentication();
@@ -70,7 +72,7 @@ public sealed class TwoFactorEndpointTests
             RouteEndpoint[] endpoints = ((IEndpointRouteBuilder)app).DataSources
                 .SelectMany(source => source.Endpoints).OfType<RouteEndpoint>().ToArray();
             string[] paths = ["/api/two-factor/login", "/api/two-factor/status", "/api/two-factor/setup",
-                "/api/two-factor/confirm", "/api/two-factor/disable", "/api/two-factor/recovery-codes", "/api/tokens/validate"];
+                "/api/two-factor/enrollment-email", "/api/two-factor/confirm", "/api/two-factor/disable", "/api/two-factor/recovery-codes", "/api/tokens/validate"];
             foreach (string path in paths)
             {
                 RouteEndpoint endpoint = Assert.Single(endpoints, endpoint => endpoint.RoutePattern.RawText == path);
@@ -103,6 +105,44 @@ public sealed class TwoFactorEndpointTests
         finally
         {
             await app.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task EnrollmentEmailDeliversTheCodeSeparatelyFromItsBrowserHandle()
+    {
+        using var harness = new MfaHarness();
+        using MfaScope scope = harness.Scope();
+        var user = await scope.AddUserAsync();
+        Assert.True((await scope.Users.RemovePasswordAsync(user)).Succeeded);
+        var login = await scope.GoogleLoginAsync(user.Id);
+        var principal = MfaHarness.Principal(login.Data!.Tokens!);
+        DateTimeOffset signIn = DateTimeOffset.FromUnixTimeSeconds(harness.Clock.GetUtcNow().ToUnixTimeSeconds());
+        harness.Clock.Advance(TimeSpan.FromMinutes(4));
+        var email = new CapturingEmail();
+        var handler = new RequestEnrollmentEmail.Handler(scope.Mfa, email);
+        var result = await handler.SendAsync(user.Id, principal, default);
+        Assert.False(result.IsError, result.Message);
+        Assert.Equal(signIn.AddMinutes(5), result.Data!.ExpiresAt);
+        Assert.Contains(result.Data.ExpiresAt.UtcDateTime.ToString("u", System.Globalization.CultureInfo.InvariantCulture), email.Body);
+        Assert.Equal(429, (await handler.SendAsync(user.Id, principal, default)).StatusCode);
+        Assert.Equal(user.Email, email.To);
+        Assert.DoesNotContain(result.Data!.Id, email.Body);
+        string code = System.Text.RegularExpressions.Regex.Match(email.Body, @"<strong>([0-9]{8})</strong>").Groups[1].Value;
+        Assert.Equal(8, code.Length);
+        var proof = new TwoFactorManagementRequest { EnrollmentEmailId = result.Data.Id, Code = code };
+        Assert.False((await scope.Mfa.BeginEnrollmentAsync(user.Id, proof, principal)).IsError);
+    }
+
+    private sealed class CapturingEmail : IEmailService
+    {
+        public string To { get; private set; } = string.Empty;
+        public string Body { get; private set; } = string.Empty;
+        public Task SendEmailAsync(string email, string subject, string htmlMessage, CancellationToken cancellationToken)
+        {
+            To = email;
+            Body = htmlMessage;
+            return Task.CompletedTask;
         }
     }
 

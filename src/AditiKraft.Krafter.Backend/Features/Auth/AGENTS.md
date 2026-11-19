@@ -60,7 +60,7 @@ if (basic is null)
 - `GoogleOAuthFlow` validates the exact canonical origin against the tenant registry before consent and again at callback. Never relay provider codes or accept a DNS suffix as proof of tenant registration.
 - `GoogleLoginTransactionStore` uses global `TenantDbContext` orchestration state because the root callback precedes tenant restoration. Proof/tenant/expiry checks and the conditional SQL delete enforce one-use consumption across replicas. Do not replace them with cache get/remove or a process-local lock.
 - Protect verifier/handoff payloads with Data Protection purposes bound to purpose, tenant and row ID. Wrong proof or tenant must not consume a valid transaction. Replica key rings must be shared and persistent.
-- Restore the recorded tenant in a fresh service scope before resolving Identity/application data. `GoogleAccountAuthenticator` owns this boundary; preserve the existing user/Basic-role provisioning transaction and local MFA transition.
+- Restore the recorded tenant in a fresh service scope before resolving Identity/application data. The Google callback records the verified email, primary authentication time and existing account ID/version in a protected handoff. Only the originating browser’s nonce redemption may provision a new user with the Basic role, start an MFA challenge or rotate refresh credentials. Recheck existing account bindings under the account lock.
 - Refresh token storage schema changes.
 
 ## References (real code)

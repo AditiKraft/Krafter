@@ -15,7 +15,7 @@ public interface IGoogleLoginTransactionStore
         CancellationToken cancellationToken) where T : class;
 }
 
-public sealed class GoogleLoginTransactionStore(TenantDbContext db, IDataProtectionProvider protection,
+public sealed class GoogleLoginTransactionStore(TenantDbContext db, [FromKeyedServices(TwoFactorProtectionOptions.ProviderKey)] IDataProtectionProvider protection,
     TimeProvider clock) : IGoogleLoginTransactionStore
 {
     public static string NewSecret() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));

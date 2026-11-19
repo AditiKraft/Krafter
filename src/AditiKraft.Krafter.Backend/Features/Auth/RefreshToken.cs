@@ -78,7 +78,9 @@ public sealed class RefreshToken
                 return Response<TokenResponse>.Success(await tokenService.GenerateTokensAndUpdateUser(user, ipAddress,
                     long.Parse(userPrincipal.FindFirstValue(AppClaimTypes.AuthenticationTime)!, System.Globalization.CultureInfo.InvariantCulture),
                     userPrincipal.FindFirstValue(AppClaimTypes.AuthenticationMethod) ?? "pwd",
-                    mfaVerified: userPrincipal.FindFirstValue(AppClaimTypes.Mfa) == "true", cancellationToken: cancellationToken));
+                    mfaVerified: userPrincipal.FindFirstValue(AppClaimTypes.Mfa) == "true", cancellationToken: cancellationToken,
+                    googleVerifiedEmail: userPrincipal.FindFirstValue(AppClaimTypes.GoogleVerifiedEmail),
+                    sessionId: userPrincipal.FindFirstValue(AppClaimTypes.SessionId)));
             }, cancellationToken);
         }
 

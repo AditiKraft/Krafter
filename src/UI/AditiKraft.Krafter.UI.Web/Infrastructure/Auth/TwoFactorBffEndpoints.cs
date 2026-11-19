@@ -42,6 +42,8 @@ public static class TwoFactorBffEndpoints
         });
         group.MapPost("/login", async (TwoFactorRequest request, IAuthApiService service, CancellationToken cancellationToken) => Json(await service.CompleteTwoFactorAsync(request, cancellationToken)));
         group.MapGet("/status", async (ITwoFactorApi api, CancellationToken cancellationToken) => Json(await ServerAuthApiErrors.CallAsync(() => api.StatusAsync(cancellationToken), cancellationToken))).RequireAuthorization();
+        group.MapPost("/enrollment-email", async (ITwoFactorApi api, CancellationToken cancellationToken) =>
+            Json(await ServerAuthApiErrors.CallAsync(() => api.RequestEnrollmentEmailAsync(cancellationToken), cancellationToken))).RequireAuthorization();
         group.MapPost("/setup", async (TwoFactorManagementRequest request, ITwoFactorApi api, CancellationToken cancellationToken) => Json(await ServerAuthApiErrors.CallAsync(() => api.SetupAsync(request, cancellationToken), cancellationToken))).RequireAuthorization();
         group.MapPost("/confirm", async (TwoFactorRequest request, ITwoFactorApi api, CancellationToken cancellationToken) => Json(await ServerAuthApiErrors.CallAsync(() => api.ConfirmAsync(request, cancellationToken), cancellationToken))).RequireAuthorization();
         group.MapPost("/recovery-codes", async (TwoFactorManagementRequest request, ITwoFactorApi api, CancellationToken cancellationToken) => Json(await ServerAuthApiErrors.CallAsync(() => api.RegenerateAsync(request, cancellationToken), cancellationToken))).RequireAuthorization();

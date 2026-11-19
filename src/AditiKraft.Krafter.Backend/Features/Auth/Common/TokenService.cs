@@ -28,7 +28,7 @@ public class TokenService(
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
 
-    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default)
+    public async Task<Response<TokenResponse>> GenerateTokensAndUpdateUser(string userId, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default, string? googleVerifiedEmail = null, string? sessionId = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await userManager.FindByIdAsync(userId);
@@ -38,10 +38,10 @@ public class TokenService(
             return Response<TokenResponse>.Unauthorized("Authentication Failed.");
         }
 
-        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress, authenticatedAt, method, mfaVerified, cancellationToken));
+        return Response<TokenResponse>.Success(await GenerateTokensAndUpdateUser(user, ipAddress, authenticatedAt, method, mfaVerified, cancellationToken, googleVerifiedEmail, sessionId));
     }
 
-    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default)
+    public async Task<TokenResponse> GenerateTokensAndUpdateUser(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false, CancellationToken cancellationToken = default, string? googleVerifiedEmail = null, string? sessionId = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (user.TwoFactorEnabled && !mfaVerified)
@@ -49,7 +49,7 @@ public class TokenService(
             throw new InvalidOperationException("MFA proof is required before token issuance.");
         }
 
-        string token = GenerateJwt(user, ipAddress, authenticatedAt, method, mfaVerified);
+        string token = GenerateJwt(user, ipAddress, authenticatedAt, method, mfaVerified, googleVerifiedEmail, sessionId);
         bool newTone = false;
         UserRefreshToken? tokenResponse =
             await applicationDbContext.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == user.Id, cancellationToken);
@@ -80,11 +80,12 @@ public class TokenService(
             tokenResponse.TokenExpiryTime, permissions?.Data ?? new List<string>());
     }
 
-    private string GenerateJwt(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false) =>
-        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress, authenticatedAt, method, mfaVerified));
+    private string GenerateJwt(ApplicationUser user, string ipAddress, long? authenticatedAt, string method, bool mfaVerified, string? googleVerifiedEmail, string? sessionId) =>
+        GenerateEncryptedToken(GetSigningCredentials(), GetClaims(user, ipAddress, authenticatedAt, method, mfaVerified, googleVerifiedEmail, sessionId));
 
-    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress, long? authenticatedAt = null, string method = "pwd", bool mfaVerified = false) =>
-        new List<Claim>
+    private IEnumerable<Claim> GetClaims(ApplicationUser user, string ipAddress, long? authenticatedAt, string method, bool mfaVerified, string? googleVerifiedEmail, string? sessionId)
+    {
+        var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(AppClaimTypes.TenantId, user.TenantId),
@@ -99,6 +100,13 @@ public class TokenService(
             new(AppClaimTypes.IpAddress, ipAddress),
             new(ClaimTypes.MobilePhone, user.PhoneNumber ?? string.Empty)
         };
+        if (method == "google" && !string.IsNullOrEmpty(googleVerifiedEmail))
+        {
+            claims.Add(new Claim(AppClaimTypes.GoogleVerifiedEmail, googleVerifiedEmail));
+            claims.Add(new Claim(AppClaimTypes.SessionId, sessionId ?? Guid.NewGuid().ToString("N")));
+        }
+        return claims;
+    }
 
     private static string GenerateRefreshToken()
     {

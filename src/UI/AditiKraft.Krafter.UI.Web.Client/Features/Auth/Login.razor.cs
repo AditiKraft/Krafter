@@ -29,7 +29,8 @@ public partial class Login(
         "invalid-google-state" => "Google sign-in expired or could not be verified. Please try again.",
         _ => null
     };
-    private string? DisplayError => authenticationService.ErrorMessage ?? QueryErrorMessage;
+    private string? sessionCheckError;
+    private string? DisplayError => authenticationService.ErrorMessage ?? QueryErrorMessage ?? sessionCheckError;
 
     [CascadingParameter] public bool IsMobileDevice { get; set; }
 
@@ -99,14 +100,16 @@ public partial class Login(
     private async Task<bool> ValidateExistingSessionAsync()
     {
         long sessionVersion = tokenService.SessionVersion;
-        if (!await tokenService.SynchronizeFromServerAsync())
+        CurrentSessionStatus status = await tokenService.CheckCurrentSessionAsync();
+        if (tokenService.SessionVersion != sessionVersion || authenticationService.PendingChallenge is not null)
         {
-            await authenticationService.LogoutAsync("Session no longer valid", sessionVersion);
             return false;
         }
 
-        return tokenService.SessionVersion == sessionVersion &&
-            authenticationService.PendingChallenge is null && DisplayError is null;
+        sessionCheckError = status == CurrentSessionStatus.Unavailable
+            ? "Unable to check your existing session. Reload this page to try again."
+            : null;
+        return status == CurrentSessionStatus.Valid && DisplayError is null;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -121,6 +124,7 @@ public partial class Login(
     private async Task CreateToken(TokenRequest loginArgs)
     {
         Error = null;
+        sessionCheckError = null;
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = new Uri(navigationManager.Uri);
@@ -129,6 +133,10 @@ public partial class Login(
 
         isBusy = true;
         bool isSuccess = await authenticationService.LoginAsync(loginArgs);
+        if (isSuccess || authenticationService.PendingChallenge is not null)
+        {
+            loginArgs.Password = string.Empty;
+        }
         if (isSuccess)
         {
             navigationManager.NavigateTo(SafeReturnUrl());
@@ -162,6 +170,7 @@ public partial class Login(
     private async Task StartGoogleLogin()
     {
         Error = null;
+        sessionCheckError = null;
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = new Uri(navigationManager.Uri);

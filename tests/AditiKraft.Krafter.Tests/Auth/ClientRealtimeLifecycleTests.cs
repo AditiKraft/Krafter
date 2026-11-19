@@ -219,15 +219,21 @@ public sealed class ClientRealtimeLifecycleTests
             }
             await initialization.WaitAsync(Timeout);
             Assert.False(gate.Operation.IsCompleted);
-            Assert.True(await coordinator.ExecuteAsync(() => Task.FromResult(true)).WaitAsync(Timeout));
-            if (refresh) Assert.True(gate.RefreshCancellation.IsCancellationRequested);
+            Task<bool> nextSessionOperation = coordinator.ExecuteAsync(() => Task.FromResult(true));
+            Assert.Equal(!refresh, nextSessionOperation.IsCompleted);
+            if (refresh)
+            {
+                Assert.True(gate.RefreshCancellation.CanBeCanceled);
+                Assert.False(gate.RefreshCancellation.IsCancellationRequested);
+            }
             Assert.False(service.IsConnected());
             Assert.False(logger.Failures.Reader.TryRead(out _));
 
             gate.Release();
+            Assert.True(await nextSessionOperation.WaitAsync(Timeout));
             await gate.Operation.WaitAsync(Timeout);
             Assert.Equal(0, host.Observations.Requests);
-            Assert.Equal(0, gate.Storage.Saves);
+            Assert.Equal(refresh ? 1 : 0, gate.Storage.Saves);
             Assert.Equal(0, gate.Storage.Clears);
             Assert.Equal(0, gate.Api.Logouts);
         }
@@ -262,13 +268,19 @@ public sealed class ClientRealtimeLifecycleTests
             int requests = host.Observations.Requests;
             await service.DisposeAsync().AsTask().WaitAsync(Timeout);
             Assert.False(gate.Operation.IsCompleted);
-            Assert.True(await coordinator.ExecuteAsync(() => Task.FromResult(true)).WaitAsync(Timeout));
-            if (refresh) Assert.True(gate.RefreshCancellation.IsCancellationRequested);
+            Task<bool> nextSessionOperation = coordinator.ExecuteAsync(() => Task.FromResult(true));
+            Assert.Equal(!refresh, nextSessionOperation.IsCompleted);
+            if (refresh)
+            {
+                Assert.True(gate.RefreshCancellation.CanBeCanceled);
+                Assert.False(gate.RefreshCancellation.IsCancellationRequested);
+            }
             gate.Release();
+            Assert.True(await nextSessionOperation.WaitAsync(Timeout));
             await gate.Operation.WaitAsync(Timeout);
             Assert.False(service.IsConnected());
             Assert.Equal(requests, host.Observations.Requests);
-            Assert.Equal(0, gate.Storage.Saves);
+            Assert.Equal(refresh ? 1 : 0, gate.Storage.Saves);
             Assert.Equal(0, gate.Storage.Clears);
             Assert.False(logger.Failures.Reader.TryRead(out _));
         }

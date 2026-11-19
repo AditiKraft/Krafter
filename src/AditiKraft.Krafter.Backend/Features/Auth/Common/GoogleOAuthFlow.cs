@@ -14,11 +14,15 @@ namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 public sealed record GoogleLoginState(string TenantId, string TenantIdentifier, string UiOrigin,
     string ReturnUrl, string ClientNonceHash, string CodeVerifier);
 
+public sealed record GoogleAccountProof(string Email, string GivenName, string FamilyName,
+    long AuthenticatedAt, string? UserId, int AuthenticationVersion);
+public sealed record GoogleHandoff(string TenantId, string TenantIdentifier, string UiOrigin, GoogleAccountProof Account);
+
 public sealed class GoogleOAuthFlow(IGoogleLoginTransactionStore transactions, ITenantFinderService tenants,
     IGoogleAccountAuthenticator authenticator, AppUrls urls, IConfiguration configuration, TimeProvider clock)
 {
     public const string AuthorizationPurpose = "authorize";
-    public const string HandoffPurpose = "handoff";
+    public const string HandoffPurpose = "handoff-v2";
 
     public async Task<Response<GoogleLoginStartResponse>> StartAsync(GoogleLoginStartRequest request, CancellationToken cancellationToken)
     {
@@ -61,20 +65,21 @@ public sealed class GoogleOAuthFlow(IGoogleLoginTransactionStore transactions, I
             destination.Value.Tenant.Identifier != state.TenantIdentifier) return CallbackRejected();
         if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 4096)
             return LoginFailed(destination.Value.Origin, state.ReturnUrl);
-        Response<LoginResponse> login;
+        Response<GoogleAccountProof> verified;
         try
         {
-            login = await authenticator.AuthenticateAsync(state, request.Code, cancellationToken);
+            verified = await authenticator.VerifyAsync(state, request.Code, cancellationToken);
         }
         catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException ||
             exception is OperationCanceledException && !cancellationToken.IsCancellationRequested)
         {
             return LoginFailed(destination.Value.Origin, state.ReturnUrl);
         }
-        if (login.IsError || login.Data is null || (!login.Data.IsCompleted && !login.Data.RequiresTwoFactor))
+        if (verified.IsError || verified.Data is null)
             return LoginFailed(destination.Value.Origin, state.ReturnUrl);
         string handoff = await transactions.CreateAsync(HandoffPurpose, state.TenantId, state.ClientNonceHash,
-            login.Data, clock.GetUtcNow().AddMinutes(1), cancellationToken);
+            new GoogleHandoff(state.TenantId, state.TenantIdentifier, state.UiOrigin, verified.Data),
+            clock.GetUtcNow().AddMinutes(1), cancellationToken);
         // A fragment is not sent in HTTP requests or referrers. No Google code or credential leaves this callback.
         string completion = new Uri(destination.Value.Origin, "/google-complete").AbsoluteUri +
             "#handoff=" + Uri.EscapeDataString(handoff) + "&returnUrl=" + Uri.EscapeDataString(state.ReturnUrl);
@@ -84,10 +89,11 @@ public sealed class GoogleOAuthFlow(IGoogleLoginTransactionStore transactions, I
     public async Task<Response<LoginResponse>> CompleteAsync(GoogleAuthRequest request, string tenantId,
         CancellationToken cancellationToken)
     {
-        LoginResponse? login = await transactions.TakeAsync<LoginResponse>(request.Handoff, HandoffPurpose,
+        GoogleHandoff? handoff = await transactions.TakeAsync<GoogleHandoff>(request.Handoff, HandoffPurpose,
             request.BrowserNonce, tenantId, cancellationToken);
-        return login is null ? Response<LoginResponse>.Unauthorized("Google login expired. Please try again.") :
-            Response<LoginResponse>.Success(login);
+        if (handoff is null || handoff.TenantId != tenantId)
+            return Response<LoginResponse>.Unauthorized("Google login expired. Please try again.");
+        return await authenticator.RedeemAsync(handoff, cancellationToken);
     }
 
     private async Task<(Tenant Tenant, Uri Origin)?> ResolveOriginAsync(string origin, CancellationToken cancellationToken)

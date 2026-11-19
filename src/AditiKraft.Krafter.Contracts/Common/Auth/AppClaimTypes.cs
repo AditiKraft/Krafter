@@ -6,6 +6,8 @@ public class AppClaimTypes
     public const string TenantId = "tenant_id";
     public const string AuthenticationTime = "auth_time";
     public const string AuthenticationMethod = "amr";
+    public const string SessionId = "sid";
+    public const string GoogleVerifiedEmail = "google_verified_email";
     public const string Mfa = "mfa";
     public const string Fullname = "fullName";
     public const string Permission = "permission";

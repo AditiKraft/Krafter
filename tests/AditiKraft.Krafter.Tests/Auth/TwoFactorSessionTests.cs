@@ -59,7 +59,9 @@ public sealed class TwoFactorSessionTests
         var user = await scope.AddUserAsync();
         Assert.True((await scope.Users.RemovePasswordAsync(user)).Succeeded);
         long originalTime = harness.Clock.GetUtcNow().ToUnixTimeSeconds();
-        var token = await scope.Tokens.GenerateTokensAndUpdateUser(user, "test", originalTime, "google");
+        string verifiedEmail = user.Email!;
+        var token = await scope.Tokens.GenerateTokensAndUpdateUser(user, "test", originalTime, "google", googleVerifiedEmail: verifiedEmail);
+        Assert.True((await scope.Users.SetEmailAsync(user, "changed@example.com")).Succeeded);
         harness.Clock.Advance(TimeSpan.FromMinutes(6));
         var handler = RefreshHandler(scope);
         var refreshed = await handler.RefreshTokenAsync(new() { Token = token.Token, RefreshToken = token.RefreshToken }, "test", CancellationToken.None);
@@ -70,7 +72,39 @@ public sealed class TwoFactorSessionTests
         ClaimsPrincipal principal = validator.ValidateToken(refreshed.Data!.Token, options.TokenValidationParameters, out _);
         Assert.Equal("google", principal.FindFirstValue(AppClaimTypes.AuthenticationMethod));
         Assert.Equal(originalTime.ToString(), principal.FindFirstValue(AppClaimTypes.AuthenticationTime));
+        Assert.Equal(verifiedEmail, principal.FindFirstValue(AppClaimTypes.GoogleVerifiedEmail));
+        string? originalSession = MfaHarness.Principal(token).FindFirstValue(AppClaimTypes.SessionId);
+        Assert.False(string.IsNullOrWhiteSpace(originalSession));
+        Assert.Equal(originalSession, principal.FindFirstValue(AppClaimTypes.SessionId));
+        Assert.True((await scope.Mfa.PrepareEnrollmentEmailAsync(user.Id, principal, default)).IsError);
         Assert.True((await scope.Mfa.BeginEnrollmentAsync(user.Id, new(), principal)).IsError);
+    }
+
+    [Theory]
+    [InlineData("pwd")]
+    [InlineData("google")]
+    public async Task CompletingMfaPreservesThePrimaryAuthenticationTime(string method)
+    {
+        using var harness = new MfaHarness();
+        using MfaScope scope = harness.Scope();
+        var user = await scope.AddUserAsync();
+        (_, IReadOnlyList<string> codes) = await harness.EnrollAsync(scope, user);
+        long primaryTime = harness.Clock.GetUtcNow().ToUnixTimeSeconds();
+        if (method == "google")
+            harness.Clock.Advance(TimeSpan.FromSeconds(40)); // The browser returns with the handoff.
+
+        var primary = method == "google"
+            ? await scope.Mfa.ExternalLoginAsync(user.Id, "test", CancellationToken.None, primaryTime, user.Email!, user.AuthenticationVersion)
+            : await scope.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test");
+        var challenge = primary.Data!.Challenge!;
+        Assert.Equal(primaryTime + 300, challenge.ExpiresAt.ToUnixTimeSeconds());
+        harness.Clock.Advance(TimeSpan.FromMinutes(3));
+        var completed = await scope.Mfa.CompleteLoginAsync(new()
+        { ChallengeId = challenge.Id, Code = codes[0], UseRecoveryCode = true }, "test");
+        Assert.False(completed.IsError);
+        ClaimsPrincipal principal = MfaHarness.Principal(completed.Data!);
+        Assert.Equal(method, principal.FindFirstValue(AppClaimTypes.AuthenticationMethod));
+        Assert.Equal(primaryTime.ToString(System.Globalization.CultureInfo.InvariantCulture), principal.FindFirstValue(AppClaimTypes.AuthenticationTime));
     }
 
     [Fact]

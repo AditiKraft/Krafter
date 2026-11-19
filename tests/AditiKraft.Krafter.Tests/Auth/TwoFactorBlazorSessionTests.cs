@@ -82,8 +82,14 @@ public sealed class TwoFactorBlazorSessionTests
         using ServiceProvider services = new ServiceCollection().AddSingleton<IAuthApi>(RestService.For<IAuthApi>(client)).BuildServiceProvider();
         var http = new DefaultHttpContext { RequestServices = services };
         TokenValidatedContext context = Context(http, token);
-        await new BlazorJwtBearerEvents(BlazorHostingMode.SplitHost).TokenValidated(context);
+        var events = new BlazorJwtBearerEvents(BlazorHostingMode.SplitHost);
+        await events.TokenValidated(context);
         Assert.NotNull(context.Result?.Failure);
+        http.Request.Path = "/api/tokens/current";
+        http.Response.Body = new MemoryStream();
+        await events.Challenge(new JwtBearerChallengeContext(http, context.Scheme, context.Options, new AuthenticationProperties()));
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, http.Response.StatusCode);
+        Assert.Equal("no-store", http.Response.Headers.CacheControl);
     }
 
     [Theory]

@@ -156,6 +156,25 @@ public sealed class LoginFailureRenderingTests
     }
 
     [Fact]
+    public async Task CancelingPasswordMfaReturnsToTheFormWithAnEmptyPassword()
+    {
+        await using var page = new LoginPage("", "/users", authenticated: false);
+        page.Authentication.ChallengeOnPasswordLogin = true;
+        await page.RenderAsync();
+        await page.RunAsync(async () =>
+        {
+            TokenRequest input = page.Form.Data;
+            input.Email = "alice@example.test";
+            input.Password = "accepted-password";
+            await page.Form.Submit.InvokeAsync(input);
+            Assert.Empty(input.Password);
+            await page.CancelVerificationButton.Click.InvokeAsync(new MouseEventArgs());
+            Assert.Equal("alice@example.test", page.Component.TokenRequestInput.Email);
+            Assert.Empty(page.Component.TokenRequestInput.Password);
+        });
+    }
+
+    [Fact]
     public async Task ACurrentHandoffFailureRemainsVisibleEvenWithAnExistingSession()
     {
         const string message = "Unable to complete authentication. Please try again.";
@@ -347,7 +366,12 @@ public sealed class LoginFailureRenderingTests
         public string? VerifiedCode { get; private set; }
         public bool VerifiedWithRecoveryCode { get; private set; }
         public event Action<string?>? LoginChange { add { } remove { } }
-        public Task<bool> LoginAsync(TokenRequest model) => Task.FromResult(true);
+        public bool ChallengeOnPasswordLogin { get; set; }
+        public Task<bool> LoginAsync(TokenRequest model)
+        {
+            if (ChallengeOnPasswordLogin) PendingChallenge = new("challenge", DateTimeOffset.UtcNow.AddMinutes(5));
+            return Task.FromResult(!ChallengeOnPasswordLogin);
+        }
         public Task<bool> LogoutAsync(string methodName, long? expectedSessionVersion = null) => Task.FromResult(true);
         public Task<bool> VerifyTwoFactorAsync(string code, bool recovery)
         {

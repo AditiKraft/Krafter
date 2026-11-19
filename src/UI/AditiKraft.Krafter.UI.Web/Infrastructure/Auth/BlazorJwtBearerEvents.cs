@@ -36,6 +36,7 @@ public enum BlazorHostingMode
 public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
     Func<TokenValidatedContext, Task<bool>>? validateLocalSession = null) : JwtBearerEvents
 {
+    private static readonly object SessionValidationUnavailable = new();
     private static readonly string[] AuthEndpointSegments =
     [
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.TwoFactor}",
@@ -138,10 +139,20 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
                 IAuthApi api = context.HttpContext.RequestServices.GetRequiredService<IAuthApi>();
                 Response<bool> result = await ServerAuthApiErrors.CallAsync(() =>
                     api.ValidateSessionAsync($"Bearer {verifiedToken}", context.HttpContext.RequestAborted), context.HttpContext.RequestAborted);
+                if (result.IsError && result.StatusCode != StatusCodes.Status401Unauthorized)
+                {
+                    context.HttpContext.Items[SessionValidationUnavailable] = true;
+                    context.Fail("Session validation is unavailable.");
+                    return;
+                }
                 if (result.IsError || !result.Data) { context.Fail("Session revoked."); return; }
             }
             catch (Exception ex) when (ex is Refit.ApiException or HttpRequestException)
-            { context.Fail("Session validation failed."); return; }
+            {
+                context.HttpContext.Items[SessionValidationUnavailable] = true;
+                context.Fail("Session validation is unavailable.");
+                return;
+            }
         }
 
         // Cookie/cache permission state must belong to the exact token that was verified above.
@@ -183,6 +194,11 @@ public class BlazorJwtBearerEvents(BlazorHostingMode hostingMode,
         if (IsApiRequest(context.Request))
         {
             PreventCurrentTokenCaching(context.HttpContext);
+            if (context.HttpContext.Items.ContainsKey(SessionValidationUnavailable))
+            {
+                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return context.Response.WriteAsJsonAsync(new { message = ServerAuthApiErrors.UnavailableMessage });
+            }
             context.Response.StatusCode = 401;
             context.Response.ContentType = "application/json";
             return context.Response.WriteAsJsonAsync(new { message = "Authentication Failed." });

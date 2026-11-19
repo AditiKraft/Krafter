@@ -132,7 +132,7 @@ public class SignalRService : IAsyncDisposable
         token.ThrowIfCancellationRequested();
         if (AuthTokenService.NeedsRefresh(credential))
         {
-            bool refreshed = await _tokenService.RefreshAsync(token).WaitAsync(token);
+            bool refreshed = await _tokenService.RefreshForRealtimeAsync(token);
             token.ThrowIfCancellationRequested();
             // Optional notifications cannot log out the app or discard unsaved recovery codes.
             if (!refreshed) return null;

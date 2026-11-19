@@ -85,15 +85,23 @@
             }
             else
             {
-                <p>For a Google-only account, sign in with Google again before setup. Your primary sign-in must be within the last five minutes.</p>
+                <p>Sign in with Google again if more than five minutes have passed. Then verify your account email to set up your first authenticator.</p>
+                <RadzenButton Text="Send verification code" Click="@SendEnrollmentEmailAsync" Disabled="busy" ButtonStyle="ButtonStyle.Light" />
+                @if (proof.EnrollmentEmailId is not null)
+                {
+                    <p role="status">Enter the eight-digit code sent to your verified email. It expires at @enrollmentEmailExpiresAt.ToLocalTime().ToString("T") (your local time).</p>
+                    <RadzenLabel Text="Email verification code" Component="EnrollmentEmailCode" />
+                    <RadzenTextBox Name="EnrollmentEmailCode" @bind-Value="proof.Code" autocomplete="one-time-code" inputmode="numeric" Style="width:100%" />
+                }
             }
-            <RadzenButton Text="Set up authenticator" Click="@BeginSetupAsync" IsBusy="busy" class="rz-mt-3" />
+            <RadzenButton Text="Set up authenticator" Click="@BeginSetupAsync" IsBusy="busy" Disabled="@(!status.HasPassword && proof.EnrollmentEmailId is null)" class="rz-mt-3" />
         }
     }
 </RadzenCard>
 
 @code
 {
+    private DateTimeOffset enrollmentEmailExpiresAt;
     private TwoFactorStatusResponse? status;
     private TwoFactorSetupResponse? setup;
     private IReadOnlyList<string>? recoveryCodes;
@@ -143,6 +151,36 @@
         }
     }
 
+    private async Task SendEnrollmentEmailAsync()
+    {
+        if (busy) return;
+        busy = true;
+        error = null;
+        try
+        {
+            var result = await AuthApiErrors.CallAsync(() => Api.RequestEnrollmentEmailAsync());
+            if (result.IsError)
+            {
+                error = result.Message;
+                if (result.StatusCode != 429)
+                {
+                    proof.EnrollmentEmailId = null;
+                    proof.Code = string.Empty;
+                }
+            }
+            else
+            {
+                proof.EnrollmentEmailId = result.Data!.Id;
+                enrollmentEmailExpiresAt = result.Data.ExpiresAt;
+                proof.Code = string.Empty;
+            }
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
     private async Task BeginSetupAsync()
     {
         if (busy)
@@ -162,6 +200,7 @@
             }
             else
             {
+                proof.EnrollmentEmailId = null;
                 setup = result.Data;
                 confirmation.ChallengeId = setup!.EnrollmentId;
             }

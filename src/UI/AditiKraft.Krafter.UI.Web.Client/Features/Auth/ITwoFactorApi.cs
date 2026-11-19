@@ -8,6 +8,8 @@ public interface ITwoFactorApi
 {
     [Get("/api/two-factor/status")]
     Task<Response<TwoFactorStatusResponse>> StatusAsync(CancellationToken cancellationToken = default);
+    [Post("/api/two-factor/enrollment-email")]
+    Task<Response<TwoFactorChallengeResponse>> RequestEnrollmentEmailAsync(CancellationToken cancellationToken = default);
     [Post("/api/two-factor/setup")]
     Task<Response<TwoFactorSetupResponse>> SetupAsync([Body] TwoFactorManagementRequest request, CancellationToken cancellationToken = default);
     [Post("/api/two-factor/confirm")]

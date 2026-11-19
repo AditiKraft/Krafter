@@ -7,6 +7,7 @@ public class TwoFactorManagementRequest
 {
     public string Password { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
+    public string? EnrollmentEmailId { get; set; }
     public bool UseRecoveryCode { get; set; }
 }
 
@@ -15,6 +16,7 @@ public sealed class TwoFactorManagementRequestValidator : AbstractValidator<TwoF
     public TwoFactorManagementRequestValidator()
     {
         RuleFor(x => x.Password).MaximumLength(PasswordLimits.MaximumLength);
+        RuleFor(x => x.EnrollmentEmailId).MaximumLength(64);
         RuleFor(x => x.Code).MaximumLength(128);
     }
 }

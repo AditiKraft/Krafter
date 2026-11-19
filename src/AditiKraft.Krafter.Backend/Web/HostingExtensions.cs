@@ -1,9 +1,6 @@
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Auth.Common;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
-using Microsoft.AspNetCore.DataProtection;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
@@ -56,22 +53,7 @@ public static class HostingExtensions
         });
         builder.Services.AddScoped<SessionValidator>();
         builder.Services.AddHostedService<TwoFactorCleanup>();
-        IDataProtectionBuilder protection = builder.Services.AddDataProtection().SetApplicationName("AditiKraft.Krafter");
-        string? keyRing = builder.Configuration["TwoFactor:KeyRingPath"];
-        if (!string.IsNullOrWhiteSpace(keyRing)) protection.PersistKeysToFileSystem(new DirectoryInfo(keyRing));
-        string? certificatePath = builder.Configuration["TwoFactor:KeyEncryptionCertificatePath"];
-        if (!string.IsNullOrWhiteSpace(certificatePath))
-        {
-            X509Certificate2 certificate = X509CertificateLoader.LoadPkcs12FromFile(certificatePath,
-                builder.Configuration["TwoFactor:KeyEncryptionCertificatePassword"]);
-            using RSA? encryptionKey = certificate.GetRSAPublicKey();
-            if (!certificate.HasPrivateKey || encryptionKey is null)
-                throw new InvalidOperationException("The two-factor key-encryption certificate must include an RSA private key.");
-            protection.ProtectKeysWithCertificate(certificate);
-        }
-        builder.Services.Configure<TwoFactorProtectionOptions>(options => options.EnrollmentAllowed =
-            builder.Environment.IsDevelopment() || (!string.IsNullOrWhiteSpace(keyRing) && !string.IsNullOrWhiteSpace(certificatePath)));
-
+        builder.AddTwoFactorProtection();
 
         builder.Services.AddCurrentUserServices();
         builder.Services.AddTenantServices();

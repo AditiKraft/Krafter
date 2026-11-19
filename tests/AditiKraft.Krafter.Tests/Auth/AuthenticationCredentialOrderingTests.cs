@@ -306,13 +306,13 @@ public sealed class AuthenticationCredentialOrderingTests
     [InlineData("password")]
     [InlineData("google")]
     [InlineData("pending")]
-    public async Task LoginBoundaryFailureCleanupCannotClearANewerSignInOrPendingFlow(string flow)
+    public async Task LoginBoundaryCheckPreservesANewerSignInOrPendingFlow(string flow)
     {
         await using var session = await BrowserSession.StartAsync();
         await session.PrepareAsync(flow);
         if (flow == "pending")
             session.Backend.PrimaryResponse = Response<LoginResponse>.Success(LoginResponse.Pending("new-pending-challenge", DateTimeOffset.UtcNow.AddMinutes(5)));
-        session.Backend.RejectCurrent = true;
+        session.Backend.CurrentErrorStatus = 401;
         session.Backend.HeldPath = "/api/tokens/current";
         session.Backend.HeldSignInPath = SignInPath(flow);
         var login = new Login(session.Authentication, session.Tokens, session.Navigation, null!, new AppUrls(), null!);
@@ -325,7 +325,7 @@ public sealed class AuthenticationCredentialOrderingTests
         try
         {
             await session.Backend.HeldSignInEntered.Task.WaitAsync(Timeout);
-            await session.Observer.AutomaticLogoutRequested.Task.WaitAsync(Timeout);
+            Assert.False(await oldValidation.WaitAsync(Timeout));
         }
         finally
         {
@@ -342,21 +342,102 @@ public sealed class AuthenticationCredentialOrderingTests
         Assert.Equal(expected, session.Cookie(StorageConstants.Local.AuthToken));
     }
 
-    [Fact]
-    public async Task LoginBoundaryUnchangedFailureStillClearsTheSession()
+    [Theory]
+    [InlineData(401)]
+    [InlineData(503)]
+    public async Task LoginCheckKeepsSharedCredentialsAndClassifiesTheFailure(int status)
     {
         await using var session = await BrowserSession.StartAsync();
-        session.Backend.RejectCurrent = true;
+        await session.Store.CacheAuthTokens(TokenTestData.Create("account-a"));
+        string? original = await session.Store.GetCachedAuthTokenAsync();
+        session.Backend.CurrentErrorStatus = status;
         var login = new Login(session.Authentication, session.Tokens, session.Navigation, null!, new AppUrls(), null!);
+        var provider = CreateProvider(session);
 
-        Assert.False(await ((Task<bool>)typeof(Login).GetMethod("ValidateExistingSessionAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .Invoke(login, null)!).WaitAsync(Timeout));
+        Assert.False(await CheckLoginAsync(login));
+        Assert.Equal(0, session.Api.LogoutCalls);
+        Assert.Equal(original, await session.Store.GetCachedAuthTokenAsync());
+        Assert.Equal(session.Original.Token, session.Cookie(StorageConstants.Local.AuthToken));
+        Assert.Null(session.Navigation.Target);
+        Assert.Equal(status != 401, (await provider.GetAuthenticationStateAsync()).User.Identity?.IsAuthenticated);
+        string? error = (string?)typeof(Login).GetProperty("DisplayError", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(login);
+        if (status == 503) Assert.Contains("Reload", error);
+        else Assert.Null(error);
 
-        Assert.Equal(1, session.Api.LogoutCalls);
-        Assert.Null(await session.Store.GetCachedAuthTokenAsync());
-        Assert.Null(session.Cookie(StorageConstants.Local.AuthToken));
-        Assert.Equal("/login", session.Navigation.Target);
+        session.Backend.CurrentErrorStatus = null;
+        Assert.True(await CheckLoginAsync(login));
     }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(503)]
+    [InlineData(null)]
+    public async Task ADelayedCookieCheckCannotOverwriteAnotherTabsCompletedLogin(int? status)
+    {
+        await using var session = await BrowserSession.StartAsync();
+        session.Backend.CurrentErrorStatus = status;
+        session.Backend.HeldPath = "/api/tokens/current";
+        var login = new Login(session.Authentication, session.Tokens, session.Navigation, null!, new AppUrls(), null!);
+        Task<bool> validation = CheckLoginAsync(login);
+        await session.Backend.HeldRequestEntered.Task.WaitAsync(Timeout);
+        try
+        {
+            await SignInFromAnotherTabAsync(session);
+        }
+        finally
+        {
+            session.Backend.ReleaseHeldRequest.TrySetResult();
+        }
+
+        Assert.False(await validation);
+        Assert.Equal(0, session.Api.LogoutCalls);
+        Assert.Equal(session.Backend.AccountB.Token, session.Cookie(StorageConstants.Local.AuthToken));
+        Assert.Equal(session.Backend.AccountB.Token, await session.Store.GetCachedAuthTokenAsync());
+        Assert.Equal("account-b", (await CreateProvider(session).GetAuthenticationStateAsync()).User.FindFirst("sub")?.Value);
+    }
+
+    [Theory]
+    [InlineData("/login", true)]
+    [InlineData("/Account/Login?ReturnUrl=%2Fusers", false)]
+    public async Task FailedRefreshOnLoginNeverClearsSharedCredentials(string path, bool replaceSession)
+    {
+        await using var session = await BrowserSession.StartAsync();
+        session.Backend.RefreshResponse = Response<TokenResponse>.Unauthorized("Expired session.");
+        session.Backend.HeldPath = "/api/tokens/refresh";
+        Task<AuthenticationState> check = CreateProvider(session, new Navigation(path)).GetAuthenticationStateAsync();
+        await session.Backend.HeldRequestEntered.Task.WaitAsync(Timeout);
+        try
+        {
+            if (replaceSession) await SignInFromAnotherTabAsync(session);
+        }
+        finally
+        {
+            session.Backend.ReleaseHeldRequest.TrySetResult();
+        }
+
+        AuthenticationState state = await check.WaitAsync(Timeout);
+        Assert.Equal(replaceSession, state.User.Identity?.IsAuthenticated);
+        if (replaceSession) Assert.Equal("account-b", state.User.FindFirst("sub")?.Value);
+        Assert.Equal(0, session.Api.LogoutCalls);
+        string expected = replaceSession ? session.Backend.AccountB.Token : session.Original.Token;
+        Assert.Equal(expected, await session.Store.GetCachedAuthTokenAsync());
+        Assert.Equal(expected, session.Cookie(StorageConstants.Local.AuthToken));
+        Assert.Null(session.Navigation.Target);
+    }
+
+    private static async Task SignInFromAnotherTabAsync(BrowserSession session)
+    {
+        // Another tab has its own WASM coordinator, but shares browser cookies and local storage.
+        using var otherCoordinator = new TokenRefreshCoordinator();
+        var otherTab = new AuthenticationService(session.Api, new AuthTokenService(session.Api, session.Store, otherCoordinator),
+            otherCoordinator, session.Layout, session.Store, new Navigation(), new HttpContextAccessor(),
+            new FormFactor("WebAssembly"), new AccountSecurityNavigationGuard(), session.Observer);
+        Assert.True(await otherTab.LoginAsync(new TokenRequest()).WaitAsync(Timeout));
+    }
+
+    private static Task<bool> CheckLoginAsync(Login login) =>
+        ((Task<bool>)typeof(Login).GetMethod("ValidateExistingSessionAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(login, null)!).WaitAsync(Timeout);
 
     [Theory]
     [InlineData("password")]
@@ -499,9 +580,9 @@ public sealed class AuthenticationCredentialOrderingTests
         _ => "/api/tokens"
     };
 
-    private static UIAuthenticationStateProvider CreateProvider(BrowserSession session)
+    private static UIAuthenticationStateProvider CreateProvider(BrowserSession session, NavigationManager? navigation = null)
     {
-        var provider = new UIAuthenticationStateProvider(session.Tokens, session.Store, session.Authentication, null!);
+        var provider = new UIAuthenticationStateProvider(session.Tokens, session.Store, session.Authentication, null!, navigation ?? session.Navigation);
         typeof(UIAuthenticationStateProvider).GetField("_isInitialLoad", BindingFlags.Instance | BindingFlags.NonPublic)!
             .SetValue(provider, false);
         return provider;
@@ -578,10 +659,10 @@ public sealed class AuthenticationCredentialOrderingTests
                     backend.HeldSignInEntered.TrySetResult();
                     await backend.ReleaseHeldSignIn.Task.WaitAsync(context.RequestAborted);
                 }
-                if (context.Request.Path == "/api/tokens/current" && backend.RejectCurrent)
+                if (context.Request.Path == "/api/tokens/current" && backend.CurrentErrorStatus is int status)
                 {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsJsonAsync(Response<TokenResponse>.Unauthorized("Old session expired."));
+                    context.Response.StatusCode = status;
+                    await context.Response.WriteAsJsonAsync(Response<TokenResponse>.CustomError("Session check failed.", status));
                     return;
                 }
                 await next(context);
@@ -640,7 +721,7 @@ public sealed class AuthenticationCredentialOrderingTests
         public TokenResponse RefreshedAccountA { get; } = TokenTestData.Create("account-a");
         public string? HeldPath { get; set; }
         public string? HeldSignInPath { get; set; }
-        public bool RejectCurrent { get; set; }
+        public int? CurrentErrorStatus { get; set; }
         public TaskCompletionSource HeldRequestEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource ReleaseHeldRequest { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource HeldSignInEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -720,7 +801,7 @@ public sealed class AuthenticationCredentialOrderingTests
     private sealed class Navigation : NavigationManager
     {
         public string? Target { get; private set; }
-        public Navigation() => Initialize("https://app.example.test/", "https://app.example.test/");
+        public Navigation(string path = "/") => Initialize("https://app.example.test/", "https://app.example.test" + path);
         protected override void NavigateToCore(string uri, bool forceLoad) => Target = uri;
     }
 

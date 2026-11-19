@@ -19,18 +19,20 @@ namespace AditiKraft.Krafter.Backend.Features.Auth.Common;
 
 public sealed class TwoFactorService(
     ApplicationDbContext db, UserManager<ApplicationUser> users, ITokenService tokens,
-    ITenantGetterService tenant, IDataProtectionProvider protection, TimeProvider clock,
+    ITenantGetterService tenant, [FromKeyedServices(TwoFactorProtectionOptions.ProviderKey)] IDataProtectionProvider protection, TimeProvider clock,
     IOptions<SecuritySettings> security, IOptions<TwoFactorProtectionOptions> protectionOptions, ILogger<TwoFactorService> logger,
     SessionValidator sessions)
 {
     private const int MaxAttempts = 5;
+    // Persisted login challenges encode primary verification time as ExpiresAt minus this fixed lifetime.
+    private static readonly TimeSpan LoginChallengeLifetime = TimeSpan.FromMinutes(5);
     private DateTimeOffset Now => clock.GetUtcNow();
     private string TenantId => tenant.Tenant.Id ?? throw new InvalidOperationException("Tenant context is required.");
 
     private Task<T> LockedAsync<T>(string userId, Func<Task<T>> action, CancellationToken cancellationToken) =>
         AccountAuthenticationTransaction.RunAsync(db, TenantId, userId, action, cancellationToken);
 
-    private async Task<bool> EligibleAsync(ApplicationUser user, CancellationToken cancellationToken) =>
+    internal async Task<bool> EligibleAsync(ApplicationUser user, CancellationToken cancellationToken) =>
         user.IsActive && !user.IsDeleted && user.TenantId == TenantId && !await IsLockedOutAsync(user, cancellationToken) &&
         (!security.Value.RequireConfirmedAccount || user.EmailConfirmed);
 
@@ -86,24 +88,31 @@ public sealed class TwoFactorService(
                 await UpdateFailureCountAsync(user, cancellationToken);
                 return Response<LoginResponse>.Unauthorized("Invalid email or password. If the problem persists, try again later.");
             }
-            return await StartLoginAsync(user, ip, "pwd", cancellationToken);
+            return await StartLoginAsync(user, ip, "pwd", Now, cancellationToken);
         }, cancellationToken);
     }
 
-    public Task<Response<LoginResponse>> ExternalLoginAsync(string userId, string ip, CancellationToken cancellationToken = default) => LockedAsync(userId, async () =>
+    public Task<Response<LoginResponse>> ExternalLoginAsync(string userId, string ip, CancellationToken cancellationToken,
+        long authenticatedAt, string verifiedEmail, int expectedVersion) => LockedAsync(userId, async () =>
     {
         cancellationToken.ThrowIfCancellationRequested();
         ApplicationUser? user = await users.FindByIdAsync(userId);
         cancellationToken.ThrowIfCancellationRequested();
-        if (user is null || !await EligibleAsync(user, cancellationToken))
+        DateTimeOffset now = Now;
+        if (user is null || !await EligibleAsync(user, cancellationToken) ||
+            string.IsNullOrWhiteSpace(verifiedEmail) || user.NormalizedEmail != users.NormalizeEmail(verifiedEmail) ||
+            user.AuthenticationVersion != expectedVersion || authenticatedAt > now.ToUnixTimeSeconds() ||
+            authenticatedAt <= (now - LoginChallengeLifetime).ToUnixTimeSeconds())
         {
             return Response<LoginResponse>.Unauthorized("Unable to sign in.");
         }
 
-        return await StartLoginAsync(user, ip, "google", cancellationToken);
+        DateTimeOffset primaryTime = DateTimeOffset.FromUnixTimeSeconds(authenticatedAt);
+        return await StartLoginAsync(user, ip, "google", primaryTime, cancellationToken);
     }, cancellationToken);
 
-    private async Task<Response<LoginResponse>> StartLoginAsync(ApplicationUser user, string ip, string method, CancellationToken cancellationToken)
+    private async Task<Response<LoginResponse>> StartLoginAsync(ApplicationUser user, string ip, string method,
+        DateTimeOffset primaryTime, CancellationToken cancellationToken)
     {
         if (!user.TwoFactorEnabled)
         {
@@ -113,7 +122,8 @@ public sealed class TwoFactorService(
             }
 
             return Response<LoginResponse>.Success(LoginResponse.Completed(
-                await tokens.GenerateTokensAndUpdateUser(user, ip, Now.ToUnixTimeSeconds(), method, cancellationToken: cancellationToken)));
+                await tokens.GenerateTokensAndUpdateUser(user, ip, primaryTime.ToUnixTimeSeconds(), method,
+                    googleVerifiedEmail: method == "google" ? user.Email : null, cancellationToken: cancellationToken)));
         }
         // Only one pending primary-login challenge per account; retries do not reset account failures.
         foreach (TwoFactorChallenge old in await db.TwoFactorChallenges.Where(x => x.UserId == user.Id && x.Purpose == "login").ToListAsync(cancellationToken))
@@ -121,7 +131,7 @@ public sealed class TwoFactorService(
             old.IsDeleted = true;
         }
 
-        (string id, TwoFactorChallenge challenge) = NewChallenge(user, "login");
+        (string id, TwoFactorChallenge challenge) = NewChallenge(user, "login", primaryTime + LoginChallengeLifetime);
         challenge.PrimaryMethod = method;
         await db.SaveChangesAsync(cancellationToken);
         return Response<LoginResponse>.Success(LoginResponse.Pending(id, challenge.ExpiresAt));
@@ -167,8 +177,9 @@ public sealed class TwoFactorService(
                 return Response<TokenResponse>.Unauthorized("Unable to sign in. Please try again.");
             }
 
+            long authenticatedAt = (challenge.ExpiresAt - LoginChallengeLifetime).ToUnixTimeSeconds();
             return Response<TokenResponse>.Success(await tokens.GenerateTokensAndUpdateUser(user, ip,
-                Now.ToUnixTimeSeconds(), challenge.PrimaryMethod ?? "pwd", mfaVerified: true, cancellationToken: cancellationToken));
+                authenticatedAt, challenge.PrimaryMethod ?? "pwd", mfaVerified: true, cancellationToken: cancellationToken));
         }, cancellationToken);
     }
 
@@ -186,6 +197,99 @@ public sealed class TwoFactorService(
             await db.TwoFactorRecoveryCodes.CountAsync(x => x.UserId == userId, cancellationToken), await users.HasPasswordAsync(user)));
     }
 
+    internal sealed record EnrollmentEmail(TwoFactorChallengeResponse Challenge, string Address, string Code);
+
+    internal Task<Response<EnrollmentEmail>> PrepareEnrollmentEmailAsync(string userId, ClaimsPrincipal principal,
+        CancellationToken cancellationToken) => LockedAsync(userId, async () =>
+    {
+        if (!protectionOptions.Value.EnrollmentAllowed)
+        {
+            return Response<EnrollmentEmail>.CustomError("Secure authenticator storage is unavailable.", 503);
+        }
+
+        ApplicationUser? user = await users.FindByIdAsync(userId);
+        if (user is null || !await ValidateManagementSessionAsync(user, principal, cancellationToken) ||
+            user.TwoFactorEnabled || !TryGetGoogleEnrollmentDeadline(user, principal, out DateTimeOffset signInDeadline) ||
+            await users.HasPasswordAsync(user))
+        {
+            return Response<EnrollmentEmail>.Forbidden("Sign in with Google again using the account's verified email, then request a code within five minutes.");
+        }
+
+        const string purpose = "enroll-email";
+        DateTimeOffset latestAllowedExpiry = Now.AddMinutes(4);
+        // Include consumed challenges so redeeming a code cannot reset the resend limit.
+        if (await db.TwoFactorChallenges.IgnoreQueryFilters().AnyAsync(x => x.TenantId == TenantId &&
+            x.UserId == userId && x.Purpose == purpose && x.ExpiresAt > latestAllowedExpiry, cancellationToken))
+        {
+            return Response<EnrollmentEmail>.CustomError("Wait one minute before requesting another code.", 429);
+        }
+
+        foreach (TwoFactorChallenge previous in await db.TwoFactorChallenges
+            .Where(x => x.UserId == userId && x.Purpose == purpose).ToListAsync(cancellationToken))
+        {
+            previous.IsDeleted = true;
+        }
+        (string id, TwoFactorChallenge challenge) = NewChallenge(user, purpose, Now.AddMinutes(5));
+        string code = RandomNumberGenerator.GetInt32(100_000_000).ToString("D8", System.Globalization.CultureInfo.InvariantCulture);
+        challenge.ProtectedKey = Convert.ToHexString(EnrollmentEmailDigest(id, user, principal, code));
+        await db.SaveChangesAsync(cancellationToken);
+        // Keep the stored five-minute lifetime for the account resend limit across sign-ins.
+        DateTimeOffset deadline = signInDeadline < challenge.ExpiresAt ? signInDeadline : challenge.ExpiresAt;
+        return Response<EnrollmentEmail>.Success(new(new(id, deadline), user.Email!, code));
+    }, cancellationToken);
+
+    private bool TryGetGoogleEnrollmentDeadline(ApplicationUser user, ClaimsPrincipal principal, out DateTimeOffset deadline)
+    {
+        deadline = default;
+        DateTimeOffset now = Now;
+        if (principal.FindFirstValue(AppClaimTypes.AuthenticationMethod) != "google" ||
+            !long.TryParse(principal.FindFirstValue(AppClaimTypes.AuthenticationTime), out long primaryTime) ||
+            primaryTime > now.ToUnixTimeSeconds() || primaryTime <= now.AddMinutes(-5).ToUnixTimeSeconds() ||
+            string.IsNullOrEmpty(principal.FindFirstValue(AppClaimTypes.SessionId)) ||
+            principal.FindFirstValue(AppClaimTypes.GoogleVerifiedEmail) is not { Length: > 0 } verified ||
+            string.IsNullOrWhiteSpace(user.Email) || user.NormalizedEmail != users.NormalizeEmail(verified))
+        {
+            return false;
+        }
+
+        deadline = DateTimeOffset.FromUnixTimeSeconds(primaryTime).AddMinutes(5);
+        return true;
+    }
+
+    // Only the initiating browser holds the random handle. Its hash is the row ID, so a database
+    // copy alone cannot test guesses for the short emailed code. Refresh preserves the original session identifier.
+    private static byte[] EnrollmentEmailDigest(string handle, ApplicationUser user, ClaimsPrincipal principal, string code) =>
+        HMACSHA256.HashData(Convert.FromHexString(handle), Encoding.UTF8.GetBytes(string.Join('\n',
+            user.NormalizedEmail, user.SecurityStamp, principal.FindFirstValue(AppClaimTypes.SessionId), code)));
+
+    private async Task<bool> ConsumeEnrollmentEmailAsync(ApplicationUser user, TwoFactorManagementRequest request,
+        ClaimsPrincipal principal, CancellationToken cancellationToken)
+    {
+        if (!TryGetGoogleEnrollmentDeadline(user, principal, out _) || request.EnrollmentEmailId is not { Length: 64 } id || !id.All(char.IsAsciiHexDigit))
+        {
+            return false;
+        }
+
+        TwoFactorChallenge? challenge = await ValidChallengeAsync(Hash(id), user, "enroll-email", cancellationToken);
+        if (challenge?.ProtectedKey is null) return false;
+
+        bool accepted = CryptographicOperations.FixedTimeEquals(Convert.FromHexString(challenge.ProtectedKey),
+            EnrollmentEmailDigest(id, user, principal, request.Code?.Trim() ?? string.Empty));
+        if (!accepted)
+        {
+            challenge.Attempts++;
+            if (challenge.Attempts >= MaxAttempts) challenge.IsDeleted = true;
+            await UpdateFailureCountAsync(user, cancellationToken);
+        }
+        else
+        {
+            challenge.IsDeleted = true;
+            challenge.ProtectedKey = null;
+        }
+        await db.SaveChangesAsync(cancellationToken);
+        return accepted;
+    }
+
     public Task<Response<TwoFactorSetupResponse>> BeginEnrollmentAsync(string userId, TwoFactorManagementRequest request,
         ClaimsPrincipal principal, CancellationToken cancellationToken = default) => LockedAsync(userId, async () =>
     {
@@ -200,7 +304,7 @@ public sealed class TwoFactorService(
         if (user is null || !await ValidateManagementSessionAsync(user, principal, cancellationToken) ||
             !await ManagementProofAsync(user, request, principal, cancellationToken))
         {
-            return Response<TwoFactorSetupResponse>.Unauthorized("Verify your password or enrolled factor. Google-only accounts must sign in again within five minutes.");
+            return Response<TwoFactorSetupResponse>.Unauthorized("Verify your password or enrolled factor. For a Google-only account, sign in again and enter the emailed code within five minutes.");
         }
 
         foreach (TwoFactorChallenge old in await db.TwoFactorChallenges.Where(x => x.UserId == userId && x.Purpose == "enroll").ToListAsync(cancellationToken))
@@ -209,7 +313,7 @@ public sealed class TwoFactorService(
         }
 
         string secret = Base32Encoding.ToString(RandomNumberGenerator.GetBytes(20));
-        (string id, TwoFactorChallenge challenge) = NewChallenge(user, "enroll");
+        (string id, TwoFactorChallenge challenge) = NewChallenge(user, "enroll", Now.AddMinutes(5));
         challenge.ProtectedKey = Protector(userId).Protect(secret);
         string issuer = "AditiKraft.Krafter";
         string label = Uri.EscapeDataString($"{issuer}:{tenant.Tenant.Identifier ?? TenantId} ({user.Email})");
@@ -337,9 +441,7 @@ public sealed class TwoFactorService(
             await UpdateFailureCountAsync(user, cancellationToken);
             return false;
         }
-        return principal.FindFirstValue(AppClaimTypes.AuthenticationMethod) == "google" &&
-            long.TryParse(principal.FindFirstValue(AppClaimTypes.AuthenticationTime), out long seconds) &&
-            seconds <= Now.ToUnixTimeSeconds() && seconds >= Now.AddMinutes(-5).ToUnixTimeSeconds();
+        return await ConsumeEnrollmentEmailAsync(user, request, principal, cancellationToken);
     }
 
     private async Task<bool> ConsumeFactorAsync(ApplicationUser user, string code, bool recovery, CancellationToken cancellationToken)
@@ -391,7 +493,7 @@ public sealed class TwoFactorService(
             x.Purpose == purpose && x.AuthenticationVersion == user.AuthenticationVersion && x.Attempts < MaxAttempts && x.ExpiresAt > Now, cancellationToken);
     }
 
-    private (string Id, TwoFactorChallenge Challenge) NewChallenge(ApplicationUser user, string purpose)
+    private (string Id, TwoFactorChallenge Challenge) NewChallenge(ApplicationUser user, string purpose, DateTimeOffset expiresAt)
     {
         string id = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         var challenge = new TwoFactorChallenge
@@ -401,7 +503,7 @@ public sealed class TwoFactorService(
             TenantId = TenantId,
             Purpose = purpose,
             AuthenticationVersion = user.AuthenticationVersion,
-            ExpiresAt = Now.AddMinutes(5)
+            ExpiresAt = expiresAt
         };
         db.TwoFactorChallenges.Add(challenge);
         return (id, challenge);

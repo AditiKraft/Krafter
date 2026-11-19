@@ -98,9 +98,9 @@ public sealed class ExternalAuth
         ApplicationDbContext db,
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
-        GoogleAuthClient googleAuthClient) : IScopedHandler
+        GoogleAuthClient googleAuthClient, TimeProvider clock) : IScopedHandler
     {
-        public async Task<Response<LoginResponse>> AuthenticateCodeAsync(
+        public async Task<Response<GoogleAccountProof>> VerifyCodeAsync(
             string code, string codeVerifier,
             CancellationToken cancellationToken)
         {
@@ -109,49 +109,51 @@ public sealed class ExternalAuth
 
             if (tokens == null)
             {
-                return Response<LoginResponse>.Unauthorized("Invalid token");
+                return Response<GoogleAccountProof>.Unauthorized("Invalid token");
             }
 
             // Get user info from Google
             GoogleAuthClient.GoogleUserInfo? userInfo = await googleAuthClient.GetUserInfoAsync(tokens.AccessToken, cancellationToken);
             if (userInfo is null || !userInfo.VerifiedEmail || string.IsNullOrWhiteSpace(userInfo.Email))
             {
-                return Response<LoginResponse>.Unauthorized("Invalid user info");
+                return Response<GoogleAccountProof>.Unauthorized("Invalid user info");
             }
 
-            // Find or create user based on email
+            long authenticatedAt = clock.GetUtcNow().ToUnixTimeSeconds();
             ApplicationUser? user = await userManager.FindByEmailAsync(userInfo.Email);
-            if (user == null)
+            bool eligible = user is null
+                ? await AvailableBasicRoleAsync(userInfo.Email, cancellationToken) is not null
+                : await twoFactor.EligibleAsync(user, cancellationToken);
+            if (!eligible)
+                return Response<GoogleAccountProof>.Unauthorized("Unable to sign in.");
+
+            // Capture the account observed for the verified email. Only redemption may provision
+            // a user, supersede a login challenge or rotate a session's refresh credential.
+            return Response<GoogleAccountProof>.Success(new(userInfo.Email, userInfo.GivenName, userInfo.FamilyName,
+                authenticatedAt, user?.Id, user?.AuthenticationVersion ?? 0));
+        }
+
+        public async Task<Response<LoginResponse>> RedeemAsync(GoogleAccountProof verified, CancellationToken cancellationToken)
+        {
+            string? id = verified.UserId;
+            if (id is null)
             {
-                ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
+                ApplicationRole? basic = await AvailableBasicRoleAsync(verified.Email, cancellationToken);
                 if (basic is null)
-                {
-                    return Response<LoginResponse>.NotFound("Basic Role Not Found.");
-                }
-
-                // Deleted identities retain their email/username reservations. An external
-                // sign-in must not recreate or relink an account hidden by the query filter.
-                Response validation = UserIdentityValidation.Validate(userManager, userInfo.Email, userInfo.Email);
-                if (validation.IsError)
-                    return Response<LoginResponse>.Unauthorized("Unable to sign in.");
-                string? normalizedEmail = userManager.NormalizeEmail(userInfo.Email);
-                string? normalizedName = userManager.NormalizeName(userInfo.Email);
-                if (await db.Users.IgnoreQueryFilters().AnyAsync(candidate => candidate.TenantId == basic.TenantId &&
-                    (candidate.NormalizedEmail == normalizedEmail || candidate.NormalizedUserName == normalizedName), cancellationToken))
                     return Response<LoginResponse>.Unauthorized("Unable to sign in.");
 
-                user = new ApplicationUser
+                var user = new ApplicationUser
                 {
                     IsActive = true,
-                    FirstName = userInfo.GivenName,
-                    LastName = userInfo.FamilyName,
-                    Email = userInfo.Email,
-                    EmailConfirmed = userInfo.VerifiedEmail,
-                    PhoneNumber = userInfo.Email,
-                    UserName = userInfo.Email,
+                    FirstName = verified.GivenName,
+                    LastName = verified.FamilyName,
+                    Email = verified.Email,
+                    EmailConfirmed = true,
+                    PhoneNumber = verified.Email,
+                    UserName = verified.Email,
                     Id = Guid.NewGuid().ToString()
                 };
-
+                id = user.Id;
                 // Identity saves immediately. Roll back both account and Basic membership on
                 // failure, and clear rejected tracked state before any later caller can save it.
                 await using var provisioning = await DomainTransaction.BeginAsync(db, cancellationToken);
@@ -175,8 +177,23 @@ public sealed class ExternalAuth
                 }
             }
 
-            Response<LoginResponse> res = await twoFactor.ExternalLoginAsync(user.Id, string.Empty, cancellationToken);
-            return res;
+            return await twoFactor.ExternalLoginAsync(id, string.Empty, cancellationToken,
+                authenticatedAt: verified.AuthenticatedAt, verifiedEmail: verified.Email, expectedVersion: verified.AuthenticationVersion);
+        }
+
+        private async Task<ApplicationRole?> AvailableBasicRoleAsync(string email, CancellationToken cancellationToken)
+        {
+            ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
+            if (basic is null || UserIdentityValidation.Validate(userManager, email, email).IsError)
+                return null;
+
+            // Soft-deleted identifiers are reserved. An account created since verification
+            // must also never inherit a handoff issued while this address was unclaimed.
+            string? normalizedEmail = userManager.NormalizeEmail(email);
+            string? normalizedName = userManager.NormalizeName(email);
+            bool reserved = await db.Users.IgnoreQueryFilters().AnyAsync(candidate => candidate.TenantId == basic.TenantId &&
+                (candidate.NormalizedEmail == normalizedEmail || candidate.NormalizedUserName == normalizedName), cancellationToken);
+            return reserved ? null : basic;
         }
     }
 

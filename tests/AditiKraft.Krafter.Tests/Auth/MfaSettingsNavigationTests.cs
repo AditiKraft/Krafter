@@ -25,6 +25,19 @@ public sealed class MfaSettingsNavigationTests
     private static readonly string[] TestCodes = Enumerable.Range(0, 10).Select(index => $"test-recovery-code-{index:00}").ToArray();
     private const string SignInButton = "I saved my codes — sign in again";
 
+    [Fact]
+    public async Task GoogleOnlyEnrollmentSubmitsTheEmailedCodeAndBrowserHandleTogether()
+    {
+        await using var page = new SettingsPage(enabled: false, hasPassword: false);
+        await page.RenderAsync();
+        Assert.True(page.Button("Set up authenticator").Disabled);
+        await page.ClickAsync("Send verification code");
+        await page.RunAsync(() => page.TextBox("EnrollmentEmailCode").ValueChanged.InvokeAsync("01234567"));
+        await page.ClickAsync("Set up authenticator");
+        Assert.Equal("01234567", page.Api.ManagementCode);
+        Assert.Equal("browser-proof", page.Api.EmailProofId);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -444,7 +457,7 @@ public sealed class MfaSettingsNavigationTests
         public DialogService Dialogs { get; }
         public HtmlRootComponent Root { get; private set; }
 
-        public SettingsPage(bool enabled)
+        public SettingsPage(bool enabled, bool hasPassword = true)
         {
             Authentication = new Authentication(Navigation, Guard);
             var registrations = new ServiceCollection();
@@ -456,7 +469,7 @@ public sealed class MfaSettingsNavigationTests
             registrations.AddSingleton(Guard);
             registrations.AddSingleton(Notifications);
             registrations.AddSingleton<DialogService>();
-            registrations.AddSingleton<CapturingActivator>(provider => new CapturingActivator(provider, enabled));
+            registrations.AddSingleton<CapturingActivator>(provider => new CapturingActivator(provider, enabled, hasPassword));
             registrations.AddSingleton<IComponentActivator>(provider => provider.GetRequiredService<CapturingActivator>());
             services = registrations.BuildServiceProvider();
             Dialogs = services.GetRequiredService<DialogService>();
@@ -506,7 +519,7 @@ public sealed class MfaSettingsNavigationTests
         }
     }
 
-    private sealed class CapturingActivator(IServiceProvider services, bool enabled) : IComponentActivator
+    private sealed class CapturingActivator(IServiceProvider services, bool enabled, bool hasPassword) : IComponentActivator
     {
         public List<IComponent> All { get; } = [];
         public IComponent CreateInstance(Type componentType)
@@ -516,7 +529,7 @@ public sealed class MfaSettingsNavigationTests
             {
                 // Initial browser-only status loading is replaced with a fixture; all user event handlers remain real.
                 typeof(TwoFactorSettings).GetField("status", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .SetValue(component, new TwoFactorStatusResponse(enabled, 1, true));
+                    .SetValue(component, new TwoFactorStatusResponse(enabled, 1, hasPassword));
             }
             All.Add(component);
             return component;
@@ -583,15 +596,19 @@ public sealed class MfaSettingsNavigationTests
         public int RemainingRecoveryCodes { get; private set; } = 1;
         public bool UsedRecoveryCode { get; private set; }
         public string? ManagementCode { get; private set; }
+        public string? EmailProofId { get; private set; }
         public Task<Response<TwoFactorStatusResponse>> StatusAsync(CancellationToken cancellationToken = default)
         {
             StatusCount++;
             return StatusResponse?.Invoke() ?? Task.FromResult(Response<TwoFactorStatusResponse>.Success(new(true, RemainingRecoveryCodes, true)));
         }
+        public Task<Response<TwoFactorChallengeResponse>> RequestEnrollmentEmailAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Response<TwoFactorChallengeResponse>.Success(new("browser-proof", DateTimeOffset.UtcNow.AddMinutes(5))));
         public async Task<Response<TwoFactorSetupResponse>> SetupAsync(TwoFactorManagementRequest request, CancellationToken cancellationToken = default)
         {
             UsedRecoveryCode = request.UseRecoveryCode;
             ManagementCode = request.Code;
+            EmailProofId = request.EnrollmentEmailId;
             Response<TwoFactorSetupResponse> response = await SetupResponse();
             if (!response.IsError && request.UseRecoveryCode)
             {

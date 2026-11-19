@@ -1,6 +1,10 @@
+using AditiKraft.Krafter.Backend.Features.Auth;
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace AditiKraft.Krafter.Tests.Auth;
 
@@ -131,6 +135,55 @@ public sealed class AuthTokenServiceTests
 
         api.Refresh = _ => Task.FromResult(Response<TokenResponse>.Success(TokenTestData.Create()));
         Assert.True(await service.RefreshAsync().WaitAsync(Timeout));
+    }
+
+    [Fact]
+    public async Task CanceledRealtimeWaiterPreservesTheRotatedProofForTheNextRefresh()
+    {
+        using var harness = new MfaHarness();
+        using MfaScope seed = harness.Scope();
+        // Every issued token falls inside the client's one-minute refresh window.
+        seed.Services.GetRequiredService<IOptions<JwtSettings>>().Value.TokenExpirationInMinutes = 1;
+        await seed.AddUserAsync();
+        TokenResponse original = (await seed.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "browser")).Data!.Tokens!;
+        var storage = new TokenStorage(original);
+        var rotated = new TaskCompletionSource<TokenResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var deliverResponse = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var api = new AuthApi
+        {
+            Refresh = async request =>
+            {
+                using MfaScope scope = harness.Scope();
+                var backend = ActivatorUtilities.CreateInstance<RefreshToken.Handler>(scope.Services);
+                Response<TokenResponse> result = await backend.RefreshTokenAsync(request, "browser", CancellationToken.None);
+                if (!result.IsError && rotated.TrySetResult(result.Data!))
+                    await deliverResponse.Task.WaitAsync(Timeout);
+                return result;
+            }
+        };
+        using var coordinator = new TokenRefreshCoordinator();
+        var service = new AuthTokenService(api, storage, coordinator);
+        using var connection = new CancellationTokenSource();
+        Task<bool> realtime = service.RefreshForRealtimeAsync(connection.Token);
+        try
+        {
+            TokenResponse replacement = await rotated.Task.WaitAsync(Timeout);
+            Assert.NotEqual(original.RefreshToken, replacement.RefreshToken);
+            connection.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => realtime.WaitAsync(Timeout));
+
+            Task<bool> nextRefresh = service.RefreshAsync();
+            Assert.False(nextRefresh.IsCompleted);
+            deliverResponse.SetResult();
+            Assert.True(await nextRefresh.WaitAsync(Timeout));
+            Assert.Equal(2, api.RefreshCount);
+            Assert.NotEqual(replacement.RefreshToken, storage.Tokens!.RefreshToken);
+        }
+        finally
+        {
+            deliverResponse.TrySetResult();
+            await coordinator.ExecuteAsync(() => Task.FromResult(true)).WaitAsync(Timeout);
+        }
     }
 
     [Fact]

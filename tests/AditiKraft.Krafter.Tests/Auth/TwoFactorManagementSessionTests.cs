@@ -113,13 +113,14 @@ public sealed class TwoFactorManagementSessionTests
         int disabledVersion = (await changing.Db.Users.AsNoTracking().SingleAsync(x => x.Id == user.Id)).AuthenticationVersion;
 
         using MfaScope fresh = harness.Scope(tenantId);
-        var login = await fresh.Mfa.ExternalLoginAsync(user.Id, "test");
+        var login = await fresh.GoogleLoginAsync(user.Id);
         Assert.False(login.IsError);
         ClaimsPrincipal current = MfaHarness.Principal(login.Data!.Tokens!);
         TwoFactorSetupResponse? enrollment = null;
+        TwoFactorManagementRequest proof = await harness.EnrollmentEmailProofAsync(fresh, user.Id, current);
         if (confirm)
         {
-            var begun = await fresh.Mfa.BeginEnrollmentAsync(user.Id, new(), current);
+            var begun = await fresh.Mfa.BeginEnrollmentAsync(user.Id, proof, current);
             Assert.False(begun.IsError);
             enrollment = begun.Data!;
             Assert.Equal(401, (await waiting.Mfa.ConfirmEnrollmentAsync(user.Id,
@@ -127,7 +128,7 @@ public sealed class TwoFactorManagementSessionTests
         }
         else
         {
-            Assert.Equal(401, (await waiting.Mfa.BeginEnrollmentAsync(user.Id, new(), original)).StatusCode);
+            Assert.Equal(401, (await waiting.Mfa.BeginEnrollmentAsync(user.Id, proof, original)).StatusCode);
         }
 
         using MfaScope check = harness.Scope(tenantId);
@@ -137,13 +138,13 @@ public sealed class TwoFactorManagementSessionTests
         Assert.Equal(0, saved.AccessFailedCount);
         Assert.Null((await check.Db.TwoFactorCredentials.SingleAsync(x => x.UserId == user.Id)).ProtectedKey);
         Assert.Equal(0, await check.Db.TwoFactorRecoveryCodes.CountAsync(x => x.UserId == user.Id));
-        Assert.Equal(confirm ? 1 : 0, await check.Db.TwoFactorChallenges.CountAsync(x => x.UserId == user.Id));
+        Assert.Equal(1, await check.Db.TwoFactorChallenges.CountAsync(x => x.UserId == user.Id));
         Assert.All(await check.Db.TwoFactorChallenges.Where(x => x.UserId == user.Id).ToListAsync(),
             challenge => Assert.Equal(0, challenge.Attempts));
 
         if (enrollment is null)
         {
-            var begun = await check.Mfa.BeginEnrollmentAsync(user.Id, new(), current);
+            var begun = await check.Mfa.BeginEnrollmentAsync(user.Id, proof, current);
             Assert.False(begun.IsError);
             enrollment = begun.Data!;
         }
@@ -159,7 +160,7 @@ public sealed class TwoFactorManagementSessionTests
     private static async Task<ClaimsPrincipal> LoginAsync(MfaScope scope, string userId, string code, bool google = false)
     {
         var primary = google
-            ? await scope.Mfa.ExternalLoginAsync(userId, "test")
+            ? await scope.GoogleLoginAsync(userId)
             : await scope.Mfa.PasswordLoginAsync(MfaHarness.PasswordRequest(), "test");
         Assert.False(primary.IsError);
         var completed = await scope.Mfa.CompleteLoginAsync(new()
