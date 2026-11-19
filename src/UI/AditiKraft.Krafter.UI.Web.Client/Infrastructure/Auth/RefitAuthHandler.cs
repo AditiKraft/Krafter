@@ -18,7 +18,6 @@ public class RefitAuthHandler(
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Logout}",
-        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tenants}/{RouteSegment.SeedData}",
         "/login"
     ];
 

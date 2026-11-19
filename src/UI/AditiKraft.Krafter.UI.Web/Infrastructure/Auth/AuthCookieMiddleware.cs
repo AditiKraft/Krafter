@@ -19,6 +19,7 @@ public class AuthCookieMiddleware(RequestDelegate next)
 {
     private static readonly HashSet<string> AuthPaths = new(StringComparer.OrdinalIgnoreCase)
     {
+        $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.TwoFactor}/login",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}/{RouteSegment.Refresh}",
         $"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}"
@@ -37,6 +38,8 @@ public class AuthCookieMiddleware(RequestDelegate next)
             return;
         }
 
+        context.Response.Headers.CacheControl = "no-store";
+
         // Buffer the response body so we can read the token data before it's sent to the client
         Stream originalBody = context.Response.Body;
         using var buffer = new MemoryStream();
@@ -53,14 +56,23 @@ public class AuthCookieMiddleware(RequestDelegate next)
             {
                 try
                 {
-                    Response<TokenResponse>? tokenResponse =
-                        await System.Text.Json.JsonSerializer.DeserializeAsync<Response<TokenResponse>>(buffer, JsonOptions);
-
-                    if (tokenResponse is { Data: not null, IsError: false })
+                    bool primary = context.Request.Path.Equals($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.Tokens}", StringComparison.OrdinalIgnoreCase) ||
+                        context.Request.Path.Equals($"/{ApiRoutes.ApiPrefix}/{ApiRoutes.ExternalAuth}/{RouteSegment.Google}", StringComparison.OrdinalIgnoreCase);
+                    TokenResponse? completed;
+                    if (primary)
                     {
-                        IAuthStorageService localStorage =
-                            context.RequestServices.GetRequiredService<IAuthStorageService>();
-                        await localStorage.CacheAuthTokens(tokenResponse.Data);
+                        Response<LoginResponse>? login = await System.Text.Json.JsonSerializer.DeserializeAsync<Response<LoginResponse>>(buffer, JsonOptions);
+                        completed = login is { IsError: false, Data.Challenge: null } ? login.Data?.Tokens : null;
+                    }
+                    else
+                    {
+                        Response<TokenResponse>? response = await System.Text.Json.JsonSerializer.DeserializeAsync<Response<TokenResponse>>(buffer, JsonOptions);
+                        completed = response is { IsError: false } ? response.Data : null;
+                    }
+                    if (completed is not null && !string.IsNullOrWhiteSpace(completed.Token) && !string.IsNullOrWhiteSpace(completed.RefreshToken))
+                    {
+                        IAuthStorageService storage = context.RequestServices.GetRequiredService<IAuthStorageService>();
+                        await storage.CacheAuthTokens(completed);
                     }
                 }
                 catch (Exception ex)

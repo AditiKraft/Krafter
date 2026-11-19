@@ -31,6 +31,10 @@ public sealed class DeleteUser
             }
 
             user.IsDeleted = true;
+            // Reject stale Identity updates instead of allowing them to restore this row.
+            user.AuthenticationVersion++;
+            user.SecurityStamp = Guid.NewGuid().ToString();
+            user.ConcurrencyStamp = Guid.NewGuid().ToString();
             db.Users.Update(user);
 
             List<ApplicationUserRole> userRoles = await db.UserRoles

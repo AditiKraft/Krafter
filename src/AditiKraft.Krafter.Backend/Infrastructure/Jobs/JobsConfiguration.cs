@@ -7,8 +7,18 @@ namespace AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 
 public static class JobsConfiguration
 {
-    public static IServiceCollection AddBackgroundJobs(this IServiceCollection services)
+    public static IServiceCollection AddBackgroundJobs(this IServiceCollection services,
+        IConfiguration configuration, IHostEnvironment environment)
     {
+        if (!environment.IsDevelopment() &&
+            (string.IsNullOrWhiteSpace(configuration["TickerQBasicAuth:Username"]) ||
+             string.IsNullOrWhiteSpace(configuration["TickerQBasicAuth:Password"]) ||
+             string.Equals(configuration["TickerQBasicAuth:Password"]?.Trim(), "admin", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException(
+                "Configure private TickerQBasicAuth:Username and TickerQBasicAuth:Password values outside Development; the public admin password is not allowed.");
+        }
+
         services.AddScoped<IJobService, JobService>();
 
         services.AddTickerQ(options =>

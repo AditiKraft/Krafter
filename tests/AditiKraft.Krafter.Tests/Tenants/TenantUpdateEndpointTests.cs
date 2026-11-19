@@ -1,4 +1,5 @@
 using System.Net;
+using AditiKraft.Krafter.Backend.Common.Auth;
 using System.Net.Http.Json;
 using AditiKraft.Krafter.Backend.Features.Tenants;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
@@ -101,6 +102,7 @@ public sealed class TenantUpdateEndpointTests
             TenantBaseDomain = "getkrafter.dev",
             ApiBaseUrl = "https://api.getkrafter.dev"
         });
+        builder.Services.AddScoped<ICurrentUser, CurrentUser>();
         builder.Services.AddScoped<UpdateTenant.Handler>();
         builder.Services.AddValidatorsFromAssemblyContaining<CreateOrUpdateTenantRequestValidator>();
         builder.AddFluentValidationEndpointFilter();

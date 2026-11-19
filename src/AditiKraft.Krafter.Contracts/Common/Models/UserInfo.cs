@@ -9,7 +9,7 @@ public class UserInfo : IIdDto
     public DateTime CreatedOn { get; set; }
 
     ////Email
-    public string Email { get; set; } = "iambipinpaul@outlook.com";
+    public string Email { get; set; } = string.Empty;
 
     ////permissions
 

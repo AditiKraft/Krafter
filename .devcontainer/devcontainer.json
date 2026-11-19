@@ -20,7 +20,7 @@
     "DOTNET_GENERATE_ASPNET_CERTIFICATE": "false",
     "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "true"
   },
-  "postCreateCommand": "dotnet restore && dotnet tool install --global dotnet-ef || echo \"dotnet-ef already installed\"",
+  "postCreateCommand": "sh .devcontainer/post-create.sh",
   "postStartCommand": "dotnet dev-certs https --trust 2>/dev/null || echo \"Dev certs trust skipped (Linux limitation)\"",
   "forwardPorts": [],
   "customizations": {

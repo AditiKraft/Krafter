@@ -9,11 +9,11 @@ using Microsoft.Extensions.Hosting;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
-builder.Services.AddHostedService<ApiDbInitializer>();
+builder.Services.AddTransient<ApiDbInitializer>();
 builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddCurrentUserServices();
 builder.Services.AddTenantServices();
 
-IHost app = builder.Build();
-
-await app.RunAsync();
+using IHost app = builder.Build();
+return await MigrationHost.RunAsync(app,
+    cancellationToken => app.Services.GetRequiredService<ApiDbInitializer>().InitializeAsync(cancellationToken));

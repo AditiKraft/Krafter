@@ -22,6 +22,7 @@ public static class RegisterUIServices
         service.AddScoped<LayoutService>();
 
         service.AddScoped<IAuthenticationService, AuthenticationService>();
+        service.AddScoped<AccountSecurityNavigationGuard>();
         service.AddScoped<AuthTokenService>();
         service.TryAddScoped<TokenRefreshCoordinator>();
         service.AddScoped<NotificationService>();

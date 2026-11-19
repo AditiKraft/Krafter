@@ -22,6 +22,38 @@ namespace AditiKraft.Krafter.Backend.Migrations.TenantDb
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.GoogleLoginTransaction", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("BrowserProofHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProtectedPayload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+                    b.HasIndex("ExpiresAt");
+                    b.ToTable("GoogleLoginTransactions", (string)null);
+                });
+
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Tenants.Common.Tenant", b =>
                 {
                     b.Property<string>("Id")

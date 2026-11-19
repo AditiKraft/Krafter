@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
@@ -16,10 +17,13 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Compile Include="../../build/UpstreamReleaseBranch.cs" Link="Build/UpstreamReleaseBranch.cs"
+             Condition="Exists('../../build/UpstreamReleaseBranch.cs')" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj" />
+    <ProjectReference Include="../../src/AditiKraft.Krafter.Backend.Migrator/AditiKraft.Krafter.Backend.Migrator.csproj" />
     <ProjectReference Include="../../src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj" />
   </ItemGroup>
 

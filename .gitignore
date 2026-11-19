@@ -195,10 +195,11 @@ publish/
 PublishScripts/
 
 # NuGet Packages
-*.nupkg
+*.[nN][uU][pP][kK][gG]
+[nN][uU][pP][kK][gG]/
 
 # NuGet Symbol Packages
-*.snupkg
+*.[sS][nN][uU][pP][kK][gG]
 # The packages folder can be ignored because of Package Restore
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
@@ -239,7 +240,16 @@ ClientBin/
 *.dbmdl
 *.dbproj.schemaview
 *.jfm
-*.pfx
+*.[pP][fF][xX]
+*.[pP]12
+*.[pP][eE][mM]
+*.[kK][eE][yY]
+[kK][eE][yY]-*.[xX][mM][lL]
+[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].[lL][oO][cC][aA][lL]*.[jJ][sS][oO][nN]
+[aA][pP][pP][sS][eE][tT][tT][iI][nN][gG][sS].*.[lL][oO][cC][aA][lL].[jJ][sS][oO][nN]
+.[eE][nN][vV]
+.[eE][nN][vV].*
+[sS][eE][cC][rR][eE][tT][sS].[jJ][sS][oO][nN]
 *.publishsettings
 orleans.codegen.cs
 
@@ -459,3 +469,6 @@ $RECYCLE.BIN/
 ##
 TestTemplate_*/
 TestKrafterApp/
+
+# Build execution metadata
+.fallout/temp/

@@ -2,8 +2,8 @@ using System.Net;
 using System.Text.Json;
 using AditiKraft.Krafter.Backend.Common.Auth;
 using AditiKraft.Krafter.Backend.Errors;
-using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common;
 using FluentValidation.Results;
 using Npgsql;
 
@@ -16,6 +16,10 @@ public class ExceptionMiddleware(ICurrentUser currentUser, ILogger<ExceptionMidd
         try
         {
             await next(context);
+        }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // The caller disconnected. Do not log an application failure or write a response.
         }
         catch (Exception exception)
         {

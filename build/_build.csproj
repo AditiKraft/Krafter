@@ -13,6 +13,8 @@
   <ItemGroup>
     <PackageReference Include="Fallout.Common" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" />
+    <!-- Fallout's XML/MSBuild dependencies require the patched XML/PKCS pair. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 
 </Project>

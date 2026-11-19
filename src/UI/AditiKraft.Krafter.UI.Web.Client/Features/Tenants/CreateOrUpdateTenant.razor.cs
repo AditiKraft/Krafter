@@ -1,4 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.UI.Web.Client.Common.Components.Dialogs;
 using Mapster;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
@@ -6,16 +7,16 @@ namespace AditiKraft.Krafter.UI.Web.Client.Features.Tenants;
 public partial class CreateOrUpdateTenant(
     DialogService dialogService,
     ApiCallService api,
-    ITenantsApi tenantsApi) : ComponentBase
+    ITenantsApi tenantsApi) : EditorDialogBase(dialogService)
 {
     [Parameter] public TenantDto? TenantInput { get; set; } = new();
     private CreateOrUpdateTenantRequest CreateRequest = new();
-    private bool isBusy;
     private string? dateError;
     private bool IsRoot => TenantInput?.Id == DefaultTenantConstants.Identifier;
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         CreateRequest = TenantInput?.Adapt<CreateOrUpdateTenantRequest>() ?? new();
         if (string.IsNullOrWhiteSpace(CreateRequest.Id))
         {
@@ -25,7 +26,7 @@ public partial class CreateOrUpdateTenant(
 
     private void ChangeLocalExpiry(DateTime? value)
     {
-        if (IsRoot)
+        if (IsRoot || IsSaving || IsDisposed)
         {
             return;
         }
@@ -48,27 +49,25 @@ public partial class CreateOrUpdateTenant(
 
     private async Task SubmitAsync(CreateOrUpdateTenantRequest input)
     {
-        if (isBusy || dateError is not null)
+        if (dateError is not null || !TryBeginSave())
         {
             return;
         }
 
-        isBusy = true;
+        CreateOrUpdateTenantRequest request = input.Adapt<CreateOrUpdateTenantRequest>();
         try
         {
-            Response result = string.IsNullOrWhiteSpace(input.Id)
-                ? await api.CallAsync(() => tenantsApi.CreateTenantAsync(input), successMessage: "Tenant created successfully")
-                : await api.CallAsync(() => tenantsApi.UpdateTenantAsync(input.Id, input), successMessage: "Tenant updated successfully");
+            Response result = string.IsNullOrWhiteSpace(request.Id)
+                ? await api.CallAsync(() => tenantsApi.CreateTenantAsync(request), successMessage: "Tenant created successfully")
+                : await api.CallAsync(() => tenantsApi.UpdateTenantAsync(request.Id, request), successMessage: "Tenant updated successfully");
             if (!result.IsError)
             {
-                dialogService.Close(true);
+                CloseAfterSave();
             }
         }
         finally
         {
-            isBusy = false;
+            EndSave();
         }
     }
-
-    private void Cancel() => dialogService.Close(false);
 }

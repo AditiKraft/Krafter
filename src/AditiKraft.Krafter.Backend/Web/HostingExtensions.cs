@@ -1,4 +1,8 @@
 using AditiKraft.Krafter.Backend.Common.Tenants;
+using AditiKraft.Krafter.Backend.Features.Auth.Common;
+using AditiKraft.Krafter.Backend.Features.Tenants.Common;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using AditiKraft.Krafter.Backend.Infrastructure.Jobs;
 using AditiKraft.Krafter.Backend.Infrastructure.Notifications;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence.Tenants;
@@ -34,6 +38,22 @@ public static class HostingExtensions
         builder.Services.AddSingleton(urls);
 
         builder.Services.AddDatabaseConfiguration(builder.Configuration);
+        builder.Services.AddHostedService<DefaultTenantInitializer>();
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<TwoFactorService>();
+        builder.Services.AddScoped<IGoogleLoginTransactionStore, GoogleLoginTransactionStore>();
+        builder.Services.AddScoped<IGoogleAccountAuthenticator, GoogleAccountAuthenticator>();
+        builder.Services.AddScoped<GoogleOAuthFlow>();
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        });
+        builder.Services.AddScoped<SessionValidator>();
+        builder.Services.AddHostedService<TwoFactorCleanup>();
+        builder.AddTwoFactorProtection();
 
         builder.Services.AddCurrentUserServices();
         builder.Services.AddTenantServices();
@@ -53,11 +73,11 @@ public static class HostingExtensions
         builder.AddFluentValidationEndpointFilter();
         builder.Services.AddValidatorsFromAssemblyContaining<TokenRequestValidator>();
 
-        builder.Services.AddBackgroundJobs();
+        builder.Services.AddBackgroundJobs(builder.Configuration, builder.Environment);
 
         builder.Services.AddRouteDiscovery();
 
-        builder.Services.AddSignalR();
+        builder.Services.AddRealtimeServices();
 
         builder.Services.AddResponseCompression(opts =>
         {
@@ -78,6 +98,7 @@ public static class HostingExtensions
         app.UseMiddleware<ExceptionMiddleware>();
         app.UseMiddleware<MultiTenantServiceMiddleware>();
         app.AuthMiddleware(config);
+        app.UseRateLimiter();
 
         return app;
     }
@@ -90,7 +111,7 @@ public static class HostingExtensions
     {
         app.MapDiscoveredRoutes();
 
-        app.MapHub<RealtimeHub>($"/{ApiRoutes.ApiPrefix}/{nameof(RealtimeHub)}")
+        app.MapHub<RealtimeHub>($"/{ApiRoutes.ApiPrefix}/{nameof(RealtimeHub)}", options => options.CloseOnAuthenticationExpiration = true)
             .MustHavePermission(PermissionAction.View, PermissionResource.Notifications);
 
         app.UseBackgroundJobs();

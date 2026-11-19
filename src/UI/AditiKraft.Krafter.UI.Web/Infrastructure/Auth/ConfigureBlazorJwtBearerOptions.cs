@@ -24,8 +24,9 @@ public class ConfigureBlazorJwtBearerOptions(IOptions<JwtSettings> jwtSettings)
             return;
         }
 
-        byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Key);
+        byte[] key = Encoding.UTF8.GetBytes(_jwtSettings.Key);
 
+        options.MapInboundClaims = false;
         options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters

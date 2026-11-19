@@ -7,6 +7,7 @@ public static class ApiRoutes
     public const string Roles = "roles";
     public const string Tenants = "tenants";
     public const string Tokens = "tokens";
+    public const string TwoFactor = "two-factor";
     public const string Users = "users";
     public const string AppInfo = "app-info";
     public const string ExternalAuth = "external-auth";
@@ -37,6 +38,4 @@ public static class RouteSegment
     public const string ForgotPassword = "forgot-password";
 
     public const string ResetPassword = "reset-password";
-
-    public const string SeedData = "seed-data";
 }

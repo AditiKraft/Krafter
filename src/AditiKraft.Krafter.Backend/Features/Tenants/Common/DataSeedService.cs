@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using System.Text.Encodings.Web;
 using AditiKraft.Krafter.Backend.Common;
 using AditiKraft.Krafter.Backend.Common.Tenants;
 using AditiKraft.Krafter.Backend.Features.Roles.Common;
@@ -10,182 +10,175 @@ using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
 using AditiKraft.Krafter.Contracts.Contracts.Roles;
-using AditiKraft.Krafter.Contracts.Contracts.Tenants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Tenants.Common;
 
-public class DataSeedService(
+public sealed class DataSeedService(
     ITenantGetterService tenantGetterService,
     IJobService jobService,
     ApplicationDbContext applicationDbContext,
-    TenantDbContext dbContext,
     RoleManager<ApplicationRole> roleManager,
-    UserManager<ApplicationUser> userManager) : IScopedHandler
+    UserManager<ApplicationUser> userManager,
+    IConfiguration configuration,
+    IHostEnvironment environment) : IScopedHandler
 {
-    public async Task<Response> SeedBasicData(SeedDataRequest request)
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        CurrentTenantDetails currentTenantResponse = tenantGetterService.Tenant;
+        CurrentTenantDetails tenant = tenantGetterService.Tenant;
+        if (string.IsNullOrWhiteSpace(tenant.Id) || string.IsNullOrWhiteSpace(tenant.TenantLink))
+            throw new InvalidOperationException("Set the tenant before provisioning its identity data.");
+        cancellationToken.ThrowIfCancellationRequested();
+        if (applicationDbContext.ChangeTracker.HasChanges())
+            throw new InvalidOperationException("Save pending changes before provisioning tenant identity data.");
 
-        int roleCount = await applicationDbContext.Roles.CountAsync();
-        if (roleCount == 0)
+        SendEmailRequestInput? welcome;
+        await using (var transaction = await DomainTransaction.BeginAsync(applicationDbContext, cancellationToken))
         {
-            var role = new ApplicationRole(RoleConstants.Basic, RoleConstants.Basic)
+            welcome = await ProvisionAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        await QueueWelcomeAsync(welcome);
+    }
+
+    // The caller owns the registry/identity transaction and must queue the returned email after commit.
+    internal async Task<SendEmailRequestInput?> ProvisionAsync(CancellationToken cancellationToken)
+    {
+        CurrentTenantDetails tenant = tenantGetterService.Tenant;
+        cancellationToken.ThrowIfCancellationRequested();
+        if (applicationDbContext.ChangeTracker.HasChanges())
+            throw new InvalidOperationException("Save pending changes before provisioning tenant identity data.");
+        if (applicationDbContext.Database.IsRelational())
+        {
+            if (applicationDbContext.Database.CurrentTransaction is null)
+                throw new InvalidOperationException("Provisioning requires an identity transaction.");
+            string key = $"tenant-bootstrap:{tenant.Id}";
+            await applicationDbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
+        }
+        applicationDbContext.ChangeTracker.Clear();
+        SendEmailRequestInput? welcome = null;
+        // Any identity history means this is an existing or partially provisioned tenant.
+        // Include soft-deleted rows without losing tenant isolation. Never repair roles,
+        // restore removed permissions, or recreate an intentionally deleted owner.
+        if (await applicationDbContext.Users.IgnoreQueryFilters().AnyAsync(
+                user => user.TenantId == tenant.Id, cancellationToken) ||
+            await applicationDbContext.Roles.IgnoreQueryFilters().AnyAsync(
+                role => role.TenantId == tenant.Id, cancellationToken))
+            return null;
+
+        bool isRoot = tenant.Id == SeedDataConstants.RootTenant.Id;
+        string password;
+        if (isRoot)
+        {
+            string? configuredPassword = configuration["Bootstrap:RootPassword"];
+            if (!environment.IsDevelopment() &&
+                (string.IsNullOrWhiteSpace(configuredPassword) || configuredPassword == SeedDataConstants.DefaultPassword))
+                throw new InvalidOperationException("Configure Bootstrap:RootPassword with a non-default password before provisioning a new production root account.");
+            password = string.IsNullOrWhiteSpace(configuredPassword) ? SeedDataConstants.DefaultPassword : configuredPassword;
+            if (password.Length > PasswordLimits.MaximumLength)
+                throw new InvalidOperationException("Bootstrap:RootPassword exceeds the supported login password length.");
+        }
+        else
+        {
+            password = PasswordGenerator.GeneratePassword();
+        }
+        ApplicationUser owner = CreateOwner();
+        // Use Identity's configured password rules before staging any identity rows.
+        foreach (IPasswordValidator<ApplicationUser> validator in userManager.PasswordValidators)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            EnsureSucceeded(await validator.ValidateAsync(userManager, owner, password));
+        }
+        Response identityValidation = await UserIdentityValidation.ValidateAsync(userManager, owner, cancellationToken);
+        if (identityValidation.IsError)
+            throw new InvalidOperationException(identityValidation.Message);
+        ApplicationRole basic = await CreateRoleAsync(RoleConstants.Basic, PermissionCatalog.Basic, cancellationToken);
+        ApplicationRole admin = await CreateRoleAsync(RoleConstants.Admin,
+            isRoot ? PermissionCatalog.All : PermissionCatalog.Admin, cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        EnsureSucceeded(await userManager.CreateAsync(owner, password));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        foreach (ApplicationRole role in new[] { basic, admin })
+            applicationDbContext.UserRoles.Add(new ApplicationUserRole
             {
-                Id = Guid.NewGuid().ToString()
+                RoleId = role.Id, UserId = owner.Id, CreatedById = owner.Id
+            });
+        await applicationDbContext.SaveChangesAsync(cancellationToken);
+
+        if (!isRoot)
+        {
+            string loginUrl = $"{tenant.TenantLink}/login";
+            HtmlEncoder html = HtmlEncoder.Default;
+            welcome = new SendEmailRequestInput
+            {
+                Email = owner.Email!,
+                Subject = "Welcome to Krafter",
+                HtmlMessage = $"Dear {html.Encode(owner.FirstName ?? string.Empty)} {html.Encode(owner.LastName ?? string.Empty)} ({html.Encode(owner.Email ?? string.Empty)}),<br><br>" +
+                              "Your Krafter account has been successfully created. Here are your login details:<br><br>" +
+                              $"Username: {html.Encode(owner.Email ?? string.Empty)}<br>" +
+                              $"Password: {html.Encode(password)}<br><br>" +
+                              $"Please <a href='{html.Encode(loginUrl)}'>click here</a> to log in.<br><br>" +
+                              "We recommend changing your password after your first login for security reasons.<br><br>" +
+                              "Best Regards,<br>" +
+                              "The Krafter Team"
             };
-            IdentityResult result = await roleManager.CreateAsync(role);
-            var role1 = new ApplicationRole(RoleConstants.Admin, RoleConstants.Admin)
-            {
-                Id = Guid.NewGuid().ToString()
-            };
-            IdentityResult result1 = await roleManager.CreateAsync(role1);
         }
 
-        ApplicationRole? adminRole = await roleManager.FindByNameAsync(RoleConstants.Admin);
-        if (adminRole != null)
+        return welcome;
+    }
+
+    internal async Task QueueWelcomeAsync(SendEmailRequestInput? welcome)
+    {
+        // This is a separate durable job boundary after identity commit. A failed enqueue is
+        // surfaced by IJobService; credentials are never queued for rolled-back identities.
+        if (welcome is not null)
+            await jobService.EnqueueAsync(welcome, nameof(Jobs.SendEmailJob), CancellationToken.None);
+    }
+
+    internal Task<Response> ValidateOwnerAsync(CancellationToken cancellationToken)
+        => UserIdentityValidation.ValidateAsync(userManager, CreateOwner(), cancellationToken);
+
+    private ApplicationUser CreateOwner()
+    {
+        bool isRoot = tenantGetterService.Tenant.Id == SeedDataConstants.RootTenant.Id;
+        string email = isRoot ? SeedDataConstants.RootUser.EmailAddress : tenantGetterService.Tenant.AdminEmail;
+        return new ApplicationUser
         {
-            IList<Claim> adminClaims = await roleManager.GetClaimsAsync(adminRole);
-            var adMinRolePermissions = adminClaims
-                .Where(c => c.Type == AppClaimTypes.Permission).Select(p => p.Value).ToList();
+            Id = isRoot ? SeedDataConstants.RootUser.Id : Guid.NewGuid().ToString(),
+            FirstName = isRoot ? SeedDataConstants.RootUser.FirstName : "Admin",
+            LastName = isRoot ? SeedDataConstants.RootUser.LastName : "User",
+            Email = email,
+            UserName = email,
+            IsActive = true,
+            IsOwner = true
+        };
+    }
 
-            IReadOnlyList<PermissionDefinition> allPermissions =
-                currentTenantResponse.Id == SeedDataConstants.RootTenant.Id
-                    ? PermissionCatalog.All
-                    : PermissionCatalog.Admin;
-
-            var allPermissionsString = allPermissions.Select(krafterPermission =>
-                    PermissionDefinition.NameFor(krafterPermission.Action, krafterPermission.Resource))
-                .ToList();
-            var permissionNotWithAdmin = allPermissionsString.Except(adMinRolePermissions).ToList();
-            if (permissionNotWithAdmin.Count > 0)
+    private async Task<ApplicationRole> CreateRoleAsync(string name,
+        IReadOnlyList<PermissionDefinition> permissions, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var role = new ApplicationRole(name, name) { Id = Guid.NewGuid().ToString() };
+        EnsureSucceeded(await roleManager.CreateAsync(role));
+        cancellationToken.ThrowIfCancellationRequested();
+        foreach (PermissionDefinition permission in permissions)
+            applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
             {
-                foreach (string permission in permissionNotWithAdmin)
-                {
-                    applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
-                    {
-                        RoleId = adminRole.Id,
-                        ClaimType = AppClaimTypes.Permission,
-                        ClaimValue = permission
-                    });
-                }
+                RoleId = role.Id,
+                ClaimType = AppClaimTypes.Permission,
+                ClaimValue = PermissionDefinition.NameFor(permission.Action, permission.Resource)
+            });
+        return role;
+    }
 
-                await applicationDbContext.SaveChangesAsync();
-            }
-        }
-
-        ApplicationRole? basicRole = await roleManager.FindByNameAsync(RoleConstants.Basic);
-        if (basicRole != null)
-        {
-            IList<Claim> basicClaims = await roleManager.GetClaimsAsync(basicRole);
-            var basicRolePermissions = basicClaims
-                .Where(c => c.Type == AppClaimTypes.Permission).Select(p => p.Value).ToList();
-
-            IReadOnlyList<PermissionDefinition> allBasicPermissions =
-                PermissionCatalog.Basic;
-
-            var allPermissionsString = allBasicPermissions.Select(krafterPermission =>
-                    PermissionDefinition.NameFor(krafterPermission.Action, krafterPermission.Resource))
-                .ToList();
-            var permissionNotWithBasic = allPermissionsString.Except(basicRolePermissions).ToList();
-            if (permissionNotWithBasic.Count > 0)
-            {
-                foreach (string permission in permissionNotWithBasic)
-                {
-                    applicationDbContext.RoleClaims.Add(new ApplicationRoleClaim
-                    {
-                        RoleId = basicRole.Id,
-                        ClaimType = AppClaimTypes.Permission,
-                        ClaimValue = permission
-                    });
-                }
-
-                await applicationDbContext.SaveChangesAsync();
-            }
-        }
-
-        int userCount = await applicationDbContext.Users.CountAsync();
-        if (userCount == 0)
-        {
-            string password = SeedDataConstants.DefaultPassword;
-            ApplicationUser rootUser;
-            if (tenantGetterService.Tenant.Id == SeedDataConstants.RootTenant.Id)
-            {
-                rootUser = new ApplicationUser
-                {
-                    Id = SeedDataConstants.RootUser.Id,
-                    FirstName = SeedDataConstants.RootUser.FirstName,
-                    LastName = SeedDataConstants.RootUser.LastName,
-                    Email = SeedDataConstants.RootUser.EmailAddress,
-                    UserName = SeedDataConstants.RootUser.EmailAddress,
-                    IsActive = true,
-                    IsOwner = true
-                };
-            }
-            else
-            {
-                rootUser = new ApplicationUser
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    FirstName = "Admin",
-                    LastName = "User",
-                    Email = tenantGetterService.Tenant.AdminEmail,
-                    UserName = tenantGetterService.Tenant.AdminEmail,
-                    IsActive = true,
-                    IsOwner = true
-                };
-                password = PasswordGenerator.GeneratePassword();
-            }
-
-            IdentityResult res = await userManager.CreateAsync(rootUser, password);
-            Tenant? tenant = await dbContext.Tenants.FirstOrDefaultAsync(c => c.Id == tenantGetterService.Tenant.Id);
-            if (adminRole is not null)
-            {
-                applicationDbContext.UserRoles.Add(new ApplicationUserRole
-                {
-                    RoleId = adminRole.Id,
-                    UserId = rootUser.Id,
-                    CreatedById = rootUser.Id
-                });
-            }
-
-            ApplicationRole? basic = await roleManager.FindByNameAsync(RoleConstants.Basic);
-            if (basic is not null)
-            {
-                applicationDbContext.UserRoles.Add(new ApplicationUserRole
-                {
-                    RoleId = basic.Id,
-                    UserId = rootUser.Id,
-                    CreatedById = rootUser.Id
-                });
-            }
-
-            await applicationDbContext.SaveChangesAsync();
-
-            if (tenant is not null)
-            {
-                if (tenantGetterService.Tenant.Id != SeedDataConstants.RootTenant.Id)
-                {
-                    string loginUrl = $"{tenantGetterService.Tenant.TenantLink}/login";
-
-                    await jobService.EnqueueAsync(new SendEmailRequestInput
-                    {
-                        Email = tenant.AdminEmail,
-                        Subject = "Welcome to Krafter",
-                        HtmlMessage = $"Dear {rootUser.FirstName} {rootUser.LastName} ({rootUser.Email}),<br><br>" +
-                                      "Your Krafter account has been successfully created. Here are your login details:<br><br>" +
-                                      $"Username: {rootUser.Email}<br>" +
-                                      $"Password: {password}<br><br>" +
-                                      $"Please <a href='{loginUrl}'>click here</a> to log in.<br><br>" +
-                                      "We recommend changing your password after your first login for security reasons.<br><br>" +
-                                      "Best Regards,<br>" +
-                                      "The Krafter Team"
-                    }, nameof(Jobs.SendEmailJob), CancellationToken.None);
-                }
-            }
-        }
-
-        return new Response();
+    private static void EnsureSucceeded(IdentityResult result)
+    {
+        if (!result.Succeeded)
+            throw new InvalidOperationException("Tenant identity provisioning failed: " +
+                string.Join(" ", result.Errors.Select(error => error.Description)));
     }
 }

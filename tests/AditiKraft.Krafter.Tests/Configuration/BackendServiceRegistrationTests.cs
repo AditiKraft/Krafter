@@ -25,6 +25,8 @@ public sealed class BackendServiceRegistrationTests
             ["Urls:RootUiUrl"] = "https://app.example.com",
             ["ConnectionStrings:appDb"] = "Host=localhost;Database=registration-test;Username=test;Password=test",
             ["SMTPEmailSettings:Host"] = "smtp.example.com",
+            ["TickerQBasicAuth:Username"] = "registration-test-operator",
+            ["TickerQBasicAuth:Password"] = "registration-test-private-dashboard-password",
             ["SecuritySettings:JwtSettings:Key"] = "registration-test-signing-key-at-least-32-characters"
         });
         builder.AddBackendServices();

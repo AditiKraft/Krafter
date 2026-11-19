@@ -55,3 +55,14 @@ window.applyThemePreference = function () {
 
     return preference; // 'dark' or 'light'
 };
+
+// Recovery codes are downloaded locally; they are never sent to a service or put in a URL query.
+window.krafterDownloadRecoveryCodes = function (codes) {
+    const blob = new Blob([codes], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'recovery-codes.txt';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+};

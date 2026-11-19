@@ -5,5 +5,5 @@ namespace AditiKraft.Krafter.Backend.Common.Tenants;
 
 public interface ITenantFinderService
 {
-    public Task<Response<Tenant>> Find(string? identifier);
+    public Task<Response<Tenant>> Find(string? identifier, CancellationToken cancellationToken = default);
 }

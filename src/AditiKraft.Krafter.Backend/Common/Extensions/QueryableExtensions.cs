@@ -6,10 +6,10 @@ public static class QueryableExtensions
 {
     public static IQueryable<T> PageBy<T>(this IQueryable<T> query, int skipCount, int maxResultCount)
     {
-        if (query == null)
-        {
-            throw new ArgumentNullException("query");
-        }
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentOutOfRangeException.ThrowIfNegative(skipCount);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxResultCount, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxResultCount, GetRequestInput.MaximumPageSize);
 
         return query.Skip(skipCount).Take(maxResultCount);
     }

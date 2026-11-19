@@ -60,7 +60,7 @@ public sealed class GetRoleByIdWithPermissions
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<RoleDto>>()
-                .MustHavePermission(PermissionAction.View, PermissionResource.Roles);
+                .MustHavePermission(PermissionAction.View, PermissionResource.RoleClaims);
         }
     }
 }

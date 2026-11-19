@@ -1,75 +1,118 @@
+using AditiKraft.Krafter.UI.Web.Client.Common.Components.Dialogs;
+using AditiKraft.Krafter.UI.Web.Client.Common.Permissions;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
 public partial class CreateOrUpdateUser(
     DialogService dialogService,
     ApiCallService api,
-    IUsersApi usersApi
-) : ComponentBase
+    IUsersApi usersApi,
+    AuthenticationStateProvider authenticationStateProvider,
+    IAuthorizationService authorization) : EditorDialogBase(dialogService)
 {
     [Parameter] public UserDto UserInput { get; set; } = new();
 
     private CreateUserRequest CreateUserRequest = new();
-    private CreateUserRequest OriginalCreateUserRequest = new();
-    public Response<List<UserRoleDto>>? UserRoles { get; set; }
-    private bool isBusy = false;
+    private List<UserRoleDto> userRoles = [];
+    private List<RoleDto> roleSelectionData = [];
+    private HashSet<string> originalRoles = [];
+    private bool permissionsChecked;
+    private bool canViewRoles;
+    private bool canUpdateRoles;
+    private bool rolesLoaded;
+    private bool isLoadingRoles;
+    private bool roleLoadFailed;
+
+    private bool IsExisting => !string.IsNullOrWhiteSpace(UserInput.Id);
+    private bool CanEditRoles => !IsDisposed && !IsSaving && canUpdateRoles && rolesLoaded;
+    private bool EmptyRoleSelection => canUpdateRoles && rolesLoaded &&
+        originalRoles.Count > 0 && CreateUserRequest.Roles.Count == 0;
+    private bool CanSave => !IsDisposed && !IsSaving && permissionsChecked &&
+        (!IsExisting || !canUpdateRoles || rolesLoaded) && !EmptyRoleSelection;
 
     protected override async Task OnInitializedAsync()
     {
-        if (UserInput is not null)
-        {
-            CreateUserRequest = UserInput.Adapt<CreateUserRequest>();
-            OriginalCreateUserRequest = UserInput.Adapt<CreateUserRequest>();
-            if (CreateUserRequest.Roles is null)
-            {
-                CreateUserRequest.Roles = new List<string>();
-                OriginalCreateUserRequest.Roles = new List<string>();
-            }
+        CreateUserRequest = UserInput.Adapt<CreateUserRequest>();
+        CreateUserRequest.Roles = [];
+        AuthenticationState state = await authenticationStateProvider.GetAuthenticationStateAsync();
+        canViewRoles = (await authorization.AuthorizeAsync(state.User,
+            UiPermissionPolicy.NameFor(PermissionAction.View, PermissionResource.UserRoles))).Succeeded;
+        canUpdateRoles = canViewRoles && (await authorization.AuthorizeAsync(state.User,
+            UiPermissionPolicy.NameFor(PermissionAction.Update, PermissionResource.UserRoles))).Succeeded;
+        if (IsDisposed) return;
 
-            if (!string.IsNullOrWhiteSpace(UserInput.Id))
-            {
-                UserRoles = await api.CallAsync(() => usersApi.GetUserRolesAsync(UserInput.Id),
-                    showErrorNotification: true);
-                CreateUserRequest.Roles = UserRoles?
-                    .Data?
-                    .Where(c => !string.IsNullOrEmpty(c.RoleId))
-                    .Select(c => c.RoleId!).ToList() ?? new List<string>();
-                OriginalCreateUserRequest.Roles = CreateUserRequest.Roles;
-            }
+        permissionsChecked = true;
+        if (IsExisting && canViewRoles)
+        {
+            await LoadRolesAsync();
         }
     }
 
-    private async void Submit(CreateUserRequest input)
+    private async Task LoadRolesAsync()
     {
-        if (UserInput is not null)
+        if (IsDisposed || IsSaving || isLoadingRoles || !canViewRoles) return;
+
+        rolesLoaded = false;
+        roleLoadFailed = false;
+        isLoadingRoles = true;
+        try
         {
-            isBusy = true;
-            Response result;
-            if (string.IsNullOrWhiteSpace(input.Id))
+            Response<List<UserRoleDto>> response = await api.CallAsync(
+                () => usersApi.GetUserRolesAsync(UserInput.Id), showErrorNotification: true);
+            if (IsDisposed) return;
+            if (response is not { IsError: false, Data: not null })
             {
-                result = await api.CallAsync(
-                    () => usersApi.CreateUserAsync(input),
-                    successMessage: "User created successfully");
+                roleLoadFailed = true;
+                return;
             }
-            else
-            {
-                result = await api.CallAsync(
-                    () => usersApi.UpdateUserAsync(input.Id, input),
-                    successMessage: "User updated successfully");
-            }
-            isBusy = false;
-            StateHasChanged();
-            if (result is { IsError: false })
-            {
-                dialogService.Close(true);
-            }
+
+            userRoles = response.Data;
+            roleSelectionData = userRoles.Where(role => !string.IsNullOrEmpty(role.RoleId))
+                .Select(role => new RoleDto { Id = role.RoleId!, Name = role.RoleName ?? role.RoleId })
+                .ToList();
+            CreateUserRequest.Roles = userRoles.Where(role => role.Enabled && !string.IsNullOrEmpty(role.RoleId))
+                .Select(role => role.RoleId!).Distinct(StringComparer.Ordinal).ToList();
+            originalRoles = new HashSet<string>(CreateUserRequest.Roles, StringComparer.Ordinal);
+            rolesLoaded = true;
         }
-        else
+        finally
         {
-            dialogService.Close(false);
+            if (!IsDisposed) isLoadingRoles = false;
         }
     }
 
-    private void Cancel() => dialogService.Close();
+    private void ChangeRoles(List<string> roles)
+    {
+        if (CanEditRoles)
+        {
+            CreateUserRequest.Roles = [.. roles];
+        }
+    }
+
+    private async Task SubmitAsync(CreateUserRequest input)
+    {
+        if (!CanSave || !TryBeginSave()) return;
+
+        // An empty roles payload deliberately preserves memberships on profile-only updates.
+        // Copy the request so an in-flight mutation cannot observe later form edits.
+        CreateUserRequest request = input.Adapt<CreateUserRequest>();
+        request.Roles = canUpdateRoles && rolesLoaded && !originalRoles.SetEquals(input.Roles)
+            ? [.. input.Roles] : [];
+        try
+        {
+            Response result = string.IsNullOrWhiteSpace(request.Id)
+                ? await api.CallAsync(() => usersApi.CreateUserAsync(request), successMessage: "User created successfully")
+                : await api.CallAsync(() => usersApi.UpdateUserAsync(request.Id, request), successMessage: "User updated successfully");
+            if (!result.IsError)
+            {
+                CloseAfterSave();
+            }
+        }
+        finally
+        {
+            EndSave();
+        }
+    }
 }

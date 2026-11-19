@@ -1,18 +1,22 @@
-﻿using System.Text;
+using System.Security.Cryptography;
+using System.Text;
+using AditiKraft.Krafter.Contracts.Common.Auth;
 
 namespace AditiKraft.Krafter.Backend.Common;
 
 public static class PasswordGenerator
 {
-    private static readonly Random Random = new();
     private const string UppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private const string LowercaseLetters = "abcdefghijklmnopqrstuvwxyz";
     private const string Digits = "0123456789";
     private const string SpecialCharacters = "!@#$%^&*()";
 
-    public static string GeneratePassword(int length = 8)
+    public static string GeneratePassword(int length = 16)
     {
-        var passwordBuilder = new StringBuilder();
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, 8);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(length, PasswordLimits.MaximumLength);
+
+        var passwordBuilder = new StringBuilder(length);
         // Ensure the password meets the criteria by adding at least one of each required character type
         passwordBuilder.Append(GetRandomCharacter(UppercaseLetters));
         passwordBuilder.Append(GetRandomCharacter(LowercaseLetters));
@@ -35,7 +39,7 @@ public static class PasswordGenerator
 
     private static char GetRandomCharacter(string validCharacters)
     {
-        int index = Random.Next(validCharacters.Length);
+        int index = RandomNumberGenerator.GetInt32(validCharacters.Length);
         return validCharacters[index];
     }
 
@@ -44,7 +48,7 @@ public static class PasswordGenerator
         int n = array.Length;
         for (int i = 0; i < n; i++)
         {
-            int r = i + Random.Next(n - i);
+            int r = RandomNumberGenerator.GetInt32(i, n);
             (array[r], array[i]) = (array[i], array[r]);
         }
 

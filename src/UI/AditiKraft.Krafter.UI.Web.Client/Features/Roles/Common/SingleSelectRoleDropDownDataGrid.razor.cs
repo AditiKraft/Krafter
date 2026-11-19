@@ -23,7 +23,7 @@ public partial class SingleSelectRoleDropDownDataGrid(
         await Task.Yield();
         GetRequestInput.SkipCount = args.Skip ?? 0;
         GetRequestInput.MaxResultCount = args.Top ?? 10;
-        GetRequestInput.Filter = args.Filter;
+        GetRequestInput.Query = args.Filter;
         GetRequestInput.OrderBy = args.OrderBy;
         IsLoading = true;
         response = await api.CallAsync(() => rolesApi.GetRolesAsync(GetRequestInput), showErrorNotification: true);

@@ -22,6 +22,111 @@ namespace AditiKraft.Krafter.Backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.TwoFactorChallenge", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AuthenticationVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PrimaryMethod")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("ProtectedKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("TenantId", "UserId");
+
+                    b.ToTable("TwoFactorChallenges");
+                });
+
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.TwoFactorCredential", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("LastAcceptedStep")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ProtectedKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("TwoFactorCredentials");
+                });
+
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.TwoFactorRecoveryCode", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "UserId");
+
+                    b.ToTable("TwoFactorRecoveryCodes");
+                });
+
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.UserRefreshToken", b =>
                 {
                     b.Property<string>("UserId")
@@ -104,8 +209,6 @@ namespace AditiKraft.Krafter.Backend.Migrations
                         .IsUnique();
 
                     b.ToTable("ApplicationRole", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRoleClaim", b =>
@@ -162,8 +265,6 @@ namespace AditiKraft.Krafter.Backend.Migrations
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("ApplicationRoleClaim", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", b =>
@@ -173,6 +274,9 @@ namespace AditiKraft.Krafter.Backend.Migrations
                         .HasColumnType("character varying(36)");
 
                     b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AuthenticationVersion")
                         .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -279,8 +383,6 @@ namespace AditiKraft.Krafter.Backend.Migrations
                         .IsUnique();
 
                     b.ToTable("ApplicationUser", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserClaim", b =>
@@ -337,8 +439,6 @@ namespace AditiKraft.Krafter.Backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ApplicationUserClaim", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserLogin", b =>
@@ -406,8 +506,6 @@ namespace AditiKraft.Krafter.Backend.Migrations
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("ApplicationUserRole", (string)null);
-
-                    b.HasAnnotation("SqlServer:IsTemporal", true);
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUserToken", b =>
@@ -427,6 +525,15 @@ namespace AditiKraft.Krafter.Backend.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Auth.Common.TwoFactorCredential", b =>
+                {
+                    b.HasOne("AditiKraft.Krafter.Backend.Features.Users.Common.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("AditiKraft.Krafter.Backend.Features.Auth.Common.TwoFactorCredential", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AditiKraft.Krafter.Backend.Features.Roles.Common.ApplicationRole", b =>

@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Users;
@@ -22,6 +23,7 @@ public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequ
 
         RuleFor(p => p.Password)
             .NotEmpty().WithMessage("New password is required")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters");
+            .MinimumLength(6).WithMessage("Password must be at least 6 characters")
+            .MaximumLength(PasswordLimits.MaximumLength);
     }
 }

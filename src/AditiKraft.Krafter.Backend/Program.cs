@@ -2,7 +2,6 @@ using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Web.Configuration;
 using AditiKraft.Krafter.Aspire.ServiceDefaults;
-using Microsoft.AspNetCore.HttpOverrides;
 
 namespace AditiKraft.Krafter.Backend;
 
@@ -11,14 +10,6 @@ public static class Program
     private static void Main(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
-        // Forwarded headers (proxy support)
-        builder.Services.Configure<ForwardedHeadersOptions>(options =>
-        {
-            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            options.KnownIPNetworks.Clear();
-            options.KnownProxies.Clear();
-        });
 
         // Aspire observability + health checks
         builder.AddServiceDefaults();

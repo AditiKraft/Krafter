@@ -6,6 +6,6 @@ public class MustHavePermissionAttribute : AuthorizeAttribute
 {
     public MustHavePermissionAttribute(string action, string resource)
     {
-        Policy = PermissionDefinition.NameFor(action, resource);
+        Policy = UiPermissionPolicy.NameFor(action, resource);
     }
 }

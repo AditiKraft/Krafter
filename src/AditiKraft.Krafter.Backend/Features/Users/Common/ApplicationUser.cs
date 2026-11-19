@@ -18,6 +18,7 @@ public class ApplicationUser : IdentityUser<string>, ICommonAuthEntityProperty
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public bool IsActive { get; set; }
+    public int AuthenticationVersion { get; set; }
 
     public string? DeleteReason { get; set; }
 

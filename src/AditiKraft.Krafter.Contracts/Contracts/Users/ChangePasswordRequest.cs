@@ -1,3 +1,4 @@
+using AditiKraft.Krafter.Contracts.Common.Auth;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Users;
@@ -18,7 +19,8 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
 
         RuleFor(p => p.NewPassword)
             .NotEmpty().WithMessage("New password is required")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters");
+            .MinimumLength(6).WithMessage("Password must be at least 6 characters")
+            .MaximumLength(PasswordLimits.MaximumLength);
 
         RuleFor(p => p.ConfirmNewPassword)
             .Equal(p => p.NewPassword).WithMessage("Passwords do not match");

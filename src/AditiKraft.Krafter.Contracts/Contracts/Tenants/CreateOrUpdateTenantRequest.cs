@@ -1,4 +1,5 @@
 using AditiKraft.Krafter.Contracts.Common;
+using AditiKraft.Krafter.Contracts.Common.Validation;
 using FluentValidation;
 
 namespace AditiKraft.Krafter.Contracts.Contracts.Tenants;
@@ -21,11 +22,17 @@ public class CreateOrUpdateTenantRequestValidator : AbstractValidator<CreateOrUp
         urls ??= new AppUrls();
         RuleFor(p => p.Name)
             .NotNull().NotEmpty().WithMessage("You must enter Name")
-            .MaximumLength(40).WithMessage("Name cannot be longer than 40 characters");
+            .MaximumLength(40).WithMessage("Name cannot be longer than 40 characters")
+            .Must(TextValue.IsValid).WithMessage("Name must contain valid Unicode text without null characters.");
 
         RuleFor(p => p.AdminEmail)
             .NotEmpty().WithMessage("Admin email is required")
-            .EmailAddress().WithMessage("Invalid email format");
+            .EmailAddress().WithMessage("Invalid email format")
+            .MaximumLength(256).WithMessage("Admin email cannot exceed 256 characters")
+            .Must(TextValue.IsValid).WithMessage("Admin email must contain valid Unicode text without null characters.");
+
+        RuleFor(p => p.TablesToCopy)
+            .Must(TextValue.IsValid).WithMessage("Tables to copy must contain valid Unicode text without null characters.");
 
         RuleFor(p => p.Identifier)
             .Cascade(CascadeMode.Stop)

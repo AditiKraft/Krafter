@@ -24,7 +24,7 @@ namespace AditiKraft.Krafter.Backend.Migrations
                 "ApplicationRole",
                 "NormalizedName",
                 unique: true,
-                filter: "[NormalizedName] IS NOT NULL");
+                filter: "\"NormalizedName\" IS NOT NULL");
 
         }
     }

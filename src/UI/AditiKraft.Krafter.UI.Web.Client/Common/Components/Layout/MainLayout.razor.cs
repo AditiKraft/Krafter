@@ -77,22 +77,4 @@ public partial class MainLayout(
 
     public void Dispose() => layoutService.HeadingChanged -= HeadingChanged;
 
-    private bool HasChildPermission(Menu category)
-    {
-        IEnumerable<string> childPermission =
-            category.Children?.Select(c => c.Permission) ?? Enumerable.Empty<string>();
-
-        return childPermission.Intersect(cachedPermissionsAsync ?? Enumerable.Empty<string>()).Any();
-    }
-
-    private bool HasPermission(Menu category)
-    {
-        if (string.IsNullOrWhiteSpace(category.Permission) &&
-            (category.Children is null || !category.Children.Any()))
-        {
-            return true;
-        }
-
-        return cachedPermissionsAsync?.Contains(category.Permission) == true;
-    }
 }

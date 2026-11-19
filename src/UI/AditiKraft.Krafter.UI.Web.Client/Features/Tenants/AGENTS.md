@@ -1,0 +1,49 @@
+# Tenants UI Feature AI Instructions
+
+> **SCOPE**: Tenant list and create/update dialog.
+> **PARENT**: See also: ../../../AGENTS.md
+
+## 1. Core Principles
+- Use the request validator in Contracts. Do not add a duplicate UI validator.
+- Resolve the validator with the public `AppUrls` so tenant identifiers use the configured reserved names. Backend handlers enforce the same rules and check uniqueness. Build tenant links from `AppUrls`, not by adding a prefix to the root UI URL.
+- Use `ApiCallService` for all tenant API calls.
+- Await each `DialogService.OpenAsync` result. Reload only when the result is `true`.
+- Use `CreateOrUpdateTenant` dialog with `TenantInput`.
+- Inherit `EditorDialogBase`, call its initializer, and use its pending-save/disposal guards. Freeze inputs and snapshot the request while saving so a delayed response cannot discard another editor's input.
+- Bind expiry directly to the local value returned by Refit. Serialization converts it to UTC. Preserve unchanged values and show root validity as "No expiry". Hide expiry timestamps during server prerendering, where responses remain UTC. Expiry filtering is disabled because grid filter strings do not use the JSON converter.
+
+## 2. Decision Tree
+- List page? Use `Features/Tenants/Tenants.razor` + `.razor.cs`.
+- Create/update tenant? Use `CreateOrUpdateTenant` dialog.
+- Delete tenant? Use `DialogService.Confirm()` + `DeleteTenantAsync`.
+
+## 3. Code Templates
+
+### Create/Update Dialog Submit
+```csharp
+Response result = await api.CallAsync(
+    () => tenantsApi.CreateTenantAsync(input),
+    successMessage: "Tenant created successfully");
+```
+
+## 4. Checklist
+1. Use `ApiRoutes.Tenants` as `RoutePath`.
+2. Use `ApiCallService` for list and delete.
+3. Await the dialog result and reload only after a successful save.
+
+## 5. Common Mistakes
+- Skipping confirmation before delete.
+- Subscribing to the shared `OnClose` event or disposing the injected dialog service.
+
+## 6. Evolution Triggers
+- Tenant creation flow changes.
+- Tenant list filtering or history behavior changes.
+
+## References (real code)
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs`
+- `src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs`
+
+---
+Last Updated: 2026-11-08
+Verified Against: src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/Tenants.razor.cs, src/UI/AditiKraft.Krafter.UI.Web.Client/Features/Tenants/CreateOrUpdateTenant.razor.cs, src/AditiKraft.Krafter.Contracts/Contracts/Tenants/CreateOrUpdateTenantRequest.cs, src/AditiKraft.Krafter.Contracts/Common/AppUrls.cs, src/AditiKraft.Krafter.Contracts/Common/ApiRoutes.cs
+---

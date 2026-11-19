@@ -3,7 +3,7 @@
 @attribute [Route(RoutePath)]
 @attribute [MustHavePermission(PermissionAction.View, PermissionResource.Users)]
 
-<AuthorizeView Policy="@PermissionDefinition.NameFor(PermissionAction.Create, PermissionResource.Users)">
+<AuthorizeView Policy="@UiPermissionPolicy.NameFor(PermissionAction.Create, PermissionResource.Users)">
 
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem"
                  JustifyContent="JustifyContent.End" class="mt-1 mb-2">
@@ -49,13 +49,13 @@
                     <ChildContent>
 
                         <AuthorizeView
-                            Policy="@(PermissionDefinition.NameFor(PermissionAction.Update, PermissionResource.Users))">
+                            Policy="@(UiPermissionPolicy.NameFor(PermissionAction.Update, PermissionResource.Users))">
                             <RadzenSplitButtonItem Text="Edit" Value="@PermissionAction.Update" Icon="edit" />
                         </AuthorizeView>
 
                         @*  @if (data.IsOwner == false)
                         {
-                            <AuthorizeView Policy="@(KrafterPermission.NameFor(KrafterAction.Delete, KrafterResource.Users))">
+                            <AuthorizeView Policy="@(UiPermissionPolicy.NameFor(PermissionAction.Delete, PermissionResource.Users))">
                                 <RadzenSplitButtonItem Text="Delete" Value="@KrafterAction.Delete" Icon="delete" />
                             </AuthorizeView>
                         } *@

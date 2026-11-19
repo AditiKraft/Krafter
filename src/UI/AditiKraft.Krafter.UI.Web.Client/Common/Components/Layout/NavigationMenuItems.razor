@@ -1,0 +1,17 @@
+@using AditiKraft.Krafter.UI.Web.Client.Common.Models
+
+@foreach (Menu menu in Items.Where(menu => MenuService.IsVisible(menu, Permissions)))
+{
+    <NavigationItem @key="menu" @bind-Expanded="menu.Expanded" Example="menu">
+        @if (menu.Children?.Any() == true)
+        {
+            <NavigationMenuItems Items="menu.Children" Permissions="Permissions" />
+        }
+    </NavigationItem>
+}
+
+@code
+{
+    [Parameter, EditorRequired] public IEnumerable<Menu> Items { get; set; } = [];
+    [Parameter] public ICollection<string>? Permissions { get; set; }
+}

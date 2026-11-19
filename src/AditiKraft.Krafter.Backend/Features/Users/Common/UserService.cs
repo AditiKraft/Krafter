@@ -1,11 +1,9 @@
 using AditiKraft.Krafter.Backend.Common;
-using AditiKraft.Krafter.Backend.Features.Roles.Common;
 using AditiKraft.Krafter.Backend.Features.Tenants.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth;
 using AditiKraft.Krafter.Contracts.Common.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AditiKraft.Krafter.Backend.Features.Users.Common;
@@ -48,35 +46,27 @@ public static class SeedDataConstants
     };
 }
 
-public class UserService(
-    UserManager<ApplicationUser> userManager,
-    RoleManager<ApplicationRole> roleManager,
-    ApplicationDbContext db)
+public class UserService(ApplicationDbContext db)
     : IUserService, IScopedService
 {
     public async Task<Response<List<string>>> GetPermissionsAsync(string userId, CancellationToken cancellationToken)
     {
-        //var user = await userManager.Asn.FindByIdAsync(userId);
-        ApplicationUser? user = await db.Users.AsNoTracking().FirstOrDefaultAsync(c => c.Id == userId, cancellationToken);
-        if (user is null)
+        if (!await db.Users.AsNoTracking().AnyAsync(user => user.Id == userId, cancellationToken))
         {
             return Response<List<string>>.NotFound("User Not Found.");
         }
 
-        IList<string> userRoles = await userManager.GetRolesAsync(user);
-        var permissions = new List<string>();
-        foreach (ApplicationRole role in await roleManager.Roles.AsNoTracking()
-                     .Where(r => userRoles.Contains(r.Name!) && r.IsDeleted == false)
-                     .ToListAsync(cancellationToken))
-        {
-            permissions.AddRange(await db.RoleClaims.AsNoTracking()
-                .Where(rc =>
-                    rc.RoleId == role.Id && rc.ClaimType == AppClaimTypes.Permission && rc.IsDeleted == false)
-                .Select(rc => rc.ClaimValue!)
-                .ToListAsync(cancellationToken));
-        }
+        // Resolve memberships and their claims in one snapshot by immutable role ID.
+        // A role name can move to an unassigned role during concurrent metadata edits.
+        List<string> permissions = await (
+            from membership in db.UserRoles.AsNoTracking()
+            join role in db.Roles on membership.RoleId equals role.Id
+            join claim in db.RoleClaims on role.Id equals claim.RoleId
+            where membership.UserId == userId && claim.ClaimType == AppClaimTypes.Permission && claim.ClaimValue != null
+            select claim.ClaimValue!)
+            .Distinct().ToListAsync(cancellationToken);
 
-        return Response<List<string>>.Success(permissions.Distinct().ToList());
+        return Response<List<string>>.Success(permissions);
     }
 
     public async Task<Response<bool>> HasPermissionAsync(string userId, string permission,

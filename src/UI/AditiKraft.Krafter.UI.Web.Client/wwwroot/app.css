@@ -443,6 +443,32 @@ h1:focus {
     outline: none;
 }
 
+.kr-editor-fields {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+button.google-login-button.rz-button {
+    border: 0;
+    padding: 0;
+    height: auto;
+    min-height: 0;
+    background: transparent;
+    box-shadow: none;
+    transition: transform 0.2s ease-in-out;
+}
+
+button.google-login-button.rz-button:focus-visible {
+    outline: 2px solid var(--kr-focus);
+    outline-offset: 4px;
+}
+
+.google-login-button img {
+    display: block;
+}
+
 .rz-button.rz-button-md,
 .btn {
     min-height: 2rem;

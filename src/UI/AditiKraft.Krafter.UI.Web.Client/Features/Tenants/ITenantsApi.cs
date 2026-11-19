@@ -20,7 +20,4 @@ public interface ITenantsApi
     [Delete("/api/tenants/{id}")]
     public Task<Response> DeleteTenantAsync(string id,
         CancellationToken cancellationToken = default);
-
-    [Post("/api/tenants/seed-data")]
-    public Task<Response> SeedDataAsync([Body] SeedDataRequest request, CancellationToken cancellationToken = default);
 }

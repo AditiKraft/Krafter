@@ -1,76 +1,36 @@
 using AditiKraft.Krafter.Contracts.Contracts.Auth;
 using AditiKraft.Krafter.UI.Web.Client.Common.Models;
+using AditiKraft.Krafter.UI.Web.Client.Features.Auth.Common;
 using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Primitives;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Auth;
 
-public partial class GoogleCallback(IAuthenticationService authenticationService, NavigationManager navigationManager)
-    : ComponentBase
+public partial class GoogleCallback(IAuthenticationService authenticationService, NavigationManager navigationManager,
+    Blazored.SessionStorage.ISessionStorageService sessionStorage) : ComponentBase
 {
     protected override async Task OnInitializedAsync()
     {
-        Uri uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out StringValues code))
+        if (!OperatingSystem.IsBrowser()) return;
+        try
         {
-            try
-            {
-                string returnUrl = "";
-                string host = "";
-                if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("state", out StringValues encodedState))
-                {
-                    string decoded = Uri.UnescapeDataString(encodedState!);
-                    string[] parts = decoded.Split("|||");
-                    host = parts[0];
-                    returnUrl = parts.Length > 1 ? parts[1] : "";
-                    if (host != uri.Host)
-                    {
-                        uri = new UriBuilder(uri) { Host = host }.Uri;
-                        navigationManager.NavigateTo(uri.ToString(), true);
-                        return;
-                    }
-                }
-
-                if (!OperatingSystem.IsBrowser())
-                {
-                    return;
-                }
-
-                if (host == uri.Host)
-                {
-                    string ReturnUrl = returnUrl;
-                    LocalAppState.GoogleLoginReturnUrl = ReturnUrl;
-                    bool isSuccess = await authenticationService.LoginAsync(new TokenRequest
-                    {
-                        IsExternalLogin = true,
-                        Code = code.ToString()
-                    });
-                    if (isSuccess)
-                    {
-                        if (!string.IsNullOrWhiteSpace(ReturnUrl))
-                        {
-                            navigationManager.NavigateTo(ReturnUrl);
-                        }
-                        else
-                        {
-                            navigationManager.NavigateTo("/");
-                        }
-                    }
-                }
-                else
-                {
-                    await Task.Delay(1000);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error during Google login: {ex.Message}");
-            }
+            Uri uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
+            var values = QueryHelpers.ParseQuery("?" + uri.Fragment.TrimStart('#'));
+            string handoff = values["handoff"].ToString();
+            string? nonce = await sessionStorage.GetItemAsStringAsync("krafter-google-browser-nonce");
+            if (string.IsNullOrWhiteSpace(handoff) || string.IsNullOrWhiteSpace(nonce))
+            { navigationManager.NavigateTo("/login?error=invalid-google-state", replace: true); return; }
+            await sessionStorage.RemoveItemAsync("krafter-google-browser-nonce");
+            string returnUrl = LocalReturnUrl.Normalize(values["returnUrl"].ToString());
+            LocalAppState.GoogleLoginReturnUrl = returnUrl;
+            bool complete = await authenticationService.LoginAsync(new TokenRequest
+            { IsExternalLogin = true, GoogleHandoff = handoff, GoogleBrowserNonce = nonce });
+            // Pending local MFA remains in the scoped authentication service when returning to login.
+            navigationManager.NavigateTo(complete ? returnUrl : "/login?ReturnUrl=" + Uri.EscapeDataString(returnUrl), replace: true);
         }
-        else
+        catch (Exception)
         {
-            navigationManager.NavigateTo("/login?error=google-auth-failed");
+            navigationManager.NavigateTo("/login?error=google-auth-failed", replace: true);
         }
     }
 }

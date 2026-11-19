@@ -1,5 +1,9 @@
 ﻿@page "/Error"
 @using System.Diagnostics
+@using Microsoft.AspNetCore.Diagnostics
+@using Microsoft.AspNetCore.Http.Extensions
+@attribute [ExcludeFromInteractiveRouting]
+@layout AditiKraft.Krafter.UI.Web.Components.Layout.ErrorLayout
 
 <PageTitle>Error</PageTitle>
 
@@ -21,20 +25,21 @@
         }
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" class="rz-mt-6">
-            <RadzenButton Text="Go Home" Icon="home" ButtonStyle="ButtonStyle.Primary"
-                          Click="@(() => NavigationManager.NavigateTo("/"))" />
-            <RadzenButton Text="Try Again" Icon="refresh" ButtonStyle="ButtonStyle.Light"
-                          Click="@(() => NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true))" />
+            <a href="/" data-enhance-nav="false" class="rz-button rz-button-md rz-primary">Go Home</a>
+            <a href="@RetryUrl" data-enhance-nav="false" class="rz-button rz-button-md rz-light">Try Again</a>
         </RadzenStack>
     </div>
 </div>
 
 @code {
     [CascadingParameter] private HttpContext? HttpContext { get; set; }
-    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
-
     private string? RequestId { get; set; }
     private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    private string RetryUrl => HttpContext is { } context
+        ? UriHelper.BuildAbsolute(context.Request.Scheme, context.Request.Host, context.Request.PathBase,
+            context.Features.Get<IExceptionHandlerPathFeature>() is { Path: { } path }
+                ? new PathString(path) : context.Request.Path, context.Request.QueryString)
+        : "/Error";
 
     protected override void OnInitialized()
     {

@@ -1,5 +1,7 @@
-<RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest input) => SubmitAsync(input))">
+@inherits AditiKraft.Krafter.UI.Web.Client.Common.Components.Dialogs.EditorDialogBase
+<RadzenTemplateForm Data="@CreateUserRequest" Submit="@((CreateOrUpdateRoleRequest input) => SubmitAsync(input))" @onkeydown="OnEditorKeyDown">
     <FluentValidationValidator Options="@(options => options.IncludeAllRuleSets())"/>
+    <fieldset disabled="@IsSaving" class="kr-editor-fields">
     <RadzenStack Gap="0.5rem" Orientation="Orientation.Vertical">
 
         <RadzenRow AlignItems="AlignItems.Center">
@@ -22,7 +24,7 @@
             <ValidationMessage For="@(() => CreateUserRequest.Description)"/>
         </RadzenRow>
 
-        @if (!string.IsNullOrWhiteSpace(UserDetails.Id))
+        @if (canViewPermissions)
         {
             @if (isLoadingPermissions)
             {
@@ -31,8 +33,8 @@
             else if (permissionLoadFailed)
             {
                 <div role="alert">
-                    <p>Could not load role permissions. Retry before saving.</p>
-                    <RadzenButton ButtonType="ButtonType.Button" Text="Retry" Click="@LoadPermissionsAsync"/>
+                    <p>Could not load role permissions. @(canUpdatePermissions ? "Retry before editing permissions or saving." : "You can still save role details.")</p>
+                    <RadzenButton ButtonType="ButtonType.Button" Text="Retry" Disabled="@IsSaving" Click="@LoadPermissionsAsync"/>
                 </div>
             }
 
@@ -41,8 +43,8 @@
                     <RadzenLabel Text="Permission" Component="FinalPermission"/>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="8">
-                    <RadzenDropDown Style="width: 100%" @bind-Value=@CreateUserRequest.Permissions Multiple=true AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="FinalPermission"
-                                    Disabled="@(!permissionsLoaded || isBusy)" Data=@(GroupedData != null ? GroupedData : Enumerable.Empty<GroupPermissionData>()) DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
+                    <RadzenDropDown TValue="List<string>" Style="width: 100%" Value="@CreateUserRequest.Permissions" ValueChanged="@ChangePermissions" Multiple="true" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Name="FinalPermission"
+                                    Disabled="@(!CanEditPermissions)" Data="@GroupedData" DisabledProperty="IsGroup" ValueProperty="FinalPermission" TextProperty="FinalPermission" MaxSelectedLabels="1">
                         <Template Context="product">
                             @(product.Resource ?? product.FinalPermission)
                         </Template>
@@ -51,8 +53,9 @@
             </RadzenRow>
         }
     </RadzenStack>
+    </fieldset>
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="0.5rem" Class="rz-mt-4 rz-mb-2">
-        <RadzenButton ButtonType="ButtonType.Submit" Disabled="@(!CanSave)" IsBusy="isBusy" Size="ButtonSize.Small" Icon="save" Text="Save" />
-        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" Icon="cancel" Text="Cancel" Click="@Cancel" />
+        <RadzenButton ButtonType="ButtonType.Submit" Disabled="@(!CanSave)" IsBusy="IsSaving" Size="ButtonSize.Small" Icon="save" Text="Save" />
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" Icon="cancel" Text="Cancel" Disabled="@IsSaving" Click="@Cancel" />
     </RadzenStack>
 </RadzenTemplateForm>

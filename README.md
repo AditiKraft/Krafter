@@ -154,20 +154,24 @@ The diagrams below reflect the template structure and are useful before you gene
    - **Scalar API Reference** (split host only): https://localhost:5199/scalar/v1
    - **Blazor UI**: https://localhost:7291
 
-5. Sign in with the seeded admin account
+5. In Development, sign in with the seeded admin account
    - Email: `admin@example.com`
    - Password: `123Pa$$word!`
 
    Alternatively, log in with Google, which will create a new account.
 
-> ⚠️ Change the default password immediately in production.
+Backend startup provisions the root account before serving requests in both hosting variants. For a fresh database outside Development, supply a private `Bootstrap:RootPassword` setting (environment variable `Bootstrap__RootPassword`) to the Backend host in split mode or the combined UI host in single mode. It must satisfy the configured Identity password rules, fit the shared login password length limit, and differ from the public Development password above; missing or invalid configuration stops startup without creating identity data. Supply it through your deployment secret configuration, and remove it after successful initial provisioning if desired.
+
+Bootstrap runs only when that tenant has no user or role history, including soft-deleted records. Existing identities, passwords, role memberships, and removed permissions remain unchanged on restart; partial or deleted identity data requires deliberate operator recovery. New tenants are still provisioned by the authorized tenant-creation operation, with their welcome email queued after identity data commits. There is no HTTP seeding endpoint or UI-triggered seeding.
 
 <details>
 <summary><strong>Database migrations workflow</strong></summary>
 
 AppHost applies checked-in migrations automatically through `krafter-migrator`. In normal local development, start AppHost and let the migrator complete.
 
-For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` in the environment or use `ConnectionStrings:AppDbMigration` in an optional `appsettings.Local.json` in the current directory. Single-host output has no backend settings files, so use the environment variable there. A placeholder PostgreSQL connection string is enough to create migration files; applying migrations requires a real database.
+The migrator exits with zero only after its work completes. An operation failure returns 1; shutdown cancellation before completion returns 2. Both nonzero outcomes keep the local AppHost's dependent application from starting. Production deployment must provide its own successful migration step before sending traffic to a new release.
+
+For `dotnet ef migrations add`, set `ConnectionStrings__AppDbMigration` in the environment or copy the Backend's `appsettings.Local.json.example` to `appsettings.Local.json` in the current directory and set `ConnectionStrings:AppDbMigration`. The local file is ignored by Git and excluded from template packages and generated applications. Single-host output has no active backend settings files; the environment variable also works there. A placeholder PostgreSQL connection string is enough to create migration files; applying migrations requires a real database.
 
 Install EF Core tools once if needed:
 
@@ -222,7 +226,15 @@ The browser loads public URLs from UI.Web automatically. For deployment examples
 
 For anything outside local development, prefer user-secrets or environment variables instead of committed values.
 
+Outside Development, startup requires a private `SecuritySettings__JwtSettings__Key` of at least 32 UTF-8 bytes on Backend and UI.Web in split mode, or UI.Web in single mode. Use the same securely generated key on both split hosts. The public example key is rejected. Backend and the combined host also require `TickerQBasicAuth__Username` and a private `TickerQBasicAuth__Password`; the public `admin` password is rejected. TickerQ keeps its separate Basic authentication. Sample credentials are supplied only by Development settings.
+
 </details>
+
+## Two-factor authentication
+
+Users can enroll an authenticator under **Account → Two-factor authentication**. Enrolled accounts require an authenticator or one-time recovery code after password or Google sign-in. Production enrollment requires persistent, certificate-protected key storage. See [two-factor authentication](docs/two-factor-authentication.md) for setup, API changes, session revocation, recovery and testing.
+
+See [dependency security maintenance](docs/dependency-security.md) for the .NET servicing minimum, transitive dependency floors and enforced NuGet audit policy.
 
 ## 📁 Project Structure
 
@@ -230,7 +242,7 @@ The structure below is what you get after running `dotnet new krafter -n MyApp` 
 
 ```text
 MyApp/
-├── Agents.md                            # AI agent instructions (entry point)
+├── AGENTS.md                            # AI agent instructions (entry point)
 ├── aspire/                              # Aspire orchestration
 │   ├── MyApp.Aspire.AppHost/
 │   └── MyApp.Aspire.ServiceDefaults/
@@ -270,7 +282,7 @@ If you are using Krafter to build an app, the main workflow is:
 4. Create migrations when your model changes
 5. Let the migrator apply them on the next AppHost start
 
-For detailed feature-by-feature instructions, naming conventions, and backend/UI implementation rules, use [Agents.md](Agents.md) and the related files in:
+For detailed feature-by-feature instructions, naming conventions, and backend/UI implementation rules, use [AGENTS.md](AGENTS.md) and the related files in:
 - `src/AditiKraft.Krafter.Backend/`
 - `src/UI/`
 - `src/AditiKraft.Krafter.Contracts/`
@@ -291,7 +303,7 @@ Start with the feature you are changing. For example, the Users UI folder contai
 | Shared HTTP client registration | UI.Web.Client `Infrastructure/Refit/` |
 | Request, response, or validator | Contracts `Contracts/<Feature>/` |
 
-Keep namespaces aligned with folders. Use the [Backend instructions](src/AditiKraft.Krafter.Backend/Agents.md) and [UI instructions](src/UI/Agents.md) for the detailed placement rules.
+Keep namespaces aligned with folders. Use the [Backend instructions](src/AditiKraft.Krafter.Backend/AGENTS.md) and [UI instructions](src/UI/AGENTS.md) for the detailed placement rules.
 
 ### Key Commands
 
@@ -315,22 +327,29 @@ dotnet run --project aspire/AditiKraft.Krafter.Aspire.AppHost/AditiKraft.Krafter
 
 ### Docker Deployment
 
-Build container images with:
+Set `ContainerNamespace` in [Directory.Build.props](Directory.Build.props) to your registry organization or username. `ContainerRegistry` contains the hostname (default `ghcr.io`); `ContainerRepository` contains only the namespace and image name, such as `your-org/krafter.api`. Override either property when your deployment uses another registry or image name.
+
+Publish the split-host images explicitly after validating the application:
 
 ```bash
-dotnet publish src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj -c Release -p:PublishProfile=DefaultContainer
-dotnet publish src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj -c Release -p:PublishProfile=DefaultContainer
+dotnet run --project build/_build.csproj -- --target Validate --configuration Release
+dotnet publish src/AditiKraft.Krafter.Backend/AditiKraft.Krafter.Backend.csproj -c Release -p:PublishProfile=DefaultContainer -p:ContainerNamespace=your-org
+dotnet publish src/UI/AditiKraft.Krafter.UI.Web/AditiKraft.Krafter.UI.Web.csproj -c Release -p:PublishProfile=DefaultContainer -p:ContainerNamespace=your-org
 ```
+
+For a generated single-host application, publish only UI.Web. Authenticate to the selected registry before publishing. These commands upload images; `Validate` only restores, builds and runs tests.
 
 ### CI/CD with GitHub Actions
 
-The project includes GitHub Actions workflows for:
-- Building and testing on every push
-- Creating Docker images for `main` and `dev` branches
-- Pushing images to GitHub Container Registry
-- Triggering deployment webhooks
+The application workflow builds and tests every push and pull request with read-only repository access. It runs the same `Validate` target as the default local command:
 
-See [.github/workflows](.github/workflows) for configuration.
+```bash
+dotnet run --project build/_build.csproj
+```
+
+Generated applications contain this validation workflow and their own solution. Configure application publishing and deployment explicitly for your registry and environment. The upstream template publisher and its NuGet credentials are excluded from both generated variants.
+
+See [build and release commands](docs/build-and-release.md) for upstream release targets and their validation prerequisites.
 
 ## 🤝 Contributing & Template Development
 
@@ -343,7 +362,7 @@ See [.github/workflows](.github/workflows) for configuration.
 ```bash
 git clone https://github.com/AditiKraft/Krafter.git
 cd Krafter
-dotnet restore
+dotnet restore AditiKraft.Krafter.Dev.slnx
 ```
 
 <details>
@@ -359,9 +378,9 @@ AditiKraft.Krafter/                         # Template repo root
 │   └── UI/AditiKraft.Krafter.UI.Web/       #   Overlaid into src/UI/ during template generation
 ├── aspire-single/                          # Single-host Aspire AppHost override
 │   └── AditiKraft.Krafter.Aspire.AppHost/  #   Overlaid into aspire/ during template generation
-├── Agents.md                               # Template developer instructions
-├── Agents.split.md                         # Renamed to Agents.md in split-host output
-├── Agents.single.md                        # Renamed to Agents.md in single-host output
+├── AGENTS.md                               # Template developer instructions
+├── AGENTS.split.md                         # Renamed to AGENTS.md in split-host output
+├── AGENTS.single.md                        # Renamed to AGENTS.md in single-host output
 ├── AditiKraft.Krafter.Dev.slnx             # All projects (template development)
 ├── AditiKraft.Krafter.slnx                 # Split-host solution (template output)
 ├── AditiKraft.Krafter.Single.slnx          # Single-host solution (template output)
@@ -389,6 +408,14 @@ The source single-host AppHost selects `src-single/UI/AditiKraft.Krafter.UI.Web`
 
 ### Test Template Output Locally
 
+Template packages and generated applications exclude local settings, environment files, Data Protection key files, and private-key formats (`.pfx`, `.p12`, `.pem`, `.key`). Keep deployment secrets outside the template tree. Use `.cer` or `.crt` for intentionally public certificate examples and `.json.example` for sample local settings.
+
+These exclusions inspect source entry filenames; package and generate only from a trusted tree without symlink or junction aliases to private files, because renaming or aliasing private content is not detected.
+
+Packages and generated applications also exclude `.nupkg`/`.snupkg` files and `nupkg/`/`artifacts/` output directories, including mixed-case names. Packing repeatedly into the documented `nupkg/` folder therefore does not embed previous packages.
+
+The isolated packaging regression check uses only harmless sentinel files in a temporary template fixture: `python3 tests/operations/verify-template-private-files.py`. It packs twice into that fixture's `nupkg/` directory and checks both archives plus generation from package/source installs. It also checks that generated automation validates the application and excludes upstream publishing files. It uses an isolated template hive without changing your installed templates.
+
 ```bash
 # Pack the template
 dotnet pack AditiKraft.Krafter.Templates.csproj -o ./nupkg
@@ -409,7 +436,7 @@ Both UI hosts use [UiHostServiceRegistration.cs](src/UI/AditiKraft.Krafter.UI.We
 
 ### Contribution Notes
 
-- Follow the coding conventions in [Agents.md](Agents.md) and the relevant sub-project `Agents.md` files
+- Follow the coding conventions in [AGENTS.md](AGENTS.md) and the relevant sub-project `AGENTS.md` files
 - Open changes through a Pull Request
 - Use [Conventional Commits](https://www.conventionalcommits.org/)
 
@@ -426,7 +453,7 @@ test(scope): add tests
 ## 📄 License, Support, and Thanks
 
 - **License**: MIT — see [LICENSE](LICENSE)
-- **Documentation**: [Agents.md](Agents.md)
+- **Documentation**: [AGENTS.md](AGENTS.md)
 - **Issues**: [GitHub Issues](https://github.com/AditiKraft/Krafter/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/AditiKraft/Krafter/discussions)
 

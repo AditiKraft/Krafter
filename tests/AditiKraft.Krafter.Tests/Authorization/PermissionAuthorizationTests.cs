@@ -81,18 +81,41 @@ public sealed class PermissionAuthorizationTests
         Assert.Empty(probes);
     }
 
-    [Fact]
-    public async Task PermissionClaimAvoidsDatabaseLookup()
+    [Theory]
+    [InlineData("alice", true)]
+    [InlineData("bob", false)]
+    public async Task CachedPermissionClaimStillRequiresCurrentDatabasePermission(string userId, bool allowed)
     {
         var probes = new ConcurrentBag<PermissionUserService>();
         await using ServiceProvider provider = CreateProvider(probes);
         await using AsyncServiceScope requestScope = provider.CreateAsyncScope();
-        var context = CreateContext("alice", withPermissionClaim: true);
+        SetTenant(requestScope, "tenant-a");
+        var context = CreateContext(userId, withPermissionClaim: true);
 
         await requestScope.ServiceProvider.GetRequiredService<IAuthorizationHandler>().HandleAsync(context);
 
-        Assert.True(context.HasSucceeded);
-        Assert.Empty(probes);
+        Assert.Equal(allowed, context.HasSucceeded);
+        Assert.Single(probes);
+    }
+
+    [Theory]
+    [InlineData("tenant-a", false)]
+    [InlineData("tenant-a", true)]
+    [InlineData("root", false)]
+    [InlineData("root", true)]
+    public async Task RootPermissionRequiresRootTenantEvenWhenClaimOrDatabaseGrantsIt(string tenantId, bool withClaim)
+    {
+        const string rootPermission = "Permissions.Tenants.Delete";
+        var probes = new ConcurrentBag<PermissionUserService>();
+        await using ServiceProvider provider = CreateProvider(probes, allowEveryPermission: true);
+        await using AsyncServiceScope requestScope = provider.CreateAsyncScope();
+        SetTenant(requestScope, tenantId);
+        var context = CreateContext("alice", withClaim, rootPermission);
+
+        await requestScope.ServiceProvider.GetRequiredService<IAuthorizationHandler>().HandleAsync(context);
+
+        Assert.Equal(tenantId == "root", context.HasSucceeded);
+        Assert.Equal(tenantId == "root" ? 1 : 0, probes.Count);
     }
 
     [Fact]
@@ -132,7 +155,8 @@ public sealed class PermissionAuthorizationTests
 
     private static ServiceProvider CreateProvider(
         ConcurrentBag<PermissionUserService> probes,
-        Func<Task>? beforeQuery = null)
+        Func<Task>? beforeQuery = null,
+        bool allowEveryPermission = false)
     {
         var services = new ServiceCollection();
         services.AddTenantServices();
@@ -140,7 +164,7 @@ public sealed class PermissionAuthorizationTests
         services.AddScoped<IUserService>(provider =>
         {
             var service = new PermissionUserService(
-                provider.GetRequiredService<ITenantGetterService>(), beforeQuery);
+                provider.GetRequiredService<ITenantGetterService>(), beforeQuery, allowEveryPermission);
             probes.Add(service);
             return service;
         });
@@ -156,7 +180,8 @@ public sealed class PermissionAuthorizationTests
         });
     }
 
-    private static AuthorizationHandlerContext CreateContext(string? userId, bool withPermissionClaim = false)
+    private static AuthorizationHandlerContext CreateContext(string? userId, bool withPermissionClaim = false,
+        string permission = Permission)
     {
         var identity = new ClaimsIdentity("test");
         if (userId is not null)
@@ -166,13 +191,13 @@ public sealed class PermissionAuthorizationTests
 
         if (withPermissionClaim)
         {
-            identity.AddClaim(new Claim(AppClaimTypes.Permission, Permission));
+            identity.AddClaim(new Claim(AppClaimTypes.Permission, permission));
         }
 
-        return new AuthorizationHandlerContext([new PermissionRequirement(Permission)], new ClaimsPrincipal(identity), null);
+        return new AuthorizationHandlerContext([new PermissionRequirement(permission)], new ClaimsPrincipal(identity), null);
     }
 
-    private sealed class PermissionUserService(ITenantGetterService tenantGetter, Func<Task>? beforeQuery)
+    private sealed class PermissionUserService(ITenantGetterService tenantGetter, Func<Task>? beforeQuery, bool allowEveryPermission)
         : IUserService, IDisposable
     {
         public ITenantGetterService TenantGetter { get; } = tenantGetter;
@@ -187,8 +212,8 @@ public sealed class PermissionAuthorizationTests
                 await beforeQuery();
             }
 
-            bool allowed = permission == Permission && (TenantGetter.Tenant.Id, userId) is
-                ("tenant-a", "alice") or ("tenant-b", "bob") or ("root", "root-user");
+            bool allowed = allowEveryPermission || (permission == Permission && (TenantGetter.Tenant.Id, userId) is
+                ("tenant-a", "alice") or ("tenant-b", "bob") or ("root", "root-user"));
             return Response<bool>.Success(allowed);
         }
 

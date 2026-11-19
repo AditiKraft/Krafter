@@ -1,8 +1,9 @@
+using AditiKraft.Krafter.UI.Web.Client.Infrastructure.Auth;
 
 namespace AditiKraft.Krafter.UI.Web.Client.Features.Users;
 
 public partial class ResetPassword(
-    NavigationManager navigationManager,
+    IAuthenticationService authentication,
     ApiCallService api,
     IUsersApi usersApi
 ) : ComponentBase
@@ -13,6 +14,10 @@ public partial class ResetPassword(
     public string Token { get; set; } = default!;
 
     public bool IsBusy { get; set; }
+    private bool passwordReset;
+    private string? signOutError;
+
+    protected override void OnParametersSet() => ResetPasswordRequest.Token = Token;
 
     private async Task SubmitResetPassword(ResetPasswordRequest requestInput)
     {
@@ -25,7 +30,20 @@ public partial class ResetPassword(
         IsBusy = false;
         if (response is { IsError: false })
         {
-            navigationManager.NavigateTo("/login");
+            passwordReset = true;
+            await SignInAgainAsync();
         }
+    }
+
+    private async Task SignInAgainAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            signOutError = await authentication.LogoutAsync("Password reset. Sign in again.")
+                ? null : authentication.ErrorMessage;
+        }
+        finally { IsBusy = false; }
     }
 }

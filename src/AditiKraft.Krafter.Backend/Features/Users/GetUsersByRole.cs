@@ -3,13 +3,13 @@ using AditiKraft.Krafter.Backend.Common.Extensions;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Dynamic.Core;
 using AditiKraft.Krafter.Backend.Web;
 using AditiKraft.Krafter.Backend.Features.Users.Common;
 using AditiKraft.Krafter.Backend.Infrastructure.Persistence;
 using AditiKraft.Krafter.Contracts.Common;
 using AditiKraft.Krafter.Contracts.Common.Auth.Permissions;
 using AditiKraft.Krafter.Contracts.Common.Models;
+using AditiKraft.Krafter.Contracts.Common.Validation;
 
 namespace AditiKraft.Krafter.Backend.Features.Users;
 
@@ -17,11 +17,22 @@ public sealed class GetUsersByRole
 {
     internal sealed class Handler(ApplicationDbContext db) : IScopedHandler
     {
+        private static readonly HashSet<string> QueryProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            nameof(UserInfo.Id), nameof(UserInfo.FirstName), nameof(UserInfo.LastName),
+            nameof(UserInfo.Email), nameof(UserInfo.CreatedOn)
+        };
+
         public async Task<Response<PaginationResponse<UserInfo>>> GetByRoleAsync(
             string roleId,
             [AsParameters] GetRequestInput requestInput,
             CancellationToken cancellationToken)
         {
+            if (!TextValue.IsValid(roleId))
+            {
+                return Response<PaginationResponse<UserInfo>>.BadRequest("RoleId must contain valid Unicode text without null characters.");
+            }
+
             ExpressionStarter<ApplicationUserRole>? predicate = PredicateBuilder.New<ApplicationUserRole>(true);
             predicate = predicate.And(c => c.RoleId == roleId);
 
@@ -33,34 +44,21 @@ public sealed class GetUsersByRole
                     Id = x.User.Id,
                     FirstName = x.User.FirstName,
                     LastName = x.User.LastName,
+                    Email = x.User.Email ?? string.Empty,
                     CreatedOn = x.User.CreatedOn
                 });
 
-            // Apply filters
-            if (!string.IsNullOrEmpty(requestInput.Filter))
+            if (!query.TryApplyListQuery(requestInput, QueryProperties, out query, out string error))
             {
-                if (requestInput.Filter.Contains("!=") ||
-                    requestInput.Filter.Contains("==") ||
-                    requestInput.Filter.Contains(".Contains(") ||
-                    requestInput.Filter.Contains(".StartsWith(") ||
-                    requestInput.Filter.Contains(".EndsWith(") ||
-                    requestInput.Filter.Contains("np("))
-                {
-                    query = query.Where(requestInput.Filter);
-                }
-                else
-                {
-                    string filter = requestInput.Filter.ToLower();
-                    query = query.Where(c =>
-                        (c.FirstName ?? "").ToLower().Contains(filter) ||
-                        (c.LastName ?? "").ToLower().Contains(filter));
-                }
+                return Response<PaginationResponse<UserInfo>>.BadRequest(error);
             }
 
-            // Apply sorting
-            if (!string.IsNullOrEmpty(requestInput.OrderBy))
+            if (!string.IsNullOrWhiteSpace(requestInput.Query))
             {
-                query = query.OrderBy(requestInput.OrderBy);
+                string search = requestInput.Query.ToLowerInvariant();
+                query = query.Where(c =>
+                    (c.FirstName ?? "").ToLower().Contains(search) ||
+                    (c.LastName ?? "").ToLower().Contains(search));
             }
 
             List<UserInfo> items = await query
@@ -98,7 +96,8 @@ public sealed class GetUsersByRole
                     return Results.Json(res, statusCode: res.StatusCode);
                 })
                 .Produces<Response<PaginationResponse<UserInfo>>>()
-                .MustHavePermission(PermissionAction.View, PermissionResource.Users);
+                .MustHavePermission(PermissionAction.View, PermissionResource.Users)
+                .MustHavePermission(PermissionAction.View, PermissionResource.UserRoles);
         }
     }
 }

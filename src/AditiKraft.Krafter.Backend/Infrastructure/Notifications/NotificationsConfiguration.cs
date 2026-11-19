@@ -14,7 +14,7 @@ public static class NotificationsConfiguration
 
         services.AddSingleton(smtpSettings);
 
-        services.AddSingleton<SmtpClient>(sp =>
+        services.AddScoped<SmtpClient>(sp =>
         {
             SMTPEmailSettings settings = sp.GetRequiredService<SMTPEmailSettings>();
             return new SmtpClient(settings.Host, settings.Port)
